@@ -40,6 +40,7 @@ export class GoogleAdapter extends OpenAICompatibleAdapter {
       headers: { "content-type": "application/json", "user-agent": "cokey/0.1.0" },
       body: JSON.stringify(toGeminiRequest(request)),
       stream,
+      proxyUrl: credential.proxyUrl,
     };
   }
 
@@ -81,6 +82,7 @@ export class GoogleAdapter extends OpenAICompatibleAdapter {
       method: "GET",
       headers: { "user-agent": "cokey/0.1.0" },
       stream: false,
+      proxyUrl: credential.proxyUrl,
     });
     if (!result.ok) throw new Error(result.error.message);
     const body = (await result.response.json()) as { models?: Array<{ name?: string }> };

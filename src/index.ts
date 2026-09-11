@@ -104,10 +104,30 @@ export {
   searchProviders,
   isFreeProvider,
 } from "./catalog/providers.js";
+export {
+  MODELS_BY_PROVIDER,
+  MODEL_CATALOG_SIZE,
+  modelsForProvider,
+} from "./catalog/models.js";
+export type { ModelSpec } from "./catalog/models.js";
+export { modelAvailability } from "./core/models/availability.js";
+export type { ModelCatalogView, SelectableModel } from "./core/models/availability.js";
 export { ProviderRegistry, createAdapter, customEndpointToCatalogEntry } from "./core/providers/registry.js";
 export { OpenAICompatibleAdapter } from "./core/providers/openai-compatible.js";
 export type { ProviderCatalogEntry, ProviderStatus, ApiStyle, AuthScheme } from "./catalog/types.js";
 export type { ProviderAdapter, ProviderRequest, SendResult, TransformContext } from "./core/providers/adapter.js";
+
+// Egress proxies and live routing feedback
+export {
+  parseProxyUrl,
+  dispatcherFor,
+  proxyLabel,
+  closeProxyDispatchers,
+} from "./core/providers/proxy.js";
+export type { ParsedProxy, ProxyDispatcher, ProxyProtocol } from "./core/providers/proxy.js";
+export { EventBus } from "./core/events.js";
+export type { CokeyEvent, CokeyEventInput, CokeyEventType, CokeyEventLevel, EventListener } from "./core/events.js";
+export { RateTracker } from "./core/credentials/rate.js";
 
 // Logging
 export { Logger, silentLogger } from "./core/logger.js";
@@ -121,9 +141,12 @@ export type {
   ChatCompletionRequest,
   ChatMessage,
   Credential,
+  CredentialProxyInfo,
+  CredentialRate,
   CredentialStatus,
   ErrorClassification,
   FallbackPolicy,
+  LiveRouteSnapshot,
   LogLevel,
   ModelInfo,
   ProviderError,

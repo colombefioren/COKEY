@@ -59,6 +59,7 @@
     "better-sqlite3": "^12.11.1",
     "cac": "^6.7.14",
     "fastify": "^4.28.1",
+    "undici": "^7.29.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {

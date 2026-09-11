@@ -17,6 +17,13 @@ export interface ProviderRequest {
   body?: string;
   /** True when the client asked for a streamed response. */
   stream: boolean;
+  /**
+   * Egress proxy for this request, taken from the credential.
+   *
+   * Adapters set it from `credential.proxyUrl` so every call made on behalf of
+   * a key leaves through that key's own exit IP.
+   */
+  proxyUrl?: string;
 }
 
 export interface SendSuccess {

@@ -1,5 +1,6 @@
 import type { ProviderError } from "../types.js";
 import type { ProviderRequest, SendResult } from "./adapter.js";
+import { dispatcherFor } from "./proxy.js";
 
 export const DEFAULT_TIMEOUT_MS = 120_000;
 
@@ -7,7 +8,22 @@ export interface RequestOptions {
   timeoutMs?: number;
   /** Extra signals to combine with the timeout. */
   signal?: AbortSignal;
+  /**
+   * Egress through this proxy instead of the process default.
+   *
+   * Defaults to the proxy declared on the request spec, so adapters that build
+   * a request from a credential get per-credential egress for free.
+   */
+  proxyUrl?: string;
 }
+
+/**
+ * `fetch` options carrying the undici `dispatcher`.
+ *
+ * `dispatcher` is redeclared as `unknown` because `@types/node` and the
+ * `undici` package ship separate, mutually incompatible copies of its type.
+ */
+type FetchInit = Omit<RequestInit, "dispatcher"> & { dispatcher?: unknown };
 
 /**
  * Execute a provider request.
@@ -31,8 +47,10 @@ export async function performRequest(
     ? (AbortSignal.any?.([controller.signal, options.signal]) ?? controller.signal)
     : controller.signal;
 
+  const dispatcher = dispatcherFor(options.proxyUrl ?? spec.proxyUrl);
+
   try {
-    const response = await fetch(spec.url, {
+    const init: FetchInit = {
       method: spec.method,
       headers: spec.headers,
       body: spec.body,
@@ -40,7 +58,12 @@ export async function performRequest(
       // Never follow a redirect that would resend an Authorization header to a
       // different origin.
       redirect: "manual",
-    });
+    };
+    // Only set the field when a proxy is configured; otherwise the process
+    // default agent stays in charge.
+    if (dispatcher) init.dispatcher = dispatcher;
+
+    const response = await fetch(spec.url, init as unknown as RequestInit);
     clearTimeout(timer);
 
     if (response.status >= 300 && response.status < 400) {

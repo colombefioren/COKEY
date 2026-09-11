@@ -3,8 +3,10 @@ import type { CredentialRow } from "../db/database.js";
 import type { CredentialsRepo } from "../db/credentials.repo.js";
 import type { SecretVault } from "../crypto/secrets.js";
 import {
+  emptyRate,
   emptyUsage,
   type Credential,
+  type CredentialProxyInfo,
   type CredentialStatus,
   type ErrorClassification,
   type PublicCredential,
@@ -12,7 +14,9 @@ import {
   type UsageStats,
 } from "../types.js";
 import { maskAccountId, maskSecret } from "./masking.js";
+import { proxyLabel } from "../providers/proxy.js";
 import type { CooldownManager } from "./cooldown.js";
+import { RateTracker } from "./rate.js";
 
 export class CredentialNotFoundError extends Error {
   constructor(id: string) {
@@ -26,6 +30,14 @@ export interface CreateCredentialInput {
   accountId?: string;
   secret: string;
   description: string;
+  /**
+   * Optional egress proxy for this key (`socks5://…` or `http://…`).
+   *
+   * Set a different proxy per credential to rotate exit IPs alongside keys —
+   * without it, several keys from one provider share an IP and therefore share
+   * the provider's IP-level limit.
+   */
+  proxyUrl?: string;
 }
 
 export interface TokenDelta {
@@ -46,6 +58,8 @@ export class CredentialManager {
     private readonly repo: CredentialsRepo,
     private readonly vault: SecretVault,
     private readonly cooldown: CooldownManager,
+    /** Live per-credential throughput gauge. Defaults to a private tracker. */
+    readonly rates: RateTracker = new RateTracker(),
   ) {}
 
   create(input: CreateCredentialInput): Credential {
@@ -56,6 +70,7 @@ export class CredentialManager {
       providerId: input.providerId,
       accountId: input.accountId,
       secretEncrypted: this.vault.encrypt(input.secret),
+      proxyUrl: input.proxyUrl,
       description: input.description,
       status: "unverified",
       createdAt: now,
@@ -103,6 +118,11 @@ export class CredentialManager {
     this.repo.update(id, { accountId, updatedAt: Date.now() });
   }
 
+  /** Attach, move or clear the egress proxy of a credential. */
+  updateProxyUrl(id: string, proxyUrl: string | null): void {
+    this.repo.update(id, { proxyUrl, updatedAt: Date.now() });
+  }
+
   /** Re-encrypt with a rotated secret. */
   rotateSecret(id: string, secret: string): void {
     this.repo.update(id, {
@@ -114,6 +134,7 @@ export class CredentialManager {
 
   delete(id: string): void {
     this.repo.delete(id);
+    this.rates.forget(id);
   }
 
   setStatus(id: string, status: CredentialStatus): void {
@@ -286,6 +307,8 @@ export class CredentialManager {
       quota: credential.quota,
       cooldownUntil: credential.cooldownUntil,
       consecutiveFailures: credential.consecutiveFailures,
+      proxy: describeProxy(credential.proxyUrl),
+      rate: this.rates.snapshot(credential.id),
     };
   }
 
@@ -295,6 +318,7 @@ export class CredentialManager {
       providerId: row.provider_id,
       accountId: row.account_id ?? undefined,
       secret: this.vault.decrypt(row.secret_encrypted),
+      proxyUrl: row.proxy_url ?? undefined,
       description: row.description,
       status: row.status as CredentialStatus,
       createdAt: row.created_at,
@@ -307,3 +331,13 @@ export class CredentialManager {
     };
   }
 }
+
+/** Proxy state safe to display: never the proxy's own username or password. */
+export function describeProxy(proxyUrl: string | undefined): CredentialProxyInfo {
+  if (!proxyUrl) return { configured: false };
+  const label = proxyLabel(proxyUrl);
+  return label ? { configured: true, label } : { configured: true };
+}
+
+/** Re-export so callers can build an empty gauge without importing the types. */
+export { emptyRate };

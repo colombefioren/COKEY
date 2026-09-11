@@ -94,6 +94,14 @@ export interface Credential {
   accountId?: string;
   /** Decrypted secret. Never serialised to HTTP responses. */
   secret: string;
+  /**
+   * Optional per-credential egress proxy (`socks5://`, `socks://`, `http://`).
+   *
+   * Two keys from one provider only fail over *independently* when they leave
+   * through different IPs, so this is part of a credential's identity, not a
+   * global setting.
+   */
+  proxyUrl?: string;
   description: string;
   status: CredentialStatus;
   createdAt: number;
@@ -103,6 +111,35 @@ export interface Credential {
   quota?: QuotaInfo;
   cooldownUntil?: number;
   consecutiveFailures: number;
+}
+
+/** Proxy configuration of a credential, with credentials stripped. */
+export interface CredentialProxyInfo {
+  configured: boolean;
+  /** `host:port` of the proxy. Never includes a proxy username or password. */
+  label?: string;
+}
+
+/** Locally observed throughput for one credential. */
+export interface CredentialRate {
+  /** Requests observed in the trailing 60 seconds. */
+  requestsPerMinute: number;
+  /** Requests observed in the trailing 5 minutes. */
+  requestsLast5Minutes: number;
+  /** True when the credential hit a provider-side limit within the last 5 min. */
+  recentlyRateLimited: boolean;
+  /** 12 buckets of 5 seconds covering the last minute, oldest first. */
+  sparkline: number[];
+  lastRequestAt?: number;
+}
+
+export function emptyRate(): CredentialRate {
+  return {
+    requestsPerMinute: 0,
+    requestsLast5Minutes: 0,
+    recentlyRateLimited: false,
+    sparkline: new Array<number>(12).fill(0),
+  };
 }
 
 /** The only credential shape any HTTP response is allowed to contain. */
@@ -120,6 +157,10 @@ export interface PublicCredential {
   quota?: QuotaInfo;
   cooldownUntil?: number;
   consecutiveFailures: number;
+  /** Egress proxy state; never the proxy's own credentials. */
+  proxy: CredentialProxyInfo;
+  /** Locally measured throughput, which distinguishes keys of one provider. */
+  rate: CredentialRate;
 }
 
 /** How credentials inside a single chain entry are ordered per request. */
@@ -151,6 +192,29 @@ export interface Chain {
   enabled: boolean;
   createdAt: number;
   updatedAt: number;
+}
+
+/** Route a chat completion goes through right now, for the live status view. */
+export interface LiveRouteSnapshot {
+  /** True while at least one request is being routed. */
+  active: boolean;
+  chainAlias?: string;
+  providerId?: string;
+  model?: string;
+  credentialId?: string;
+  credentialDescription?: string;
+  maskedSecret?: string;
+  proxyLabel?: string;
+  /** True when the current attempt is not the first entry tried. */
+  fallback: boolean;
+  attempts: number;
+  startedAt?: number;
+  updatedAt: number;
+  /** Outcome of the most recently finished route. */
+  lastOutcome?: "success" | "error";
+  lastClassification?: string;
+  /** Reason the last route needed fallback, when it did. */
+  lastFallbackReason?: string;
 }
 
 /** A chat message. Content is passed through verbatim, including multimodal parts. */

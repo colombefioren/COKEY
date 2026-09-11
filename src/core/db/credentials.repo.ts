@@ -5,6 +5,7 @@ export interface InsertCredentialInput {
   providerId: string;
   accountId?: string;
   secretEncrypted: string;
+  proxyUrl?: string;
   description: string;
   status: string;
   createdAt: number;
@@ -17,6 +18,7 @@ export interface CredentialPatch {
   providerId?: string;
   accountId?: string | null;
   secretEncrypted?: string;
+  proxyUrl?: string | null;
   description?: string;
   status?: string;
   updatedAt?: number;
@@ -31,6 +33,7 @@ const COLUMNS: Record<keyof CredentialPatch, string> = {
   providerId: "provider_id",
   accountId: "account_id",
   secretEncrypted: "secret_encrypted",
+  proxyUrl: "proxy_url",
   description: "description",
   status: "status",
   updatedAt: "updated_at",
@@ -48,15 +51,16 @@ export class CredentialsRepo {
     this.db.db
       .prepare(
         `INSERT INTO credentials
-           (id, provider_id, account_id, secret_encrypted, description, status,
+           (id, provider_id, account_id, secret_encrypted, proxy_url, description, status,
             created_at, updated_at, usage, consecutive_failures)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
       )
       .run(
         input.id,
         input.providerId,
         input.accountId ?? null,
         input.secretEncrypted,
+        input.proxyUrl ?? null,
         input.description,
         input.status,
         input.createdAt,

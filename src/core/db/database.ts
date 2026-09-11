@@ -107,6 +107,13 @@ export const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    version: 4,
+    name: "credential_proxy",
+    sql: `
+      ALTER TABLE credentials ADD COLUMN proxy_url TEXT;
+    `,
+  },
 ];
 
 /**
@@ -187,6 +194,7 @@ export interface CredentialRow {
   provider_id: string;
   account_id: string | null;
   secret_encrypted: string;
+  proxy_url: string | null;
   description: string;
   status: string;
   created_at: number;

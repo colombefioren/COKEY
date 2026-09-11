@@ -12,10 +12,27 @@ export const ChainAliasSchema = z
   .max(64)
   .regex(/^[a-z0-9][a-z0-9._-]*$/i, "Use letters, digits, dot, dash or underscore");
 
+/**
+ * An egress proxy URL.
+ *
+ * SOCKS5/SOCKS and HTTP CONNECT are accepted. Credentials may be embedded in
+ * the URL (`socks5://user:pass@host:1080`) and are stored encrypted with the
+ * key they belong to.
+ */
+export const ProxyUrlSchema = z
+  .string()
+  .min(1)
+  .max(300)
+  .refine(
+    (value) => /^(socks5|socks|socks5h|https?):\/\//i.test(value),
+    "Use socks5://, socks:// or http(s)://",
+  );
+
 export const ConnectProviderSchema = z.object({
   secret: z.string().min(1, "API key is required"),
   description: z.string().min(1, "Description is required").max(120),
   accountId: z.string().min(1).max(200).optional(),
+  proxyUrl: ProxyUrlSchema.optional(),
 });
 
 export const CreateChainSchema = z.object({
@@ -60,6 +77,7 @@ export const CreateCredentialSchema = z.object({
   secret: z.string().min(1),
   description: z.string().min(1).max(120),
   accountId: z.string().min(1).max(200).optional(),
+  proxyUrl: ProxyUrlSchema.optional(),
 });
 
 export const UpdateCredentialSchema = z
@@ -68,6 +86,8 @@ export const UpdateCredentialSchema = z
     accountId: z.string().max(200).nullable().optional(),
     secret: z.string().min(1).optional(),
     status: z.enum(["healthy", "cooldown", "invalid", "disabled", "unverified"]).optional(),
+    /** `null` clears the proxy and returns the key to direct egress. */
+    proxyUrl: ProxyUrlSchema.nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
 

@@ -51,6 +51,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
       headers: this.headers(credential, request.stream === true ? "text/event-stream" : "application/json"),
       body: JSON.stringify(body),
       stream: request.stream === true,
+      proxyUrl: credential.proxyUrl,
     };
   }
 
@@ -121,6 +122,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
       method: "GET",
       headers: this.headers(credential, "application/json"),
       stream: false,
+      proxyUrl: credential.proxyUrl,
     });
     if (!result.ok) throw new Error(result.error.message);
 

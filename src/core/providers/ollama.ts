@@ -58,6 +58,7 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
       },
       body: JSON.stringify(body),
       stream: request.stream === true,
+      proxyUrl: credential.proxyUrl,
     };
   }
 
@@ -108,6 +109,7 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
         "user-agent": "cokey/0.1.0",
       },
       stream: false,
+      proxyUrl: credential.proxyUrl,
     });
     if (!result.ok) throw new Error(result.error.message);
 

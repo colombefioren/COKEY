@@ -66,7 +66,15 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     const headers = this.chatHeaders(credential);
     const body = JSON.stringify({ ...request, model: entry.model, stream: request.stream === true });
 
-    return { url: this.chatUrl(base, credential), method: "POST", headers, body, stream: request.stream === true };
+    return {
+      url: this.chatUrl(base, credential),
+      method: "POST",
+      headers,
+      body,
+      stream: request.stream === true,
+      // Egress through this key's own proxy, if it has one.
+      proxyUrl: credential.proxyUrl,
+    };
   }
 
   async send(
@@ -96,6 +104,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       method: "GET",
       headers: this.buildHeaders(credential),
       stream: false,
+      proxyUrl: credential.proxyUrl,
     });
 
     if (!result.ok) throw new Error(result.error.message);
@@ -140,6 +149,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
         stream: false,
       }),
       stream: false,
+      proxyUrl: credential.proxyUrl,
     });
 
     const latencyMs = Date.now() - started;
@@ -159,6 +169,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       method: "GET",
       headers: this.buildHeaders(credential),
       stream: false,
+      proxyUrl: credential.proxyUrl,
     });
 
     const latencyMs = Date.now() - started;

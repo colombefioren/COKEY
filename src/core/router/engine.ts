@@ -6,8 +6,12 @@ import type { CooldownManager } from "../credentials/cooldown.js";
 import type { ProviderAdapter, SendResult, TransformContext } from "../providers/adapter.js";
 import type { ProviderRegistry } from "../providers/registry.js";
 import { getHeader } from "../providers/http.js";
+import { proxyLabel } from "../providers/proxy.js";
 import { parseQuota } from "../quota/parse.js";
 import type { Logger } from "../logger.js";
+import { maskSecret } from "../credentials/masking.js";
+import type { RateTracker } from "../credentials/rate.js";
+import type { EventBus } from "../events.js";
 import { isRequestScoped, isRetryable } from "../errors/classify.js";
 import type {
   Chain,
@@ -130,6 +134,10 @@ export class RouterEngine {
     private readonly cooldown: CooldownManager,
     private readonly selector: CredentialSelector,
     private readonly logger: Logger,
+    /** Live feedback for the UI: route progress and key/model switches. */
+    private readonly events: EventBus,
+    /** Per-credential throughput gauge. */
+    private readonly rates: RateTracker,
     private readonly policy: () => FallbackPolicy,
     options: RouterOptions = {},
   ) {
@@ -154,6 +162,24 @@ export class RouterEngine {
 
     const state: RouteState = { attempts: [], fallback: false };
 
+    this.events.updateRoute({
+      active: true,
+      chainAlias,
+      fallback: false,
+      attempts: 0,
+      startedAt: Date.now(),
+      lastOutcome: undefined,
+      lastClassification: undefined,
+      lastFallbackReason: undefined,
+    });
+    this.events.emit({
+      type: "route.start",
+      level: "info",
+      message: `Routing chain ${chainAlias}`,
+      chainAlias,
+      model: request.model,
+    });
+
     for (const entry of entries) {
       const outcome = await this.tryEntry(chainAlias, entry, request, policy, state);
 
@@ -166,6 +192,21 @@ export class RouterEngine {
       chain: chainAlias,
       attempts: state.attempts.length,
       reason: state.fallbackReason,
+    });
+
+    this.events.updateRoute({
+      active: false,
+      lastOutcome: "error",
+      lastFallbackReason: state.fallbackReason,
+      attempts: state.attempts.length,
+    });
+    this.events.emit({
+      type: "route.failure",
+      level: "error",
+      message: `All chains exhausted for ${chainAlias}`,
+      chainAlias,
+      classification: state.fallbackReason ?? "unknown",
+      data: { attempts: state.attempts.length },
     });
 
     throw new AllChainsExhaustedError(state.attempts, state.lastError);
@@ -218,6 +259,8 @@ export class RouterEngine {
       const adapter = this.providers.get(entry.providerId);
       const started = Date.now();
 
+      this.announceAttempt(chainAlias, entry, credential, state);
+
       this.logger.info("request attempt", {
         chain: chainAlias,
         entry: entry.id,
@@ -253,6 +296,26 @@ export class RouterEngine {
           credential: credential.description,
           latencyMs,
           fallback: state.fallback,
+        });
+
+        this.events.updateRoute({
+          active: false,
+          fallback: state.fallback,
+          attempts: state.attempts.length,
+          lastOutcome: "success",
+          lastFallbackReason: state.fallbackReason,
+        });
+        this.events.emit({
+          type: "route.success",
+          level: "success",
+          message: `${credential.description} answered with ${entry.model}`,
+          chainAlias,
+          providerId: entry.providerId,
+          model: entry.model,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          proxyLabel: proxyLabel(credential.proxyUrl),
+          data: { latencyMs, fallback: state.fallback },
         });
 
         return {
@@ -298,8 +361,27 @@ export class RouterEngine {
         status: outcome.error.status,
       });
 
+      this.events.emit({
+        type: "route.failure",
+        level: classification === "temporary_provider_error" ? "warn" : "error",
+        message: `${credential.description} failed (${classification})`,
+        chainAlias,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        classification,
+        status: outcome.error.status,
+      });
+
       if (isRequestScoped(classification)) {
         this.logger.info("request scoped error; stopping rotation", { classification });
+        this.events.updateRoute({
+          active: false,
+          lastOutcome: "error",
+          lastClassification: classification,
+          attempts: state.attempts.length,
+        });
         throw new RequestScopedError(classification, outcome.error);
       }
 
@@ -337,9 +419,20 @@ export class RouterEngine {
         const retryAfter = getHeader(error.headers, "retry-after");
         const until = this.credentials.putInCooldown(credential.id, retryAfter);
         this.credentials.markFailure(credential.id, classification);
+        this.rates.recordRateLimited(credential.id);
         this.logger.info("credential cooling down", {
           credential: credential.description,
           cooldownMs: until - Date.now(),
+        });
+        this.events.emit({
+          type: "credential.cooldown",
+          level: "warn",
+          message: `${credential.description} cooling down for ${Math.round((until - Date.now()) / 1000)}s`,
+          providerId: credential.providerId,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          classification,
+          data: { cooldownUntil: until },
         });
         state.fallback = true;
         state.fallbackReason ??= classification === "quota_exhausted" ? "quota" : "rate_limit";
@@ -349,6 +442,15 @@ export class RouterEngine {
       case "credential_invalid": {
         this.credentials.markInvalid(credential.id);
         this.credentials.markFailure(credential.id, classification);
+        this.events.emit({
+          type: "credential.invalid",
+          level: "error",
+          message: `${credential.description} was rejected by the provider`,
+          providerId: credential.providerId,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          classification,
+        });
         state.fallback = true;
         state.fallbackReason ??= "credential_invalid";
         return;
@@ -423,6 +525,86 @@ export class RouterEngine {
     } catch {
       // Quota parsing is cosmetic; never fail a successful request for it.
     }
+  }
+
+  /**
+   * Publish the credential about to serve, and flag a switch when the target
+   * differs from the previous attempt of this route.
+   *
+   * This is what powers the "key changed" / "model changed" notifications: a
+   * client cannot see a rotation happen, so the gateway narrates it.
+   */
+  private announceAttempt(
+    chainAlias: string,
+    entry: ChainEntry,
+    credential: Credential,
+    state: RouteState,
+  ): void {
+    const previousRoute = this.events.routeSnapshot();
+    const switching =
+      state.attempts.length > 0 &&
+      (previousRoute.providerId !== entry.providerId ||
+        previousRoute.model !== entry.model ||
+        previousRoute.credentialId !== credential.id);
+
+    const proxy = proxyLabel(credential.proxyUrl);
+    this.rates.record(credential.id);
+
+    this.events.updateRoute({
+      active: true,
+      chainAlias,
+      providerId: entry.providerId,
+      model: entry.model,
+      credentialId: credential.id,
+      credentialDescription: credential.description,
+      maskedSecret: maskSecret(credential.secret),
+      proxyLabel: proxy,
+      fallback: state.fallback,
+      attempts: state.attempts.length,
+    });
+
+    if (switching) {
+      const changedCredential = previousRoute.credentialId !== credential.id;
+      const changedModel = previousRoute.model !== entry.model;
+      const changedProvider = previousRoute.providerId !== entry.providerId;
+      const parts = [
+        changedProvider || changedModel
+          ? `model → ${entry.providerId}/${entry.model}`
+          : undefined,
+        changedCredential ? `key → ${credential.description}` : undefined,
+      ].filter(Boolean);
+
+      this.events.emit({
+        type: "route.switch",
+        level: "warn",
+        message: `Switched: ${parts.join(", ")}`,
+        chainAlias,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        proxyLabel: proxy,
+        previous: {
+          providerId: previousRoute.providerId,
+          model: previousRoute.model,
+          credentialId: previousRoute.credentialId,
+          credentialDescription: previousRoute.credentialDescription,
+        },
+        data: { changedModel, changedCredential, changedProvider },
+      });
+    }
+
+    this.events.emit({
+      type: "route.attempt",
+      level: "info",
+      message: `Trying ${entry.providerId}/${entry.model} with ${credential.description}`,
+      chainAlias,
+      providerId: entry.providerId,
+      model: entry.model,
+      credentialId: credential.id,
+      credentialDescription: credential.description,
+      proxyLabel: proxy,
+    });
   }
 
   private attempt(

@@ -12,7 +12,11 @@ import { SettingsRepo } from "./db/settings.repo.js";
 import { ChainManager } from "./chains/manager.js";
 import { CredentialManager } from "./credentials/manager.js";
 import { CooldownManager } from "./credentials/cooldown.js";
+import { RateTracker } from "./credentials/rate.js";
 import { CredentialSelector } from "./credentials/selector.js";
+import { EventBus, type CokeyEvent } from "./events.js";
+import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
+import { modelAvailability, type ModelCatalogView } from "./models/availability.js";
 import { SecretVault } from "./crypto/secrets.js";
 import { RequestHistory, type HistoryStats } from "./history.js";
 import { Logger } from "./logger.js";
@@ -67,6 +71,8 @@ export interface ConnectProviderInput {
   secret: string;
   description: string;
   accountId?: string;
+  /** Optional egress proxy, so this key leaves through its own IP. */
+  proxyUrl?: string;
 }
 
 export interface ConnectProviderResult {
@@ -136,6 +142,10 @@ export class Cokey {
   readonly selector: CredentialSelector;
   readonly router: RouterEngine;
   readonly history: RequestHistory;
+  /** Live routing narration: what is running now, and every switch. */
+  readonly events = new EventBus();
+  /** Locally measured per-credential throughput. */
+  readonly rates = new RateTracker();
 
   private started = false;
   private sweeper?: NodeJS.Timeout;
@@ -175,7 +185,12 @@ export class Cokey {
       jitterRatio: 0.15,
     });
 
-    this.credentials = new CredentialManager(this.credentialsRepo, this.vault, this.cooldown);
+    this.credentials = new CredentialManager(
+      this.credentialsRepo,
+      this.vault,
+      this.cooldown,
+      this.rates,
+    );
     this.chains = new ChainManager(this.chainsRepo);
     this.providers = new ProviderRegistry(this.customEndpointsRepo.list());
     this.selector = new CredentialSelector(this.credentials, this.cooldown);
@@ -187,6 +202,8 @@ export class Cokey {
       this.cooldown,
       this.selector,
       this.logger,
+      this.events,
+      this.rates,
       () => this.settings.fallback,
     );
   }
@@ -205,7 +222,15 @@ export class Cokey {
     this.sweeper = setInterval(() => {
       try {
         const changed = this.credentials.refreshCooldowns();
-        if (changed > 0) this.logger.debug("cooldowns expired", { changed });
+        if (changed > 0) {
+          this.logger.debug("cooldowns expired", { changed });
+          this.events.emit({
+            type: "credential.updated",
+            level: "info",
+            message: `${changed} credential(s) left cooldown`,
+            data: { changed },
+          });
+        }
       } catch (error) {
         this.logger.error("cooldown sweep failed", { message: (error as Error).message });
       }
@@ -257,6 +282,7 @@ export class Cokey {
       accountId: input.accountId,
       secret: input.secret,
       description: input.description,
+      proxyUrl: input.proxyUrl,
     });
 
     const adapter = this.providers.get(providerId);
@@ -264,6 +290,15 @@ export class Cokey {
 
     if (validation.ok) {
       this.credentials.markVerified(credential.id);
+      this.events.emit({
+        type: "credential.verified",
+        level: "success",
+        message: `${input.description} verified for ${catalog.displayName}`,
+        providerId,
+        credentialId: credential.id,
+        credentialDescription: input.description,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+      });
     } else if (
       validation.classification === "credential_rate_limited" ||
       validation.classification === "quota_exhausted"
@@ -302,11 +337,88 @@ export class Cokey {
 
     if (validation.ok) {
       this.credentials.markVerified(credential.id);
+      this.events.emit({
+        type: "credential.verified",
+        level: "success",
+        message: `${credential.description} verified`,
+        providerId: credential.providerId,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+      });
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
+      this.events.emit({
+        type: "credential.invalid",
+        level: "error",
+        message: `${credential.description} was rejected`,
+        providerId: credential.providerId,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        classification: validation.classification,
+      });
     }
 
     return validation;
+  }
+
+  /**
+   * Point a credential at a different egress proxy, or back to direct traffic.
+   *
+   * Changing the exit IP mid-flight is safe: the next request picks up the new
+   * dispatcher, while in-flight requests keep the connection they opened.
+   */
+  setCredentialProxy(credentialId: string, proxyUrl: string | null): PublicCredential {
+    const credential = this.credentials.getOrThrow(credentialId);
+    // Validate before persisting so a typo cannot silently disable a key.
+    const parsed = parseProxyUrl(proxyUrl);
+    this.credentials.updateProxyUrl(credentialId, parsed ? parsed.href : null);
+
+    this.events.emit({
+      type: "credential.updated",
+      level: "info",
+      message: parsed
+        ? `${credential.description} now egresses via ${parsed.label}`
+        : `${credential.description} reverted to direct egress`,
+      providerId: credential.providerId,
+      credentialId,
+      credentialDescription: credential.description,
+      proxyLabel: parsed?.label,
+    });
+
+    return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
+  }
+
+  /** The live status payload: current route plus recent routing events. */
+  liveStatus(limit = 30): {
+    route: ReturnType<EventBus["routeSnapshot"]>;
+    recent: CokeyEvent[];
+    subscribers: number;
+  } {
+    return {
+      route: this.events.routeSnapshot(),
+      recent: this.events.recent(limit),
+      subscribers: this.events.subscriberCount,
+    };
+  }
+
+  /**
+   * Every curated free model, annotated with whether the user can actually use
+   * it right now.
+   *
+   * A model is only selectable once its provider has at least one working key;
+   * showing the rest greyed out is what makes the catalog honest rather than a
+   * wish list.
+   */
+  modelCatalog(): ModelCatalogView[] {
+    const counts = this.credentials.countsByProvider();
+    const working = new Map<string, string[]>();
+    for (const credential of this.credentials.listAll()) {
+      if (credential.status !== "healthy") continue;
+      const ids = working.get(credential.providerId) ?? [];
+      ids.push(credential.id);
+      working.set(credential.providerId, ids);
+    }
+    return modelAvailability(this.providers.getBuiltInCatalog(), counts, working);
   }
 
   // ---- chains -------------------------------------------------------------
