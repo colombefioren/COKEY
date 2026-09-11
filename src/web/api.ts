@@ -25,9 +25,9 @@ export class ApiError extends Error {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const token = (window as unknown as { COKEY_AUTH_TOKEN?: string }).COKEY_AUTH_TOKEN;
   const headers: Record<string, string> = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
+  const stored = localStorage.getItem("cokey_auth_token");
+  if (stored) headers.Authorization = `Bearer ${stored}`;
   if (body !== undefined) headers["content-type"] = "application/json";
 
   const response = await fetch(path, {

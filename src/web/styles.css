@@ -860,3 +860,43 @@ code {
   padding: 1px 5px;
   font-size: 12px;
 }
+
+/* ---- login screen ---------------------------------------------------------- */
+
+.login {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  background: var(--bg);
+}
+
+.login-card {
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  width: min(380px, 90vw);
+}
+
+.login-card h1 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 650;
+}
+
+.login-card .subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.login-card form {
+  display: grid;
+  gap: 10px;
+}
+
+.login-card input[type="password"] {
+  font-size: 14px;
+  padding: 10px 12px;
+  font-family: var(--mono);
+}

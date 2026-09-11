@@ -28,8 +28,6 @@ export function Settings({
   const [endpointModels, setEndpointModels] = useState("");
   const [tokenConfigured, setTokenConfigured] = useState(false);
   const [tokenBusy, setTokenBusy] = useState(false);
-  const [tokenCopied, setTokenCopied] = useState(false);
-  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
 
   useEffect(() => {
     setDraft(settings);
@@ -116,11 +114,12 @@ export function Settings({
   async function generateToken() {
     setTokenBusy(true);
     try {
-      const result = await api.generateAuthToken();
-      setGeneratedToken(result.authToken);
+      await api.generateAuthToken();
       setTokenConfigured(true);
-      setTokenCopied(false);
-      toast.ok("New API token generated. Copy it now — it will not be shown again.");
+      // Clear the browser token so the login form reappears with the new token.
+      localStorage.removeItem("cokey_auth_token");
+      toast.ok("New API token generated. The login form will show the new token.");
+      onSaved();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
     } finally {
@@ -132,9 +131,9 @@ export function Settings({
     if (!confirm("Revoke the management API token? Requests will then be allowed without authentication."))
       return;
     try {
-      await api.revokeAuthToken();
+       await api.revokeAuthToken();
       setTokenConfigured(false);
-      setGeneratedToken(null);
+      localStorage.removeItem("cokey_auth_token");
       toast.ok("API token revoked. Requests are now allowed without a bearer token.");
       onSaved();
     } catch (error) {
@@ -204,26 +203,7 @@ export function Settings({
                {tokenConfigured ? (
                  <>
                    <div className="row" style={{ gap: 8, marginTop: 4 }}>
-                     <span className="mono small">
-                       {generatedToken
-                         ? `sk-…${generatedToken.slice(-16)}`
-                         : "••••••••••••• (configured)"}
-                     </span>
-                     <button
-                       className="ghost small"
-                       onClick={async () => {
-                         if (generatedToken) {
-                           await navigator.clipboard.writeText(generatedToken);
-                           setTokenCopied(true);
-                           setTimeout(() => setTokenCopied(false), 2000);
-                           toast.ok("Token copied to clipboard");
-                         }
-                       }}
-                       disabled={!generatedToken}
-                       title={generatedToken ? "Copy to clipboard" : "Reload to copy the current token"}
-                     >
-                       {tokenCopied ? "✓ copied" : "copy"}
-                     </button>
+                     <span className="mono small">••••••••••••• (configured)</span>
                      <button
                        className="ghost small"
                        onClick={() => void generateToken()}
@@ -237,7 +217,8 @@ export function Settings({
                      </button>
                    </div>
                    <div className="small faint" style={{ marginTop: 5 }}>
-                     Send this as a <code>Bearer</code> header for /v1 and /api requests.
+                     Once configured, auth stays on. Regenerating clears your
+                     browser session — you'll log in again with the new token.
                    </div>
                  </>
                ) : (
@@ -250,8 +231,8 @@ export function Settings({
                      {tokenBusy ? "Generating…" : "Generate API token"}
                    </button>
                    <div className="small faint" style={{ marginTop: 5 }}>
-                     The gateway is currently open — no bearer token is required. Generate a token to
-                     protect it when binding to 0.0.0.0 or a LAN.
+                     The gateway is currently open — no bearer token is required.
+                     Generate a token to protect it when binding to 0.0.0.0 or a LAN.
                    </div>
                  </>
                )}
