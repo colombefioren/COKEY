@@ -171,6 +171,32 @@ export class CredentialManager {
     });
   }
 
+  /**
+   * Add upstream-reported token usage to a credential's counters.
+   *
+   * Called after a successful non-streamed response is parsed, because the
+   * counts only exist in the response body.
+   */
+  recordTokens(id: string, tokens: TokenDelta): void {
+    const inputTokens = tokens.inputTokens ?? 0;
+    const outputTokens = tokens.outputTokens ?? 0;
+    if (inputTokens === 0 && outputTokens === 0) return;
+
+    const credential = this.get(id);
+    if (!credential) return;
+
+    const usage = credential.usage;
+    this.repo.update(id, {
+      usage: JSON.stringify({
+        ...usage,
+        inputTokens: usage.inputTokens + inputTokens,
+        outputTokens: usage.outputTokens + outputTokens,
+        totalTokens: usage.totalTokens + inputTokens + outputTokens,
+      }),
+      updatedAt: Date.now(),
+    });
+  }
+
   markFailure(id: string, classification: ErrorClassification): void {
     const credential = this.getOrThrow(id);
     const usage = credential.usage;
