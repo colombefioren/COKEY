@@ -55,6 +55,55 @@ export function registerInspectCommands(cli: CAC): void {
 
   defineCommand(
     cli,
+    "models [provider]",
+    "List curated free models, marking providers that have a working key",
+    async (args, context) => {
+      const filter = args[0];
+
+      await withCokey(context, (cokey) => {
+        const views = cokey.modelCatalog().filter(
+          (view) => !filter || view.providerId === filter,
+        );
+
+        emit(context, views, () => {
+          if (views.length === 0) {
+            console.log(dim(`No catalog provider matches "${filter ?? ""}".`));
+            return;
+          }
+
+          const usable = views.filter((view) => view.available).length;
+          console.log(
+            bold(`${views.reduce((sum, view) => sum + view.models.length, 0)} free models`) +
+              dim(` · ${usable}/${views.length} providers usable`),
+          );
+          console.log("");
+
+          for (const view of views) {
+            const state = view.available
+              ? green(`${view.healthyCount} working key${view.healthyCount === 1 ? "" : "s"}`)
+              : dim("no working key");
+            console.log(
+              `${bold(view.displayName)} ${dim(`(${view.providerId})`)} · ${dim(view.freeTier.summary)} · ${state}`,
+            );
+            for (const model of view.models) {
+              const meta = [
+                model.context,
+                model.bestFor,
+                model.latencySeconds !== undefined ? `${model.latencySeconds}s` : undefined,
+              ]
+                .filter(Boolean)
+                .join(" · ");
+              console.log(`  ${model.id.padEnd(54)} ${dim(meta)}`);
+            }
+            console.log("");
+          }
+        });
+      });
+    },
+  );
+
+  defineCommand(
+    cli,
     "keys [...args]",
     "List credentials (masked), or re-verify one with `keys test <id>`",
     async (args, context) => {
@@ -100,13 +149,37 @@ export function registerInspectCommands(cli: CAC): void {
             credential.maskedSecret,
             `${credential.usage.requests} req`,
             `${credential.usage.successfulRequests} ok`,
+            `${credential.rate.requestsPerMinute}/min`,
+            credential.rate.recentlyRateLimited ? yellow("limited") : "",
+            credential.proxy.configured
+              ? cyan(`⇢ ${credential.proxy.label ?? "proxy"}`)
+              : dim("direct"),
             credential.cooldownUntil && credential.cooldownUntil > Date.now()
               ? `cooldown ${humanizeDuration(credential.cooldownUntil - Date.now())}`
               : "",
           ]);
 
-          console.log(table(["STATE", "PROVIDER", "DESCRIPTION", "KEY", "USAGE", "OK", ""], rows));
+          console.log(
+            table(
+              [
+                "STATE",
+                "PROVIDER",
+                "DESCRIPTION",
+                "KEY",
+                "USAGE",
+                "OK",
+                "RATE",
+                "",
+                "EGRESS",
+                "",
+              ],
+              rows,
+            ),
+          );
           console.log("");
+          console.log(
+            dim(`RATE is this key's own observed requests per minute, not a provider quota.`),
+          );
           console.log(
             dim(`Quota is shown per credential in the UI; "unknown" means the provider reports none.`),
           );
