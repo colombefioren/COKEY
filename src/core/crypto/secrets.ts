@@ -1,4 +1,4 @@
-import { createCipheriv, createDecipheriv, randomBytes, timingSafeEqual } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { resolveMasterKey, type MasterKeyKind, type ResolveOptions } from "./keyring.js";
 
 const ALGORITHM = "aes-256-gcm";
@@ -62,10 +62,7 @@ export class SecretVault {
 
   /** Stable, non-reversible identifier for the active key. Safe to log. */
   keyFingerprint(): string {
-    return createCipheriv(ALGORITHM, this.key, Buffer.alloc(IV_LENGTH))
-      .update("fingerprint")
-      .digest("hex")
-      .slice(0, 12);
+    return createHash("sha256").update(this.key).digest("hex").slice(0, 12);
   }
 
   /** Constant-time comparison used by tests and diagnostics. */
