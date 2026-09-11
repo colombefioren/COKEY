@@ -1,0 +1,115 @@
+import { z } from "zod";
+
+/** Enum narrowing used by the application layer. */
+export const ApiStyleSchema = z.enum(["openai", "anthropic", "google", "cohere", "cloudflare", "ollama"]);
+export const AuthSchemeSchema = z.enum(["bearer", "x-api-key", "query-param", "custom-header"]);
+export const RoutingStrategySchema = z.enum(["sequential", "round-robin"]);
+export const LogLevelSchema = z.enum(["debug", "info", "warn", "error"]);
+
+export const ChainAliasSchema = z
+  .string()
+  .min(1)
+  .max(64)
+  .regex(/^[a-z0-9][a-z0-9._-]*$/i, "Use letters, digits, dot, dash or underscore");
+
+export const ConnectProviderSchema = z.object({
+  secret: z.string().min(1, "API key is required"),
+  description: z.string().min(1, "Description is required").max(120),
+  accountId: z.string().min(1).max(200).optional(),
+});
+
+export const CreateChainSchema = z.object({
+  alias: ChainAliasSchema,
+  description: z.string().max(280).optional(),
+});
+
+export const UpdateChainSchema = z
+  .object({
+    alias: ChainAliasSchema.optional(),
+    description: z.string().max(280).nullable().optional(),
+    enabled: z.boolean().optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
+
+export const AddEntrySchema = z.object({
+  providerId: z.string().min(1),
+  model: z.string().min(1),
+  credentialIds: z.array(z.string().min(1)).min(1, "At least one credential is required"),
+  routingStrategy: RoutingStrategySchema.optional(),
+  enabled: z.boolean().optional(),
+});
+
+export const UpdateEntrySchema = z
+  .object({
+    model: z.string().min(1).optional(),
+    enabled: z.boolean().optional(),
+    routingStrategy: RoutingStrategySchema.optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
+
+export const ReorderSchema = z.object({
+  entryIds: z.array(z.string().min(1)),
+});
+
+export const MoveEntrySchema = z.object({
+  toIndex: z.number().int().min(0),
+});
+
+export const CreateCredentialSchema = z.object({
+  providerId: z.string().min(1),
+  secret: z.string().min(1),
+  description: z.string().min(1).max(120),
+  accountId: z.string().min(1).max(200).optional(),
+});
+
+export const UpdateCredentialSchema = z
+  .object({
+    description: z.string().min(1).max(120).optional(),
+    accountId: z.string().max(200).nullable().optional(),
+    secret: z.string().min(1).optional(),
+    status: z.enum(["healthy", "cooldown", "invalid", "disabled", "unverified"]).optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
+
+export const UpdateSettingsSchema = z
+  .object({
+    port: z.number().int().min(0).max(65535).optional(),
+    host: z.string().min(1).optional(),
+    logLevel: LogLevelSchema.optional(),
+    showFreeProviderNudger: z.boolean().optional(),
+    freeProviderTarget: z.number().int().min(0).max(50).optional(),
+    allowPrivateEndpoints: z.boolean().optional(),
+    fallback: z
+      .object({
+        enabled: z.boolean().optional(),
+        credentialFallback: z.boolean().optional(),
+        entryFallback: z.boolean().optional(),
+        maxRetriesPerCredential: z.number().int().min(0).max(10).optional(),
+        cooldownAutomatic: z.boolean().optional(),
+      })
+      .optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
+
+export const CustomEndpointSchema = z.object({
+  displayName: z.string().min(1).max(120),
+  baseUrl: z.string().url(),
+  apiStyle: ApiStyleSchema.default("openai"),
+  authScheme: AuthSchemeSchema.default("bearer"),
+  models: z.array(z.string().min(1)).default([]),
+});
+
+export const ChatCompletionSchema = z.object({
+  model: z.string().min(1),
+  messages: z
+    .array(
+      z
+        .object({
+          role: z.string().min(1),
+          content: z.unknown().optional(),
+        })
+        .passthrough(),
+    )
+    .min(1, "messages must contain at least one message"),
+  stream: z.boolean().optional(),
+}).passthrough();
