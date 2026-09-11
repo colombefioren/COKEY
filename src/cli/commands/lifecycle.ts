@@ -17,7 +17,7 @@ import {
   writePidFile,
   type CommandContext,
 } from "../context.js";
-import { bold, bullet, cyan, dim, formatClock, green, humanizeDuration, red, statusGlyph, yellow } from "../format.js";
+import { bold, bullet, cyan, dim, formatClock, green, humanizeDuration, red, yellow } from "../format.js";
 
 /** Register lifecycle commands: start, stop, status, config, doctor. */
 export function registerLifecycleCommands(cli: CAC): void {
