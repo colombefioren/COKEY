@@ -25,9 +25,14 @@ export class ApiError extends Error {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const token = (window as unknown as { COKEY_AUTH_TOKEN?: string }).COKEY_AUTH_TOKEN;
+  const headers: Record<string, string> = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  if (body !== undefined) headers["content-type"] = "application/json";
+
   const response = await fetch(path, {
     method,
-    headers: body === undefined ? {} : { "content-type": "application/json" },
+    headers,
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
@@ -55,9 +60,7 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 export const api = {
   health: () => request<{ ok: boolean; version: string; dataDir: string }>("GET", "/health"),
   stats: () => request<Stats>("GET", "/api/stats"),
-  nudge: () => request<Nudge>("GET", "/api/nudge"),
-
-  providers: () => request<ProviderStatus[]>("GET", "/api/providers"),
+  nudge: () => request<Nudge>("GET", "/api/nudge"),  providers: () => request<ProviderStatus[]>("GET", "/api/providers"),
   connectProvider: (
     providerId: string,
     body: { secret: string; description: string; accountId?: string; proxyUrl?: string },

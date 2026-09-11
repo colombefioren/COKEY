@@ -7,7 +7,11 @@ function isPublic(url: string): boolean {
   if (url === "/" || url === "/health") return true;
   if (url.startsWith("/assets/")) return true;
   if (url === "/favicon.ico" || url === "/logo.svg") return true;
-  // The single-page UI is public; the API it calls is not.
+  // Auth-token management endpoints are always public — even when a token is
+  // configured, anyone reaching the gateway can generate or revoke it. This
+  // avoids the chicken-and-egg of needing the token to revoke itself.
+  if (url === "/api/auth-token" || url.startsWith("/api/auth-token/")) return true;
+  // The single-page UI page is public; the API calls it makes are not.
   return PUBLIC_PREFIXES.includes(url) && !url.startsWith("/api") && !url.startsWith("/v1");
 }
 
@@ -17,9 +21,14 @@ function isPublic(url: string): boolean {
  * COKEY binds to loopback by default, so this is opt-in hardening for users who
  * expose the port to a LAN. When no token is configured, every request is
  * allowed — otherwise the gateway would be unusable out of the box.
+ *
+ * The token is read dynamically on each request (via `tokenSupplier`) so that
+ * tokens generated or revoked at runtime — without a server restart — take
+ * effect immediately.
  */
-export function makeAuthHook(expectedToken?: string): onRequestHookHandler {
+export function makeAuthHook(tokenSupplier: () => string | undefined): onRequestHookHandler {
   return async function authHook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+    const expectedToken = tokenSupplier();
     if (!expectedToken) return;
     if (isPublic(request.url)) return;
 

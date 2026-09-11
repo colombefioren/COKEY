@@ -54,14 +54,14 @@ export async function createServer(cokey: Cokey, options: ServerOptions = {}): P
     disableRequestLogging: true,
   });
 
-  app.addHook("onRequest", makeAuthHook(cokey.settings.authToken));
+  app.addHook("onRequest", makeAuthHook(() => cokey.settings.authToken));
 
   registerOpenAiRoutes(app, cokey);
   registerManagementRoutes(app, cokey);
   registerStatsRoutes(app, cokey);
 
   if (options.serveUi !== false) {
-    registerUi(app);
+    registerUi(app, cokey);
   }
 
   app.setNotFoundHandler((request, reply) => {
@@ -72,8 +72,11 @@ export async function createServer(cokey: Cokey, options: ServerOptions = {}): P
       });
     }
     if (request.method === "GET" && options.serveUi !== false) {
-      const index = readUiFile("index.html");
-      if (index) return reply.type(MIME_TYPES[".html"]!).send(index);
+      const raw = readUiFile("index.html");
+      if (raw) {
+        const html = injectAuthToken(raw, cokey.settings.authToken);
+        return reply.type(MIME_TYPES[".html"]!).send(html);
+      }
     }
     return reply.code(404).send({ error: { message: "Not found", type: "not_found" } });
   });
@@ -84,16 +87,23 @@ export async function createServer(cokey: Cokey, options: ServerOptions = {}): P
 /**
  * Serve the built single-page app.
  *
+ * When an auth token is configured, it is injected into the HTML as an inline
+ * script (`window.COKEY_AUTH_TOKEN`). This lets the UI authenticate its own
+ * API calls without a separate login flow. The token is only useful from the
+ * same origin — loopback-by-default means this is safe for local use, and on a
+ * LAN the attacker would need to already serve the page to read it.
+ *
  * Only files under the UI directory are reachable: the resolved path is
  * checked against the root after normalisation, which blocks `../` traversal.
  */
-function registerUi(app: FastifyInstance): void {
+function registerUi(app: FastifyInstance, cokey: Cokey): void {
   const uiDir = resolveUiDirectory();
 
   app.get("/", async (_request, reply) => {
-    const index = readUiFile("index.html");
-    if (!index) return notBuilt(reply);
-    return reply.type(MIME_TYPES[".html"]!).send(index);
+    const raw = readUiFile("index.html");
+    if (!raw) return notBuilt(reply);
+    const html = injectAuthToken(raw, cokey.settings.authToken);
+    return reply.type(MIME_TYPES[".html"]!).send(html);
   });
 
   app.get("/assets/*", async (request, reply) => {
@@ -121,6 +131,19 @@ function readUiFile(relative: string, uiDir = resolveUiDirectory()): Buffer | un
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Inject the auth token into the built HTML as an inline script.
+ *
+ * The token is JSON-stringified (safe in HTML) and only present when configured.
+ * When absent, the script sets an empty string so the UI always has a defined value.
+ */
+function injectAuthToken(html: Buffer, token: string | undefined): Buffer {
+  const safe = (token ?? "").replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/"/g, "\\u0022");
+  const marker = `<!--__COKEY_AUTH_TOKEN__-->`;
+  const injection = `<script>window.COKEY_AUTH_TOKEN="${safe}";</script>`;
+  return Buffer.from(String(html).replace(marker, injection));
 }
 
 function notBuilt(reply: FastifyReply): unknown {
