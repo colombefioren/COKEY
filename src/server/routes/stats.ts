@@ -1,5 +1,5 @@
 import type { FastifyInstance } from "fastify";
-import { COKEY_VERSION } from "../../index.js";
+import { COKEY_VERSION } from "../../version.js";
 import type { Cokey } from "../../core/cokey.js";
 import { UpdateSettingsSchema } from "../../core/validation/schemas.js";
 import { withErrors } from "./http-errors.js";

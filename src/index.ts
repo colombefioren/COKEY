@@ -20,7 +20,7 @@
  * ```
  */
 
-export const COKEY_VERSION = "0.1.0";
+export { COKEY_VERSION } from "./version.js";
 
 // Application facade
 export { Cokey, BadCredentialError } from "./core/cokey.js";
