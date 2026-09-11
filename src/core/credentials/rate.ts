@@ -31,7 +31,8 @@ export class RateTracker {
   record(credentialId: string, at = Date.now()): void {
     const entry = this.entryFor(credentialId);
     entry.stamps.push(at);
-    entry.lastRequestAt = at;
+    // Track the newest observed time, not merely the last call to record().
+    entry.lastRequestAt = Math.max(entry.lastRequestAt ?? 0, at);
     this.prune(entry, at);
   }
 
@@ -91,10 +92,12 @@ export class RateTracker {
   }
 
   private prune(entry: RateEntry, now: number): void {
+    if (entry.stamps.length === 0) return;
     const cutoff = now - WINDOW_MS;
-    // Timestamps are appended in order, so trimming the head is enough.
-    let drop = 0;
-    while (drop < entry.stamps.length && entry.stamps[drop]! <= cutoff) drop += 1;
-    if (drop > 0) entry.stamps.splice(0, drop);
+    // Timestamps are normally appended in order, but filter rather than
+    // head-trim so an out-of-order or clock-adjusted value cannot leave the
+    // window silently over-counted.
+    const kept = entry.stamps.filter((at) => at > cutoff);
+    if (kept.length !== entry.stamps.length) entry.stamps = kept;
   }
 }
