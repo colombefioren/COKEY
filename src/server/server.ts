@@ -29,7 +29,10 @@ const MIME_TYPES: Record<string, string> = {
 /** Locate the built UI, whether running from `dist/` or from source. */
 export function resolveUiDirectory(): string {
   const here = dirname(fileURLToPath(import.meta.url));
-  const candidates = [join(here, "..", "web"), join(here, "..", "..", "dist", "web")];
+  // Prefer the built UI (dist/web) which has compiled assets the server can
+  // actually serve. The source directory only contains index.html referencing
+  // main.tsx, which requires the Vite dev server — not available from tsx.
+  const candidates = [join(here, "..", "..", "dist", "web"), join(here, "..", "web")];
   for (const candidate of candidates) {
     if (existsSync(join(candidate, "index.html"))) return resolve(candidate);
   }
