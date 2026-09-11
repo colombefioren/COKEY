@@ -58,7 +58,10 @@ export function withErrors(
 ): RouteHandlerMethod {
   return async function wrapped(request, reply) {
     try {
-      await handler(request, reply);
+      // The returned value IS the response body: Fastify only serialises what
+      // an async handler returns, so dropping it would answer 200 with an
+      // empty payload.
+      return await handler(request, reply);
     } catch (error) {
       const status = statusFor(error);
       if (status >= 500) {
@@ -68,6 +71,7 @@ export function withErrors(
       const body = payload.error as Record<string, unknown>;
       if (error instanceof BadCredentialError) body.classification = error.classification;
       await reply.code(status).send(payload);
+      return reply;
     }
   };
 }
