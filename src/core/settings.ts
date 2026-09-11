@@ -18,6 +18,14 @@ export class InvalidSettingError extends Error {
 }
 
 /**
+ * A settings patch may touch individual fallback knobs without replacing the
+ * whole policy object, which is what the Settings screen sends.
+ */
+export type SettingsPatch = Partial<Omit<Settings, "fallback">> & {
+  fallback?: Partial<FallbackPolicy>;
+};
+
+/**
  * Owns the gateway configuration.
  *
  * Precedence, lowest to highest: built-in defaults → persisted row →
@@ -45,7 +53,7 @@ export class SettingsService {
   }
 
   /** Merge a validated patch and persist it. */
-  update(patch: Partial<Settings>): Settings {
+  update(patch: SettingsPatch): Settings {
     const merged = validateSettings({
       ...this.current,
       ...patch,
