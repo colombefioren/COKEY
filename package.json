@@ -1,0 +1,80 @@
+{
+  "name": "cokey",
+  "version": "0.1.0",
+  "description": "Local LLM credential pool and chain-fallback gateway",
+  "keywords": [
+    "llm",
+    "gateway",
+    "failover",
+    "openai-compatible",
+    "credential-pool",
+    "router"
+  ],
+  "type": "module",
+  "license": "MIT",
+  "author": "COKEY contributors",
+  "homepage": "https://github.com/colombefioren/COKEY#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/colombefioren/COKEY.git"
+  },
+  "bugs": {
+    "url": "https://github.com/colombefioren/COKEY/issues"
+  },
+  "bin": {
+    "cokey": "./dist/cli/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=20.10"
+  },
+  "scripts": {
+    "build": "npm run build:web && npm run build:server",
+    "build:server": "tsc -p tsconfig.json",
+    "build:web": "vite build",
+    "dev": "tsx src/cli/index.ts",
+    "dev:web": "vite",
+    "start": "node dist/cli/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.test.json --noEmit && tsc -p src/web/tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\""
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.10.0",
+    "cac": "^6.7.14",
+    "fastify": "^4.28.1",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^9.14.0",
+    "prettier": "^3.3.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.13.0",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  }
+}
