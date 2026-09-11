@@ -35,6 +35,10 @@ export type {
   FreeProviderNudge,
 } from "./core/cokey.js";
 
+// HTTP server
+export { createServer, startServer, resolveUiDirectory } from "./server/server.js";
+export type { ServerOptions, StartedServer } from "./server/server.js";
+
 // Routing
 export {
   RouterEngine,
