@@ -37,6 +37,19 @@ export interface TokenUsage {
 }
 
 /**
+ * Identity of the completion currently being translated.
+ *
+ * Upstreams that do not echo the user-visible model name need it from the
+ * chain entry, and reusing one stable id keeps a translated stream consistent
+ * across its chunks.
+ */
+export interface TransformContext {
+  model: string;
+  requestId: string;
+  created: number;
+}
+
+/**
  * The contract every provider integration implements.
  *
  * Nearly all catalog entries are served by {@link OpenAICompatibleAdapter}; a
@@ -83,13 +96,16 @@ export interface ProviderAdapter {
    * Translate a non-streamed upstream body into OpenAI chat-completion shape.
    * Absent means "already OpenAI-compatible, forward verbatim".
    */
-  transformResponse?(body: unknown): unknown;
+  transformResponse?(body: unknown, context: TransformContext): unknown;
 
   /**
    * Translate an upstream byte stream into OpenAI `text/event-stream` framing.
    * Absent means "already SSE, pipe verbatim".
    */
-  transformStream?(body: ReadableStream<Uint8Array>): ReadableStream<Uint8Array>;
+  transformStream?(
+    body: ReadableStream<Uint8Array>,
+    context: TransformContext,
+  ): ReadableStream<Uint8Array>;
 
   /** Resolve the base URL for an entry, expanding templated segments. */
   resolveBaseUrl(entry: ChainEntry, credential: Credential): string;

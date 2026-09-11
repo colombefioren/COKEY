@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { COKEY_VERSION } from "../../version.js";
 import type { Cokey } from "../../core/cokey.js";
 import { UpdateSettingsSchema } from "../../core/validation/schemas.js";
+import { exportConfig } from "../../core/config/export-import.js";
 import { withErrors } from "./http-errors.js";
 
 /** Reporting, configuration and health endpoints. */
@@ -61,6 +62,20 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     withErrors(() => {
       cokey.settingsService.reset();
       return publicSettings(cokey);
+    }),
+  );
+
+  /**
+   * Portable configuration export.
+   *
+   * Built from `exportConfig`, which deliberately contains no secrets — the
+   * Settings screen links straight to this endpoint.
+   */
+  app.get(
+    "/api/config/export",
+    withErrors((_request, reply) => {
+      reply.header("content-disposition", 'attachment; filename="cokey-export.json"');
+      return exportConfig(cokey);
     }),
   );
 
