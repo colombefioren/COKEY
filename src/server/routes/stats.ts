@@ -3,6 +3,7 @@ import { COKEY_VERSION } from "../../version.js";
 import type { Cokey } from "../../core/cokey.js";
 import { UpdateSettingsSchema } from "../../core/validation/schemas.js";
 import { exportConfig } from "../../core/config/export-import.js";
+import { streamEvents } from "../streaming/events.js";
 import { withErrors } from "./http-errors.js";
 
 /** Reporting, configuration and health endpoints. */
@@ -21,6 +22,28 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     "/api/stats",
     withErrors(() => cokey.stats()),
   );
+
+  /**
+   * What the router is doing right now.
+   *
+   * The route snapshot names the model, the key and the proxy currently in
+   * use; `recent` carries the last switch/cooldown notifications so a UI that
+   * reloads does not lose the story.
+   */
+  app.get(
+    "/api/status",
+    withErrors((request) => {
+      const query = request.query as { limit?: string };
+      const limit = query.limit ? Number(query.limit) : 30;
+      return cokey.liveStatus(Number.isFinite(limit) ? limit : 30);
+    }),
+  );
+
+  /** Server-sent events for live routing feedback. */
+  app.get("/api/events", async (request, reply) => {
+    await streamEvents(reply, cokey.events);
+    return reply;
+  });
 
   app.get(
     "/api/requests",

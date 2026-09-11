@@ -8,6 +8,7 @@ import {
   CreateCredentialSchema,
   CustomEndpointSchema,
   MoveEntrySchema,
+  ProxyUrlSchema,
   ReorderSchema,
   UpdateChainSchema,
   UpdateCredentialSchema,
@@ -16,12 +17,20 @@ import {
 import { withErrors } from "./http-errors.js";
 import { z } from "zod";
 
+/**
+ * Management API.
+ *
+ * Every response here is built from `PublicCredential` projections — there is
+ * no code path in this file that can return a stored secret.
+ */
 const AttachCredentialSchema = z
   .object({
     credentialId: z.string().min(1).optional(),
     secret: z.string().min(1).optional(),
     description: z.string().min(1).max(120).optional(),
     accountId: z.string().min(1).max(200).optional(),
+    /** Optional egress proxy bound to the new key. */
+    proxyUrl: ProxyUrlSchema.optional(),
     /** Keep an unverifiable credential when the provider is unreachable. */
     addAnyway: z.boolean().optional(),
   })
@@ -36,12 +45,33 @@ const AttachCredentialSchema = z
  * no code path in this file that can return a stored secret.
  */
 export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): void {
+  // ---- model catalog ------------------------------------------------------
+
+  /**
+   * The curated free-model catalog, annotated with availability.
+   *
+   * A model is `selectable` only when its provider has a healthy credential,
+   * so the picker can never offer a model that has no key behind it.
+   */
+  app.get(
+    "/api/models",
+    withErrors(() => {
+      const providers = cokey.modelCatalog();
+      return {
+        providers,
+        total: providers.reduce((sum, view) => sum + view.models.length, 0),
+        available: providers.filter((view) => view.available).length,
+      };
+    }),
+  );
+
   // ---- providers ----------------------------------------------------------
 
   app.get(
     "/api/providers",
     withErrors(() => cokey.providerStatuses()),
   );
+
 
   app.post(
     "/api/providers/:id/connect",
@@ -253,6 +283,7 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         accountId: body.accountId,
         secret: body.secret!,
         description: body.description ?? "Untitled",
+        proxyUrl: body.proxyUrl,
       });
 
       const validation = await cokey.verifyCredential(entry.providerId, entry.model, credential);
@@ -341,6 +372,9 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       if (body.accountId !== undefined) cokey.credentials.updateAccountId(id, body.accountId);
       if (body.secret !== undefined) cokey.credentials.rotateSecret(id, body.secret);
       if (body.status !== undefined) cokey.credentials.setStatus(id, body.status);
+      // Proxy changes go through the facade so validation and the live event
+      // feed stay in one place.
+      if (body.proxyUrl !== undefined) return cokey.setCredentialProxy(id, body.proxyUrl);
 
       return cokey.credentials.toPublic(cokey.credentials.getOrThrow(id));
     }),
