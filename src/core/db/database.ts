@@ -132,6 +132,10 @@ export class DatabaseClient {
     this.db.pragma("journal_mode = WAL");
     this.db.pragma("foreign_keys = ON");
     this.db.pragma("busy_timeout = 5000");
+    // Recover from a crashed writer: checkpoint any leftover WAL frames so
+    // the main database file stays tidy and reads from an external connection
+    // (e.g. `sqlite3 .cokey/cokey.db`) always see committed data.
+    this.db.pragma("wal_checkpoint(TRUNCATE)");
     runMigrations(this.db);
   }
 
