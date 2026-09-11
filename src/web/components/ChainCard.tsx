@@ -3,7 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ChainView, PublicCredential } from "../types.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
 import { AddEntryModal } from "./AddEntryModal.js";
-import { StatusDot } from "./Primitives.js";
+import { RateLabel, StatusDot } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 
 /**
@@ -264,9 +264,26 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                 <span className="badge bad">no keys</span>
               ) : (
                 entry.credentials.map((credential) => (
-                  <span key={credential.id} className="cred-chip">
+                  <span
+                    key={credential.id}
+                    className="cred-chip"
+                    title={
+                      (credential.proxy.configured
+                        ? `egress via ${credential.proxy.label ?? "proxy"}`
+                        : "direct egress") +
+                      ` · ${credential.rate.requestsPerMinute} req/min (last 60s)` +
+                      (credential.rate.recentlyRateLimited ? " · rate limited recently" : "")
+                    }
+                  >
                     <StatusDot status={credential.status} />
                     {credential.description}
+                    <span className="mono small faint">{credential.maskedSecret}</span>
+                    <RateLabel rate={credential.rate} compact />
+                    {credential.proxy.label ? (
+                      <span className="chip-proxy mono small" title={`egress via ${credential.proxy.label}`}>
+                        ⇢ {credential.proxy.label}
+                      </span>
+                    ) : null}
                     <button
                       className="ghost"
                       style={{ padding: "0 2px" }}

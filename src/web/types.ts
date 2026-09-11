@@ -33,6 +33,29 @@ export interface UsageStats {
   cooldownCount: number;
 }
 
+/** Proxy state of a credential. Never carries the proxy's own credentials. */
+export interface CredentialProxyInfo {
+  configured: boolean;
+  /** `host:port` of the egress proxy. */
+  label?: string;
+}
+
+/**
+ * Locally measured throughput for one key.
+ *
+ * This is what makes two keys from the same provider distinguishable: the
+ * provider's own quota is often unknown or identical across keys, but the
+ * observed rate is always specific to the credential.
+ */
+export interface CredentialRate {
+  requestsPerMinute: number;
+  requestsLast5Minutes: number;
+  recentlyRateLimited: boolean;
+  /** 12 buckets of 5 seconds covering the last minute, oldest first. */
+  sparkline: number[];
+  lastRequestAt?: number;
+}
+
 export interface PublicCredential {
   id: string;
   providerId: string;
@@ -47,6 +70,8 @@ export interface PublicCredential {
   quota?: QuotaInfo;
   cooldownUntil?: number;
   consecutiveFailures: number;
+  proxy: CredentialProxyInfo;
+  rate: CredentialRate;
 }
 
 export interface ChainEntryView {
@@ -176,4 +201,98 @@ export interface Nudge {
 export interface ConnectResult {
   credential: PublicCredential;
   validation: ValidationResult;
+}
+
+/** What the router is doing right now. */
+export interface LiveRouteSnapshot {
+  active: boolean;
+  chainAlias?: string;
+  providerId?: string;
+  model?: string;
+  credentialId?: string;
+  credentialDescription?: string;
+  maskedSecret?: string;
+  proxyLabel?: string;
+  fallback: boolean;
+  attempts: number;
+  startedAt?: number;
+  updatedAt: number;
+  lastOutcome?: "success" | "error";
+  lastClassification?: string;
+  lastFallbackReason?: string;
+}
+
+/** The target a switch moved away from. */
+export interface RouteTarget {
+  providerId?: string;
+  model?: string;
+  credentialId?: string;
+  credentialDescription?: string;
+}
+
+/** One routing notification, streamed over SSE. */
+export interface CokeyEvent {
+  id: string;
+  type:
+    | "route.start"
+    | "route.attempt"
+    | "route.switch"
+    | "route.success"
+    | "route.failure"
+    | "credential.cooldown"
+    | "credential.invalid"
+    | "credential.verified"
+    | "credential.updated"
+    | "chain.updated"
+    | "models.updated";
+  at: number;
+  level: "info" | "success" | "warn" | "error";
+  message: string;
+  chainAlias?: string;
+  providerId?: string;
+  model?: string;
+  credentialId?: string;
+  credentialDescription?: string;
+  previous?: RouteTarget;
+  classification?: string;
+  status?: number;
+  proxyLabel?: string;
+  data?: Record<string, unknown>;
+}
+
+export interface StatusResponse {
+  route: LiveRouteSnapshot;
+  recent: CokeyEvent[];
+  subscribers: number;
+}
+
+/** A curated free model, selectable only when its provider has a working key. */
+export interface SelectableModel {
+  id: string;
+  providerId: string;
+  context?: string;
+  bestFor?: string;
+  latencySeconds?: number;
+  selectable: boolean;
+}
+
+export interface ModelCatalogView {
+  providerId: string;
+  displayName: string;
+  baseUrl: string;
+  apiStyle: string;
+  signupUrl: string;
+  docsUrl?: string;
+  freeTier: { advertised: boolean; summary: string; quotaSource: string };
+  available: boolean;
+  credentialCount: number;
+  healthyCount: number;
+  credentialIds: string[];
+  models: SelectableModel[];
+}
+
+export interface ModelsResponse {
+  providers: ModelCatalogView[];
+  total: number;
+  available: number;
 }

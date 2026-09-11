@@ -2,19 +2,22 @@ import { useCallback, useEffect, useState } from "react";
 import { api } from "./api.js";
 import type { Nudge, ProviderStatus, PublicCredential, Settings as SettingsModel } from "./types.js";
 import { ToastProvider } from "./components/Toast.js";
+import { LiveStatus } from "./components/LiveStatus.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
 import { AddChain } from "./pages/AddChain.js";
+import { Models } from "./pages/Models.js";
 import { Providers } from "./pages/Providers.js";
 import { Keys } from "./pages/Keys.js";
 import { Requests } from "./pages/Requests.js";
 import { Settings } from "./pages/Settings.js";
 
-type Tab = "dashboard" | "chains" | "add" | "providers" | "keys" | "requests" | "settings";
+type Tab = "dashboard" | "chains" | "add" | "models" | "providers" | "keys" | "requests" | "settings";
 
 const TABS: Array<[Tab, string]> = [
   ["dashboard", "Dashboard"],
   ["chains", "Chains"],
+  ["models", "Models"],
   ["add", "Add chain"],
   ["providers", "Providers"],
   ["keys", "Keys"],
@@ -94,7 +97,7 @@ function Shell() {
           ))}
         </nav>
         <div className="topbar-meta">
-          <span>● running</span>
+          <LiveStatus />
           {version ? <span>v{version}</span> : null}
           {dataDir ? <span title={dataDir}>{dataDir}</span> : null}
           <a href="/v1/models" target="_blank" rel="noreferrer">
@@ -125,6 +128,8 @@ function Shell() {
             }}
           />
         ) : null}
+
+        {tab === "models" ? <Models refreshKey={refreshKey} onChanged={bump} /> : null}
 
         {tab === "providers" ? <Providers refreshKey={refreshKey} onChanged={bump} /> : null}
 

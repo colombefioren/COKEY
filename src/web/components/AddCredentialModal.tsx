@@ -25,6 +25,7 @@ export function AddCredentialModal({
   const [description, setDescription] = useState("");
   const [secret, setSecret] = useState("");
   const [accountId, setAccountId] = useState("");
+  const [proxyUrl, setProxyUrl] = useState("");
   const [candidates, setCandidates] = useState<PublicCredential[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [busy, setBusy] = useState(false);
@@ -75,6 +76,9 @@ export function AddCredentialModal({
         description: description.trim(),
         secret: secret.trim(),
         ...(needsAccountId && accountId.trim() ? { accountId: accountId.trim() } : {}),
+        // A distinct proxy per key is what makes several keys from one provider
+        // fail over independently instead of sharing an IP-level limit.
+        ...(proxyUrl.trim() ? { proxyUrl: proxyUrl.trim() } : {}),
       });
       setResult(response.validation);
       toast.ok(`Verified and attached to ${entry.providerId}/${entry.model}`);
@@ -173,6 +177,20 @@ export function AddCredentialModal({
               />
             </div>
           ) : null}
+
+          <div className="field">
+            <label htmlFor="credential-proxy">Egress proxy (optional)</label>
+            <input
+              id="credential-proxy"
+              value={proxyUrl}
+              placeholder="socks5://user:pass@host:1080"
+              onChange={(event) => setProxyUrl(event.target.value)}
+            />
+            <span className="small faint">
+              Give each key its own exit IP so their rate limits are independent. Leave empty for direct
+              egress.
+            </span>
+          </div>
 
           {busy ? <div className="verify pending">Verifying with {entry.providerId}…</div> : null}
           {result?.ok ? (

@@ -1,6 +1,7 @@
 import type {
   ChainView,
   ConnectResult,
+  ModelsResponse,
   Nudge,
   ProviderCatalogEntry,
   ProviderStatus,
@@ -8,6 +9,7 @@ import type {
   RequestLogEntry,
   Settings,
   Stats,
+  StatusResponse,
   ValidationResult,
 } from "./types.js";
 
@@ -56,8 +58,24 @@ export const api = {
   nudge: () => request<Nudge>("GET", "/api/nudge"),
 
   providers: () => request<ProviderStatus[]>("GET", "/api/providers"),
-  connectProvider: (providerId: string, body: { secret: string; description: string; accountId?: string }) =>
-    request<ConnectResult>("POST", `/api/providers/${encodeURIComponent(providerId)}/connect`, body),
+  connectProvider: (
+    providerId: string,
+    body: { secret: string; description: string; accountId?: string; proxyUrl?: string },
+  ) => request<ConnectResult>("POST", `/api/providers/${encodeURIComponent(providerId)}/connect`, body),
+
+  /**
+   * The curated free-model catalog with availability folded in.
+   *
+   * `selectable` is false for every model whose provider has no healthy key, so
+   * the UI can show the whole list while only allowing usable picks.
+   */
+  models: () => request<ModelsResponse>("GET", "/api/models"),
+
+  /** Current route plus recent routing events. */
+  status: (limit = 30) => request<StatusResponse>("GET", `/api/status?limit=${limit}`),
+
+  /** URL of the live routing event stream, consumed with EventSource. */
+  eventsUrl: () => "/api/events",
 
   chains: () => request<ChainView[]>("GET", "/api/chains"),
   createChain: (body: { alias: string; description?: string }) =>
@@ -84,7 +102,14 @@ export const api = {
 
   addEntryCredential: (
     entryId: string,
-    body: { credentialId?: string; secret?: string; description?: string; accountId?: string; addAnyway?: boolean },
+    body: {
+      credentialId?: string;
+      secret?: string;
+      description?: string;
+      accountId?: string;
+      proxyUrl?: string;
+      addAnyway?: boolean;
+    },
   ) =>
     request<{ credential: PublicCredential; validation: ValidationResult; attached: boolean; error?: { message: string } }>(
       "POST",
@@ -97,7 +122,14 @@ export const api = {
   credentials: () => request<PublicCredential[]>("GET", "/api/credentials"),
   updateCredential: (
     id: string,
-    body: { description?: string; accountId?: string | null; secret?: string; status?: string },
+    body: {
+      description?: string;
+      accountId?: string | null;
+      secret?: string;
+      status?: string;
+      /** `null` clears the proxy and restores direct egress. */
+      proxyUrl?: string | null;
+    },
   ) => request<PublicCredential>("PATCH", `/api/credentials/${id}`, body),
   deleteCredential: (id: string) => request<{ ok: boolean }>("DELETE", `/api/credentials/${id}`),
   testCredential: (id: string) => request<ValidationResult>("POST", `/api/credentials/${id}/test`),

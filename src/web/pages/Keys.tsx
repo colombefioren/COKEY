@@ -1,7 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, timeAgo } from "../api.js";
 import type { PublicCredential } from "../types.js";
-import { Empty, Panel, QuotaLabel, StatusBadge, formatDuration, formatNumber } from "../components/Primitives.js";
+import {
+  Empty,
+  Panel,
+  QuotaLabel,
+  RateLabel,
+  StatusBadge,
+  formatDuration,
+  formatNumber,
+} from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
 /** Credential inventory: masked secrets only, never the raw value. */
@@ -49,6 +57,36 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
     }
   }
 
+  /**
+   * Bind or clear this key's egress proxy.
+   *
+   * Two keys from one provider only fail over independently when they leave
+   * through different IPs, so this is the difference between a pool and a
+   * queue of keys sharing one rate limit.
+   */
+  async function editProxy(credential: PublicCredential) {
+    const current = credential.proxy.label ? `socks5://…@${credential.proxy.label}` : "";
+    const answer = window.prompt(
+      `Egress proxy for “${credential.description}”\n\n` +
+        "Leave empty to restore direct egress.\n" +
+        "Examples: socks5://user:pass@host:1080 · http://host:8080",
+      current,
+    );
+    if (answer === null) return;
+
+    // A masked placeholder means "keep the existing proxy".
+    if (answer === current && credential.proxy.configured) return;
+
+    try {
+      await api.updateCredential(credential.id, { proxyUrl: answer.trim() ? answer.trim() : null });
+      toast.ok(answer.trim() ? "Proxy updated" : "Proxy cleared");
+      await load();
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    }
+  }
+
   async function remove(credential: PublicCredential) {
     if (!confirm(`Delete credential “${credential.description}”? It is detached from every chain.`))
       return;
@@ -77,6 +115,8 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
               <th>Provider</th>
               <th>Description</th>
               <th>Key</th>
+              <th>Rate / min</th>
+              <th>Egress</th>
               <th>Usage</th>
               <th>Quota</th>
               <th>Last used</th>
@@ -97,6 +137,30 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
                 <td className="mono small">{credential.providerId}</td>
                 <td>{credential.description}</td>
                 <td className="mono small">{credential.maskedSecret}</td>
+                <td>
+                  <RateLabel rate={credential.rate} />
+                </td>
+                <td className="small">
+                  {credential.proxy.configured ? (
+                    <button
+                      className="ghost mono small"
+                      style={{ padding: "2px 4px" }}
+                      title="Change or clear this key's egress proxy"
+                      onClick={() => void editProxy(credential)}
+                    >
+                      {credential.proxy.label ?? "proxy"} ↗
+                    </button>
+                  ) : (
+                    <button
+                      className="ghost small"
+                      style={{ padding: "2px 4px" }}
+                      title="Route this key through its own SOCKS5/HTTP proxy"
+                      onClick={() => void editProxy(credential)}
+                    >
+                      direct
+                    </button>
+                  )}
+                </td>
                 <td className="small muted">
                   {formatNumber(credential.usage.requests)} req ·{" "}
                   {formatNumber(credential.usage.successfulRequests)} ok
