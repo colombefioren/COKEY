@@ -108,7 +108,7 @@ function createChain(cokey: Cokey, context: CommandContext, alias?: string): voi
     alias: name,
     description: typeof context.description === "string" ? context.description : undefined,
   });
-  emit(context, chain, () => console.log(green(`Created chain ${bold(chain.alias)} (${chain.id})`)));
+  emit(context, chain, () => console.log(green(`Created chain ${bold(chain.alias)} (${chain.id}) — use ${chain.alias} as the model id.`)));
 }
 
 function deleteChain(cokey: Cokey, context: CommandContext, alias?: string): void {

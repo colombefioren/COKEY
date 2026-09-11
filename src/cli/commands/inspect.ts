@@ -105,11 +105,23 @@ export function registerInspectCommands(cli: CAC): void {
   defineCommand(
     cli,
     "keys [...args]",
-    "List credentials (masked), or re-verify one with `keys test <id>`",
+    "List credentials, or: create (management API key), test <id>",
     async (args, context) => {
       const [action, id] = args;
 
       await withCokey(context, async (cokey) => {
+        if (action === "create") {
+          const token = cokey.generateAuthToken();
+          emit(context, { authToken: token, authTokenConfigured: true }, () => {
+            console.log(green(`Generated management API token.`));
+            console.log(dim("This token authenticates /v1 and /api requests."));
+            console.log(dim("Save it now — it is only shown once."));
+            console.log("");
+            console.log(bold(token));
+          });
+          return;
+        }
+
         if (action === "test") {
           const credentialId = requireArg(id, "Usage: cokey keys test <credential-id>");
           const before = cokey.credentials.getOrThrow(credentialId);
@@ -127,7 +139,7 @@ export function registerInspectCommands(cli: CAC): void {
         }
 
         if (action !== undefined && action !== "" && action !== "list") {
-          throw new Error(`Unknown keys action "${action}". Try: cokey keys test <id>`);
+          throw new Error(`Unknown keys action "${action}". Try: cokey keys create, cokey keys test <id>`);
         }
 
         const credentials = cokey.credentials

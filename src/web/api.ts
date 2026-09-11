@@ -157,6 +157,12 @@ export const api = {
   }) => request<ProviderCatalogEntry>("POST", "/api/custom-endpoints", body),
   deleteCustomEndpoint: (providerId: string) =>
     request<{ ok: boolean }>("DELETE", `/api/custom-endpoints/${encodeURIComponent(providerId.replace(/^custom:/, ""))}`),
+
+  // ---- management auth ------------------------------------------------------
+
+  authTokenStatus: () => request<{ authTokenConfigured: boolean }>("GET", "/api/auth-token"),
+  generateAuthToken: () => request<{ authToken: string }>("POST", "/api/auth-token"),
+  revokeAuthToken: () => request<{ ok: boolean; authTokenConfigured: boolean }>("DELETE", "/api/auth-token"),
 };
 
 /** Human-friendly relative time for tables. */

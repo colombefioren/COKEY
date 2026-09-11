@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import type { SettingsRepo } from "./db/settings.repo.js";
 import {
   DEFAULT_FALLBACK_POLICY,
@@ -9,6 +10,8 @@ import {
 
 const SETTINGS_KEY = "settings";
 const LOG_LEVELS: LogLevel[] = ["debug", "info", "warn", "error"];
+const AUTH_TOKEN_KEY = "authToken";
+const AUTH_TOKEN_BYTES = 32;
 
 export class InvalidSettingError extends Error {
   constructor(message: string) {
@@ -75,13 +78,33 @@ export class SettingsService {
     return this.get();
   }
 
+  /**
+   * Generate a fresh management API token, persist it as the gateway's auth
+   * bearer token, and return it (once — it is never stored in plaintext by
+   * the caller).
+   */
+  generateAuthToken(): string {
+    const token = randomBytes(AUTH_TOKEN_BYTES).toString("hex");
+    this.repo.setJson(AUTH_TOKEN_KEY, token);
+    this.current = this.compute();
+    return token;
+  }
+
+  /** Clear the management API token, reverting to no-auth mode. */
+  clearAuthToken(): void {
+    this.repo.delete(AUTH_TOKEN_KEY);
+    this.current = this.compute();
+  }
+
   private compute(): Settings {
     const defaults = defaultSettings(this.env.COKEY_DATA_DIR || process.cwd() + "/.cokey");
     const stored = this.repo.getJson<Partial<Settings>>(SETTINGS_KEY) ?? {};
+    const storedToken = this.repo.getJson<string>(AUTH_TOKEN_KEY) ?? undefined;
 
     const base = validateSettings({
       ...defaults,
       ...stored,
+      ...(storedToken ? { authToken: storedToken } : {}),
       fallback: { ...DEFAULT_FALLBACK_POLICY, ...(stored.fallback ?? {}) },
     });
 

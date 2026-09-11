@@ -26,6 +26,10 @@ export function Settings({
   const [endpointName, setEndpointName] = useState("");
   const [endpointUrl, setEndpointUrl] = useState("");
   const [endpointModels, setEndpointModels] = useState("");
+  const [tokenConfigured, setTokenConfigured] = useState(false);
+  const [tokenBusy, setTokenBusy] = useState(false);
+  const [tokenCopied, setTokenCopied] = useState(false);
+  const [generatedToken, setGeneratedToken] = useState<string | null>(null);
 
   useEffect(() => {
     setDraft(settings);
@@ -37,6 +41,17 @@ export function Settings({
         setEndpoints(await api.customEndpoints());
       } catch {
         /* surfaced elsewhere */
+      }
+    })();
+  }, [refreshKey]);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        const result = await api.authTokenStatus();
+        setTokenConfigured(result.authTokenConfigured);
+      } catch {
+        /* handled by the error boundary */
       }
     })();
   }, [refreshKey]);
@@ -88,10 +103,39 @@ export function Settings({
     }
   }
 
-  async function removeEndpoint(providerId: string) {
+   async function removeEndpoint(providerId: string) {
+     try {
+       await api.deleteCustomEndpoint(providerId);
+       setEndpoints(await api.customEndpoints());
+       onSaved();
+     } catch (error) {
+       toast.err(error instanceof ApiError ? error.message : String(error));
+     }
+   }
+
+  async function generateToken() {
+    setTokenBusy(true);
     try {
-      await api.deleteCustomEndpoint(providerId);
-      setEndpoints(await api.customEndpoints());
+      const result = await api.generateAuthToken();
+      setGeneratedToken(result.authToken);
+      setTokenConfigured(true);
+      setTokenCopied(false);
+      toast.ok("New API token generated. Copy it now — it will not be shown again.");
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setTokenBusy(false);
+    }
+  }
+
+  async function revokeToken() {
+    if (!confirm("Revoke the management API token? Requests will then be allowed without authentication."))
+      return;
+    try {
+      await api.revokeAuthToken();
+      setTokenConfigured(false);
+      setGeneratedToken(null);
+      toast.ok("API token revoked. Requests are now allowed without a bearer token.");
       onSaved();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -155,13 +199,63 @@ export function Settings({
               <label>Data directory</label>
               <input value={draft.dataDir} readOnly />
             </div>
-            <div className="field">
-              <label>Auth token</label>
-              <input value={draft.authTokenConfigured ? "configured" : "not set"} readOnly />
-              <div className="small faint" style={{ marginTop: 5 }}>
-                Set <code>COKEY_AUTH_TOKEN</code> to require a bearer token on the API.
-              </div>
-            </div>
+             <div className="field">
+               <label>Auth token</label>
+               {tokenConfigured ? (
+                 <>
+                   <div className="row" style={{ gap: 8, marginTop: 4 }}>
+                     <span className="mono small">
+                       {generatedToken
+                         ? `sk-…${generatedToken.slice(-16)}`
+                         : "••••••••••••• (configured)"}
+                     </span>
+                     <button
+                       className="ghost small"
+                       onClick={async () => {
+                         if (generatedToken) {
+                           await navigator.clipboard.writeText(generatedToken);
+                           setTokenCopied(true);
+                           setTimeout(() => setTokenCopied(false), 2000);
+                           toast.ok("Token copied to clipboard");
+                         }
+                       }}
+                       disabled={!generatedToken}
+                       title={generatedToken ? "Copy to clipboard" : "Reload to copy the current token"}
+                     >
+                       {tokenCopied ? "✓ copied" : "copy"}
+                     </button>
+                     <button
+                       className="ghost small"
+                       onClick={() => void generateToken()}
+                       disabled={tokenBusy}
+                       title="Regenerate (invalidates the previous token)"
+                     >
+                       {tokenBusy ? "…" : "regenerate"}
+                     </button>
+                     <button className="ghost small danger" onClick={() => void revokeToken()} title="Revoke this token">
+                       revoke
+                     </button>
+                   </div>
+                   <div className="small faint" style={{ marginTop: 5 }}>
+                     Send this as a <code>Bearer</code> header for /v1 and /api requests.
+                   </div>
+                 </>
+               ) : (
+                 <>
+                   <button
+                     className="secondary"
+                     onClick={() => void generateToken()}
+                     disabled={tokenBusy}
+                   >
+                     {tokenBusy ? "Generating…" : "Generate API token"}
+                   </button>
+                   <div className="small faint" style={{ marginTop: 5 }}>
+                     The gateway is currently open — no bearer token is required. Generate a token to
+                     protect it when binding to 0.0.0.0 or a LAN.
+                   </div>
+                 </>
+               )}
+             </div>
             <div className="hint-box">
               Config export (no secrets):{" "}
               <a href="/api/config/export" download="cokey-export.json">

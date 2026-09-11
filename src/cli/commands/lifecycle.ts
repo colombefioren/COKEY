@@ -84,6 +84,7 @@ export function registerLifecycleCommands(cli: CAC): void {
         console.log(`  listen:       http://${cokey.settings.host}:${cokey.settings.port}`);
         console.log(`  data dir:     ${stats.dataDir}`);
         console.log(`  master key:   ${stats.keySource}`);
+        console.log(`  auth token:   ${cokey.settings.authToken ? green("configured") : dim("not set")}`);
         console.log(
           `  credentials:  ${stats.credentials} (${stats.healthyCredentials} healthy, ${stats.cooldownCredentials} cooldown, ${stats.invalidCredentials} invalid)`,
         );

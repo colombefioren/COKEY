@@ -202,6 +202,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
         ) : (
           <>
             <span className="alias mono">{chain.alias}</span>
+            <span className="mono small faint" style={{ marginLeft: 8 }}>
+              ID: {chain.id.slice(0, 8)}
+            </span>
             {chain.enabled ? null : <span className="badge warn">disabled</span>}
             <span className="small faint">
               {entries.length} {entries.length === 1 ? "entry" : "entries"} · model id for clients

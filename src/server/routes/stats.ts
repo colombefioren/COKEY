@@ -102,23 +102,56 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  /** The local free-provider "incite" payload. */
-  app.get(
-    "/api/nudge",
-    withErrors(() => {
-      const nudge = cokey.freeProviderNudge();
-      const settings = cokey.settings;
-      return {
-        enabled: settings.showFreeProviderNudger,
-        ...nudge,
-        suggestions: nudge.suggestions.map((entry) => ({
-          id: entry.id,
-          displayName: entry.displayName,
-          summary: entry.freeTier.summary,
-          signupUrl: entry.signupUrl,
-        })),
-      };
+   /** The local free-provider "incite" payload. */
+   app.get(
+     "/api/nudge",
+     withErrors(() => {
+       const nudge = cokey.freeProviderNudge();
+       const settings = cokey.settings;
+       return {
+         enabled: settings.showFreeProviderNudger,
+         ...nudge,
+         suggestions: nudge.suggestions.map((entry) => ({
+           id: entry.id,
+           displayName: entry.displayName,
+           summary: entry.freeTier.summary,
+           signupUrl: entry.signupUrl,
+         })),
+       };
+     }),
+   );
+
+  // ---- management auth ------------------------------------------------------
+
+  /**
+   * Generate or rotate the gateway's management API token.
+   *
+   * The token is returned in the response body exactly once — it is never
+   * retrievable again. The auth middleware is updated in-process so the new
+   * token takes effect immediately without a restart.
+   */
+  app.post(
+    "/api/auth-token",
+    withErrors((_request, reply) => {
+      const token = cokey.generateAuthToken();
+      reply.code(201);
+      return { authToken: token };
     }),
+  );
+
+  /** Revoke the management API token. No body means no auth required. */
+  app.delete(
+    "/api/auth-token",
+    withErrors((_request, _reply) => {
+      cokey.clearAuthToken();
+      return { ok: true, authTokenConfigured: false };
+    }),
+  );
+
+  /** Check whether a token is configured (the token itself is never returned). */
+  app.get(
+    "/api/auth-token",
+    withErrors(() => ({ authTokenConfigured: Boolean(cokey.settings.authToken) })),
   );
 }
 

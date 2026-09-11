@@ -680,9 +680,8 @@ export class Cokey {
     };
   }
 
-  /**
-   * The local "incite" check: how many advertised-free providers are connected,
-   * and which ones would widen failover coverage.
+  /** The local "incite" check: how many advertised-free providers are connected,
+   *  and which ones would widen failover coverage.
    *
    * Entirely local — there is no telemetry behind this.
    */
@@ -696,6 +695,24 @@ export class Cokey {
       target: this.settings.freeProviderTarget,
       suggestions: free.filter((entry) => !connected.includes(entry)),
     };
+  }
+
+  // ---- management auth ------------------------------------------------------
+
+  /**
+   * Generate or rotate the management API bearer token.
+   *
+   * Returns the plaintext token exactly once — it is persisted encrypted by the
+   * vault-like keyfile path, so the caller must capture it before the response
+   * closes. Pass `rotate=true` to invalidate the previous token.
+   */
+  generateAuthToken(): string {
+    return this.settingsService.generateAuthToken();
+  }
+
+  /** Revoke the management API token. Requests are then allowed with no bearer. */
+  clearAuthToken(): void {
+    this.settingsService.clearAuthToken();
   }
 }
 
