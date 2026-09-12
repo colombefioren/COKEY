@@ -102,6 +102,17 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
     }
   }
 
+  async function setModel(entry: ChainEntryView, model: string) {
+    if (model === entry.model) return;
+    try {
+      await api.updateEntry(entry.id, { model });
+      toast.ok(`${entry.providerId} model changed to ${model}`);
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    }
+  }
+
   async function duplicate(entry: ChainEntryView) {
     try {
       await api.duplicateEntry(entry.id);
@@ -259,7 +270,26 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             </span>
             <span className="priority">{index + 1}.</span>
             <span className="model" title={entry.baseUrl}>
-              {entry.providerId} / {entry.model}
+              {entry.providerId} /{" "}
+              {entry.provider && entry.provider.knownModels.length > 0 ? (
+                <select
+                  value={entry.model}
+                  onChange={(event) => void setModel(entry, event.target.value)}
+                  style={{ width: "auto", maxWidth: 260, display: "inline-block", padding: "2px 6px" }}
+                  title="Change the model this entry routes to"
+                >
+                  {(entry.provider.knownModels.includes(entry.model)
+                    ? entry.provider.knownModels
+                    : [entry.model, ...entry.provider.knownModels]
+                  ).map((knownModel) => (
+                    <option key={knownModel} value={knownModel}>
+                      {knownModel}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                entry.model
+              )}
             </span>
 
             <span className="creds">
