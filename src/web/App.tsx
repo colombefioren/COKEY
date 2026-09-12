@@ -258,7 +258,6 @@ function renderPage(path: string, context: PageContext) {
           refreshKey={context.refreshKey}
           onChanged={context.bump}
           providers={context.providers}
-          credentials={context.credentials}
         />
       );
     case "/models":

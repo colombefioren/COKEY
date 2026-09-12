@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api.js";
-import type { ChainView, ProviderStatus, PublicCredential } from "../types.js";
+import type { ChainView, ProviderStatus } from "../types.js";
 import { ChainCard } from "../components/ChainCard.js";
 import { Pagination } from "../components/Pagination.js";
 import { Empty, Panel } from "../components/Primitives.js";
@@ -22,12 +22,10 @@ export function Chains({
   refreshKey,
   onChanged,
   providers,
-  credentials,
 }: {
   refreshKey: number;
   onChanged: () => void;
   providers: ProviderStatus[];
-  credentials: PublicCredential[];
 }) {
   const { route, navigate } = useRoute();
   const tab = route.section === "keys" ? "keys" : "nodes";

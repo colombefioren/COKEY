@@ -34,7 +34,6 @@ import { RouterEngine, type RouteResult } from "./router/engine.js";
 import { SettingsService } from "./settings.js";
 import { assertSafeEndpoint } from "./security/ssrf.js";
 import type {
-  AutoProxyStrategy,
   Chain,
   ChainEntry,
   ChatCompletionRequest,
