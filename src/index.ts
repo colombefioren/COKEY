@@ -47,7 +47,7 @@ export {
   ChainNotFoundError,
   ChainDisabledError,
 } from "./core/router/engine.js";
-export type { AttemptLog, RouteResult, RouterOptions } from "./core/router/engine.js";
+export type { AttemptLog, RouteErrorInfo, RouteResult, RouterOptions } from "./core/router/engine.js";
 
 // Managers
 export { CredentialManager, CredentialNotFoundError } from "./core/credentials/manager.js";

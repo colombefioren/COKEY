@@ -26,6 +26,7 @@ import {
   type ProxyPoolView,
 } from "./providers/proxy-pool.js";
 import { modelAvailability, type ModelCatalogView } from "./models/availability.js";
+import { emptyUsage } from "./types.js";
 import { SecretVault } from "./crypto/secrets.js";
 import { RequestHistory, type HistoryStats } from "./history.js";
 import { Logger } from "./logger.js";
@@ -88,6 +89,8 @@ export interface ConnectProviderInput {
   accountId?: string;
   /** Optional egress proxy, so this key leaves through its own IP. */
   proxyUrl?: string;
+  /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+  saveAnyway?: boolean;
 }
 
 export interface ConnectProviderResult {
@@ -355,6 +358,10 @@ export class Cokey {
       // Transient: keep it, but clearly unverified. The caller decides whether
       // to keep it ("Retry" or "Add anyway").
       this.credentials.setStatus(credential.id, "unverified");
+    } else if (input.saveAnyway) {
+      // Explicit override: the user chose to save this key regardless of the
+      // probe verdict. Keep it, clearly marked unverified.
+      this.credentials.setStatus(credential.id, "unverified");
     } else {
       this.credentials.delete(credential.id);
       throw new BadCredentialError(
@@ -374,6 +381,40 @@ export class Cokey {
       credential: this.credentials.toPublic(this.credentials.getOrThrow(credential.id)),
       validation,
     };
+  }
+
+  /**
+   * Probe a raw secret without persisting anything.
+   *
+   * Backs the separate "Test" button: the verdict appears in the UI, and the
+   * key is only stored when the user then confirms with "Save". This is the
+   * mirror of `connectProvider` that never writes a row and never throws for a
+   * rejected key - rejection is reported as `ok: false`.
+   */
+  async testProviderSecret(
+    providerId: string,
+    input: { secret: string; accountId?: string; model?: string },
+  ): Promise<ValidationResult> {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    if (!catalog) throw new Error(`Unknown provider: ${providerId}`);
+
+    // A transient credential drives the same probe paths as a stored row,
+    // without ever touching the vault or the database.
+    const credential: Credential = {
+      id: "probe",
+      providerId,
+      accountId: input.accountId,
+      secret: input.secret,
+      description: "probe",
+      status: "unverified",
+      consecutiveFailures: 0,
+      usage: emptyUsage(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    if (input.model) return this.verifyCredential(providerId, input.model, credential);
+    return this.providers.get(providerId).validateCredential(credential);
   }
 
   /** Re-run verification for a stored credential. */

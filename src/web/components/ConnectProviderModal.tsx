@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { api, ApiError } from "../api.js";
+import { api } from "../api.js";
 import type { ProviderStatus, ValidationResult } from "../types.js";
 import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
@@ -7,8 +7,11 @@ import { useToast } from "./Toast.js";
 /**
  * Two-field connect dialog (plus account id for Cloudflare).
  *
- * The credential is verified server-side before it is persisted as healthy, and
- * the verdict is shown inline — never a silent failure.
+ * Two buttons, each an independent contract:
+ *  - "Test" probes the raw key without persisting anything — you get a verdict
+ *    and can keep editing.
+ *  - "Save" persists the key regardless of the verdict. A rejected key is kept
+ *    but clearly marked unverified, so nothing silently disappears.
  */
 export function ConnectProviderModal({
   provider,
@@ -28,42 +31,54 @@ export function ConnectProviderModal({
   const [error, setError] = useState<string | undefined>();
 
   const needsAccountId = provider.credentialFields.includes("accountId");
+  const hasFields = Boolean(description.trim() && secret.trim() && (!needsAccountId || accountId.trim()));
 
-  async function submit(addAnyway = false) {
-    if (!description.trim() || !secret.trim()) {
-      setError("Description and key are both required");
+  async function test() {
+    if (!hasFields) {
+      setError(needsAccountId ? "Description, key and account id are required" : "Description and key are both required");
       return;
     }
-
     setBusy(true);
     setError(undefined);
     setResult(undefined);
+    try {
+      const validation = await api.testProviderSecret(provider.id, {
+        secret: secret.trim(),
+        ...(needsAccountId ? { accountId: accountId.trim() } : {}),
+      });
+      setResult(validation);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
 
+  async function save() {
+    if (!hasFields) {
+      setError(needsAccountId ? "Description, key and account id are required" : "Description and key are both required");
+      return;
+    }
+    setBusy(true);
+    setError(undefined);
+    setResult(undefined);
     try {
       const response = await api.connectProvider(provider.id, {
         description: description.trim(),
         secret: secret.trim(),
-        ...(needsAccountId && accountId.trim() ? { accountId: accountId.trim() } : {}),
+        ...(needsAccountId ? { accountId: accountId.trim() } : {}),
+        saveAnyway: true,
       });
       setResult(response.validation);
-      toast.ok(`${provider.displayName} key verified in ${response.validation.latencyMs ?? 0}ms`);
+      toast.ok(
+        response.validation.ok
+          ? `${provider.displayName} key verified in ${response.validation.latencyMs ?? 0}ms`
+          : `${provider.displayName} key saved (${response.validation.classification})`,
+      );
       onConnected();
       onClose();
     } catch (err) {
-      const message = err instanceof ApiError ? err.message : String(err);
-      setError(message);
-      const classification = err instanceof ApiError ? err.classification : undefined;
-
-      if (classification === "network_error") {
-        // A transient failure is the one case where keeping the key unverified
-        // is the user's call.
-        setResult({ ok: false, classification: classification, message });
-        if (addAnyway) {
-          setError("Network error — retry, or paste the key again once the provider is reachable.");
-        }
-      } else {
-        setResult(classification ? { ok: false, classification, message } : undefined);
-      }
+      setError(err instanceof Error ? err.message : String(err));
     } finally {
       setBusy(false);
     }
@@ -130,8 +145,11 @@ export function ConnectProviderModal({
         <button className="secondary" onClick={onClose} disabled={busy}>
           Cancel
         </button>
-        <button onClick={() => void submit()} disabled={busy}>
-          {busy ? "Verifying…" : "Save & test"}
+        <button className="secondary" onClick={() => void test()} disabled={busy || !secret.trim()}>
+          {busy ? "Testing…" : "Test"}
+        </button>
+        <button onClick={() => void save()} disabled={busy || !hasFields}>
+          {busy ? "Saving…" : "Save key"}
         </button>
       </div>
     </Modal>

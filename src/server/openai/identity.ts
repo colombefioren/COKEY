@@ -1,4 +1,4 @@
-import type { RouteResult } from "../../core/router/engine.js";
+import type { AttemptLog, RouteResult } from "../../core/router/engine.js";
 
 /**
  * Client-facing identity for the gateway.
@@ -41,6 +41,43 @@ export function chainStateMessage(result: RouteResult): string {
   return `chain changed state: ${result.chainAlias} now on ${entry} via ${result.credentialDescription} (${reason})`;
 }
 
+/**
+ * Visible notice to prepend to the assistant output when the chain moved.
+ *
+ * Headers are readable by tools but invisible to a chat window, so a fallback —
+ * the moment the chain actually changes who answers — becomes a literal line in
+ * the response. Coding agents then see the chain moved without reading headers.
+ * Returns `null` when nothing changed and the reply should stay clean.
+ */
+export function chainStateNotice(result: RouteResult): string | null {
+  if (!result.fallback) return null;
+  return `\n[chain state] ${chainStateMessage(result)}\n\n`;
+}
+
+/**
+ * Prepend a notice to each choice's assistant content.
+ *
+ * The upstream text is untouched: the notice is a prefix on the already-built
+ * message so the model output the client sees starts with the state change.
+ */
+export function withChainStateNotice(body: unknown, notice: string | null): unknown {
+  if (!notice || !body || typeof body !== "object" || Array.isArray(body)) return body;
+  const record = body as Record<string, unknown>;
+  const choices = record.choices;
+  if (!Array.isArray(choices)) return body;
+  const changed = choices.map((choice) => {
+    const content = (choice as Record<string, unknown> | undefined)?.message as
+      | Record<string, unknown>
+      | undefined;
+    if (!content || typeof content.content !== "string") return choice;
+    return {
+      ...(choice as Record<string, unknown>),
+      message: { ...content, content: `${notice}${content.content}` },
+    };
+  });
+  return { ...record, choices: changed };
+}
+
 /** Headers that make the current routing state machine-readable. */
 export function identityHeaders(result: RouteResult): Record<string, string> {
   return {
@@ -54,4 +91,57 @@ export function identityHeaders(result: RouteResult): Record<string, string> {
     "x-cokey-state": chainStateMessage(result),
     ...(result.fallbackReason ? { "x-cokey-fallback-reason": result.fallbackReason } : {}),
   };
+}
+
+/**
+ * Build the `X-Cokey-*` headers for a failed request.
+ *
+ * Success already reports routing state out-of-band; failure does not get a
+ * `response` to annotate, so the gateway reconstructs the same headers from the
+ * attempts it recorded. A coding agent that reads `x-cokey-provider` on a 200
+ * now sees exactly which vendor raised the 502 — and `x-cokey-error-origin`
+ * marks it as `provider`, never Cokey's own voice.
+ */
+export function errorIdentityHeaders(info: {
+  attempts: AttemptLog[];
+  chainAlias?: string;
+  fallback?: boolean;
+  fallbackReason?: string;
+}): Record<string, string> {
+  const attempts = info.attempts;
+  const last = attempts[attempts.length - 1];
+  const origin = attempts.length > 0 ? "provider" : "gateway";
+  const headers: Record<string, string> = {
+    "x-cokey-error-origin": origin,
+    "x-cokey-state": errorStateMessage(info),
+    "x-cokey-attempts": String(attempts.length),
+  };
+  if (info.chainAlias) headers["x-cokey-chain"] = info.chainAlias;
+  if (info.fallback) headers["x-cokey-fallback"] = "true";
+  if (info.fallbackReason) headers["x-cokey-fallback-reason"] = info.fallbackReason;
+  if (last) {
+    headers["x-cokey-provider"] = last.providerId;
+    headers["x-cokey-entry"] = `${last.providerId}/${last.model}`;
+    headers["x-cokey-model"] = last.model;
+    headers["x-cokey-credential"] = last.description;
+    if (last.status !== undefined) headers["x-cokey-upstream-status"] = String(last.status);
+  }
+  return headers;
+}
+
+/** Plain-language narration of a failed route, for `x-cokey-state` on errors. */
+export function errorStateMessage(info: {
+  attempts: AttemptLog[];
+  chainAlias?: string;
+  fallback?: boolean;
+  fallbackReason?: string;
+}): string {
+  const { attempts, chainAlias, fallback, fallbackReason } = info;
+  const who = chainAlias ?? "chain";
+  if (attempts.length === 0) return `chain state: ${who} could not be routed`;
+  const providers = [...new Set(attempts.map((a) => a.providerId))].join(", ");
+  if (fallback) {
+    return `chain state: ${who} fell back across ${attempts.length} node(s) via ${providers} and failed (${fallbackReason ?? "exhausted"})`;
+  }
+  return `chain state: ${who} ${providers} did not answer OK`;
 }
