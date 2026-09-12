@@ -19,7 +19,7 @@ import {
 /**
  * The OpenAI-compatible surface.
  *
- * Clients change one thing — their base URL — and everything else keeps
+ * Clients change one thing - their base URL - and everything else keeps
  * working, including streaming. Fallback decisions are exposed in `X-Cokey-*`
  * response headers so a user can always tell which credential actually served
  * a request.

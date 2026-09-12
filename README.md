@@ -3,7 +3,7 @@
 <p align="center">
   <strong>Local LLM credential pool and chain-fallback gateway.</strong><br />
   Point any OpenAI-compatible tool at <code>http://localhost:8787/v1</code> and let COKEY rotate
-  your free API keys — across accounts, across models, across providers — without ever
+  your free API keys - across accounts, across models, across providers - without ever
   leaking a key or inventing a quota.
 </p>
 
@@ -26,7 +26,7 @@ OpenCode / Kilo Code / any OpenAI-compatible client
 COKEY is a local gateway, not a service. It runs on your machine, keeps your keys
 encrypted at rest, and exposes one OpenAI-compatible endpoint. When a provider
 rate-limits a key, COKEY cools that key down and retries the next one **inside the
-same entry** — only falling through to the next entry once every key of the
+same entry** - only falling through to the next entry once every key of the
 current one is spent.
 
 ---
@@ -48,8 +48,8 @@ exist, and both are deliberate:
 | `context_too_large`, `invalid_request` | Request-shaped. Stop immediately; rotating would fail identically. |
 | `model_unavailable` | Entry-shaped. Skip the entry's remaining keys; the other entries may still work. |
 
-Everything else — `429`, quota exhaustion, invalid keys, provider 5xx, network
-errors — rotates to the next key of the same entry first.
+Everything else - `429`, quota exhaustion, invalid keys, provider 5xx, network
+errors - rotates to the next key of the same entry first.
 
 ---
 
@@ -63,7 +63,7 @@ errors — rotates to the next key of the same entry first.
   client. Streamed over SSE from `/api/events`.
 - **Per-key egress proxies.** Bind a `socks5://` or `http://` proxy to each credential.
   Several keys from one provider only fail over *independently* when they leave through
-  different IPs — otherwise they share the provider's IP-level limit.
+  different IPs - otherwise they share the provider's IP-level limit.
 - **Per-key throughput.** Locally measured requests-per-minute and a trailing-minute
   sparkline per credential, so two keys of the same provider are never indistinguishable.
 - **340 curated free models across 45 providers**, each annotated with context window,
@@ -110,7 +110,7 @@ Any OpenAI-compatible tool needs only a base URL.
 }
 ```
 
-> Verify the exact key names against your tool's current documentation — COKEY itself
+> Verify the exact key names against your tool's current documentation - COKEY itself
 > only cares about the base URL and that the client sends an OpenAI-shaped request.
 
 ---
@@ -131,7 +131,7 @@ curl -X PATCH http://localhost:8787/api/credentials/<id> \
 - `socks5://`, `socks://`, `socks5h://` and `http(s)://` are supported (SOCKS5 via
   undici's `Socks5ProxyAgent`, HTTP CONNECT via `ProxyAgent`).
 - Dispatchers are pooled per proxy URL; one key, one pool, one exit IP.
-- Proxy credentials are stored with the key and are **never** returned by the API —
+- Proxy credentials are stored with the key and are **never** returned by the API -
   responses expose `host:port` only.
 - `proxyUrl: null` returns the key to direct egress.
 
@@ -161,8 +161,8 @@ Every event is local-only; there is no telemetry anywhere in COKEY.
 1. The client asks for a chain alias (`model: "cokey-best"`).
 2. Each entry is tried in the user's order.
 3. Inside an entry, keys are ordered by the entry's strategy:
-   - **sequential** — the order you bound them in;
-   - **round-robin** — rotated per request, preferring the least-contended key so
+   - **sequential** - the order you bound them in;
+   - **round-robin** - rotated per request, preferring the least-contended key so
      concurrent requests never stampede the same credential.
 4. On a credential-scoped failure the key is cooled down (honouring `Retry-After`
    when present, otherwise exponential backoff with jitter) and the next key is tried.
@@ -280,7 +280,7 @@ await cokey.addChain({
 - Secrets are encrypted with **AES-256-GCM**; the on-disk value is
   `v1:` + `base64(iv ‖ authTag ‖ ciphertext)`.
 - The master key comes from `COKEY_MASTER_KEY`, a passphrase
-  (`COKEY_PASSPHRASE`), the OS keychain, or a `0600` key file — in that order.
+  (`COKEY_PASSPHRASE`), the OS keychain, or a `0600` key file - in that order.
 - The log redactor drops sensitive field names and rewrites token-shaped values,
   so an `Authorization` header cannot reach a log line.
 - A credential is never serialised raw: HTTP responses use a masked projection.

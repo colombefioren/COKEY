@@ -21,7 +21,7 @@ import { z } from "zod";
 /**
  * Management API.
  *
- * Every response here is built from `PublicCredential` projections — there is
+ * Every response here is built from `PublicCredential` projections - there is
  * no code path in this file that can return a stored secret.
  */
 const AttachCredentialSchema = z
@@ -42,7 +42,7 @@ const AttachCredentialSchema = z
 /**
  * Management API.
  *
- * Every response here is built from `PublicCredential` projections — there is
+ * Every response here is built from `PublicCredential` projections - there is
  * no code path in this file that can return a stored secret.
  */
 export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): void {

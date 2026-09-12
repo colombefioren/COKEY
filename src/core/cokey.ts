@@ -134,7 +134,7 @@ export class BadCredentialError extends Error {
 /**
  * The COKEY application.
  *
- * This class owns every long-lived object — database, vault, managers, router —
+ * This class owns every long-lived object - database, vault, managers, router -
  * and is the single entry point used by the HTTP server, the CLI and the public
  * programmatic API. Nothing here knows about HTTP.
  */
@@ -995,7 +995,7 @@ export class Cokey {
    * Usage view: per provider → per key → per model, plus the live route.
    *
    * Token counts come from the per-day rollup; remaining quota comes from the
-   * last provider response (may be absent — never invented). `now` is the route
+   * last provider response (may be absent - never invented). `now` is the route
    * the router is on, so the UI can show which node/sub-key is serving.
    */
   usageView(): {
@@ -1183,7 +1183,7 @@ export class Cokey {
   /** The local "incite" check: how many advertised-free providers are connected,
    *  and which ones would widen failover coverage.
    *
-   * Entirely local — there is no telemetry behind this.
+   * Entirely local - there is no telemetry behind this.
    */
   freeProviderNudge(): FreeProviderNudge {
     const counts = this.credentials.countsByProvider();

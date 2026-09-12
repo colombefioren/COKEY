@@ -96,14 +96,14 @@ export function registerLifecycleCommands(cli: CAC): void {
         for (const chain of cokey.chains.listChains()) {
           const entries = cokey.chains.listEntries(chain.id);
           const label = chain.enabled ? chain.alias : `${chain.alias} ${dim("(disabled)")}`;
-          console.log(`  ${bold(label)} — ${entries.length} entries`);
+          console.log(`  ${bold(label)} - ${entries.length} entries`);
           for (const entry of entries) {
             const credentials = cokey.credentials.listByIds(entry.credentialIds);
             const healthy = credentials.filter((c) => c.status === "healthy").length;
             const cooldown = credentials.filter((c) => c.status === "cooldown").length;
             const flag = entry.enabled ? "" : dim(" [disabled]");
             console.log(
-              `    ${dim(`#${entry.priority}`)} ${entry.providerId} / ${entry.model} — ` +
+              `    ${dim(`#${entry.priority}`)} ${entry.providerId} / ${entry.model} - ` +
                 `${credentials.length} keys (${green(`${healthy} healthy`)}, ${yellow(`${cooldown} cooldown`)})${flag}`,
             );
           }
@@ -215,7 +215,7 @@ export function registerLifecycleCommands(cli: CAC): void {
         if (cokey.settings.showFreeProviderNudger) {
           console.log("");
           console.log(
-            `  ${bold("Maximize failover coverage")} — ${nudge.connectedFree} of ${nudge.target} free providers connected`,
+            `  ${bold("Maximize failover coverage")} - ${nudge.connectedFree} of ${nudge.target} free providers connected`,
           );
           for (const suggestion of nudge.suggestions.slice(0, 6)) {
             console.log(
