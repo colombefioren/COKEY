@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { CredentialRate, CredentialStatus } from "../types.js";
 
 /** Coloured status indicator for a credential. */
@@ -45,15 +46,7 @@ export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>;
 }
 
-export function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: ReactNode;
-  hint?: string;
-}) {
+export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="stat">
       <div className="label">{label}</div>
@@ -77,15 +70,16 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
-  return (
-    <div
-      className="overlay"
-      onClick={onClose}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
-      role="presentation"
-    >
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return createPortal(
+    <div className="overlay" onClick={onClose} role="presentation">
       <div
         className="modal"
         style={wide ? { width: "min(820px, 100%)" } : undefined}
@@ -98,7 +92,8 @@ export function Modal({
         {subtitle ? <div className="modal-sub">{subtitle}</div> : null}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
@@ -162,12 +157,23 @@ export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: 
 }
 
 /** A credential's quota, or an explicit "unknown" - never a fabricated value. */
-export function QuotaLabel({ quota }: { quota?: { available: boolean; requestsRemaining?: number; tokensRemaining?: number; requestsPerMinute?: number } }) {
+export function QuotaLabel({
+  quota,
+}: {
+  quota?: {
+    available: boolean;
+    requestsRemaining?: number;
+    tokensRemaining?: number;
+    requestsPerMinute?: number;
+  };
+}) {
   if (!quota || !quota.available) return <span className="faint">Quota: Unknown</span>;
 
   const parts: string[] = [];
-  if (typeof quota.requestsRemaining === "number") parts.push(`${quota.requestsRemaining} req left`);
-  if (typeof quota.tokensRemaining === "number") parts.push(`${formatNumber(quota.tokensRemaining)} tok left`);
+  if (typeof quota.requestsRemaining === "number")
+    parts.push(`${quota.requestsRemaining} req left`);
+  if (typeof quota.tokensRemaining === "number")
+    parts.push(`${formatNumber(quota.tokensRemaining)} tok left`);
   if (typeof quota.requestsPerMinute === "number") parts.push(`${quota.requestsPerMinute} RPM`);
   if (parts.length === 0) return <span className="faint">Quota: Unknown</span>;
   return <span className="muted">{parts.join(" · ")}</span>;

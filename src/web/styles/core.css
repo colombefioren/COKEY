@@ -2370,12 +2370,18 @@ tbody tr:nth-child(n + 6) {
 
 .flow-scroll {
   overflow-x: auto;
-  padding: 10px 2px 16px;
+  /* With overflow-x:auto an unspecified overflow-y computes to auto too, which
+     is what drew a stray vertical scrollbar over the diagram. Hidden + generous
+     padding lets the hub ring and the hover lift breathe without one. */
+  overflow-y: hidden;
+  padding: 18px 4px 20px;
+  scrollbar-width: thin;
 }
 .flow-track {
   display: flex;
   align-items: stretch;
   min-width: min-content;
+  padding: 2px;
 }
 
 .flow-node {
@@ -2384,7 +2390,7 @@ tbody tr:nth-child(n + 6) {
   display: grid;
   align-content: center;
   gap: 6px;
-  padding: 13px 15px;
+  padding: 14px 16px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
   background: var(--surface-2);
@@ -2398,8 +2404,9 @@ tbody tr:nth-child(n + 6) {
     box-shadow 0.25s ease;
 }
 .flow-node:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
+  transform: translateY(-3px);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-lift);
 }
 @keyframes node-in {
   from {
@@ -2447,11 +2454,11 @@ tbody tr:nth-child(n + 6) {
 .flow-hub::after {
   content: "";
   position: absolute;
-  inset: -6px;
-  border-radius: inherit;
+  inset: -5px;
+  border-radius: calc(var(--radius-md) + 5px);
   border: 1px dashed var(--violet-line);
-  opacity: 0.75;
-  animation: hub-orbit 9s linear infinite;
+  opacity: 0.7;
+  animation: hub-orbit 11s linear infinite;
   pointer-events: none;
 }
 @keyframes hub-orbit {
