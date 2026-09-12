@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { RequestsRepo } from "./db/requests.repo.js";
+import type { RequestsRepo, UsageRollupRow } from "./db/requests.repo.js";
 import type { RequestLogRow } from "./db/database.js";
 import type { ErrorClassification, RequestLogEntry } from "./types.js";
 
@@ -17,6 +17,8 @@ export interface RecordRequestInput {
   fallbackReason?: string;
   attempts: number;
   stream: boolean;
+  inputTokens?: number;
+  outputTokens?: number;
 }
 
 export interface HistoryStats {
@@ -58,6 +60,8 @@ export class RequestHistory {
       fallbackReason: input.fallbackReason,
       attempts: input.attempts,
       stream: input.stream,
+      inputTokens: input.inputTokens ?? 0,
+      outputTokens: input.outputTokens ?? 0,
     };
 
     this.repo.insert({ ...entry });
@@ -97,6 +101,11 @@ export class RequestHistory {
     return this.repo.count();
   }
 
+  /** Per-day/per-provider/per-key/per-model rollup since `sinceDay` (YYYY-MM-DD). */
+  rollup(sinceDay: string): UsageRollupRow[] {
+    return this.repo.rollupSince(sinceDay);
+  }
+
   clear(): void {
     this.repo.clear();
   }
@@ -119,5 +128,7 @@ function rowToEntry(row: RequestLogRow): RequestLogEntry {
     fallbackReason: row.fallback_reason ?? undefined,
     attempts: row.attempts,
     stream: row.stream === 1,
+    inputTokens: row.input_tokens,
+    outputTokens: row.output_tokens,
   };
 }

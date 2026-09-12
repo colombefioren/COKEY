@@ -10,6 +10,7 @@ import type {
   Settings,
   Stats,
   StatusResponse,
+  UsageView,
   ValidationResult,
 } from "./types.js";
 
@@ -159,6 +160,9 @@ export const api = {
       `/api/requests?limit=${limit}`,
     ),
   clearRequests: () => request<{ ok: boolean }>("DELETE", "/api/requests"),
+
+  /** Per provider → key → model usage, live route, and chain topology. */
+  usage: () => request<UsageView>("GET", "/api/usage"),
 
   settings: () => request<Settings>("GET", "/api/settings"),
   updateSettings: (body: Record<string, unknown>) =>

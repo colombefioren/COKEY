@@ -296,3 +296,52 @@ export interface ModelsResponse {
   total: number;
   available: number;
 }
+
+/** Per-model usage inside one provider. */
+export interface UsageModelView {
+  model: string;
+  requests: number;
+  success: number;
+  failure: number;
+  inputTokens: number;
+  outputTokens: number;
+  averageLatencyMs: number;
+  perCredential: Array<{
+    credentialId: string;
+    requests: number;
+    inputTokens: number;
+    outputTokens: number;
+  }>;
+}
+
+/** Per-provider usage: connected keys, model rollups and daily totals. */
+export interface UsageProviderView {
+  providerId: string;
+  displayName: string;
+  credentials: PublicCredential[];
+  models: UsageModelView[];
+  daily: Array<{ day: string; requests: number; inputTokens: number; outputTokens: number }>;
+}
+
+/** Chain/entry/key topology with the currently active key flagged. */
+export interface UsageChainView {
+  id: string;
+  alias: string;
+  enabled: boolean;
+  entries: Array<{
+    id: string;
+    providerId: string;
+    model: string;
+    enabled: boolean;
+    priority: number;
+    routingStrategy: "sequential" | "round-robin";
+    credentials: Array<{ id: string; description: string; status: string; active: boolean }>;
+  }>;
+}
+
+export interface UsageView {
+  now: LiveRouteSnapshot;
+  today: string;
+  providers: UsageProviderView[];
+  chains: UsageChainView[];
+}

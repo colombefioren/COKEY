@@ -690,6 +690,168 @@ export class Cokey {
 
   // ---- reporting ----------------------------------------------------------
 
+  /**
+   * Usage view: per provider → per key → per model, plus the live route.
+   *
+   * Token counts come from the per-day rollup; remaining quota comes from the
+   * last provider response (may be absent — never invented). `now` is the route
+   * the router is on, so the UI can show which node/sub-key is serving.
+   */
+  usageView(): {
+    now: ReturnType<EventBus["routeSnapshot"]>;
+    today: string;
+    providers: Array<{
+      providerId: string;
+      displayName: string;
+      credentials: PublicCredential[];
+      models: Array<{
+        model: string;
+        requests: number;
+        success: number;
+        failure: number;
+        inputTokens: number;
+        outputTokens: number;
+        averageLatencyMs: number;
+        perCredential: Array<{
+          credentialId: string;
+          requests: number;
+          inputTokens: number;
+          outputTokens: number;
+        }>;
+      }>;
+      daily: Array<{ day: string; requests: number; inputTokens: number; outputTokens: number }>;
+    }>;
+    chains: Array<{
+      id: string;
+      alias: string;
+      enabled: boolean;
+      entries: Array<{
+        id: string;
+        providerId: string;
+        model: string;
+        enabled: boolean;
+        priority: number;
+        routingStrategy: RoutingStrategy;
+        credentials: Array<{ id: string; description: string; status: string; active: boolean }>;
+      }>;
+    }>;
+  } {
+    const now = this.events.routeSnapshot();
+    const today = new Date().toISOString().slice(0, 10);
+    const since = new Date(Date.now() - 29 * 86_400_000).toISOString().slice(0, 10);
+    const rows = this.history.rollup(since);
+
+    const catalog = new Map(
+      this.providers.getCatalog().map((entry) => [entry.id, entry.displayName]),
+    );
+    const byProvider = new Map<string, typeof rows>();
+    for (const row of rows) {
+      const list = byProvider.get(row.provider_id) ?? [];
+      list.push(row);
+      byProvider.set(row.provider_id, list);
+    }
+
+    const credentials = this.credentials.listAll();
+    const providerIds = new Set<string>([
+      ...credentials.map((credential) => credential.providerId),
+      ...byProvider.keys(),
+    ]);
+
+    const providers = [...providerIds].map((providerId) => {
+      const providerRows = byProvider.get(providerId) ?? [];
+      const modelNames = [...new Set(providerRows.map((row) => row.model))].sort();
+
+      const models = modelNames.map((model) => {
+        const modelRows = providerRows.filter((row) => row.model === model);
+        const perCredentialMap = new Map<
+          string,
+          { credentialId: string; requests: number; inputTokens: number; outputTokens: number }
+        >();
+        let requests = 0;
+        let success = 0;
+        let failure = 0;
+        let inputTokens = 0;
+        let outputTokens = 0;
+        let latencySum = 0;
+        for (const row of modelRows) {
+          requests += row.requests;
+          success += row.success;
+          failure += row.failure;
+          inputTokens += row.input_tokens;
+          outputTokens += row.output_tokens;
+          latencySum += row.latency_ms_sum;
+          const existing = perCredentialMap.get(row.credential_id) ?? {
+            credentialId: row.credential_id,
+            requests: 0,
+            inputTokens: 0,
+            outputTokens: 0,
+          };
+          existing.requests += row.requests;
+          existing.inputTokens += row.input_tokens;
+          existing.outputTokens += row.output_tokens;
+          perCredentialMap.set(row.credential_id, existing);
+        }
+        return {
+          model,
+          requests,
+          success,
+          failure,
+          inputTokens,
+          outputTokens,
+          averageLatencyMs: requests === 0 ? 0 : Math.round(latencySum / requests),
+          perCredential: [...perCredentialMap.values()],
+        };
+      });
+
+      const days = [...new Set(providerRows.map((row) => row.day))].sort((a, b) =>
+        a < b ? 1 : -1,
+      );
+      const daily = days.map((day) => {
+        const dayRows = providerRows.filter((row) => row.day === day);
+        return {
+          day,
+          requests: dayRows.reduce((sum, row) => sum + row.requests, 0),
+          inputTokens: dayRows.reduce((sum, row) => sum + row.input_tokens, 0),
+          outputTokens: dayRows.reduce((sum, row) => sum + row.output_tokens, 0),
+        };
+      });
+
+      return {
+        providerId,
+        displayName: catalog.get(providerId) ?? providerId,
+        credentials: credentials
+          .filter((credential) => credential.providerId === providerId)
+          .map((credential) => this.credentials.toPublic(credential)),
+        models,
+        daily,
+      };
+    });
+
+    providers.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+    const chains = this.chains.listChains().map((chain) => ({
+      id: chain.id,
+      alias: chain.alias,
+      enabled: chain.enabled,
+      entries: this.chains.listEntries(chain.id).map((entry) => ({
+        id: entry.id,
+        providerId: entry.providerId,
+        model: entry.model,
+        enabled: entry.enabled,
+        priority: entry.priority,
+        routingStrategy: entry.routingStrategy,
+        credentials: this.credentials.listByIds(entry.credentialIds).map((credential) => ({
+          id: credential.id,
+          description: credential.description,
+          status: credential.status,
+          active: now.active && now.credentialId === credential.id,
+        })),
+      })),
+    }));
+
+    return { now, today, providers, chains };
+  }
+
   stats(): {
     chains: number;
     credentials: number;

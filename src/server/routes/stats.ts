@@ -45,6 +45,12 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     return reply;
   });
 
+  /** Per provider → key → model usage, plus the live route and chain topology. */
+  app.get(
+    "/api/usage",
+    withErrors(() => cokey.usageView()),
+  );
+
   app.get(
     "/api/requests",
     withErrors((request) => {
@@ -102,24 +108,24 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-   /** The local free-provider "incite" payload. */
-   app.get(
-     "/api/nudge",
-     withErrors(() => {
-       const nudge = cokey.freeProviderNudge();
-       const settings = cokey.settings;
-       return {
-         enabled: settings.showFreeProviderNudger,
-         ...nudge,
-         suggestions: nudge.suggestions.map((entry) => ({
-           id: entry.id,
-           displayName: entry.displayName,
-           summary: entry.freeTier.summary,
-           signupUrl: entry.signupUrl,
-         })),
-       };
-     }),
-   );
+  /** The local free-provider "incite" payload. */
+  app.get(
+    "/api/nudge",
+    withErrors(() => {
+      const nudge = cokey.freeProviderNudge();
+      const settings = cokey.settings;
+      return {
+        enabled: settings.showFreeProviderNudger,
+        ...nudge,
+        suggestions: nudge.suggestions.map((entry) => ({
+          id: entry.id,
+          displayName: entry.displayName,
+          summary: entry.freeTier.summary,
+          signupUrl: entry.signupUrl,
+        })),
+      };
+    }),
+  );
 
   // ---- management auth ------------------------------------------------------
 

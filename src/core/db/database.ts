@@ -114,6 +114,30 @@ export const MIGRATIONS: Migration[] = [
       ALTER TABLE credentials ADD COLUMN proxy_url TEXT;
     `,
   },
+  {
+    version: 5,
+    name: "usage_rollup",
+    sql: `
+      ALTER TABLE request_log ADD COLUMN input_tokens INTEGER NOT NULL DEFAULT 0;
+      ALTER TABLE request_log ADD COLUMN output_tokens INTEGER NOT NULL DEFAULT 0;
+
+      CREATE TABLE IF NOT EXISTS usage_daily (
+        day             TEXT NOT NULL,
+        provider_id     TEXT NOT NULL,
+        credential_id   TEXT NOT NULL,
+        model           TEXT NOT NULL,
+        requests        INTEGER NOT NULL DEFAULT 0,
+        success         INTEGER NOT NULL DEFAULT 0,
+        failure         INTEGER NOT NULL DEFAULT 0,
+        input_tokens    INTEGER NOT NULL DEFAULT 0,
+        output_tokens   INTEGER NOT NULL DEFAULT 0,
+        latency_ms_sum  INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (day, provider_id, credential_id, model)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_usage_daily_day ON usage_daily(day DESC);
+    `,
+  },
 ];
 
 /**
@@ -168,7 +192,9 @@ function ensureMigrationTable(db: SqliteDatabase): void {
 
 export function runMigrations(db: SqliteDatabase, migrations: Migration[] = MIGRATIONS): number {
   ensureMigrationTable(db);
-  const row = db.prepare(`SELECT MAX(version) AS v FROM schema_migrations`).get() as { v: number | null };
+  const row = db.prepare(`SELECT MAX(version) AS v FROM schema_migrations`).get() as {
+    v: number | null;
+  };
   const current = row.v ?? 0;
 
   let applied = 0;
@@ -260,4 +286,6 @@ export interface RequestLogRow {
   fallback_reason: string | null;
   attempts: number;
   stream: number;
+  input_tokens: number;
+  output_tokens: number;
 }

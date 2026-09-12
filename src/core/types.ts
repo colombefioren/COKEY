@@ -7,12 +7,7 @@
  */
 
 /** Lifecycle state of a single credential (one API key). */
-export type CredentialStatus =
-  | "healthy"
-  | "cooldown"
-  | "invalid"
-  | "disabled"
-  | "unverified";
+export type CredentialStatus = "healthy" | "cooldown" | "invalid" | "disabled" | "unverified";
 
 /**
  * How a failed upstream attempt should influence routing.
@@ -321,4 +316,6 @@ export interface RequestLogEntry {
   fallbackReason?: string;
   attempts: number;
   stream: boolean;
+  inputTokens: number;
+  outputTokens: number;
 }

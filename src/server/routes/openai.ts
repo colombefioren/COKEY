@@ -31,7 +31,8 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         owned_by: "cokey",
         chain: true,
       })),
-      ...cokey.listModelIds()
+      ...cokey
+        .listModelIds()
         .filter((id) => !chains.some((chain) => chain.alias === id))
         .map((id) => ({ id, object: "model", created, owned_by: "cokey" })),
     ];
@@ -44,7 +45,9 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
     if (!parsed.success) {
       return reply.code(400).send({
         error: {
-          message: parsed.error.issues.map((i) => `${i.path.join(".") || "body"}: ${i.message}`).join("; "),
+          message: parsed.error.issues
+            .map((i) => `${i.path.join(".") || "body"}: ${i.message}`)
+            .join("; "),
           type: "invalid_request_error",
         },
       });
@@ -143,10 +146,14 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
 
     // Token counts only exist in the body, so they are applied here rather
     // than inside the router (which never reads a successful body).
+    let inputTokens = 0;
+    let outputTokens = 0;
     if (parsedBody !== undefined) {
       const usage = adapter.extractUsage?.(parsedBody);
       if (usage && (usage.inputTokens || usage.outputTokens)) {
         cokey.credentials.recordTokens(result.credentialId, usage);
+        inputTokens = usage.inputTokens ?? 0;
+        outputTokens = usage.outputTokens ?? 0;
       }
     }
 
@@ -164,14 +171,17 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
       fallbackReason: result.fallbackReason,
       attempts: result.attempts.length,
       stream: false,
+      inputTokens,
+      outputTokens,
     });
 
     const contentType = upstream.headers.get("content-type") ?? "application/json";
 
     if (parsedBody !== undefined && adapter.transformResponse) {
-      return reply.code(upstream.status).type("application/json").send(
-        adapter.transformResponse(parsedBody, result.context),
-      );
+      return reply
+        .code(upstream.status)
+        .type("application/json")
+        .send(adapter.transformResponse(parsedBody, result.context));
     }
 
     if (parsedBody !== undefined) {
