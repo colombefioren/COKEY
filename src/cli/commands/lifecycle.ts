@@ -18,6 +18,7 @@ import {
   type CommandContext,
 } from "../context.js";
 import { bold, bullet, cyan, dim, formatClock, green, humanizeDuration, red, yellow } from "../format.js";
+import { printBanner } from "../banner.js";
 
 /** Register lifecycle commands: start, stop, status, config, doctor. */
 export function registerLifecycleCommands(cli: CAC): void {
@@ -284,7 +285,7 @@ async function startGateway(options: CommandContext): Promise<void> {
   const { app, url } = await startServer(cokey);
   writePidFile(dataDir, process.pid);
 
-  console.log(bold("COKEY"));
+  printBanner();
   console.log(`  gateway:  ${cyan(`${url}/v1`)}`);
   console.log(`  ui:       ${cyan(`${url}/`)}`);
   console.log(`  data dir: ${dim(cokey.dataDir)}`);

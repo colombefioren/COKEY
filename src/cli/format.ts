@@ -13,6 +13,8 @@ export const green = wrap(32);
 export const yellow = wrap(33);
 export const blue = wrap(34);
 export const cyan = wrap(36);
+export const magenta = wrap(35);
+export const brightMagenta = wrap(95);
 
 /** A coloured status glyph for a credential. */
 export function statusGlyph(status: string): string {
