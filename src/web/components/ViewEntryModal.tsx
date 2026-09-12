@@ -15,7 +15,9 @@ interface Props {
 export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
   const toast = useToast();
   const [testingCredId, setTestingCredId] = useState<string | null>(null);
-  const [testResults, setTestResults] = useState<Record<string, { ok: boolean; latencyMs?: number; message?: string }>>({});
+  const [testResults, setTestResults] = useState<
+    Record<string, { ok: boolean; latencyMs?: number; message?: string }>
+  >({});
   const [addingCredential, setAddingCredential] = useState(false);
 
   async function testCredential(credential: PublicCredential) {
@@ -46,46 +48,73 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
   }
 
   return (
-    <Modal title={`${entry.model} · Details`} onClose={onClose}>
+    <Modal
+      title={`${entry.model} · Details`}
+      subtitle="Everything this node routes to. Keys are tried in the strategy order below."
+      onClose={onClose}
+    >
       <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-        <div className="field">
-          <label>Provider</label>
-          <span className="mono">{entry.providerId}</span>
-        </div>
+        <div className="detail-grid">
+          <div className="detail-row">
+            <span className="detail-label">Provider</span>
+            <span className="mono">{entry.providerId}</span>
+          </div>
 
-        <div className="field">
-          <label>Model</label>
-          <span className="mono">{entry.model}</span>
-        </div>
+          <div className="detail-row">
+            <span className="detail-label">Model</span>
+            <span className="mono">{entry.model}</span>
+          </div>
 
-        <div className="field">
-          <label>Base URL</label>
-          <span className="mono small">{entry.baseUrl}</span>
-        </div>
+          <div className="detail-row">
+            <span className="detail-label">Base URL</span>
+            <span className="mono small">{entry.baseUrl}</span>
+          </div>
 
-        <div className="field">
-          <label>Routing strategy</label>
-          <span className="badge">{entry.routingStrategy}</span>
-        </div>
+          <div className="detail-row">
+            <span className="detail-label">Strategy</span>
+            <span className="badge" title="How credentials are rotated for this node">
+              {entry.routingStrategy === "sequential"
+                ? "sequential · in order"
+                : "round-robin · rotate"}
+            </span>
+          </div>
 
-        <div className="field">
-          <label>Status</label>
-          <span className="badge" style={{ backgroundColor: entry.enabled ? "var(--ok-bg)" : "var(--warn-bg)", color: entry.enabled ? "var(--ok)" : "var(--warn)" }}>
-            {entry.enabled ? "✓ enabled" : "⊘ disabled"}
-          </span>
+          <div className="detail-row">
+            <span className="detail-label">Status</span>
+            <span
+              className="badge"
+              style={{
+                backgroundColor: entry.enabled ? "var(--ok-bg)" : "var(--warn-bg)",
+                color: entry.enabled ? "var(--ok)" : "var(--warn)",
+              }}
+            >
+              {entry.enabled ? "✓ enabled" : "⊘ disabled"}
+            </span>
+          </div>
         </div>
 
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h4 style={{ margin: 0 }}>Credentials ({entry.credentials.length})</h4>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: 4,
+            }}
+          >
+            <h4 style={{ margin: 0 }}>Keys ({entry.credentials.length})</h4>
             <button
               className="secondary"
               style={{ padding: "4px 8px", fontSize: 12 }}
               onClick={() => setAddingCredential(true)}
             >
-              + Add
+              + Add key
             </button>
           </div>
+          <p className="small faint" style={{ margin: "0 0 12px" }}>
+            Test a key against <span className="mono">{entry.model}</span>. A red pill means the key
+            failed for this model; a green pill shows its latency.
+          </p>
 
           {entry.credentials.length === 0 ? (
             <p className="small faint">No credentials linked to this entry.</p>
@@ -138,7 +167,9 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                       style={{ padding: "2px 4px", fontSize: 12 }}
                       onClick={() => void testCredential(credential)}
                       disabled={testingCredId === credential.id}
-                      title={testingCredId === credential.id ? "Testing..." : "Test this credential"}
+                      title={
+                        testingCredId === credential.id ? "Testing..." : "Test this credential"
+                      }
                     >
                       {testingCredId === credential.id ? "⟳" : "↻"}
                     </button>

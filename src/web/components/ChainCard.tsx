@@ -230,18 +230,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           >
             {/* Left: reorder buttons */}
             <div className="entry-reorder">
-              <button
-                className="ghost"
-                title="Move up (Alt+↑)"
-                onClick={() => move(entry.id, -1)}
-              >
+              <button className="ghost" title="Move up (Alt+↑)" onClick={() => move(entry.id, -1)}>
                 ▲
               </button>
-              <button
-                className="ghost"
-                title="Move down (Alt+↓)"
-                onClick={() => move(entry.id, 1)}
-              >
+              <button className="ghost" title="Move down (Alt+↓)" onClick={() => move(entry.id, 1)}>
                 ▼
               </button>
             </div>
@@ -249,31 +241,28 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             {/* Center: model name */}
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
-              <span className="model-name mono">{entry.model}</span>
+              <button
+                className="model-name mono"
+                title="View details"
+                onClick={() => setViewingEntry(entry)}
+              >
+                {entry.model}
+              </button>
+              <span className="small faint" title={`Provider: ${entry.providerId}`}>
+                {entry.providerId}
+              </span>
               {!entry.enabled && <span className="badge warn">disabled</span>}
             </div>
 
             {/* Right: action buttons */}
             <div className="entry-actions">
-              <button
-                className="ghost"
-                title="View details"
-                onClick={() => setViewingEntry(entry)}
-              >
+              <button className="ghost" title="View details" onClick={() => setViewingEntry(entry)}>
                 👁
               </button>
-              <button
-                className="ghost"
-                title="Edit"
-                onClick={() => setEditingEntry(entry)}
-              >
+              <button className="ghost" title="Edit" onClick={() => setEditingEntry(entry)}>
                 ✎
               </button>
-              <button
-                className="ghost"
-                title="Duplicate"
-                onClick={() => void duplicate(entry)}
-              >
+              <button className="ghost" title="Duplicate" onClick={() => void duplicate(entry)}>
                 ⧉
               </button>
               <button
@@ -295,11 +284,14 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
         ))}
       </div>
 
-      <div className="row" style={{ marginTop: 12 }}>
+      <div className="entry-add-row">
         <button className="secondary" onClick={() => setAddingEntry(true)}>
           + Add entry
         </button>
-        <span className="small faint">Alt+↑ / Alt+↓ reorders without the mouse.</span>
+        <span className="small faint">
+          Nodes run top to bottom. Drag or Alt+↑ / Alt+↓ to reorder; click a model to view, edit, or
+          test its keys.
+        </span>
       </div>
 
       {addingEntry ? (

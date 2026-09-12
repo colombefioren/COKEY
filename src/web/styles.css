@@ -577,6 +577,20 @@ label {
   font-weight: 500;
 }
 
+button.model-name {
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+button.model-name:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .entry-actions {
   display: flex;
   gap: 6px;
@@ -607,6 +621,41 @@ label {
 .entry-actions button.danger:hover {
   background: var(--bad);
   color: var(--bg);
+}
+
+.entry-add-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--panel-2);
+}
+
+.detail-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+}
+
+.detail-row + .detail-row {
+  border-top: 1px solid var(--border);
+}
+
+.detail-label {
+  color: var(--faint);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
 }
 
 .cred-chip {
