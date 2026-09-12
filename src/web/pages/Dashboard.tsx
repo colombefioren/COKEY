@@ -3,6 +3,7 @@ import { api, timeAgo } from "../api.js";
 import type { ChainView, Nudge, RequestLogEntry, Stats } from "../types.js";
 import { Nudger } from "../components/Nudger.js";
 import { ChainFlow } from "../components/ChainFlow.js";
+import { Resilience } from "../components/Resilience.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
@@ -56,6 +57,8 @@ export function Dashboard({
       >
         <ChainFlow chains={chains} refreshKey={refreshKey} />
       </Panel>
+
+      <Resilience />
 
       <Panel title="Gateway">
         <div className="grid cards">
