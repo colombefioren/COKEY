@@ -37,6 +37,8 @@ const AttachCredentialSchema = z
     addAnyway: z.boolean().optional(),
     /** Keep an unverifiable key: attach it as unverified instead of rejecting. */
     saveAnyway: z.boolean().optional(),
+    /** Route the probe through the automatic egress pool. Default true. */
+    useProxy: z.boolean().optional(),
   })
   .refine((value) => Boolean(value.credentialId) || Boolean(value.secret), {
     message: "Provide either credentialId or secret",
@@ -320,7 +322,12 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         proxyUrl: body.proxyUrl,
       });
 
-      const validation = await cokey.verifyCredential(entry.providerId, entry.model, credential);
+      const validation = await cokey.verifyCredential(
+        entry.providerId,
+        entry.model,
+        credential,
+        body.useProxy !== false,
+      );
 
       if (validation.ok) {
         cokey.credentials.markVerified(credential.id);

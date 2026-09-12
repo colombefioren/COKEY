@@ -112,6 +112,12 @@ export const api = {
   removeProxy: (id: string) => request<ProxyPoolResponse>("DELETE", `/api/proxy-pool/${id}`),
   syncProxyPool: () =>
     request<ProxyPoolResponse & { changed: number }>("POST", "/api/proxy-pool/sync"),
+  fetchProxifly: (limit?: number) =>
+    request<ProxyPoolBulkResponse & { source: "proxifly-free" }>(
+      "POST",
+      "/api/proxy-pool/fetch-proxifly",
+      { limit },
+    ),
 
   connectProvider: (
     providerId: string,
@@ -122,6 +128,8 @@ export const api = {
       proxyUrl?: string;
       /** Keep an unverifiable key: save it as unverified instead of rejecting. */
       saveAnyway?: boolean;
+      /** Route the probe through the automatic egress pool. Default true. */
+      useProxy?: boolean;
     },
   ) =>
     request<ConnectResult>(
@@ -136,7 +144,10 @@ export const api = {
    * Powers the separate "Test" button: the verdict is shown inline and the key
    * is only stored when the user then clicks "Save".
    */
-  testProviderSecret: (providerId: string, body: { secret: string; accountId?: string; model?: string }) =>
+  testProviderSecret: (
+    providerId: string,
+    body: { secret: string; accountId?: string; model?: string; useProxy?: boolean },
+  ) =>
     request<ValidationResult>(
       "POST",
       `/api/providers/${encodeURIComponent(providerId)}/test`,
@@ -208,6 +219,8 @@ export const api = {
       addAnyway?: boolean;
       /** Keep an unverifiable key: save it as unverified instead of rejecting. */
       saveAnyway?: boolean;
+      /** Route the probe through the automatic egress pool. Default true. */
+      useProxy?: boolean;
     },
   ) =>
     request<{

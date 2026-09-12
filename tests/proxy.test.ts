@@ -2,6 +2,10 @@ import { afterAll, describe, expect, it } from "vitest";
 import { findProvider } from "../src/catalog/providers.js";
 import { OpenAICompatibleAdapter } from "../src/core/providers/openai-compatible.js";
 import {
+  PROXIFLY_FREE_LIST_URL,
+  parseProxiflyList,
+} from "../src/core/providers/proxifly.js";
+import {
   closeProxyDispatchers,
   dispatcherFor,
   parseProxyUrl,
@@ -48,6 +52,38 @@ describe("parseProxyUrl", () => {
     expect(proxyLabel("socks5://alice:hunter2@egress.test:1080")).toBe("egress.test:1080");
     expect(proxyLabel("nonsense")).toBeUndefined();
     expect(proxyLabel(undefined)).toBeUndefined();
+  });
+});
+
+describe("parseProxiflyList", () => {
+  it("parses socks5 lines and deduplicates them", () => {
+    const list = parseProxiflyList(
+      "socks5://a.test:1080\nsocks5://b.test:1080\n\nsocks5://a.test:1080\n",
+    );
+    expect(list.urls).toEqual(["socks5://a.test:1080", "socks5://b.test:1080"]);
+    expect(list.schemaSummary).toBe("socks5");
+  });
+
+  it("skips garbage lines instead of failing the batch", () => {
+    const list = parseProxiflyList("socks5://ok.test:1080\nnot a url\nsocks4://old.test:1080\n");
+    expect(list.urls).toEqual(["socks5://ok.test:1080"]);
+  });
+
+  it("supports crlf line endings", () => {
+    const list = parseProxiflyList("socks5://a.test:1080\r\nsocks5://b.test:1080\r\n");
+    expect(list.urls).toHaveLength(2);
+  });
+
+  it("caps the parsed entries at the requested limit", () => {
+    const list = parseProxiflyList(
+      "socks5://a.test:1080\nsocks5://b.test:1080\nsocks5://c.test:1080\n",
+      2,
+    );
+    expect(list.urls).toEqual(["socks5://a.test:1080", "socks5://b.test:1080"]);
+  });
+
+  it("exposes the free list source", () => {
+    expect(PROXIFLY_FREE_LIST_URL).toMatch(/^https:\/\//);
   });
 });
 

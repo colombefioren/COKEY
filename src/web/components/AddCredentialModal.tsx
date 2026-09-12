@@ -31,6 +31,7 @@ export function AddCredentialModal({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ValidationResult | undefined>();
   const [error, setError] = useState<string | undefined>();
+  const [useProxy, setUseProxy] = useState(true);
 
   const needsAccountId = entry.provider?.credentialFields.includes("accountId") ?? false;
 
@@ -77,6 +78,7 @@ export function AddCredentialModal({
         secret: secret.trim(),
         ...(needsAccountId && accountId.trim() ? { accountId: accountId.trim() } : {}),
         model: entry.model,
+        useProxy,
       });
       setResult(validation);
     } catch (err) {
@@ -109,6 +111,7 @@ export function AddCredentialModal({
         // The user asked for this key explicitly: save it even if the probe
         // rejects it, clearly marked unverified.
         saveAnyway: true,
+        useProxy,
       });
       setResult(response.validation);
       toast.ok(
@@ -227,6 +230,20 @@ export function AddCredentialModal({
               overrides the pool for it.
             </span>
           </div>
+
+          <label className="selected-item" style={{ marginBottom: 12 }}>
+            <input
+              type="checkbox"
+              style={{ width: "auto" }}
+              checked={useProxy}
+              onChange={(event) => setUseProxy(event.target.checked)}
+            />
+            Route this test/save through the egress pool
+            <span className="small faint" style={{ display: "block", marginLeft: 22 }}>
+              Protects your real IP, but free pool exits can hang, error or get blocked — no proxy
+              is faster. Off = direct.
+            </span>
+          </label>
 
           {busy ? <div className="verify pending">Verifying with {entry.providerId}…</div> : null}
           {result?.ok ? (

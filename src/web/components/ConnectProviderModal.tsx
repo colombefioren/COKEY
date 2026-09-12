@@ -26,6 +26,7 @@ export function ConnectProviderModal({
   const [description, setDescription] = useState("");
   const [secret, setSecret] = useState("");
   const [accountId, setAccountId] = useState("");
+  const [useProxy, setUseProxy] = useState(true);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ValidationResult | undefined>();
   const [error, setError] = useState<string | undefined>();
@@ -45,6 +46,7 @@ export function ConnectProviderModal({
       const validation = await api.testProviderSecret(provider.id, {
         secret: secret.trim(),
         ...(needsAccountId ? { accountId: accountId.trim() } : {}),
+        useProxy,
       });
       setResult(validation);
     } catch (err) {
@@ -68,6 +70,7 @@ export function ConnectProviderModal({
         secret: secret.trim(),
         ...(needsAccountId ? { accountId: accountId.trim() } : {}),
         saveAnyway: true,
+        useProxy,
       });
       setResult(response.validation);
       toast.ok(
@@ -133,6 +136,20 @@ export function ConnectProviderModal({
       ) : null}
 
       {error ? <div className="verify err">{error}</div> : null}
+
+      <label className="selected-item" style={{ marginTop: 14 }}>
+        <input
+          type="checkbox"
+          style={{ width: "auto" }}
+          checked={useProxy}
+          onChange={(event) => setUseProxy(event.target.checked)}
+        />
+        Route this test/save through the egress pool
+        <span className="small faint" style={{ display: "block", marginLeft: 22 }}>
+          Protects your real IP, but free pool exits can hang, error or get blocked — no proxy is
+          faster. Off = direct.
+        </span>
+      </label>
 
       <div className="hint-box" style={{ marginTop: 14 }}>
         Need a key?{" "}

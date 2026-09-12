@@ -25,6 +25,10 @@ import {
   type ProxyPoolStatus,
   type ProxyPoolView,
 } from "./providers/proxy-pool.js";
+import {
+  fetchProxiflyFreeList,
+  parseProxiflyList,
+} from "./providers/proxifly.js";
 import { modelAvailability, type ModelCatalogView } from "./models/availability.js";
 import { emptyUsage } from "./types.js";
 import { SecretVault } from "./crypto/secrets.js";
@@ -91,6 +95,11 @@ export interface ConnectProviderInput {
   proxyUrl?: string;
   /** Keep an unverifiable key: save it as unverified instead of rejecting. */
   saveAnyway?: boolean;
+  /**
+   * Route the verification probe through the automatic egress pool.
+   * Defaults to true: a probe should reflect what production will do.
+   */
+  useProxy?: boolean;
 }
 
 export interface ConnectProviderResult {
@@ -336,6 +345,8 @@ export class Cokey {
     this.syncProxyAssignments();
 
     const adapter = this.providers.get(providerId);
+    const exit = this.resolveProbeProxy(credential, input.useProxy !== false);
+    if (exit) credential.proxyUrl = exit;
     const validation = await adapter.validateCredential(credential);
 
     if (validation.ok) {
@@ -393,7 +404,7 @@ export class Cokey {
    */
   async testProviderSecret(
     providerId: string,
-    input: { secret: string; accountId?: string; model?: string },
+    input: { secret: string; accountId?: string; model?: string; useProxy?: boolean },
   ): Promise<ValidationResult> {
     const catalog = this.providers.findCatalogEntry(providerId);
     if (!catalog) throw new Error(`Unknown provider: ${providerId}`);
@@ -412,6 +423,12 @@ export class Cokey {
       createdAt: Date.now(),
       updatedAt: Date.now(),
     };
+
+    // The probe leaves through the exit this key would get from the pool, so
+    // "Test" reflects what production requests will actually do. An explicit
+    // proxyUrl on the input is honored first.
+    const probeExit = this.resolveProbeProxy(credential, input.useProxy !== false);
+    if (probeExit) credential.proxyUrl = probeExit;
 
     if (input.model) return this.verifyCredential(providerId, input.model, credential);
     return this.providers.get(providerId).validateCredential(credential);
@@ -583,6 +600,30 @@ export class Cokey {
     );
   }
 
+  /**
+   * Resolve the exit IP a probe or test request should leave through.
+   *
+   * Mirrors `syncProxyAssignments`, but on a transient credential that has not
+   * been persisted yet: an explicit `proxyUrl` wins, then the pool slot this
+   * key would land on (when the pool is enabled and has entries), otherwise
+   * nothing - meaning the request goes direct. The probe stays direct when the
+   * caller opted out with `useProxy: false`.
+   */
+  private resolveProbeProxy(
+    credential: Credential,
+    useProxy: boolean,
+  ): string | undefined {
+    if (credential.proxyUrl) return credential.proxyUrl;
+    if (!useProxy || !this.settings.autoProxy) return undefined;
+    if (this.proxyPool.size() === 0) return undefined;
+
+    const [slot] = this.proxyPool.plan(
+      [{ id: credential.id, providerId: credential.providerId }],
+      this.settings.autoProxyStrategy,
+    );
+    return slot?.proxyUrl;
+  }
+
   /** Add one proxy to the pool and re-plan immediately. */
   addProxyToPool(url: string): ProxyPoolView[] {
     this.proxyPool.add(url);
@@ -595,6 +636,33 @@ export class Cokey {
     const result = this.proxyPool.addMany(rawList);
     this.syncProxyAssignments();
     return { ...result, entries: this.listProxyPool() };
+  }
+
+  /**
+   * Fetch Proxifly's free public list and fold it into the egress pool.
+   *
+   * The list is a static CDN-hosted file, so there is no API key involved and
+   * nothing to be charged. `limit` caps how many entries a single click can
+   * add (the file is ~60 KB today). The pool is re-planned afterwards so any
+   * pool-owned credentials land on their new exits immediately.
+   */
+  async addProxiflyFreeList(
+    limit?: number,
+  ): Promise<{ added: number; skipped: number; entries: ProxyPoolView[]; status: ProxyPoolStatus }> {
+    const raw = await fetchProxiflyFreeList();
+    const { urls } = parseProxiflyList(raw, limit);
+    if (urls.length === 0) {
+      return { added: 0, skipped: 0, entries: this.listProxyPool(), status: this.proxyPoolStatus() };
+    }
+
+    const result = this.proxyPool.addMany(urls.join("\n"));
+    this.syncProxyAssignments();
+
+    return {
+      ...result,
+      entries: this.listProxyPool(),
+      status: this.proxyPoolStatus(),
+    };
   }
 
   removeProxyFromPool(id: string): ProxyPoolView[] {
@@ -960,9 +1028,15 @@ export class Cokey {
     providerId: string,
     model: string,
     credential: Credential,
+    useProxy = true,
   ): Promise<ValidationResult> {
     const catalog = this.providers.findCatalogEntry(providerId);
     const adapter = this.providers.get(providerId);
+
+    // Probe leaves through the exit this key would get in production. The pool
+    // reassignment happens after connect, so it cannot be relied on here.
+    const exit = this.resolveProbeProxy(credential, useProxy);
+    const probeCredential = exit !== undefined ? { ...credential, proxyUrl: exit } : credential;
 
     // Always try a real chat request against the specific model so that
     // quota exhaustion and model availability are both tested.
@@ -983,7 +1057,7 @@ export class Cokey {
         updatedAt: now,
       };
 
-      const result = await adapter.send(probe, credential, {
+      const result = await adapter.send(probe, probeCredential, {
         model,
         messages: [{ role: "user", content: "ping" }],
         max_tokens: 1,
@@ -1001,7 +1075,7 @@ export class Cokey {
       };
     }
 
-    return adapter.validateCredential(credential);
+    return adapter.validateCredential(probeCredential);
   }
 
   listChains(): ChainView[] {

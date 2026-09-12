@@ -66,7 +66,7 @@ export class ProxyPool {
   }
 
   prune(now = Date.now()): number {
-    let removed = 0;
+    const removed = 0;
     this._addresses = this._addresses.filter((address) => {
       if (
         address.lastUsedAt !== undefined &&

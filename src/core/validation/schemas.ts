@@ -35,6 +35,8 @@ export const ConnectProviderSchema = z.object({
   proxyUrl: ProxyUrlSchema.optional(),
   /** Keep an unverifiable key: save it as unverified instead of rejecting. */
   saveAnyway: z.boolean().optional(),
+  /** Route the probe through the automatic egress pool. Default true. */
+  useProxy: z.boolean().optional(),
 });
 
 /** Raw key probe. Runs validation against the provider without persisting. */
@@ -43,6 +45,8 @@ export const TestSecretSchema = z.object({
   accountId: z.string().min(1).max(200).optional(),
   /** When present, the probe verifies against this exact model. */
   model: z.string().min(1).optional(),
+  /** Route the probe through the automatic egress pool. Default true. */
+  useProxy: z.boolean().optional(),
 });
 
 export const CreateChainSchema = z.object({
@@ -94,6 +98,12 @@ export const ProxyPoolEntrySchema = z.object({
 
 export const BulkProxyPoolSchema = z.object({
   text: z.string().min(1, "Paste at least one proxy URL").max(20_000),
+});
+
+/** Import Proxifly's free list into the pool. */
+export const FetchProxiflySchema = z.object({
+  /** Cap how many proxies one click may import. Omit for the whole list. */
+  limit: z.number().int().min(1).max(2_000).optional(),
 });
 
 export const UpdateProxyPoolSchema = z

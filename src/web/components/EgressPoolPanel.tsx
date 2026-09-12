@@ -104,6 +104,20 @@ export function EgressPoolPanel({
     }
   }
 
+  async function fetchProxifly() {
+    setBusy(true);
+    try {
+      const result = await api.fetchProxifly();
+      setData(result);
+      toast.ok(`${result.added} free exit(s) added from Proxifly`);
+      onSettingsChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function setAutoProxy(enabled: boolean) {
     try {
       await api.updateSettings({ autoProxy: enabled });
@@ -134,6 +148,9 @@ export function EgressPoolPanel({
       title={`Egress pool (${entries.length})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
+          <button className="secondary" onClick={() => void fetchProxifly()} disabled={busy}>
+            fetch free proxies (Proxifly)
+          </button>
           <button className="secondary" onClick={() => setBulkOpen(true)} disabled={busy}>
             bulk paste
           </button>
@@ -167,6 +184,15 @@ export function EgressPoolPanel({
             <option value="round-robin">Rotate by provider order</option>
           </select>
         </div>
+      </div>
+
+      <div className="hint-box" style={{ marginBottom: 14 }}>
+        <strong>Fetch free proxies (Proxifly):</strong> pulls Proxifly's public free list into the
+        pool. It's free because it's public — open exit IPs shared by strangers, so expect them to be
+        slower, flaky, sometimes already dead, and some providers block them on sight. One click and
+        the pool fills up, but don't build anything serious on these. Paste your own paid or
+        residential proxies in bulk above for exits you can trust. (We're all poor here — but
+        careful does it.)
       </div>
 
       {status ? (

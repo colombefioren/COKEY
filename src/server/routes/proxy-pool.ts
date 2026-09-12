@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import type { Cokey } from "../../core/cokey.js";
 import {
   BulkProxyPoolSchema,
+  FetchProxiflySchema,
   ProxyPoolEntrySchema,
   UpdateProxyPoolSchema,
 } from "../../core/validation/schemas.js";
@@ -83,5 +84,28 @@ export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): voi
       entries: cokey.listProxyPool(),
       status: cokey.proxyPoolStatus(),
     })),
+  );
+
+  /**
+   * Pull Proxifly's free proxy list into the pool.
+   *
+   * Free proxies are public and shared: the pool grows fast, expectations stay
+   * low. Users who need reliability should paste in their own (often paid)
+   * entries via `/api/proxy-pool/bulk` instead.
+   */
+  app.post(
+    "/api/proxy-pool/fetch-proxifly",
+    withErrors(async (request, reply) => {
+      const body = FetchProxiflySchema.parse(request.body ?? {});
+      const result = await cokey.addProxiflyFreeList(body.limit);
+      reply.code(201);
+      return {
+        source: "proxifly-free",
+        added: result.added,
+        skipped: result.skipped,
+        entries: result.entries,
+        status: result.status,
+      };
+    }),
   );
 }
