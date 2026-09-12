@@ -1,5 +1,6 @@
 import { CokeyLogo } from "../components/Logo.js";
 import { Panel } from "../components/Primitives.js";
+import { ContactGrid } from "../components/Contact.js";
 import { CREATOR, DATA_CREDIT, REPO_URL } from "../links.js";
 
 /**
@@ -80,32 +81,7 @@ export function About() {
           Built and maintained by <strong>@{CREATOR.name}</strong>. Bug reports, provider tips and
           pull requests are all welcome.
         </p>
-        <div className="contact-grid">
-          <ContactCard
-            label="GitHub"
-            value={`@${CREATOR.name}`}
-            href={CREATOR.github}
-            hint="Issues, pull requests and the source"
-          />
-          <ContactCard
-            label="LinkedIn"
-            value={CREATOR.name}
-            href={CREATOR.linkedin}
-            hint="Work and updates"
-          />
-          <ContactCard
-            label="Facebook"
-            value="colombe.fioren"
-            href={CREATOR.facebook}
-            hint="Say hello"
-          />
-          <ContactCard
-            label="Repository"
-            value="colombefioren/COKEY"
-            href={REPO_URL}
-            hint="Open source, MIT licensed"
-          />
-        </div>
+        <ContactGrid />
       </Panel>
 
       <Panel title="Credits">
@@ -119,25 +95,5 @@ export function About() {
         </p>
       </Panel>
     </>
-  );
-}
-
-function ContactCard({
-  label,
-  value,
-  href: link,
-  hint,
-}: {
-  label: string;
-  value: string;
-  href: string;
-  hint: string;
-}) {
-  return (
-    <a className="contact-card" href={link} target="_blank" rel="noreferrer">
-      <span className="contact-label">{label}</span>
-      <span className="contact-value mono">{value}</span>
-      <span className="contact-hint small faint">{hint}</span>
-    </a>
   );
 }

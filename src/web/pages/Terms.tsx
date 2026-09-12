@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
+import { ContactGrid } from "../components/Contact.js";
 import { Panel } from "../components/Primitives.js";
+import { CREATOR } from "../links.js";
 
 /**
  * Terms of service.
@@ -122,6 +124,15 @@ export function Terms() {
           for any consequences that follow from it. If a dispute arises with a provider, it is
           between you and that provider.
         </div>
+      </Panel>
+
+      <Panel title="Contact the creator">
+        <p className="small muted" style={{ marginTop: 0 }}>
+          COKEY is built and maintained by one person, <strong>@{CREATOR.name}</strong>. Bug
+          reports, provider tips, a free tier that changed under you, and pull requests are all
+          welcome - the software is MIT licensed and the source is public.
+        </p>
+        <ContactGrid />
       </Panel>
 
       <div className="closing">
