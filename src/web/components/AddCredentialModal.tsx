@@ -64,7 +64,7 @@ export function AddCredentialModal({
 
   async function createAndVerify() {
     if (!description.trim() || !secret.trim()) {
-      setError("Description and key are both required");
+      setError("Name and key are both required");
       return;
     }
     setBusy(true);
@@ -146,7 +146,7 @@ export function AddCredentialModal({
       ) : (
         <>
           <div className="field">
-            <label htmlFor="credential-description">Description</label>
+            <label htmlFor="credential-description">Name</label>
             <input
               id="credential-description"
               value={description}
