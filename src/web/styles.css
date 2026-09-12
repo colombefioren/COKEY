@@ -583,6 +583,32 @@ label {
   align-items: center;
 }
 
+.entry-actions button {
+  padding: 6px 10px;
+  font-size: 13px;
+  transition: all 0.15s ease;
+}
+
+.entry-actions button.ghost {
+  color: var(--muted);
+}
+
+.entry-actions button.ghost:hover {
+  color: var(--text);
+  background: var(--panel-2);
+}
+
+.entry-actions button.danger {
+  color: var(--bad);
+  background: transparent;
+  border: 1px solid var(--bad);
+}
+
+.entry-actions button.danger:hover {
+  background: var(--bad);
+  color: var(--bg);
+}
+
 .cred-chip {
   display: inline-flex;
   align-items: center;
