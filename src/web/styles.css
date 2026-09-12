@@ -514,44 +514,73 @@ label {
   margin-top: 12px;
 }
 
-.entry {
-  display: flex;
+/* ---- clean entry node layout --------------------------------------------- */
+
+.entry-node {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 10px;
-  padding: 9px 11px;
+  gap: 16px;
+  padding: 12px 14px;
   border-radius: 7px;
   background: var(--panel);
   border: 1px solid var(--border);
+  transition: all 0.15s ease;
 }
-.entry.dragging {
+
+.entry-node:hover {
+  background: var(--panel-2);
+  border-color: var(--border-strong);
+}
+
+.entry-node.dragging {
   opacity: 0.45;
 }
-.entry.disabled {
+
+.entry-node.disabled {
   opacity: 0.55;
 }
-.entry .handle {
-  cursor: grab;
-  color: var(--faint);
-  user-select: none;
-  letter-spacing: -2px;
+
+.entry-reorder {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.entry .priority {
+
+.entry-reorder button {
+  padding: 4px 6px;
+  font-size: 11px;
+}
+
+.entry-model {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.entry-model .priority {
   color: var(--faint);
   font-variant-numeric: tabular-nums;
-  min-width: 20px;
+  min-width: 24px;
+  text-align: right;
+  font-weight: 600;
 }
-.entry .model {
+
+.entry-model .model-name {
   flex: 1;
-  min-width: 160px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text);
+  font-weight: 500;
 }
-.entry .creds {
+
+.entry-actions {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   align-items: center;
-  flex-wrap: wrap;
 }
 
 .cred-chip {
