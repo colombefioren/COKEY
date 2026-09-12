@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError, timeAgo } from "../api.js";
 import type { ProviderStatus, PublicCredential } from "../types.js";
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
+import { Pagination } from "../components/Pagination.js";
 import {
   Empty,
   Panel,
@@ -13,35 +14,41 @@ import {
 } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
+const KEYS_PER_PAGE = 25;
+
 interface ProviderGroup {
   providerId: string;
   displayName: string;
-  connected: boolean;
   credentials: PublicCredential[];
 }
 
 /**
- * Credential inventory, grouped by provider.
+ * The credential inventory.
  *
- * Secrets are only ever shown masked. Each key can be tested, disabled,
- * replaced (rotated) or revoked; a provider group can gain another key without
- * leaving the page, so a mixed-provider pool is managed in one place.
+ * Secrets are shown masked and only masked. A proxy set by the automatic pool is
+ * labelled as such, so it is always obvious which keys will move when the pool
+ * changes and which ones are pinned by hand.
  */
-export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
+export function Keys({
+  refreshKey,
+  onChanged,
+  providers,
+}: {
+  refreshKey: number;
+  onChanged: () => void;
+  providers: ProviderStatus[];
+}) {
   const toast = useToast();
   const [credentials, setCredentials] = useState<PublicCredential[]>([]);
-  const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addingFor, setAddingFor] = useState<ProviderStatus | null>(null);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(KEYS_PER_PAGE);
 
   const load = useCallback(async () => {
     try {
-      const [credentialList, providerList] = await Promise.all([
-        api.credentials(),
-        api.providers(),
-      ]);
-      setCredentials(credentialList);
-      setProviders(providerList);
+      setCredentials(await api.allCredentials());
     } catch (error) {
       toast.err(error instanceof Error ? error.message : String(error));
     }
@@ -52,34 +59,42 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
   }, [load, refreshKey]);
 
   const groups = useMemo<ProviderGroup[]>(() => {
+    const needle = query.trim().toLowerCase();
     const byProvider = new Map<string, PublicCredential[]>();
     for (const credential of credentials) {
+      if (
+        needle &&
+        ![credential.description, credential.providerId, credential.maskedSecret, credential.status].some(
+          (field) => field.toLowerCase().includes(needle),
+        )
+      ) {
+        continue;
+      }
       const list = byProvider.get(credential.providerId) ?? [];
       list.push(credential);
       byProvider.set(credential.providerId, list);
     }
 
     const known = new Map(providers.map((provider) => [provider.id, provider]));
-    const result: ProviderGroup[] = [];
-    for (const [providerId, list] of byProvider) {
-      result.push({
+    return [...byProvider.entries()]
+      .map(([providerId, list]) => ({
         providerId,
         displayName: known.get(providerId)?.displayName ?? providerId,
-        connected: true,
         credentials: list,
-      });
-    }
-    result.sort((a, b) => a.displayName.localeCompare(b.displayName));
-    return result;
-  }, [credentials, providers]);
+      }))
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }, [credentials, providers, query]);
+
+  const totalPages = Math.max(1, Math.ceil(groups.length / pageSize));
+  const current = Math.min(page, totalPages);
+  const visible = groups.slice((current - 1) * pageSize, current * pageSize);
 
   async function test(credential: PublicCredential) {
     setBusyId(credential.id);
     try {
       const result = await api.testCredential(credential.id);
       if (result.ok) toast.ok(`${credential.description}: verified in ${result.latencyMs ?? 0}ms`);
-      else
-        toast.err(`${credential.description}: ${result.classification} — ${result.message ?? ""}`);
+      else toast.err(`${credential.description}: ${result.classification} ${result.message ?? ""}`);
       await load();
       onChanged();
     } catch (error) {
@@ -103,7 +118,7 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
 
   async function replace(credential: PublicCredential) {
     const answer = window.prompt(
-      `Replace the API key for “${credential.description}”?\n\nThe new secret is verified before it is stored.`,
+      `Replace the API key for "${credential.description}"?\n\nThe new secret is verified before it is stored.`,
       "",
     );
     if (answer === null) return;
@@ -125,20 +140,25 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
     }
   }
 
+  /**
+   * Pin a key to a hand-picked exit IP, or hand it back to the pool.
+   *
+   * An empty value means "let the pool choose", which is the useful default now
+   * that assignment is automatic.
+   */
   async function editProxy(credential: PublicCredential) {
-    const current = credential.proxy.label ? `socks5://…@${credential.proxy.label}` : "";
+    const currentValue = credential.proxy.configured ? `socks5://...@${credential.proxy.label}` : "";
     const answer = window.prompt(
-      `Egress proxy for “${credential.description}”\n\n` +
-        "Leave empty to restore direct egress.\n" +
-        "Examples: socks5://user:pass@host:1080 · http://host:8080",
-      current,
+      `Egress proxy for "${credential.description}"\n\n` +
+        "Leave empty to let the automatic pool choose this key's exit IP.\n" +
+        "Set a value to pin it: socks5://user:pass@host:1080 or http://host:8080",
+      currentValue,
     );
     if (answer === null) return;
-    if (answer === current && credential.proxy.configured) return;
 
     try {
       await api.updateCredential(credential.id, { proxyUrl: answer.trim() ? answer.trim() : null });
-      toast.ok(answer.trim() ? "Proxy updated" : "Proxy cleared");
+      toast.ok(answer.trim() ? "Proxy pinned manually" : "Proxy returned to the automatic pool");
       await load();
       onChanged();
     } catch (error) {
@@ -147,7 +167,7 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
   }
 
   async function remove(credential: PublicCredential) {
-    if (!confirm(`Delete credential “${credential.description}”? It is detached from every chain.`))
+    if (!confirm(`Delete credential "${credential.description}"? It is detached from every chain.`))
       return;
     try {
       await api.deleteCredential(credential.id);
@@ -161,14 +181,27 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
 
   return (
     <>
-      <Panel title={`Credentials by provider (${credentials.length})`}>
+      <Panel
+        title={`Credentials (${credentials.length})`}
+        actions={
+          <input
+            className="search"
+            placeholder="Search description, provider or state"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
+          />
+        }
+      >
         {groups.length === 0 ? (
           <Empty>
-            No credentials yet. Connect a provider from the Providers tab — COKEY verifies each key
+            No credentials yet. Connect a provider from the Providers tab. COKEY verifies every key
             before storing it.
           </Empty>
         ) : (
-          groups.map((group) => (
+          visible.map((group) => (
             <div key={group.providerId} className="provider-group">
               <div className="provider-group-head">
                 <strong>{group.displayName}</strong>
@@ -176,7 +209,7 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
                 <span className="badge">
                   {group.credentials.length} key{group.credentials.length === 1 ? "" : "s"}
                 </span>
-                <span className="spacer" style={{ flex: 1 }} />
+                <span className="spacer" />
                 <button
                   className="secondary"
                   style={{ padding: "4px 9px" }}
@@ -191,104 +224,110 @@ export function Keys({ refreshKey, onChanged }: { refreshKey: number; onChanged:
                 </button>
               </div>
 
-              <table>
-                <thead>
-                  <tr>
-                    <th>State</th>
-                    <th>Description</th>
-                    <th>Key</th>
-                    <th>Rate / min</th>
-                    <th>Egress</th>
-                    <th>Usage</th>
-                    <th>Quota</th>
-                    <th>Last used</th>
-                    <th />
-                  </tr>
-                </thead>
-                <tbody>
-                  {group.credentials.map((credential) => (
-                    <tr key={credential.id}>
-                      <td>
-                        <StatusBadge status={credential.status} />
-                        {credential.cooldownUntil && credential.cooldownUntil > Date.now() ? (
-                          <div className="small faint">
-                            {formatDuration(credential.cooldownUntil - Date.now())} left
-                          </div>
-                        ) : null}
-                      </td>
-                      <td>{credential.description}</td>
-                      <td className="mono small">{credential.maskedSecret}</td>
-                      <td>
-                        <RateLabel rate={credential.rate} />
-                      </td>
-                      <td className="small">
-                        {credential.proxy.configured ? (
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>State</th>
+                      <th>Description</th>
+                      <th>Key</th>
+                      <th>Rate / min</th>
+                      <th>Egress</th>
+                      <th>Usage</th>
+                      <th>Quota</th>
+                      <th>Last used</th>
+                      <th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {group.credentials.map((credential) => (
+                      <tr key={credential.id}>
+                        <td>
+                          <StatusBadge status={credential.status} />
+                          {credential.cooldownUntil && credential.cooldownUntil > Date.now() ? (
+                            <div className="small faint">
+                              {formatDuration(credential.cooldownUntil - Date.now())} left
+                            </div>
+                          ) : null}
+                        </td>
+                        <td>{credential.description}</td>
+                        <td className="mono small">{credential.maskedSecret}</td>
+                        <td>
+                          <RateLabel rate={credential.rate} />
+                        </td>
+                        <td className="small">
                           <button
                             className="ghost mono small"
                             style={{ padding: "2px 4px" }}
-                            title="Change or clear this key's egress proxy"
+                            title="Pin this key to its own exit IP, or return it to the automatic pool"
                             onClick={() => void editProxy(credential)}
                           >
-                            {credential.proxy.label ?? "proxy"} ↗
+                            {credential.proxy.configured
+                              ? `${credential.proxy.label ?? "proxy"}${credential.proxy.auto ? " (auto)" : " (pinned)"}`
+                              : "direct"}
                           </button>
-                        ) : (
-                          <button
-                            className="ghost small"
-                            style={{ padding: "2px 4px" }}
-                            title="Route this key through its own SOCKS5/HTTP proxy"
-                            onClick={() => void editProxy(credential)}
-                          >
-                            direct
-                          </button>
-                        )}
-                      </td>
-                      <td className="small muted">
-                        {formatNumber(credential.usage.requests)} req ·{" "}
-                        {formatNumber(credential.usage.successfulRequests)} ok
-                        {credential.usage.totalTokens > 0
-                          ? ` · ${formatNumber(credential.usage.totalTokens)} tok`
-                          : ""}
-                      </td>
-                      <td className="small">
-                        <QuotaLabel quota={credential.quota} />
-                      </td>
-                      <td className="small muted">
-                        {credential.usage.lastUsedAt
-                          ? timeAgo(credential.usage.lastUsedAt)
-                          : "never"}
-                      </td>
-                      <td>
-                        <div className="row" style={{ gap: 4 }}>
-                          <button
-                            className="secondary"
-                            style={{ padding: "4px 9px" }}
-                            onClick={() => void test(credential)}
-                            disabled={busyId === credential.id}
-                          >
-                            {busyId === credential.id ? "…" : "Test"}
-                          </button>
-                          <button className="ghost" onClick={() => void replace(credential)}>
-                            replace
-                          </button>
-                          <button className="ghost" onClick={() => void toggle(credential)}>
-                            {credential.status === "disabled" ? "enable" : "disable"}
-                          </button>
-                          <button
-                            className="danger"
-                            style={{ padding: "4px 9px" }}
-                            onClick={() => void remove(credential)}
-                          >
-                            revoke
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        </td>
+                        <td className="small muted">
+                          {formatNumber(credential.usage.requests)} req ·{" "}
+                          {formatNumber(credential.usage.successfulRequests)} ok
+                          {credential.usage.totalTokens > 0
+                            ? ` · ${formatNumber(credential.usage.totalTokens)} tok`
+                            : ""}
+                        </td>
+                        <td className="small">
+                          <QuotaLabel quota={credential.quota} />
+                        </td>
+                        <td className="small muted">
+                          {credential.usage.lastUsedAt ? timeAgo(credential.usage.lastUsedAt) : "never"}
+                        </td>
+                        <td>
+                          <div className="row" style={{ gap: 4 }}>
+                            <button
+                              className="secondary"
+                              style={{ padding: "4px 9px" }}
+                              onClick={() => void test(credential)}
+                              disabled={busyId === credential.id}
+                            >
+                              {busyId === credential.id ? "…" : "Test"}
+                            </button>
+                            <button className="ghost" onClick={() => void replace(credential)}>
+                              replace
+                            </button>
+                            <button className="ghost" onClick={() => void toggle(credential)}>
+                              {credential.status === "disabled" ? "enable" : "disable"}
+                            </button>
+                            <button
+                              className="danger"
+                              style={{ padding: "4px 9px" }}
+                              onClick={() => void remove(credential)}
+                            >
+                              revoke
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           ))
         )}
+
+        <Pagination
+          page={current}
+          totalPages={totalPages}
+          total={groups.length}
+          pageSize={pageSize}
+          noun="provider groups"
+          onChange={(params) => {
+            if (params.page) setPage(params.page);
+            if (params.pageSize) {
+              setPageSize(params.pageSize);
+              setPage(1);
+            }
+          }}
+        />
       </Panel>
 
       {addingFor ? (

@@ -242,15 +242,28 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
               <button
-                className="model-name mono"
+                className="model-name"
                 title="View details"
                 onClick={() => setViewingEntry(entry)}
               >
-                {entry.model}
+                {entry.label ?? entry.model}
               </button>
+              {entry.label ? <span className="small faint mono">{entry.model}</span> : null}
               <span className="small faint" title={`Provider: ${entry.providerId}`}>
                 {entry.providerId}
               </span>
+              {entry.credentials.length > 0 ? (
+                <span className="badge neutral" title="Keys bound to this node">
+                  {entry.healthyCount}/{entry.credentials.length} keys
+                </span>
+              ) : (
+                <span className="badge bad">no keys</span>
+              )}
+              {entry.credentials.some((credential) => credential.proxy.auto) ? (
+                <span className="badge neutral" title="Automatic egress pool is assigning exits">
+                  auto proxy
+                </span>
+              ) : null}
               {!entry.enabled && <span className="badge warn">disabled</span>}
             </div>
 

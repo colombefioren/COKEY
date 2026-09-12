@@ -36,7 +36,7 @@ export function AddCredentialModal({
 
   useEffect(() => {
     void (async () => {
-      const all = await api.credentials();
+      const all = await api.allCredentials();
       const bindable = all.filter(
         (credential) =>
           credential.providerId === entry.providerId && !entry.credentialIds.includes(credential.id),

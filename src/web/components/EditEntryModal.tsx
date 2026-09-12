@@ -1,9 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ProviderStatus } from "../types.js";
 import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 
+/**
+ * Edit one chain node.
+ *
+ * The provider is fixed: an entry's credentials belong to that provider, so
+ * swapping the provider would silently detach every key. Model, display name,
+ * routing strategy and enabled state are all editable.
+ *
+ * The display name is free text on purpose. COKEY never derives a label such as
+ * "DeepSeek V4 Pro (xKiro)" from the model id; whatever the user types is what
+ * clients and the UI show.
+ */
 export function EditEntryModal({
   entry,
   onClose,
@@ -15,8 +26,8 @@ export function EditEntryModal({
 }) {
   const toast = useToast();
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
-  const [providerId, setProviderId] = useState(entry.providerId);
   const [model, setModel] = useState(entry.model);
+  const [label, setLabel] = useState(entry.label ?? "");
   const [strategy, setStrategy] = useState(entry.routingStrategy);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -24,22 +35,21 @@ export function EditEntryModal({
   useEffect(() => {
     void (async () => {
       try {
-        const data = await api.providers();
-        setProviders(data);
+        setProviders(await api.allProviders());
       } catch (err) {
         setError(err instanceof ApiError ? err.message : String(err));
       }
     })();
   }, []);
 
-  // Get models for currently selected provider
-  const selectedProvider = useMemo(
-    () => providers.find((p) => p.id === providerId),
-    [providers, providerId],
-  );
+  const knownModels = providers.find((p) => p.id === entry.providerId)?.knownModels ?? [];
+  const known = new Set(knownModels);
+  // Keep the current model selectable even if the curated catalog has moved on.
+  const modelOptions = known.has(model) ? knownModels : [model, ...knownModels];
 
-  const knownModels = selectedProvider?.knownModels ?? [];
-  const modelOptions = knownModels.includes(model) || knownModels.length === 0 ? knownModels : [model, ...knownModels];
+  const trimmedLabel = label.trim();
+  const hasChanges =
+    model.trim() !== entry.model || trimmedLabel !== (entry.label ?? "") || strategy !== entry.routingStrategy;
 
   async function save() {
     const nextModel = model.trim();
@@ -47,17 +57,13 @@ export function EditEntryModal({
       setError("Pick or type a model");
       return;
     }
-    if (!providerId) {
-      setError("Select a provider");
-      return;
-    }
 
     setBusy(true);
     setError(undefined);
     try {
-      const updates: Record<string, unknown> = {};
-      if (providerId !== entry.providerId) updates.providerId = providerId;
+      const updates: Parameters<typeof api.updateEntry>[1] = {};
       if (nextModel !== entry.model) updates.model = nextModel;
+      if (trimmedLabel !== (entry.label ?? "")) updates.label = trimmedLabel || null;
       if (strategy !== entry.routingStrategy) updates.routingStrategy = strategy;
 
       if (Object.keys(updates).length === 0) {
@@ -66,7 +72,7 @@ export function EditEntryModal({
       }
 
       await api.updateEntry(entry.id, updates);
-      toast.ok("Entry updated");
+      toast.ok("Chain node updated");
       onChanged();
       onClose();
     } catch (err) {
@@ -76,70 +82,65 @@ export function EditEntryModal({
     }
   }
 
-  const hasChanges =
-    providerId !== entry.providerId || model !== entry.model || strategy !== entry.routingStrategy;
-
   return (
-    <Modal title="Edit entry" onClose={onClose}>
-      <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
-        <div className="field">
-          <label htmlFor="entry-edit-provider">Provider</label>
-          <select
-            id="entry-edit-provider"
-            value={providerId}
-            onChange={(event) => {
-              setProviderId(event.target.value);
-              setModel(""); // Reset model when provider changes
-            }}
-            autoFocus
-          >
-            <option value="">Select provider…</option>
-            {providers.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.id} ({p.knownModels.length} models)
-              </option>
-            ))}
-          </select>
-        </div>
+    <Modal
+      title="Edit chain node"
+      subtitle={`${entry.providerId} cannot be changed here: this node's keys belong to it.`}
+      onClose={onClose}
+    >
+      <div className="field">
+        <label htmlFor="entry-edit-label">Display name (optional)</label>
+        <input
+          id="entry-edit-label"
+          value={label}
+          placeholder="DeepSeek V4 Pro (xKiro)"
+          onChange={(event) => setLabel(event.target.value)}
+          autoFocus
+        />
+        <span className="small faint">
+          Shown in the dashboard and in <code>/v1/models</code>. Leave it empty to show the raw model id.
+        </span>
+      </div>
 
-        {providerId && (
-          <div className="field">
-            <label htmlFor="entry-edit-model">Model</label>
-            <select
-              id="entry-edit-model"
-              value={model}
-              onChange={(event) => setModel(event.target.value)}
-            >
-              <option value="">Select model…</option>
-              {modelOptions.map((m) => (
-                <option key={m} value={m}>
-                  {m}
-                </option>
-              ))}
-            </select>
-            <span className="small faint">{knownModels.length} models available in this provider</span>
-          </div>
-        )}
+      <div className="field">
+        <label htmlFor="entry-edit-model">Model</label>
+        <input
+          id="entry-edit-model"
+          list="entry-edit-model-options"
+          value={model}
+          onChange={(event) => setModel(event.target.value)}
+        />
+        <datalist id="entry-edit-model-options">
+          {modelOptions.map((option) => (
+            <option key={option} value={option} />
+          ))}
+        </datalist>
+        <span className="small faint">
+          {knownModels.length} curated model(s) for {entry.providerId}. Any id the provider accepts works.
+        </span>
+      </div>
 
-        <div className="field">
-          <label htmlFor="entry-edit-strategy">Routing strategy</label>
-          <select id="entry-edit-strategy" value={strategy} onChange={(event) => setStrategy(event.target.value as "sequential" | "round-robin")}>
-            <option value="sequential">Sequential (use credentials in order)</option>
-            <option value="round-robin">Round-robin (rotate through credentials)</option>
-          </select>
-          <span className="small faint">How credentials are selected when routing to this model</span>
-        </div>
+      <div className="field">
+        <label htmlFor="entry-edit-strategy">Routing strategy</label>
+        <select
+          id="entry-edit-strategy"
+          value={strategy}
+          onChange={(event) => setStrategy(event.target.value as "sequential" | "round-robin")}
+        >
+          <option value="sequential">Sequential: use the keys in order</option>
+          <option value="round-robin">Round robin: rotate the keys</option>
+        </select>
+      </div>
 
-        {error ? <div className="verify err">{error}</div> : null}
+      {error ? <div className="verify err">{error}</div> : null}
 
-        <div className="modal-actions">
-          <button className="secondary" onClick={onClose} disabled={busy}>
-            Cancel
-          </button>
-          <button onClick={() => void save()} disabled={busy || !hasChanges || !model.trim() || !providerId}>
-            {busy ? "Saving…" : "Save"}
-          </button>
-        </div>
+      <div className="modal-actions">
+        <button className="secondary" onClick={onClose} disabled={busy}>
+          Cancel
+        </button>
+        <button onClick={() => void save()} disabled={busy || !hasChanges || !model.trim()}>
+          {busy ? "Saving…" : "Save"}
+        </button>
       </div>
     </Modal>
   );

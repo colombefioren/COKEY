@@ -31,8 +31,8 @@ export function AddEntryModal({
   useEffect(() => {
     void (async () => {
       const [providerList, credentialList] = await Promise.all([
-        api.providers(),
-        api.credentials(),
+        api.allProviders(),
+        api.allCredentials(),
       ]);
       setProviders(providerList);
       setCredentials(credentialList);
