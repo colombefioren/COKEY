@@ -267,7 +267,6 @@ export interface FallbackPolicy {
 export interface Settings {
   port: number;
   host: string;
-  authToken?: string;
   logLevel: LogLevel;
   dataDir: string;
   showFreeProviderNudger: boolean;

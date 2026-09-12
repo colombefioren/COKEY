@@ -26,8 +26,25 @@ export function Settings({
   const [endpointName, setEndpointName] = useState("");
   const [endpointUrl, setEndpointUrl] = useState("");
   const [endpointModels, setEndpointModels] = useState("");
-  const [tokenConfigured, setTokenConfigured] = useState(false);
-  const [tokenBusy, setTokenBusy] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [passwordBusy, setPasswordBusy] = useState(false);
+
+  async function savePassword() {
+    if (!newPassword.trim()) return;
+    if (!confirm("Set this password permanently? It cannot be changed again.")) return;
+    setPasswordBusy(true);
+    try {
+      await api.setPassword(newPassword.trim());
+      setDraft((current) => (current ? { ...current, passwordLocked: true } : current));
+      setNewPassword("");
+      toast.ok("Password set. It is now permanent.");
+      onSaved();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setPasswordBusy(false);
+    }
+  }
 
   useEffect(() => {
     setDraft(settings);
@@ -39,17 +56,6 @@ export function Settings({
         setEndpoints(await api.customEndpoints());
       } catch {
         /* surfaced elsewhere */
-      }
-    })();
-  }, [refreshKey]);
-
-  useEffect(() => {
-    void (async () => {
-      try {
-        const result = await api.authTokenStatus();
-        setTokenConfigured(result.authTokenConfigured);
-      } catch {
-        /* handled by the error boundary */
       }
     })();
   }, [refreshKey]);
@@ -101,40 +107,10 @@ export function Settings({
     }
   }
 
-   async function removeEndpoint(providerId: string) {
-     try {
-       await api.deleteCustomEndpoint(providerId);
-       setEndpoints(await api.customEndpoints());
-       onSaved();
-     } catch (error) {
-       toast.err(error instanceof ApiError ? error.message : String(error));
-     }
-   }
-
-  async function generateToken() {
-    setTokenBusy(true);
+  async function removeEndpoint(providerId: string) {
     try {
-      await api.generateAuthToken();
-      setTokenConfigured(true);
-      // Clear the browser token so the login form reappears with the new token.
-      localStorage.removeItem("cokey_auth_token");
-      toast.ok("New API token generated. The login form will show the new token.");
-      onSaved();
-    } catch (error) {
-      toast.err(error instanceof ApiError ? error.message : String(error));
-    } finally {
-      setTokenBusy(false);
-    }
-  }
-
-  async function revokeToken() {
-    if (!confirm("Revoke the management API token? Requests will then be allowed without authentication."))
-      return;
-    try {
-       await api.revokeAuthToken();
-      setTokenConfigured(false);
-      localStorage.removeItem("cokey_auth_token");
-      toast.ok("API token revoked. Requests are now allowed without a bearer token.");
+      await api.deleteCustomEndpoint(providerId);
+      setEndpoints(await api.customEndpoints());
       onSaved();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -198,45 +174,36 @@ export function Settings({
               <label>Data directory</label>
               <input value={draft.dataDir} readOnly />
             </div>
-             <div className="field">
-               <label>Auth token</label>
-               {tokenConfigured ? (
-                 <>
-                   <div className="row" style={{ gap: 8, marginTop: 4 }}>
-                     <span className="mono small">••••••••••••• (configured)</span>
-                     <button
-                       className="ghost small"
-                       onClick={() => void generateToken()}
-                       disabled={tokenBusy}
-                       title="Regenerate (invalidates the previous token)"
-                     >
-                       {tokenBusy ? "…" : "regenerate"}
-                     </button>
-                     <button className="ghost small danger" onClick={() => void revokeToken()} title="Revoke this token">
-                       revoke
-                     </button>
-                   </div>
-                   <div className="small faint" style={{ marginTop: 5 }}>
-                     Once configured, auth stays on. Regenerating clears your
-                     browser session — you'll log in again with the new token.
-                   </div>
-                 </>
-               ) : (
-                 <>
-                   <button
-                     className="secondary"
-                     onClick={() => void generateToken()}
-                     disabled={tokenBusy}
-                   >
-                     {tokenBusy ? "Generating…" : "Generate API token"}
-                   </button>
-                   <div className="small faint" style={{ marginTop: 5 }}>
-                     The gateway is currently open — no bearer token is required.
-                     Generate a token to protect it when binding to 0.0.0.0 or a LAN.
-                   </div>
-                 </>
-               )}
-             </div>
+            <div className="field">
+              <label>Admin password</label>
+              {draft.passwordLocked ? (
+                <div className="small faint" style={{ marginTop: 4 }}>
+                  Set. The password is permanent and can no longer be changed here.
+                </div>
+              ) : (
+                <>
+                  <div className="row" style={{ gap: 8, marginTop: 4 }}>
+                    <input
+                      type="password"
+                      placeholder="New password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                    />
+                    <button
+                      className="secondary"
+                      onClick={() => void savePassword()}
+                      disabled={passwordBusy || !newPassword.trim()}
+                    >
+                      {passwordBusy ? "Saving…" : "Set password"}
+                    </button>
+                  </div>
+                  <div className="small faint" style={{ marginTop: 5 }}>
+                    Currently the default (<code>coco-the-best</code>). Setting a password locks it
+                    permanently — there is no way to change it afterwards.
+                  </div>
+                </>
+              )}
+            </div>
             <div className="hint-box">
               Config export (no secrets):{" "}
               <a href="/api/config/export" download="cokey-export.json">
@@ -255,7 +222,10 @@ export function Settings({
               style={{ width: "auto" }}
               checked={draft.fallback.enabled}
               onChange={(event) =>
-                setDraft({ ...draft, fallback: { ...draft.fallback, enabled: event.target.checked } })
+                setDraft({
+                  ...draft,
+                  fallback: { ...draft.fallback, enabled: event.target.checked },
+                })
               }
             />
             Fallback enabled
@@ -280,7 +250,10 @@ export function Settings({
               style={{ width: "auto" }}
               checked={draft.fallback.entryFallback}
               onChange={(event) =>
-                setDraft({ ...draft, fallback: { ...draft.fallback, entryFallback: event.target.checked } })
+                setDraft({
+                  ...draft,
+                  fallback: { ...draft.fallback, entryFallback: event.target.checked },
+                })
               }
             />
             Fall through to the next entry
@@ -312,7 +285,10 @@ export function Settings({
             onChange={(event) =>
               setDraft({
                 ...draft,
-                fallback: { ...draft.fallback, maxRetriesPerCredential: Number(event.target.value) },
+                fallback: {
+                  ...draft.fallback,
+                  maxRetriesPerCredential: Number(event.target.value),
+                },
               })
             }
           />
@@ -325,7 +301,9 @@ export function Settings({
             type="checkbox"
             style={{ width: "auto" }}
             checked={draft.showFreeProviderNudger}
-            onChange={(event) => setDraft({ ...draft, showFreeProviderNudger: event.target.checked })}
+            onChange={(event) =>
+              setDraft({ ...draft, showFreeProviderNudger: event.target.checked })
+            }
           />
           Show the free-provider nudger
         </label>
@@ -337,7 +315,9 @@ export function Settings({
             min={0}
             max={50}
             value={draft.freeProviderTarget}
-            onChange={(event) => setDraft({ ...draft, freeProviderTarget: Number(event.target.value) })}
+            onChange={(event) =>
+              setDraft({ ...draft, freeProviderTarget: Number(event.target.value) })
+            }
           />
         </div>
         <div className="hint-box">
@@ -385,14 +365,16 @@ export function Settings({
                 type="checkbox"
                 style={{ width: "auto" }}
                 checked={draft.allowPrivateEndpoints}
-                onChange={(event) => setDraft({ ...draft, allowPrivateEndpoints: event.target.checked })}
+                onChange={(event) =>
+                  setDraft({ ...draft, allowPrivateEndpoints: event.target.checked })
+                }
               />
               Allow private, loopback and plain-HTTP endpoints
             </label>
             <div className="hint-box">
               Off by default: custom URLs are checked against the SSRF guard, which blocks loopback,
-              private ranges, link-local and cloud metadata addresses. Turn this on only for a service
-              you run yourself.
+              private ranges, link-local and cloud metadata addresses. Turn this on only for a
+              service you run yourself.
             </div>
 
             <div className="selected-list" style={{ marginTop: 14 }}>
@@ -404,7 +386,11 @@ export function Settings({
                     <span>{endpoint.displayName}</span>
                     <span className="mono muted small">{endpoint.baseUrl}</span>
                     <span className="spacer" style={{ flex: 1 }} />
-                    <button className="danger" style={{ padding: "4px 9px" }} onClick={() => void removeEndpoint(endpoint.id)}>
+                    <button
+                      className="danger"
+                      style={{ padding: "4px 9px" }}
+                      onClick={() => void removeEndpoint(endpoint.id)}
+                    >
                       delete
                     </button>
                   </div>

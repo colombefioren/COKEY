@@ -1,4 +1,3 @@
-import { randomBytes } from "node:crypto";
 import type { SettingsRepo } from "./db/settings.repo.js";
 import {
   DEFAULT_FALLBACK_POLICY,
@@ -10,8 +9,9 @@ import {
 
 const SETTINGS_KEY = "settings";
 const LOG_LEVELS: LogLevel[] = ["debug", "info", "warn", "error"];
-const AUTH_TOKEN_KEY = "authToken";
-const AUTH_TOKEN_BYTES = 32;
+const PASSWORD_KEY = "adminPassword";
+const PASSWORD_LOCKED_KEY = "adminPasswordLocked";
+export const DEFAULT_ADMIN_PASSWORD = "coco-the-best";
 
 export class InvalidSettingError extends Error {
   constructor(message: string) {
@@ -78,33 +78,46 @@ export class SettingsService {
     return this.get();
   }
 
-  /**
-   * Generate a fresh management API token, persist it as the gateway's auth
-   * bearer token, and return it (once — it is never stored in plaintext by
-   * the caller).
-   */
-  generateAuthToken(): string {
-    const token = randomBytes(AUTH_TOKEN_BYTES).toString("hex");
-    this.repo.setJson(AUTH_TOKEN_KEY, token);
-    this.current = this.compute();
-    return token;
+  /** The admin password. Defaults to `coco-the-best` until the user sets one. */
+  password(): string {
+    return this.repo.get(PASSWORD_KEY) ?? DEFAULT_ADMIN_PASSWORD;
   }
 
-  /** Clear the management API token, reverting to no-auth mode. */
-  clearAuthToken(): void {
-    this.repo.delete(AUTH_TOKEN_KEY);
+  /**
+   * True once the user has chosen their own password. From that point the
+   * password is permanent — there is no UI or API path to change it again.
+   */
+  passwordLocked(): boolean {
+    return this.repo.get(PASSWORD_LOCKED_KEY) === "1";
+  }
+
+  verifyPassword(candidate: string): boolean {
+    return candidate.length > 0 && candidate === this.password();
+  }
+
+  /**
+   * Set the admin password. Only allowed while the default is still in place;
+   * afterwards the stored password is immutable.
+   */
+  setPassword(password: string): void {
+    if (this.passwordLocked()) {
+      throw new InvalidSettingError("The admin password has already been set and cannot be changed");
+    }
+    if (!password || password.length < 4) {
+      throw new InvalidSettingError("Password must be at least 4 characters");
+    }
+    this.repo.set(PASSWORD_KEY, password);
+    this.repo.set(PASSWORD_LOCKED_KEY, "1");
     this.current = this.compute();
   }
 
   private compute(): Settings {
     const defaults = defaultSettings(this.env.COKEY_DATA_DIR || process.cwd() + "/.cokey");
     const stored = this.repo.getJson<Partial<Settings>>(SETTINGS_KEY) ?? {};
-    const storedToken = this.repo.getJson<string>(AUTH_TOKEN_KEY) ?? undefined;
 
     const base = validateSettings({
       ...defaults,
       ...stored,
-      ...(storedToken ? { authToken: storedToken } : {}),
       fallback: { ...DEFAULT_FALLBACK_POLICY, ...(stored.fallback ?? {}) },
     });
 
@@ -142,7 +155,6 @@ export function validateSettings(settings: Settings): Settings {
     ...settings,
     port,
     freeProviderTarget,
-    authToken: settings.authToken || undefined,
     fallback: { ...policy, maxRetriesPerCredential },
   };
 }
@@ -160,7 +172,6 @@ export function applyEnvOverrides(settings: Settings, env: NodeJS.ProcessEnv): S
   if (env.COKEY_LOG_LEVEL && LOG_LEVELS.includes(env.COKEY_LOG_LEVEL as LogLevel)) {
     next.logLevel = env.COKEY_LOG_LEVEL as LogLevel;
   }
-  if (env.COKEY_AUTH_TOKEN) next.authToken = env.COKEY_AUTH_TOKEN;
   if (env.COKEY_ALLOW_PRIVATE_ENDPOINTS === "1" || env.COKEY_ALLOW_PRIVATE_ENDPOINTS === "true") {
     next.allowPrivateEndpoints = true;
   }

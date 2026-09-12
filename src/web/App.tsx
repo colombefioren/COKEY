@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { api } from "./api.js";
+import { api, ApiError } from "./api.js";
 import type {
   Nudge,
   ProviderStatus,
@@ -15,11 +15,10 @@ import { AddChain } from "./pages/AddChain.js";
 import { Models } from "./pages/Models.js";
 import { Providers } from "./pages/Providers.js";
 import { Keys } from "./pages/Keys.js";
+import { ApiKeys } from "./pages/ApiKeys.js";
 import { Requests } from "./pages/Requests.js";
 import { Usage } from "./pages/Usage.js";
 import { Settings } from "./pages/Settings.js";
-
-const AUTH_STORAGE_KEY = "cokey_auth_token";
 
 type Tab =
   | "dashboard"
@@ -28,6 +27,7 @@ type Tab =
   | "models"
   | "providers"
   | "keys"
+  | "api-keys"
   | "requests"
   | "usage"
   | "settings";
@@ -39,6 +39,7 @@ const TABS: Array<[Tab, string]> = [
   ["add", "Add chain"],
   ["providers", "Providers"],
   ["keys", "Keys"],
+  ["api-keys", "API keys"],
   ["requests", "Requests"],
   ["usage", "Usage"],
   ["settings", "Settings"],
@@ -59,25 +60,29 @@ function Shell() {
 
   // ---- auth gate ----
 
-  // The server injects the current token into the HTML. When it's non-empty,
-  // the gateway requires a bearer token. The browser must have a matching token
-  // in localStorage to access the UI. A mismatch (e.g. after rotation) drops
-  // back to the login form.
-  const serverToken = (window as unknown as { COKEY_AUTH_TOKEN?: string }).COKEY_AUTH_TOKEN ?? "";
-  const storedToken = window.localStorage.getItem(AUTH_STORAGE_KEY);
-  const needsLogin = Boolean(serverToken) && storedToken !== serverToken;
+  // The gateway always requires a session cookie. On first load we probe an
+  // authenticated endpoint; a 401 means show the password form.
+  const [authed, setAuthed] = useState<boolean | null>(null);
 
-  if (needsLogin) {
-    return (
-      <LoginForm
-        serverToken={serverToken}
-        onLogin={(token) => {
-          window.localStorage.setItem(AUTH_STORAGE_KEY, token);
-          window.location.reload();
-        }}
-      />
-    );
-  }
+  const probe = useCallback(async () => {
+    try {
+      await api.settings();
+      setAuthed(true);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 401) {
+        setAuthed(false);
+        return;
+      }
+      setAuthed(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    void probe();
+  }, [probe]);
+
+  if (authed === null) return null;
+  if (!authed) return <LoginForm onLogin={() => setAuthed(true)} />;
 
   const reload = useCallback(async () => {
     try {
@@ -169,6 +174,8 @@ function Shell() {
         {tab === "providers" ? <Providers refreshKey={refreshKey} onChanged={bump} /> : null}
 
         {tab === "keys" ? <Keys refreshKey={refreshKey} onChanged={bump} /> : null}
+
+        {tab === "api-keys" ? <ApiKeys refreshKey={refreshKey} onChanged={bump} /> : null}
 
         {tab === "requests" ? <Requests refreshKey={refreshKey} /> : null}
 

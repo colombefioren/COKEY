@@ -1,60 +1,56 @@
 import { useState } from "react";
-
-interface Props {
-  /** The token injected by the server (empty string when no auth is configured). */
-  serverToken: string;
-  onLogin: (token: string) => void;
-}
+import { api, ApiError } from "../api.js";
 
 /**
- * Full-screen login form shown when an auth token is configured but the
- * browser session doesn't have one stored yet.
+ * Full-screen password gate.
  *
- * The server injects the current token into the HTML — the form is pre-filled
- * with it so the user just clicks "Login" on first visit. After a token
- * rotation in Settings, localStorage is cleared and the login form reappears.
- *
- * Once a token is configured it stays configured — there is no UI path to
- * return to open (no-auth) mode. Use `cokey keys delete` or restart the server
- * without COKEY_AUTH_TOKEN to go back to open mode from the CLI.
+ * The server requires a session cookie for every `/api/*` call. The form posts
+ * the admin password once and the cookie keeps the user signed in until it
+ * expires or the gateway restarts.
  */
-export function LoginForm({ serverToken, onLogin }: Props) {
-  const [value, setValue] = useState(serverToken);
+export function LoginForm({ onLogin }: { onLogin: () => void }) {
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | undefined>();
 
-  function handleSubmit(event: React.FormEvent) {
+  async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const trimmed = value.trim();
-    if (!trimmed) return;
+    if (!password) return;
     setBusy(true);
-    setTimeout(() => {
-      onLogin(trimmed);
+    setError(undefined);
+    try {
+      await api.login(password);
+      onLogin();
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : String(err));
+    } finally {
       setBusy(false);
-    }, 50);
+    }
   }
 
   return (
     <div className="login">
       <div className="login-card">
         <h1>COKEY</h1>
-        <p className="subtitle">Authenticate with the management API token</p>
+        <p className="subtitle">Sign in to manage the gateway</p>
 
         <form onSubmit={handleSubmit}>
-          <label htmlFor="auth-token-input">Bearer token</label>
+          <label htmlFor="password-input">Password</label>
           <input
-            id="auth-token-input"
+            id="password-input"
             type="password"
-            value={value}
-            onChange={(event) => setValue(event.target.value)}
+            autoComplete="current-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
             autoFocus
-            style={{ fontFamily: "monospace" }}
           />
           <div className="small faint" style={{ marginTop: 8, marginBottom: 12 }}>
-            Set <code>COKEY_AUTH_TOKEN</code> when starting the gateway, or generate one with{" "}
-            <code>cokey keys create</code>.
+            Default password is <code>coco-the-best</code>. Change it once in Settings — after that
+            it is permanent.
           </div>
-          <button type="submit" disabled={busy || !value.trim()}>
-            {busy ? "Logging in…" : "Login"}
+          {error ? <div className="verify err">{error}</div> : null}
+          <button type="submit" disabled={busy || !password}>
+            {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
       </div>

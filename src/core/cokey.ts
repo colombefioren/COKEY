@@ -1,6 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { join } from "node:path";
 import { mkdirSync } from "node:fs";
+import { ApiKeyService, type ApiKeyView, type CreatedApiKey } from "./api-keys.js";
+import { ApiKeysRepo } from "./db/api-keys.repo.js";
 import type { ProviderCatalogEntry, ProviderStatus } from "../catalog/types.js";
 import { ApiStyleSchema, AuthSchemeSchema } from "./validation/schemas.js";
 import { ChainsRepo } from "./db/chains.repo.js";
@@ -40,7 +42,6 @@ export interface CokeyOptions {
   port?: number;
   host?: string;
   dataDir?: string;
-  authToken?: string;
   logLevel?: LogLevel;
   /** Injectable environment, primarily for tests. */
   env?: NodeJS.ProcessEnv;
@@ -133,6 +134,8 @@ export class Cokey {
   readonly chainsRepo: ChainsRepo;
   readonly requestsRepo: RequestsRepo;
   readonly customEndpointsRepo: CustomEndpointsRepo;
+  readonly apiKeysRepo: ApiKeysRepo;
+  readonly apiKeys: ApiKeyService;
 
   readonly settingsService: SettingsService;
   readonly cooldown: CooldownManager;
@@ -166,14 +169,15 @@ export class Cokey {
     this.chainsRepo = new ChainsRepo(this.db);
     this.requestsRepo = new RequestsRepo(this.db);
     this.customEndpointsRepo = new CustomEndpointsRepo(this.db);
+    this.apiKeysRepo = new ApiKeysRepo(this.db);
+    this.apiKeys = new ApiKeyService(this.apiKeysRepo);
 
     this.settingsService = new SettingsService(this.settingsRepo, env);
-    if (options.dataDir || options.port || options.host || options.authToken || options.logLevel) {
+    if (options.dataDir || options.port || options.host || options.logLevel) {
       this.settingsService.update({
         ...(options.dataDir ? { dataDir: this.dataDir } : {}),
         ...(options.port !== undefined ? { port: options.port } : {}),
         ...(options.host !== undefined ? { host: options.host } : {}),
-        ...(options.authToken !== undefined ? { authToken: options.authToken } : {}),
         ...(options.logLevel !== undefined ? { logLevel: options.logLevel } : {}),
       });
     }
@@ -898,20 +902,32 @@ export class Cokey {
 
   // ---- management auth ------------------------------------------------------
 
-  /**
-   * Generate or rotate the management API bearer token.
-   *
-   * Returns the plaintext token exactly once — it is persisted encrypted by the
-   * vault-like keyfile path, so the caller must capture it before the response
-   * closes. Pass `rotate=true` to invalidate the previous token.
-   */
-  generateAuthToken(): string {
-    return this.settingsService.generateAuthToken();
+  verifyPassword(password: string): boolean {
+    return this.settingsService.verifyPassword(password);
   }
 
-  /** Revoke the management API token. Requests are then allowed with no bearer. */
-  clearAuthToken(): void {
-    this.settingsService.clearAuthToken();
+  passwordLocked(): boolean {
+    return this.settingsService.passwordLocked();
+  }
+
+  setPassword(password: string): void {
+    this.settingsService.setPassword(password);
+  }
+
+  createApiKey(name: string): CreatedApiKey {
+    return this.apiKeys.create(name);
+  }
+
+  listApiKeys(): ApiKeyView[] {
+    return this.apiKeys.list();
+  }
+
+  revokeApiKey(id: string): void {
+    this.apiKeys.revoke(id);
+  }
+
+  verifyApiKey(presented: string): ApiKeyView | undefined {
+    return this.apiKeys.verify(presented);
   }
 }
 

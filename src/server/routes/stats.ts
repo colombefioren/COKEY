@@ -2,6 +2,7 @@ import type { FastifyInstance } from "fastify";
 import { COKEY_VERSION } from "../../version.js";
 import type { Cokey } from "../../core/cokey.js";
 import { UpdateSettingsSchema } from "../../core/validation/schemas.js";
+import { InvalidSettingError } from "../../core/settings.js";
 import { exportConfig } from "../../core/config/export-import.js";
 import { streamEvents } from "../streaming/events.js";
 import { withErrors } from "./http-errors.js";
@@ -94,6 +95,17 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
+  app.post(
+    "/api/password",
+    withErrors((request) => {
+      const body = request.body as { password?: unknown } | undefined;
+      const password = typeof body?.password === "string" ? body.password : "";
+      if (!password) throw new InvalidSettingError("A password is required");
+      cokey.setPassword(password);
+      return { ok: true, passwordLocked: true };
+    }),
+  );
+
   /**
    * Portable configuration export.
    *
@@ -127,37 +139,31 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  // ---- management auth ------------------------------------------------------
+  // ---- api keys -------------------------------------------------------------
 
-  /**
-   * Generate or rotate the gateway's management API token.
-   *
-   * The token is returned in the response body exactly once — it is never
-   * retrievable again. The auth middleware is updated in-process so the new
-   * token takes effect immediately without a restart.
-   */
-  app.post(
-    "/api/auth-token",
-    withErrors((_request, reply) => {
-      const token = cokey.generateAuthToken();
-      reply.code(201);
-      return { authToken: token };
-    }),
-  );
-
-  /** Revoke the management API token. No body means no auth required. */
-  app.delete(
-    "/api/auth-token",
-    withErrors((_request, _reply) => {
-      cokey.clearAuthToken();
-      return { ok: true, authTokenConfigured: false };
-    }),
-  );
-
-  /** Check whether a token is configured (the token itself is never returned). */
   app.get(
-    "/api/auth-token",
-    withErrors(() => ({ authTokenConfigured: Boolean(cokey.settings.authToken) })),
+    "/api/keys",
+    withErrors(() => ({ data: cokey.listApiKeys() })),
+  );
+
+  app.post(
+    "/api/keys",
+    withErrors((request, reply) => {
+      const body = request.body as { name?: unknown };
+      const name = typeof body?.name === "string" ? body.name.trim() : "";
+      if (!name) throw new InvalidSettingError("A name is required for the API key");
+      reply.code(201);
+      return cokey.createApiKey(name);
+    }),
+  );
+
+  app.delete(
+    "/api/keys/:id",
+    withErrors((request) => {
+      const { id } = request.params as { id: string };
+      cokey.revokeApiKey(id);
+      return { ok: true };
+    }),
   );
 }
 
@@ -173,6 +179,6 @@ function publicSettings(cokey: Cokey): Record<string, unknown> {
     freeProviderTarget: settings.freeProviderTarget,
     allowPrivateEndpoints: settings.allowPrivateEndpoints,
     fallback: settings.fallback,
-    authTokenConfigured: Boolean(settings.authToken),
+    passwordLocked: cokey.passwordLocked(),
   };
 }

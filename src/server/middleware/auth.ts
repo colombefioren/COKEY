@@ -1,47 +1,65 @@
 import type { FastifyReply, FastifyRequest, onRequestHookHandler } from "fastify";
+import type { SessionStore } from "../session.js";
 
-/** Paths that never require the local auth token. */
-const PUBLIC_PREFIXES = ["/", "/health", "/assets", "/favicon.ico"];
+const SESSION_COOKIE = "cokey_session";
 
+export interface AuthDependencies {
+  sessions: SessionStore;
+  /** Verify a named API key; returns the key name when valid. */
+  verifyApiKey: (presented: string) => { name: string } | undefined;
+  verifyPassword: (password: string) => boolean;
+}
+
+/** Paths reachable without any authentication. */
 function isPublic(url: string): boolean {
   if (url === "/" || url === "/health") return true;
   if (url.startsWith("/assets/")) return true;
-  if (url === "/favicon.ico" || url === "/logo.svg") return true;
-  // Auth-token management endpoints are always public — even when a token is
-  // configured, anyone reaching the gateway can generate or revoke it. This
-  // avoids the chicken-and-egg of needing the token to revoke itself.
-  if (url === "/api/auth-token" || url.startsWith("/api/auth-token/")) return true;
-  // The single-page UI page is public; the API calls it makes are not.
-  return PUBLIC_PREFIXES.includes(url) && !url.startsWith("/api") && !url.startsWith("/v1");
+  if (url === "/favicon.ico" || url === "/logo.svg" || url === "/favicon.svg") return true;
+  if (url === "/api/session" || url.startsWith("/api/session/")) return true;
+  return false;
+}
+
+function readCookie(header: string | undefined, name: string): string | undefined {
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const [key, ...rest] = part.trim().split("=");
+    if (key === name) return rest.join("=");
+  }
+  return undefined;
+}
+
+function bearerToken(request: FastifyRequest): string | undefined {
+  const header = request.headers.authorization;
+  if (typeof header !== "string" || !header.toLowerCase().startsWith("bearer ")) return undefined;
+  const value = header.slice(7).trim();
+  return value || undefined;
 }
 
 /**
- * Optional local auth token.
+ * Gate for the management API and the OpenAI-compatible surface.
  *
- * COKEY binds to loopback by default, so this is opt-in hardening for users who
- * expose the port to a LAN. When no token is configured, every request is
- * allowed — otherwise the gateway would be unusable out of the box.
- *
- * The token is read dynamically on each request (via `tokenSupplier`) so that
- * tokens generated or revoked at runtime — without a server restart — take
- * effect immediately.
+ * The browser gets in with a session cookie issued after a password login; a
+ * program (OpenCode, KiloCode, the CLI) gets in with a named API key. The UI
+ * itself is public so the login form can render — every `/api/*` and `/v1/*`
+ * call it makes is not.
  */
-export function makeAuthHook(tokenSupplier: () => string | undefined): onRequestHookHandler {
+export function makeAuthHook(deps: AuthDependencies): onRequestHookHandler {
   return async function authHook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-    const expectedToken = tokenSupplier();
-    if (!expectedToken) return;
     if (isPublic(request.url)) return;
 
-    const header = request.headers.authorization;
-    const token =
-      typeof header === "string" && header.toLowerCase().startsWith("bearer ")
-        ? header.slice(7).trim()
-        : undefined;
+    const cookieSession = readCookie(request.headers.cookie, SESSION_COOKIE);
+    if (deps.sessions.has(cookieSession)) return;
 
-    if (token !== expectedToken) {
-      await reply.code(401).send({
-        error: { message: "Unauthorized", type: "unauthorized" },
-      });
+    const presented = bearerToken(request);
+    if (presented) {
+      if (deps.verifyApiKey(presented)) return;
+      if (deps.verifyPassword(presented)) return;
     }
+
+    await reply.code(401).send({
+      error: { message: "Unauthorized", type: "unauthorized" },
+    });
   };
 }
+
+export { SESSION_COOKIE };

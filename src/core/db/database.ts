@@ -138,6 +138,23 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_usage_daily_day ON usage_daily(day DESC);
     `,
   },
+  {
+    version: 6,
+    name: "api_keys",
+    sql: `
+      CREATE TABLE IF NOT EXISTS api_keys (
+        id           TEXT PRIMARY KEY,
+        name         TEXT NOT NULL,
+        prefix       TEXT NOT NULL,
+        key_hash     TEXT NOT NULL,
+        created_at   INTEGER NOT NULL,
+        last_used_at INTEGER,
+        enabled      INTEGER NOT NULL DEFAULT 1
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
+    `,
+  },
 ];
 
 /**
@@ -288,4 +305,14 @@ export interface RequestLogRow {
   stream: number;
   input_tokens: number;
   output_tokens: number;
+}
+
+export interface ApiKeyRow {
+  id: string;
+  name: string;
+  prefix: string;
+  key_hash: string;
+  created_at: number;
+  last_used_at: number | null;
+  enabled: number;
 }

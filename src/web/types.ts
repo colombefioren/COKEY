@@ -188,7 +188,16 @@ export interface Settings {
   freeProviderTarget: number;
   allowPrivateEndpoints: boolean;
   fallback: FallbackPolicy;
-  authTokenConfigured: boolean;
+  passwordLocked: boolean;
+}
+
+export interface ApiKeyView {
+  id: string;
+  name: string;
+  prefix: string;
+  createdAt: number;
+  lastUsedAt?: number;
+  enabled: boolean;
 }
 
 export interface Nudge {

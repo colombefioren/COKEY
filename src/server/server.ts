@@ -7,6 +7,7 @@ import { makeAuthHook } from "./middleware/auth.js";
 import { registerManagementRoutes } from "./routes/management.js";
 import { registerOpenAiRoutes } from "./routes/openai.js";
 import { registerStatsRoutes } from "./routes/stats.js";
+import { SessionStore } from "./session.js";
 
 export interface ServerOptions {
   /** Serve the built web UI. Disabled in tests. */
@@ -29,9 +30,6 @@ const MIME_TYPES: Record<string, string> = {
 /** Locate the built UI, whether running from `dist/` or from source. */
 export function resolveUiDirectory(): string {
   const here = dirname(fileURLToPath(import.meta.url));
-  // Prefer the built UI (dist/web) which has compiled assets the server can
-  // actually serve. The source directory only contains index.html referencing
-  // main.tsx, which requires the Vite dev server — not available from tsx.
   const candidates = [join(here, "..", "..", "dist", "web"), join(here, "..", "web")];
   for (const candidate of candidates) {
     if (existsSync(join(candidate, "index.html"))) return resolve(candidate);
@@ -46,22 +44,38 @@ export function resolveUiDirectory(): string {
  *   - `/v1/*`  the OpenAI-compatible gateway
  *   - `/api/*` the management API used by the UI and the CLI
  *   - `/`      the built React UI (when present)
+ *
+ * The UI is public so the login form can render; every API call it makes is
+ * gated by a session cookie or an API key.
  */
-export async function createServer(cokey: Cokey, options: ServerOptions = {}): Promise<FastifyInstance> {
+export async function createServer(
+  cokey: Cokey,
+  options: ServerOptions = {},
+): Promise<FastifyInstance> {
   const app = Fastify({
     logger: false,
     bodyLimit: 64 * 1024 * 1024,
     disableRequestLogging: true,
   });
 
-  app.addHook("onRequest", makeAuthHook(() => cokey.settings.authToken));
+  const sessions = new SessionStore();
+
+  app.addHook(
+    "onRequest",
+    makeAuthHook({
+      sessions,
+      verifyApiKey: (presented) => cokey.verifyApiKey(presented),
+      verifyPassword: (password) => cokey.verifyPassword(password),
+    }),
+  );
 
   registerOpenAiRoutes(app, cokey);
   registerManagementRoutes(app, cokey);
   registerStatsRoutes(app, cokey);
+  registerSessionRoutes(app, cokey, sessions);
 
   if (options.serveUi !== false) {
-    registerUi(app, cokey);
+    registerUi(app);
   }
 
   app.setNotFoundHandler((request, reply) => {
@@ -74,8 +88,7 @@ export async function createServer(cokey: Cokey, options: ServerOptions = {}): P
     if (request.method === "GET" && options.serveUi !== false) {
       const raw = readUiFile("index.html");
       if (raw) {
-        const html = injectAuthToken(raw, cokey.settings.authToken);
-        return reply.type(MIME_TYPES[".html"]!).send(html);
+        return reply.type(MIME_TYPES[".html"]!).send(raw);
       }
     }
     return reply.code(404).send({ error: { message: "Not found", type: "not_found" } });
@@ -84,26 +97,47 @@ export async function createServer(cokey: Cokey, options: ServerOptions = {}): P
   return app;
 }
 
+function registerSessionRoutes(app: FastifyInstance, cokey: Cokey, sessions: SessionStore): void {
+  app.post("/api/session", async (request, reply) => {
+    const body = request.body as { password?: unknown } | undefined;
+    const password = typeof body?.password === "string" ? body.password : "";
+    if (!cokey.verifyPassword(password)) {
+      await reply.code(401).send({ error: { message: "Incorrect password", type: "unauthorized" } });
+      return reply;
+    }
+    const token = sessions.create();
+    reply.header(
+      "set-cookie",
+      `cokey_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800`,
+    );
+    return { authenticated: true, passwordLocked: cokey.passwordLocked() };
+  });
+
+  app.delete("/api/session", async (request) => {
+    const header = request.headers.cookie;
+    const token = header
+      ?.split(";")
+      .map((part) => part.trim())
+      .find((part) => part.startsWith("cokey_session="))
+      ?.slice("cokey_session=".length);
+    sessions.delete(token);
+    return { ok: true };
+  });
+}
+
 /**
  * Serve the built single-page app.
- *
- * When an auth token is configured, it is injected into the HTML as an inline
- * script (`window.COKEY_AUTH_TOKEN`). This lets the UI authenticate its own
- * API calls without a separate login flow. The token is only useful from the
- * same origin — loopback-by-default means this is safe for local use, and on a
- * LAN the attacker would need to already serve the page to read it.
  *
  * Only files under the UI directory are reachable: the resolved path is
  * checked against the root after normalisation, which blocks `../` traversal.
  */
-function registerUi(app: FastifyInstance, cokey: Cokey): void {
+function registerUi(app: FastifyInstance): void {
   const uiDir = resolveUiDirectory();
 
   app.get("/", async (_request, reply) => {
     const raw = readUiFile("index.html");
     if (!raw) return notBuilt(reply);
-    const html = injectAuthToken(raw, cokey.settings.authToken);
-    return reply.type(MIME_TYPES[".html"]!).send(html);
+    return reply.type(MIME_TYPES[".html"]!).send(raw);
   });
 
   app.get("/assets/*", async (request, reply) => {
@@ -133,19 +167,6 @@ function readUiFile(relative: string, uiDir = resolveUiDirectory()): Buffer | un
   }
 }
 
-/**
- * Inject the auth token into the built HTML as an inline script.
- *
- * The token is JSON-stringified (safe in HTML) and only present when configured.
- * When absent, the script sets an empty string so the UI always has a defined value.
- */
-function injectAuthToken(html: Buffer, token: string | undefined): Buffer {
-  const safe = (token ?? "").replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026").replace(/"/g, "\\u0022");
-  const marker = `<!--__COKEY_AUTH_TOKEN__-->`;
-  const injection = `<script>window.COKEY_AUTH_TOKEN="${safe}";</script>`;
-  return Buffer.from(String(html).replace(marker, injection));
-}
-
 function notBuilt(reply: FastifyReply): unknown {
   return reply
     .code(503)
@@ -165,7 +186,10 @@ export interface StartedServer {
 }
 
 /** Create and listen, returning the bound URL. */
-export async function startServer(cokey: Cokey, options: ServerOptions = {}): Promise<StartedServer> {
+export async function startServer(
+  cokey: Cokey,
+  options: ServerOptions = {},
+): Promise<StartedServer> {
   const app = await createServer(cokey, options);
   const settings = cokey.settings;
   await app.listen({ host: settings.host, port: settings.port });

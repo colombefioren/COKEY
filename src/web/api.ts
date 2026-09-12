@@ -1,4 +1,5 @@
 import type {
+  ApiKeyView,
   ChainView,
   ConnectResult,
   ModelsResponse,
@@ -27,13 +28,12 @@ export class ApiError extends Error {
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const headers: Record<string, string> = {};
-  const stored = localStorage.getItem("cokey_auth_token");
-  if (stored) headers.Authorization = `Bearer ${stored}`;
   if (body !== undefined) headers["content-type"] = "application/json";
 
   const response = await fetch(path, {
     method,
     headers,
+    credentials: "same-origin",
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 
@@ -183,12 +183,22 @@ export const api = {
       `/api/custom-endpoints/${encodeURIComponent(providerId.replace(/^custom:/, ""))}`,
     ),
 
-  // ---- management auth ------------------------------------------------------
+  // ---- session --------------------------------------------------------------
 
-  authTokenStatus: () => request<{ authTokenConfigured: boolean }>("GET", "/api/auth-token"),
-  generateAuthToken: () => request<{ authToken: string }>("POST", "/api/auth-token"),
-  revokeAuthToken: () =>
-    request<{ ok: boolean; authTokenConfigured: boolean }>("DELETE", "/api/auth-token"),
+  login: (password: string) =>
+    request<{ authenticated: boolean; passwordLocked: boolean }>("POST", "/api/session", {
+      password,
+    }),
+  logout: () => request<{ ok: boolean }>("DELETE", "/api/session"),
+  setPassword: (password: string) =>
+    request<{ ok: boolean; passwordLocked: boolean }>("POST", "/api/password", { password }),
+
+  // ---- api keys -------------------------------------------------------------
+
+  apiKeys: () => request<{ data: ApiKeyView[] }>("GET", "/api/keys"),
+  createApiKey: (name: string) =>
+    request<{ key: string; view: ApiKeyView }>("POST", "/api/keys", { name }),
+  revokeApiKey: (id: string) => request<{ ok: boolean }>("DELETE", `/api/keys/${id}`),
 };
 
 /** Human-friendly relative time for tables. */
