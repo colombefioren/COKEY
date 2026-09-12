@@ -14,6 +14,7 @@ import {
   UpdateCredentialSchema,
   UpdateEntrySchema,
 } from "../../core/validation/schemas.js";
+import { matchesQuery, paginate, parsePageQuery } from "../pagination.js";
 import { withErrors } from "./http-errors.js";
 import { z } from "zod";
 
@@ -69,7 +70,13 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
 
   app.get(
     "/api/providers",
-    withErrors(() => cokey.providerStatuses()),
+    withErrors((request) => {
+      const page = parsePageQuery(request.query, { pageSize: 50 });
+      const rows = cokey
+        .providerStatuses()
+        .filter((row) => matchesQuery(page.query, row.id, row.displayName, row.freeTier.summary));
+      return paginate(rows, page);
+    }),
   );
 
   app.post(
@@ -172,6 +179,7 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         chainId: id,
         providerId: body.providerId,
         model: body.model,
+        label: body.label,
         baseUrl: catalogEntry.baseUrl,
         credentialIds: body.credentialIds,
         routingStrategy: body.routingStrategy,
@@ -193,6 +201,7 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         if (!catalogEntry) throw new Error(`Unknown provider: ${entry.providerId}`);
         cokey.chains.updateEntryModel(id, body.model, catalogEntry.baseUrl);
       }
+      if (body.label !== undefined) cokey.chains.updateEntryLabel(id, body.label);
       if (body.enabled !== undefined) cokey.chains.setEntryEnabled(id, body.enabled);
       if (body.routingStrategy !== undefined) {
         cokey.chains.setEntryRoutingStrategy(id, body.routingStrategy);
@@ -343,9 +352,22 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
 
   app.get(
     "/api/credentials",
-    withErrors(() =>
-      cokey.credentials.listAll().map((credential) => cokey.credentials.toPublic(credential)),
-    ),
+    withErrors((request) => {
+      const page = parsePageQuery(request.query, { pageSize: 50 });
+      const rows = cokey.credentials
+        .listAll()
+        .map((credential) => cokey.credentials.toPublic(credential))
+        .filter((credential) =>
+          matchesQuery(
+            page.query,
+            credential.description,
+            credential.providerId,
+            credential.maskedSecret,
+            credential.status,
+          ),
+        );
+      return paginate(rows, page);
+    }),
   );
 
   app.get(
