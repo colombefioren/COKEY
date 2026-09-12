@@ -87,6 +87,23 @@ export class ProviderProxy {
     return address;
   }
 
+  /** Return a dispatcher for the address the provider would use next. */
+  dispatcherForNext(providerId: string): ProxyPoolAddress | undefined {
+    const state = this.byProvider.get(providerId) ?? EMPTY;
+    if (state.config.source.kind === "off") return undefined;
+    const pool =
+      state.config.source.kind === "credential"
+        ? this.pools.get(`${providerId}:${state.config.source.seedUrl}`)
+        : state.config.source.kind === "shared"
+          ? state.config.source.pool
+          : undefined;
+    if (!pool) return undefined;
+    const address = pool.next();
+    state.lastAddress = address;
+    state.nextLabel = address?.label;
+    return address;
+  }
+
   prune(providerId: string, now = Date.now()): number {
     const state = this.byProvider.get(providerId);
     if (!state || state.config.source.kind !== "shared") return 0;
