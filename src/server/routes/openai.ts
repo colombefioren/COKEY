@@ -8,13 +8,15 @@ import {
   RequestScopedError,
 } from "../../core/router/engine.js";
 import { ChatCompletionSchema } from "../../core/validation/schemas.js";
-import { pipeStream } from "../streaming/sse.js";
+import { pipeStream, prependStream } from "../streaming/sse.js";
 import {
   COKEY_PROVIDER_NAME,
   chainStateMessage,
+  chainStateNotice,
   errorIdentityHeaders,
   identityHeaders,
   withCokeyIdentity,
+  withChainStateNotice,
 } from "../openai/identity.js";
 
 /**
@@ -87,6 +89,7 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
     const adapter = cokey.providers.get(result.providerId);
     const started = Date.now();
     const upstream = result.response;
+    const notice = chainStateNotice(result);
 
     if (wantsStream) {
       if (!upstream.body) {
@@ -113,9 +116,19 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
 
       // Adapters whose upstream format differs translate the stream; the rest
       // (already OpenAI-compatible) are piped through untouched.
-      const stream = adapter.transformStream
+      let stream = adapter.transformStream
         ? adapter.transformStream(upstream.body, result.context)
         : upstream.body;
+
+      // A fallback is visible in the chat itself, not only in headers.
+      if (notice) {
+        const prefix = new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            choices: [{ delta: { role: "assistant", content: notice } }],
+          })}\n\n`,
+        );
+        stream = prependStream(prefix, stream);
+      }
 
       cokey.logger.debug("streaming response", {
         chain: result.chainAlias,
@@ -189,10 +202,11 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
     const contentType = upstream.headers.get("content-type") ?? "application/json";
 
     if (parsedBody !== undefined && adapter.transformResponse) {
+      const transformed = adapter.transformResponse(parsedBody, result.context);
       return reply
         .code(upstream.status)
         .type("application/json")
-        .send(withCokeyIdentity(adapter.transformResponse(parsedBody, result.context), result.chainAlias));
+        .send(withCokeyIdentity(withChainStateNotice(transformed, notice), result.chainAlias));
     }
 
     if (parsedBody !== undefined) {
@@ -201,10 +215,10 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
       return reply
         .code(upstream.status)
         .type(contentType)
-        .send(withCokeyIdentity(parsedBody, result.chainAlias));
+        .send(withCokeyIdentity(withChainStateNotice(parsedBody, notice), result.chainAlias));
     }
 
-    return reply.code(upstream.status).type(contentType).send(text);
+    return reply.code(upstream.status).type(contentType).send(notice ? `${notice}\n${text}` : text);
   });
 }
 

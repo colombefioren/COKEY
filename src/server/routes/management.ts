@@ -10,6 +10,7 @@ import {
   MoveEntrySchema,
   ProxyUrlSchema,
   ReorderSchema,
+  TestSecretSchema,
   UpdateChainSchema,
   UpdateCredentialSchema,
   UpdateEntrySchema,
@@ -34,6 +35,8 @@ const AttachCredentialSchema = z
     proxyUrl: ProxyUrlSchema.optional(),
     /** Keep an unverifiable credential when the provider is unreachable. */
     addAnyway: z.boolean().optional(),
+    /** Keep an unverifiable key: attach it as unverified instead of rejecting. */
+    saveAnyway: z.boolean().optional(),
   })
   .refine((value) => Boolean(value.credentialId) || Boolean(value.secret), {
     message: "Provide either credentialId or secret",
@@ -85,6 +88,21 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       const { id } = request.params as { id: string };
       const body = ConnectProviderSchema.parse(request.body);
       return cokey.connectProvider(id, body);
+    }),
+  );
+
+  /**
+   * Test a raw key against a provider without storing anything. Drives the
+   * separate "Test" button; the verdict is readable in the modal while the key
+   * is only saved once the user confirms.
+   */
+  app.post(
+    "/api/providers/:id/test",
+    withErrors(async (request) => {
+      const { id } = request.params as { id: string };
+      const body = TestSecretSchema.parse(request.body);
+      const validation = await cokey.testProviderSecret(id, body);
+      return { validated: validation.ok, validation };
     }),
   );
 
@@ -313,6 +331,9 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         cokey.credentials.putInCooldown(credential.id);
       } else if (validation.classification === "network_error" && body.addAnyway) {
         // Explicit override: keep it, still marked unverified.
+      } else if (body.saveAnyway) {
+        // Explicit override: the user chose to save this key regardless of
+        // whether the probe passed. Keep it, clearly marked unverified.
       } else {
         cokey.credentials.delete(credential.id);
         reply.code(400);

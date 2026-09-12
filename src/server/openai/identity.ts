@@ -41,6 +41,43 @@ export function chainStateMessage(result: RouteResult): string {
   return `chain changed state: ${result.chainAlias} now on ${entry} via ${result.credentialDescription} (${reason})`;
 }
 
+/**
+ * Visible notice to prepend to the assistant output when the chain moved.
+ *
+ * Headers are readable by tools but invisible to a chat window, so a fallback —
+ * the moment the chain actually changes who answers — becomes a literal line in
+ * the response. Coding agents then see the chain moved without reading headers.
+ * Returns `null` when nothing changed and the reply should stay clean.
+ */
+export function chainStateNotice(result: RouteResult): string | null {
+  if (!result.fallback) return null;
+  return `\n[chain state] ${chainStateMessage(result)}\n\n`;
+}
+
+/**
+ * Prepend a notice to each choice's assistant content.
+ *
+ * The upstream text is untouched: the notice is a prefix on the already-built
+ * message so the model output the client sees starts with the state change.
+ */
+export function withChainStateNotice(body: unknown, notice: string | null): unknown {
+  if (!notice || !body || typeof body !== "object" || Array.isArray(body)) return body;
+  const record = body as Record<string, unknown>;
+  const choices = record.choices;
+  if (!Array.isArray(choices)) return body;
+  const changed = choices.map((choice) => {
+    const content = (choice as Record<string, unknown> | undefined)?.message as
+      | Record<string, unknown>
+      | undefined;
+    if (!content || typeof content.content !== "string") return choice;
+    return {
+      ...(choice as Record<string, unknown>),
+      message: { ...content, content: `${notice}${content.content}` },
+    };
+  });
+  return { ...record, choices: changed };
+}
+
 /** Headers that make the current routing state machine-readable. */
 export function identityHeaders(result: RouteResult): Record<string, string> {
   return {

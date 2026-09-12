@@ -33,6 +33,16 @@ export const ConnectProviderSchema = z.object({
   description: z.string().min(1, "Description is required").max(120),
   accountId: z.string().min(1).max(200).optional(),
   proxyUrl: ProxyUrlSchema.optional(),
+  /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+  saveAnyway: z.boolean().optional(),
+});
+
+/** Raw key probe. Runs validation against the provider without persisting. */
+export const TestSecretSchema = z.object({
+  secret: z.string().min(1, "API key is required"),
+  accountId: z.string().min(1).max(200).optional(),
+  /** When present, the probe verifies against this exact model. */
+  model: z.string().min(1).optional(),
 });
 
 export const CreateChainSchema = z.object({

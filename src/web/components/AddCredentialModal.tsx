@@ -63,6 +63,32 @@ export function AddCredentialModal({
     }
   }
 
+  async function testNew() {
+    if (!secret.trim()) {
+      setError("Key is required");
+      return;
+    }
+    setBusy(true);
+    setError(undefined);
+    setResult(undefined);
+    try {
+      // Probes against the exact model of this entry, but stores nothing.
+      const validation = await api.testProviderSecret(entry.providerId, {
+        secret: secret.trim(),
+        ...(needsAccountId && accountId.trim() ? { accountId: accountId.trim() } : {}),
+        model: entry.model,
+      });
+      setResult(validation);
+    } catch (err) {
+      const message = err instanceof ApiError ? err.message : String(err);
+      const classification = err instanceof ApiError ? err.classification : undefined;
+      setError(message);
+      if (classification) setResult({ ok: false, classification, message });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function createAndVerify() {
     if (!description.trim() || !secret.trim()) {
       setError("Name and key are both required");
@@ -80,9 +106,16 @@ export function AddCredentialModal({
         // A distinct proxy per key is what makes several keys from one provider
         // fail over independently instead of sharing an IP-level limit.
         ...(proxyUrl.trim() ? { proxyUrl: proxyUrl.trim() } : {}),
+        // The user asked for this key explicitly: save it even if the probe
+        // rejects it, clearly marked unverified.
+        saveAnyway: true,
       });
       setResult(response.validation);
-      toast.ok(`Verified and attached to ${entry.providerId}/${entry.model}`);
+      toast.ok(
+        response.validation.ok
+          ? `Verified and attached to ${entry.providerId}/${entry.model}`
+          : `Saved (${response.validation.classification}) and attached to ${entry.providerId}/${entry.model}`,
+      );
       onChanged();
       onClose();
     } catch (err) {
@@ -200,6 +233,11 @@ export function AddCredentialModal({
             <div className="verify ok">
               ✓ Verified · {entry.providerId} accepted the key · {result.latencyMs ?? 0}ms
             </div>
+          ) : result ? (
+            <div className="verify err">
+              ✗ {result.classification}
+              {result.message ? ` · ${result.message}` : ""}
+            </div>
           ) : null}
           {error ? <div className="verify err">✗ {error}</div> : null}
 
@@ -207,8 +245,18 @@ export function AddCredentialModal({
             <button className="secondary" onClick={onClose} disabled={busy}>
               Cancel
             </button>
-            <button onClick={() => void createAndVerify()} disabled={busy}>
-              {busy ? "Verifying…" : "Save & test"}
+            <button
+              className="secondary"
+              onClick={() => void testNew()}
+              disabled={busy || !secret.trim()}
+            >
+              {busy ? "Testing…" : "Test"}
+            </button>
+            <button
+              onClick={() => void createAndVerify()}
+              disabled={busy || !description.trim() || !secret.trim()}
+            >
+              {busy ? "Saving…" : "Save key"}
             </button>
           </div>
         </>

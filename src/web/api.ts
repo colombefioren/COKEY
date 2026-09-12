@@ -115,11 +115,31 @@ export const api = {
 
   connectProvider: (
     providerId: string,
-    body: { secret: string; description: string; accountId?: string; proxyUrl?: string },
+    body: {
+      secret: string;
+      description: string;
+      accountId?: string;
+      proxyUrl?: string;
+      /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+      saveAnyway?: boolean;
+    },
   ) =>
     request<ConnectResult>(
       "POST",
       `/api/providers/${encodeURIComponent(providerId)}/connect`,
+      body,
+    ),
+
+  /**
+   * Verify a raw key against a provider without persisting anything.
+   *
+   * Powers the separate "Test" button: the verdict is shown inline and the key
+   * is only stored when the user then clicks "Save".
+   */
+  testProviderSecret: (providerId: string, body: { secret: string; accountId?: string; model?: string }) =>
+    request<ValidationResult>(
+      "POST",
+      `/api/providers/${encodeURIComponent(providerId)}/test`,
       body,
     ),
 
@@ -186,6 +206,8 @@ export const api = {
       accountId?: string;
       proxyUrl?: string;
       addAnyway?: boolean;
+      /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+      saveAnyway?: boolean;
     },
   ) =>
     request<{
