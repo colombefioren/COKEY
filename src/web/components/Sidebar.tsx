@@ -14,7 +14,7 @@ import { CREATOR, REPO_URL } from "../links.js";
 export interface NavItem {
   path: string;
   label: string;
-  icon: string;
+  icon: ReactNode;
   hint: string;
   /** Optional badge text, for example a credential count. */
   badge?: string;

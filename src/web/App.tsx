@@ -11,6 +11,18 @@ import { LiveStatus } from "./components/LiveStatus.js";
 import { Sidebar, type NavGroup } from "./components/Sidebar.js";
 import { LoginForm } from "./components/LoginForm.js";
 import { ThemeToggle } from "./components/ThemeToggle.js";
+import {
+  IconActivity,
+  IconBook,
+  IconCpu,
+  IconGrid,
+  IconKey,
+  IconLayers,
+  IconRoute,
+  IconScroll,
+  IconSliders,
+  IconSparkle,
+} from "./components/Icons.js";
 import { href, useRoute } from "./router.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -34,7 +46,7 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
         {
           path: "/dashboard",
           label: "Dashboard",
-          icon: "\u25C9",
+          icon: <IconLayers />,
           hint: "Gateway summary and live route",
         },
       ],
@@ -45,27 +57,27 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
         {
           path: "/chains",
           label: "Chains",
-          icon: "\u2726",
+          icon: <IconRoute />,
           hint: "Your failover chains, their nodes and their keys",
           badge: counts.chains ? String(counts.chains) : undefined,
         },
         {
           path: "/models",
           label: "Models",
-          icon: "\u2699",
+          icon: <IconCpu />,
           hint: "Model catalog, live tests and rankings",
         },
         {
           path: "/providers",
           label: "Providers",
-          icon: "\u25A4",
+          icon: <IconGrid />,
           hint: "Who runs each provider and whether to depend on it",
           badge: counts.providers ? String(counts.providers) : undefined,
         },
         {
           path: "/api-keys",
           label: "API keys",
-          icon: "\u26BF",
+          icon: <IconKey />,
           hint: "Keys for talking to the gateway itself",
         },
       ],
@@ -76,7 +88,7 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
         {
           path: "/usage",
           label: "Usage",
-          icon: "\u25A5",
+          icon: <IconActivity />,
           hint: "Request history and token usage together",
           badge: counts.keys ? String(counts.keys) : undefined,
         },
@@ -88,25 +100,25 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
         {
           path: "/settings",
           label: "Settings",
-          icon: "\u2261",
+          icon: <IconSliders />,
           hint: "Gateway, fallback and egress settings",
         },
         {
           path: "/tutorial",
           label: "Tutorial",
-          icon: "\u203A",
+          icon: <IconBook />,
           hint: "Wire COKEY into your editor or CLI",
         },
         {
           path: "/terms",
           label: "Terms",
-          icon: "\u00A7",
+          icon: <IconScroll />,
           hint: "What you agree to by using COKEY",
         },
         {
           path: "/about",
           label: "About",
-          icon: "\u265E",
+          icon: <IconSparkle />,
           hint: "The stack, the credits and how to reach the creator",
         },
       ],

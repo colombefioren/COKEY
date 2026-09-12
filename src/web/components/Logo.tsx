@@ -1,84 +1,122 @@
 /**
  * The COKEY mark.
  *
- * The logo is one line that crosses itself: a C and an O fused into an
- * infinity, with two leaves sprouting off the second loop. It is drawn with
- * `currentColor` so it inherits whatever accent the theme is using, and it
- * carries its own geometry rather than loading an image, which keeps it crisp
- * at every size and free of a network request.
+ * This is the same artwork as `docs/assets/cokey-logo.svg` in the readme: one
+ * continuous line crossing itself into a C and an O, with two leaves off the
+ * second loop, then KEY stroked beside it. It is inlined rather than loaded as
+ * an image so it stays crisp at any size, inherits nothing from the network,
+ * and can re-colour for the active theme through the gradient stops.
  */
 
+const MARK_PATH =
+  "M84 50 C75 44 63 43 52 50 C32 62 32 90 52 102 C72 114 96 102 96 76 C96 50 120 38 140 50 C160 62 160 90 140 102 C120 114 96 102 96 76";
+
 /** The mark alone: the CO ligature and the leaves. */
-export function CokeyMark({
-  height = 30,
-  className,
-}: {
-  height?: number;
-  className?: string;
-}) {
+export function CokeyMark({ height = 30, className }: { height?: number; className?: string }) {
   return (
     <svg
       className={className}
-      viewBox="0 0 212 104"
+      viewBox="0 0 220 128"
       height={height}
-      width={(height / 104) * 212}
+      width={(height / 128) * 220}
       role="img"
       aria-label="COKEY"
       fill="none"
     >
       <path
-        d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"
+        d={MARK_PATH}
         stroke="currentColor"
         strokeWidth="13"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="currentColor" />
-      <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="currentColor" opacity="0.6" />
+      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="currentColor" />
+      <path
+        d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z"
+        fill="currentColor"
+        opacity="0.6"
+      />
     </svg>
   );
 }
 
 /**
- * The full lockup: mark plus the KEY wordmark.
+ * The full lockup: mark plus the KEY wordmark, matching the readme asset.
  *
- * The letters are stroke-drawn rather than typed, so the wordmark never depends
- * on a font being installed and keeps the same weight as the mark.
+ * The gradient ids are suffixed with the `uid` prop so two lockups can sit on
+ * one page without one stealing the other's `url(#…)` reference.
  */
 export function CokeyLogo({
   height = 26,
   className,
   withWordmark = true,
+  uid = "cokey",
 }: {
   height?: number;
   className?: string;
   withWordmark?: boolean;
+  uid?: string;
 }) {
-  const viewWidth = withWordmark ? 420 : 212;
+  const viewWidth = withWordmark ? 440 : 220;
+  const markId = `${uid}-mark`;
+  const wordId = `${uid}-word`;
+
   return (
     <svg
       className={className}
-      viewBox={`0 0 ${viewWidth} 104`}
+      viewBox={`0 0 ${viewWidth} 128`}
       height={height}
-      width={(height / 104) * viewWidth}
+      width={(height / 128) * viewWidth}
       role="img"
       aria-label="COKEY"
       fill="none"
     >
+      <defs>
+        <linearGradient
+          id={markId}
+          x1="24"
+          y1="24"
+          x2="200"
+          y2="118"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#d9a9cc" />
+          <stop offset="0.55" stopColor="#c08fbf" />
+          <stop offset="1" stopColor="#9672a6" />
+        </linearGradient>
+        <linearGradient
+          id={wordId}
+          x1="246"
+          y1="42"
+          x2="430"
+          y2="112"
+          gradientUnits="userSpaceOnUse"
+        >
+          <stop offset="0" stopColor="#ecd4e7" />
+          <stop offset="1" stopColor="#d9a9cc" />
+        </linearGradient>
+      </defs>
+
       <path
-        d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"
-        stroke="currentColor"
+        d={MARK_PATH}
+        stroke={`url(#${markId})`}
         strokeWidth="13"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="currentColor" />
-      <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="currentColor" opacity="0.6" />
+      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#d9a9cc" />
+      <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#9672a6" />
+
       {withWordmark ? (
-        <g stroke="currentColor" strokeWidth="10" strokeLinecap="square" strokeLinejoin="miter">
-          <path d="M236 16 V88 M278 16 L240 52 L278 88" />
-          <path d="M330 16 H300 V88 H330 M300 52 H322" />
-          <path d="M362 16 L386 48 L410 16 M386 48 V88" />
+        <g
+          stroke={`url(#${wordId})`}
+          strokeWidth="11"
+          strokeLinecap="square"
+          strokeLinejoin="miter"
+        >
+          <path d="M246 42 V112 M292 42 L250 76 L292 112" />
+          <path d="M346 42 H312 V112 H346 M312 76 H338" />
+          <path d="M378 42 L404 76 L430 42 M404 76 V112" />
         </g>
       ) : null}
     </svg>
