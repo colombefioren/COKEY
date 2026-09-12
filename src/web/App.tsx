@@ -177,6 +177,7 @@ function Shell() {
         groups={groups}
         activePath={route.path}
         navigate={navigate}
+        onClose={() => setNavOpen(false)}
         footer={
           <div className="sidebar-stats">
             <span title="Connected providers">{providers.filter((p) => p.connected).length} providers</span>

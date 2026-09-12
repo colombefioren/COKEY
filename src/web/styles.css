@@ -1,50 +1,70 @@
 /*
  * COKEY dashboard theme.
  *
- * Palette, darkest to lightest:
- *   #030826  the ground
- *   #0E1140  raised surfaces
- *   #1E1C59  borders and dividers
- *   #9672A6  secondary accent
- *   #D9A9CC  primary accent
+ * A night sky, not a dashboard: the ground is the near-black violet of deep
+ * space, surfaces float on it as soft lavender glass, and the accents are the
+ * lilac and periwinkle of the logo. Palette, darkest to lightest:
  *
- * A deep indigo night with a lilac accent, which keeps long sessions easy on the
- * eyes and still gives status colours room to read: green, amber and red are the
- * only saturated hues in the interface, so they always mean something.
+ *   #0A0620  the ground
+ *   #150F3D  raised surfaces
+ *   #2C2570  borders and dividers
+ *   #8D7AE0  secondary accent (periwinkle)
+ *   #CDB0F0  primary accent (lilac)
+ *   #EFB4E0  tertiary accent, the nebula pink
+ *
+ * Green, amber and red are the only saturated hues in the interface, so a
+ * status colour always means something and never just decorates.
  */
 
 :root {
   color-scheme: dark;
 
-  --bg: #030826;
-  --bg-2: #0e1140;
-  --panel: #0e1140;
-  --panel-2: #141852;
-  --border: #1e1c59;
-  --border-strong: #2c2a70;
+  --bg: #0a0620;
+  --bg-2: #150f3d;
+  --panel: #171244;
+  --panel-2: #1e1858;
+  --border: #2c2570;
+  --border-strong: #403890;
 
-  --text: #ece9f5;
-  --muted: #a8a6c8;
-  --faint: #7c7aa5;
+  --text: #f1eefc;
+  --muted: #b4aee6;
+  --faint: #8b84c9;
 
-  --accent: #d9a9cc;
-  --accent-hover: #e7c2dd;
-  --accent-2: #9672a6;
-  --accent-ink: #180a22;
+  --accent: #cdb0f0;
+  --accent-hover: #ded2fb;
+  --accent-2: #8d7ae0;
+  --accent-3: #efb4e0;
+  --accent-ink: #140a26;
 
-  --ok: #7fe0a8;
-  --warn: #f2bd63;
-  --bad: #f2798f;
+  --ok: #86e6b0;
+  --warn: #f6c46e;
+  --bad: #f589a3;
 
   --ok-bg: #10331f;
-  --warn-bg: #35280f;
-  --bad-bg: #3a1425;
-  --neutral-bg: #1a1d5e;
+  --warn-bg: #382a10;
+  --bad-bg: #3d1630;
+  --neutral-bg: #221c66;
 
-  --radius: 12px;
-  --radius-sm: 8px;
+  /* Glows and shadows do the depth work, so surfaces need no heavy fills. */
+  --glow: rgba(163, 138, 246, 0.32);
+  --glow-soft: rgba(163, 138, 246, 0.16);
+  --shadow: 0 26px 60px -34px rgba(2, 0, 16, 0.95);
+  --hairline: rgba(205, 176, 240, 0.14);
+
+  --radius: 16px;
+  --radius-sm: 11px;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  --sidebar-w: 252px;
+  --sidebar-w: 254px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
 }
 
 * {
@@ -59,8 +79,17 @@ body,
 
 body {
   margin: 0;
-  background: var(--bg);
   color: var(--text);
+  /*
+   * The sky itself: two nebula blooms over a vertical gradient, fixed so the
+   * content scrolls past a still sky instead of dragging it along.
+   */
+  background:
+    radial-gradient(1200px 820px at 10% -12%, rgba(141, 122, 224, 0.24), transparent 62%),
+    radial-gradient(940px 700px at 102% -6%, rgba(239, 180, 224, 0.14), transparent 58%),
+    radial-gradient(1100px 900px at 50% 118%, rgba(45, 37, 112, 0.6), transparent 64%),
+    linear-gradient(180deg, #0d0830, var(--bg) 42%);
+  background-attachment: fixed;
   font:
     14px/1.6 ui-sans-serif,
     system-ui,
@@ -92,16 +121,53 @@ h3 {
 }
 
 .sidebar {
+  position: sticky;
+  top: 0;
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 20px 14px;
-  background: linear-gradient(180deg, var(--bg-2), var(--bg));
-  border-right: 1px solid var(--border);
-  position: sticky;
-  top: 0;
   height: 100vh;
+  padding: 20px 14px 16px;
   overflow-y: auto;
+  overflow-x: hidden;
+  border-right: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(21, 15, 61, 0.94), rgba(10, 6, 32, 0.97));
+  backdrop-filter: blur(14px);
+  box-shadow: inset -1px 0 0 rgba(205, 176, 240, 0.05);
+}
+
+/*
+ * A slow aurora behind the navigation. It never moves anything the eye is
+ * reading, it just keeps the darkest column of the app from going flat.
+ */
+.sidebar::before {
+  content: "";
+  position: absolute;
+  inset: -25% -50% auto;
+  height: 130%;
+  pointer-events: none;
+  background:
+    radial-gradient(420px 330px at 28% 6%, rgba(141, 122, 224, 0.3), transparent 62%),
+    radial-gradient(360px 300px at 92% 44%, rgba(239, 180, 224, 0.15), transparent 62%);
+  filter: blur(8px);
+  animation: aurora 24s ease-in-out infinite alternate;
+}
+
+@keyframes aurora {
+  from {
+    transform: translate3d(-7%, -3%, 0) scale(1);
+    opacity: 0.7;
+  }
+  to {
+    transform: translate3d(7%, 5%, 0) scale(1.14);
+    opacity: 1;
+  }
+}
+
+/* Keep every direct child above the aurora. */
+.sidebar > * {
+  position: relative;
+  z-index: 1;
 }
 
 .sidebar-brand {
@@ -124,11 +190,13 @@ h3 {
   color: var(--accent);
 }
 
+/* Positioned so the gliding highlight can be measured against it. */
 .sidebar-nav {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  flex: 1;
+  flex: 1; /* offsetParent for every nav item */
 }
 
 .nav-group {
@@ -138,14 +206,77 @@ h3 {
 }
 
 .nav-group-title {
+  position: relative;
   font-size: 10px;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--faint);
   padding: 0 10px 6px;
 }
+.nav-group-title::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 2px;
+  height: 1px;
+  background: linear-gradient(90deg, var(--hairline), transparent);
+  transform-origin: left;
+  animation: rail-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes rail-in {
+  from {
+    transform: scaleX(0);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+/*
+ * The moving highlight.
+ *
+ * One element glides between items instead of every item blinking on and off,
+ * which is what makes the navigation read as a single object rather than a row
+ * of buttons. Position and height are measured from the active anchor.
+ */
+.nav-glider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(100deg, rgba(205, 176, 240, 0.2), rgba(141, 122, 224, 0.07));
+  box-shadow:
+    0 0 26px -8px var(--glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition:
+    transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* The lilac spine that marks the current page. */
+.nav-glider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 24%;
+  bottom: 24%;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 14px var(--glow);
+}
 
 .nav-item {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -153,31 +284,78 @@ h3 {
   border-radius: var(--radius-sm);
   color: var(--muted);
   border: 1px solid transparent;
+  /* Staggered entrance; --nav-index is set per item by the sidebar. */
+  animation: nav-in 0.52s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--nav-index, 0) * 38ms);
   transition:
-    background 0.15s,
-    color 0.15s,
-    border-color 0.15s;
+    background 0.18s,
+    color 0.18s,
+    border-color 0.18s;
 }
+
+@keyframes nav-in {
+  from {
+    opacity: 0;
+    transform: translateX(-14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A sheen that sweeps across an item on hover, once, and leaves. */
+.nav-item::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-45%);
+  background: linear-gradient(100deg, transparent 22%, rgba(241, 238, 252, 0.1) 50%, transparent 78%);
+  transition:
+    opacity 0.2s ease,
+    transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
 .nav-item:hover {
-  background: var(--panel);
+  background: rgba(30, 24, 88, 0.55);
   color: var(--text);
   text-decoration: none;
 }
+.nav-item:hover::after {
+  opacity: 1;
+  transform: translateX(45%);
+}
 .nav-item.active {
-  background: linear-gradient(90deg, rgba(217, 169, 204, 0.16), rgba(150, 114, 166, 0.06));
-  border-color: var(--border-strong);
+  /* The glider paints the fill; the item only owns the text colour. */
+  background: transparent;
+  border-color: transparent;
   color: var(--text);
 }
 .nav-icon {
   width: 18px;
   text-align: center;
   color: var(--accent-2);
+  transition:
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.18s;
+}
+.nav-item:hover .nav-icon {
+  color: var(--accent);
+  transform: translateY(-1px) scale(1.18);
 }
 .nav-item.active .nav-icon {
   color: var(--accent);
+  transform: scale(1.08);
 }
 .nav-label {
   flex: 1;
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.nav-item:hover .nav-label {
+  transform: translateX(2px);
 }
 .nav-badge {
   font-size: 10px;
@@ -186,6 +364,14 @@ h3 {
   background: var(--panel-2);
   color: var(--muted);
   font-variant-numeric: tabular-nums;
+  transition:
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    color 0.18s;
+}
+.nav-item:hover .nav-badge,
+.nav-item.active .nav-badge {
+  color: var(--accent);
+  transform: scale(1.08);
 }
 
 .sidebar-foot {
@@ -218,17 +404,36 @@ h3 {
 }
 
 .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
   display: flex;
   align-items: center;
   gap: 14px;
   padding: 12px 22px;
-  border-bottom: 1px solid var(--border);
-  background: rgba(3, 8, 38, 0.85);
-  backdrop-filter: blur(8px);
-  position: sticky;
-  top: 0;
-  z-index: 20;
   font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(16, 11, 48, 0.88), rgba(10, 6, 32, 0.78));
+  backdrop-filter: blur(16px) saturate(140%);
+}
+
+/* A single lilac hairline, brightest in the middle. */
+.topbar::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 1px;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--hairline) 20%,
+    rgba(239, 180, 224, 0.24) 50%,
+    var(--hairline) 80%,
+    transparent
+  );
 }
 .topbar-title {
   font-weight: 600;
@@ -252,10 +457,26 @@ main {
 /* ---- surfaces ------------------------------------------------------------- */
 
 section.panel {
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  position: relative;
   padding: 18px 20px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(28, 22, 76, 0.72), rgba(19, 14, 56, 0.74));
+  backdrop-filter: blur(10px);
+  box-shadow:
+    var(--shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+section.panel:hover {
+  border-color: var(--border-strong);
+  box-shadow:
+    var(--shadow),
+    0 0 34px -20px var(--glow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .panel-head {
@@ -301,10 +522,25 @@ section.panel {
 }
 
 .stat {
-  background: var(--panel-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+  position: relative;
+  overflow: hidden;
   padding: 13px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, rgba(32, 25, 86, 0.66), rgba(19, 14, 56, 0.74));
+}
+
+/* A soft bloom in the corner, so a row of stats is not a row of grey boxes. */
+.stat::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -70px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--glow-soft), transparent 68%);
 }
 .stat .value {
   font-size: 21px;
@@ -325,14 +561,21 @@ section.panel {
 }
 
 .card {
-  background: var(--panel-2);
-  border: 1px solid var(--border-strong);
-  border-radius: var(--radius-sm);
   padding: 14px;
-  transition: border-color 0.15s;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(180deg, rgba(32, 25, 86, 0.7), rgba(21, 16, 62, 0.78));
+  transition:
+    border-color 0.22s ease,
+    transform 0.22s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.22s ease;
 }
 .card:hover {
   border-color: var(--accent-2);
+  transform: translateY(-2px);
+  box-shadow:
+    0 18px 34px -26px rgba(0, 0, 0, 0.95),
+    0 0 26px -12px var(--glow);
 }
 .card .title {
   font-weight: 600;
@@ -354,17 +597,23 @@ button {
   border: 1px solid transparent;
   color: var(--accent-ink);
   padding: 7px 13px;
-  border-radius: 7px;
+  border-radius: 9px;
   cursor: pointer;
   font: inherit;
   font-weight: 550;
   transition:
-    background 0.15s,
-    border-color 0.15s,
-    color 0.15s;
+    background 0.18s,
+    border-color 0.18s,
+    color 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
 }
 button:hover:not(:disabled) {
   background: var(--accent-hover);
+  box-shadow: 0 12px 26px -16px var(--glow);
+}
+button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 button:disabled {
   opacity: 0.45;
@@ -1404,6 +1653,11 @@ button.play.fail {
 
 /* ---- responsive ----------------------------------------------------------- */
 
+/* The drawer's backdrop. Present only while the drawer is open. */
+.sidebar-scrim {
+  display: none;
+}
+
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
@@ -1413,11 +1667,24 @@ button.play.fail {
     z-index: 60;
     width: var(--sidebar-w);
     transform: translateX(-104%);
-    transition: transform 0.2s ease;
-    box-shadow: 0 0 40px rgba(0, 0, 0, 0.6);
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 0 60px rgba(0, 0, 0, 0.7);
   }
   .shell.nav-open .sidebar {
     transform: translateX(0);
+  }
+  .shell.nav-open .sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    cursor: pointer;
+    background: rgba(4, 2, 18, 0.62);
+    backdrop-filter: blur(3px);
+    animation: scrim-in 0.3s ease both;
   }
   .nav-toggle {
     display: inline-block;
@@ -1445,14 +1712,36 @@ button.play.fail {
   align-items: center;
   padding: 4px 10px 2px;
   color: var(--accent);
-  filter: drop-shadow(0 0 14px rgba(217, 169, 204, 0.3));
+  animation: brand-float 7s ease-in-out infinite;
 }
 .sidebar-brand:hover {
   color: var(--accent-hover);
   text-decoration: none;
 }
+
+@keyframes brand-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-2px);
+  }
+}
+
 .brand-logo {
   display: block;
+  animation: brand-glow 6.5s ease-in-out infinite;
+}
+
+@keyframes brand-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 10px rgba(205, 176, 240, 0.22));
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(205, 176, 240, 0.55));
+  }
 }
 
 .sr-only {
@@ -1502,20 +1791,51 @@ button.play.fail {
 
 /* ---- starfield ------------------------------------------------------------ */
 
+/*
+ * Three star layers at different sizes and drift speeds. Slow parallax plus a
+ * slow twinkle is enough to make the shell feel alive; anything faster reads as
+ * a distraction behind a table of API keys.
+ */
 .starfield {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.45;
+  /* The star layers are larger than the viewport so they can drift. */
+  overflow: hidden;
+}
+
+.starfield::before,
+.starfield::after {
+  content: "";
+  position: absolute;
+  inset: -20%;
+}
+
+.starfield::before {
+  opacity: 0.5;
   background-image:
-    radial-gradient(1.5px 1.5px at 40px 60px, rgba(236, 233, 245, 0.85) 50%, transparent 52%),
-    radial-gradient(1.2px 1.2px at 164px 28px, rgba(217, 169, 204, 0.8) 50%, transparent 52%),
-    radial-gradient(1px 1px at 108px 152px, rgba(236, 233, 245, 0.7) 50%, transparent 52%),
-    radial-gradient(1.7px 1.7px at 192px 194px, rgba(150, 114, 166, 0.85) 50%, transparent 52%),
-    radial-gradient(1.1px 1.1px at 70px 210px, rgba(217, 169, 204, 0.6) 50%, transparent 52%);
+    radial-gradient(1.6px 1.6px at 40px 60px, rgba(241, 238, 252, 0.9) 50%, transparent 52%),
+    radial-gradient(1.3px 1.3px at 164px 28px, rgba(205, 176, 240, 0.85) 50%, transparent 52%),
+    radial-gradient(1px 1px at 108px 152px, rgba(241, 238, 252, 0.7) 50%, transparent 52%),
+    radial-gradient(1.8px 1.8px at 192px 194px, rgba(141, 122, 224, 0.9) 50%, transparent 52%),
+    radial-gradient(1.1px 1.1px at 70px 210px, rgba(239, 180, 224, 0.65) 50%, transparent 52%);
   background-size: 230px 230px;
-  animation: twinkle 10s ease-in-out infinite;
+  animation:
+    twinkle 9s ease-in-out infinite,
+    drift 190s linear infinite;
+}
+
+.starfield::after {
+  opacity: 0.34;
+  background-image:
+    radial-gradient(1px 1px at 22px 44px, rgba(241, 238, 252, 0.8) 50%, transparent 52%),
+    radial-gradient(2px 2px at 130px 96px, rgba(205, 176, 240, 0.6) 50%, transparent 52%),
+    radial-gradient(1.4px 1.4px at 206px 176px, rgba(241, 238, 252, 0.55) 50%, transparent 52%);
+  background-size: 340px 340px;
+  animation:
+    twinkle 13s ease-in-out infinite reverse,
+    drift 260s linear infinite reverse;
 }
 
 @keyframes twinkle {
@@ -1524,20 +1844,17 @@ button.play.fail {
     opacity: 0.3;
   }
   50% {
-    opacity: 0.52;
+    opacity: 0.62;
   }
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(900px 620px at 10% -12%, rgba(150, 114, 166, 0.22), transparent 62%),
-    radial-gradient(720px 520px at 102% -4%, rgba(217, 169, 204, 0.14), transparent 58%),
-    radial-gradient(820px 720px at 48% 122%, rgba(30, 28, 89, 0.6), transparent 62%);
+@keyframes drift {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 460px 690px;
+  }
 }
 
 .shell {
@@ -1773,6 +2090,15 @@ body::before {
   }
 }
 
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .flow-keys {
   display: flex;
   align-items: center;
@@ -1825,6 +2151,266 @@ body::before {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* ---- resilience layers --------------------------------------------------- */
+
+.layers-panel {
+  overflow: hidden;
+  background:
+    radial-gradient(680px 320px at 14% -22%, rgba(141, 122, 224, 0.2), transparent 62%),
+    radial-gradient(520px 280px at 96% 118%, rgba(239, 180, 224, 0.1), transparent 60%),
+    linear-gradient(180deg, rgba(28, 22, 76, 0.8), rgba(17, 12, 52, 0.84));
+}
+
+.layer-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.layer-head-kicker {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+}
+.layer-head-scope {
+  margin-left: auto;
+  padding: 4px 11px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: rgba(10, 6, 32, 0.6);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.layer-title {
+  margin: 0 0 16px;
+  font-size: 16.5px;
+  line-height: 1.5;
+  color: var(--text);
+}
+.layer-title em {
+  font-style: normal;
+  background: linear-gradient(92deg, var(--accent), var(--accent-3));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.layer {
+  display: grid;
+  grid-template-columns: minmax(200px, 1fr) minmax(250px, 1.2fr) minmax(220px, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 15px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, rgba(16, 11, 48, 0.7), rgba(12, 8, 38, 0.66));
+  transition:
+    border-color 0.25s ease,
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
+}
+.layer + .layer {
+  margin-top: 10px;
+}
+.layer:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow:
+    0 22px 44px -32px rgba(0, 0, 0, 0.95),
+    0 0 30px -14px var(--glow);
+}
+
+.layer-kicker {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.layer h4 {
+  margin: 6px 0 4px;
+  font-size: 14.5px;
+  color: var(--text);
+}
+.layer-copy p {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.layer-track {
+  display: flex;
+  align-items: center;
+}
+
+.layer-node {
+  display: grid;
+  gap: 2px;
+  padding: 8px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--border-strong);
+  background: rgba(30, 24, 88, 0.62);
+  font-size: 11.5px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.layer-node small {
+  font-size: 10px;
+  color: var(--faint);
+}
+.layer-node.is-hub {
+  border-color: var(--accent-2);
+  box-shadow: inset 0 0 22px rgba(141, 122, 224, 0.18);
+}
+
+/* A request travelling the connector, so the diagram is not a static drawing. */
+.layer-rail {
+  position: relative;
+  flex: 1;
+  min-width: 34px;
+  height: 2px;
+  margin: 0 9px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--border-strong), rgba(64, 56, 144, 0.35));
+}
+.layer-rail::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px 2px var(--glow);
+  animation: rail-travel 2.6s linear infinite;
+}
+.layer:nth-child(4) .layer-rail::after {
+  animation-delay: 0.5s;
+}
+.layer:nth-child(5) .layer-rail::after {
+  animation-delay: 1s;
+}
+
+@keyframes rail-travel {
+  from {
+    left: 0;
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  to {
+    left: calc(100% - 6px);
+    opacity: 0;
+  }
+}
+
+.layer-stack {
+  display: grid;
+  gap: 5px;
+  min-width: 168px;
+}
+
+.layer-key {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: rgba(20, 15, 58, 0.82);
+  font-family: var(--mono);
+  font-size: 10.5px;
+  color: var(--muted);
+}
+.layer-key i {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.layer-key em {
+  margin-left: auto;
+  font-style: normal;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+.layer-key.is-ok {
+  border-color: rgba(134, 230, 176, 0.32);
+  color: var(--text);
+}
+.layer-key.is-ok i {
+  background: var(--ok);
+  box-shadow: 0 0 9px rgba(134, 230, 176, 0.7);
+}
+.layer-key.is-bad {
+  border-color: rgba(245, 137, 163, 0.42);
+  color: var(--bad);
+}
+.layer-key.is-bad i {
+  background: var(--bad);
+  animation: flow-blink 1.3s ease-in-out infinite;
+}
+.layer-key.is-bad em {
+  color: var(--warn);
+}
+.layer-key.is-locked {
+  border-style: dashed;
+  opacity: 0.62;
+}
+.layer-key.is-locked i {
+  background: transparent;
+  border: 1px solid var(--faint);
+}
+
+.layer-notes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.layer-notes li {
+  position: relative;
+  padding-left: 14px;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--faint);
+}
+.layer-notes li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.58em;
+  width: 6px;
+  height: 1px;
+  background: var(--accent-2);
+}
+
+.layer-footer {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  font-size: 10.5px;
+  letter-spacing: 0.04em;
+  color: var(--faint);
 }
 
 /* ---- about, chips and contact -------------------------------------------- */
@@ -1934,6 +2520,24 @@ body::before {
   font-size: 13px;
 }
 
+@media (max-width: 1020px) {
+  .layer {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .layer-track {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .layer-rail {
+    min-width: 26px;
+  }
+  .layer-stack {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
 @media (max-width: 860px) {
   .flow-node {
     min-width: 138px;
@@ -1943,5 +2547,8 @@ body::before {
   }
   .about-hero {
     gap: 14px;
+  }
+  .layer-head-scope {
+    margin-left: 0;
   }
 }
