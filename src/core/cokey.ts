@@ -923,42 +923,44 @@ export class Cokey {
     const catalog = this.providers.findCatalogEntry(providerId);
     const adapter = this.providers.get(providerId);
 
-    if (!catalog || catalog.verification.method !== "chat") {
-      return adapter.validateCredential(credential);
+    // Always try a real chat request against the specific model so that
+    // quota exhaustion and model availability are both tested.
+    if (catalog) {
+      const started = Date.now();
+      const now = Date.now();
+      const probe: ChainEntry = {
+        id: "probe",
+        chainId: "probe",
+        providerId,
+        model,
+        baseUrl: catalog.baseUrl,
+        credentialIds: [],
+        enabled: true,
+        priority: 0,
+        routingStrategy: "sequential",
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const result = await adapter.send(probe, credential, {
+        model,
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: 1,
+        stream: false,
+      });
+
+      const latencyMs = Date.now() - started;
+      if (result.ok) return { ok: true, classification: "success", latencyMs };
+
+      return {
+        ok: false,
+        classification: adapter.classifyError(result.error),
+        message: result.error.message,
+        latencyMs,
+      };
     }
 
-    const started = Date.now();
-    const now = Date.now();
-    const probe: ChainEntry = {
-      id: "probe",
-      chainId: "probe",
-      providerId,
-      model,
-      baseUrl: catalog.baseUrl,
-      credentialIds: [],
-      enabled: true,
-      priority: 0,
-      routingStrategy: "sequential",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const result = await adapter.send(probe, credential, {
-      model,
-      messages: [{ role: "user", content: "ping" }],
-      max_tokens: 1,
-      stream: false,
-    });
-
-    const latencyMs = Date.now() - started;
-    if (result.ok) return { ok: true, classification: "success", latencyMs };
-
-    return {
-      ok: false,
-      classification: adapter.classifyError(result.error),
-      message: result.error.message,
-      latencyMs,
-    };
+    return adapter.validateCredential(credential);
   }
 
   listChains(): ChainView[] {
