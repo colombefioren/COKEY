@@ -155,6 +155,31 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
     `,
   },
+  {
+    version: 7,
+    name: "proxy_pool_and_entry_labels",
+    sql: `
+      -- The automatic egress pool. Entries are real proxy URLs; the gateway
+      -- decides which credential leaves through which one.
+      CREATE TABLE IF NOT EXISTS proxy_pool (
+        id         TEXT PRIMARY KEY,
+        url        TEXT NOT NULL UNIQUE,
+        label      TEXT NOT NULL,
+        enabled    INTEGER NOT NULL DEFAULT 1,
+        created_at INTEGER NOT NULL
+      );
+
+      -- 1 when the proxy on this row was chosen by the pool rather than by the
+      -- user. A manual proxy stays manual forever, even after a pool change.
+      ALTER TABLE credentials ADD COLUMN proxy_auto INTEGER NOT NULL DEFAULT 0;
+
+      -- User-chosen display name for a chain node, so a client can show
+      -- "DeepSeek V4 Pro (xKiro)" instead of the raw upstream model id.
+      ALTER TABLE chain_entries ADD COLUMN label TEXT;
+
+      CREATE INDEX IF NOT EXISTS idx_credentials_proxy ON credentials(proxy_url);
+    `,
+  },
 ];
 
 /**
@@ -242,6 +267,7 @@ export interface CredentialRow {
   account_id: string | null;
   secret_encrypted: string;
   proxy_url: string | null;
+  proxy_auto: number;
   description: string;
   status: string;
   created_at: number;
@@ -267,6 +293,8 @@ export interface ChainEntryRow {
   chain_id: string;
   provider_id: string;
   model: string;
+  /** Optional user-chosen display name. Falls back to the model id. */
+  label: string | null;
   base_url: string;
   credential_ids: string;
   enabled: number;

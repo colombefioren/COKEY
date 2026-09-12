@@ -13,6 +13,8 @@ export type CokeyEventType =
   | "route.start"
   | "route.attempt"
   | "route.switch"
+  /** A node or key changed underneath a client, phrased for a notification. */
+  | "chain.state"
   | "route.success"
   | "route.failure"
   | "credential.cooldown"

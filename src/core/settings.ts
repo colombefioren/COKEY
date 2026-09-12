@@ -140,6 +140,10 @@ export function validateSettings(settings: Settings): Settings {
     throw new InvalidSettingError("Invalid data directory");
   }
 
+  if (settings.autoProxyStrategy !== "per-provider" && settings.autoProxyStrategy !== "round-robin") {
+    throw new InvalidSettingError(`Invalid auto proxy strategy: ${settings.autoProxyStrategy}`);
+  }
+
   const freeProviderTarget = Number(settings.freeProviderTarget);
   if (!Number.isInteger(freeProviderTarget) || freeProviderTarget < 0 || freeProviderTarget > 50) {
     throw new InvalidSettingError(`Invalid free provider target: ${settings.freeProviderTarget}`);
@@ -154,6 +158,7 @@ export function validateSettings(settings: Settings): Settings {
   return {
     ...settings,
     port,
+    autoProxy: Boolean(settings.autoProxy),
     freeProviderTarget,
     fallback: { ...policy, maxRetriesPerCredential },
   };
@@ -177,6 +182,15 @@ export function applyEnvOverrides(settings: Settings, env: NodeJS.ProcessEnv): S
   }
   if (env.COKEY_FREE_PROVIDER_NUDGER === "0" || env.COKEY_FREE_PROVIDER_NUDGER === "false") {
     next.showFreeProviderNudger = false;
+  }
+  if (env.COKEY_AUTO_PROXY === "0" || env.COKEY_AUTO_PROXY === "false") {
+    next.autoProxy = false;
+  }
+  if (env.COKEY_AUTO_PROXY === "1" || env.COKEY_AUTO_PROXY === "true") {
+    next.autoProxy = true;
+  }
+  if (env.COKEY_AUTO_PROXY_STRATEGY === "round-robin" || env.COKEY_AUTO_PROXY_STRATEGY === "per-provider") {
+    next.autoProxyStrategy = env.COKEY_AUTO_PROXY_STRATEGY;
   }
   if (env.COKEY_MAX_RETRIES_PER_CREDENTIAL) {
     const retries = Number(env.COKEY_MAX_RETRIES_PER_CREDENTIAL);

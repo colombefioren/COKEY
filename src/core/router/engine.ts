@@ -592,6 +592,28 @@ export class RouterEngine {
         },
         data: { changedModel, changedCredential, changedProvider },
       });
+
+      // A second, plainly worded event for clients that want to raise a
+      // notification rather than an error. Editor integrations show this as an
+      // informational toast: the request still succeeds, only the path moved.
+      this.events.emit({
+        type: "chain.state",
+        level: "info",
+        message: `chain changed state: ${chainAlias} on ${entry.providerId}/${entry.model} via ${credential.description}`,
+        chainAlias,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        proxyLabel: proxy,
+        previous: {
+          providerId: previousRoute.providerId,
+          model: previousRoute.model,
+          credentialId: previousRoute.credentialId,
+          credentialDescription: previousRoute.credentialDescription,
+        },
+        data: { changedModel, changedCredential, changedProvider, notify: true },
+      });
     }
 
     this.events.emit({

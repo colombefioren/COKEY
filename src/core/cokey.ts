@@ -3,12 +3,14 @@ import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { ApiKeyService, type ApiKeyView, type CreatedApiKey } from "./api-keys.js";
 import { ApiKeysRepo } from "./db/api-keys.repo.js";
+import { PROVIDER_ALIASES } from "../catalog/providers.js";
 import type { ProviderCatalogEntry, ProviderStatus } from "../catalog/types.js";
 import { ApiStyleSchema, AuthSchemeSchema } from "./validation/schemas.js";
 import { ChainsRepo } from "./db/chains.repo.js";
 import { CredentialsRepo } from "./db/credentials.repo.js";
 import { CustomEndpointsRepo } from "./db/custom-endpoints.repo.js";
 import { DatabaseClient } from "./db/database.js";
+import { ProxyPoolRepo } from "./db/proxy-pool.repo.js";
 import { RequestsRepo } from "./db/requests.repo.js";
 import { SettingsRepo } from "./db/settings.repo.js";
 import { ChainManager } from "./chains/manager.js";
@@ -18,6 +20,11 @@ import { RateTracker } from "./credentials/rate.js";
 import { CredentialSelector } from "./credentials/selector.js";
 import { EventBus, type CokeyEvent } from "./events.js";
 import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
+import {
+  ProxyPoolService,
+  type ProxyPoolStatus,
+  type ProxyPoolView,
+} from "./providers/proxy-pool.js";
 import { modelAvailability, type ModelCatalogView } from "./models/availability.js";
 import { SecretVault } from "./crypto/secrets.js";
 import { RequestHistory, type HistoryStats } from "./history.js";
@@ -27,16 +34,24 @@ import { RouterEngine, type RouteResult } from "./router/engine.js";
 import { SettingsService } from "./settings.js";
 import { assertSafeEndpoint } from "./security/ssrf.js";
 import type {
+  AutoProxyStrategy,
   Chain,
   ChainEntry,
   ChatCompletionRequest,
   Credential,
+  ErrorClassification,
   LogLevel,
   PublicCredential,
   RoutingStrategy,
   Settings,
   ValidationResult,
 } from "./types.js";
+import {
+  PROBE_MESSAGE,
+  probeEntry,
+  selectProbeCredential,
+  type ModelProbeResult,
+} from "./models/probe.js";
 
 export interface CokeyOptions {
   port?: number;
@@ -134,8 +149,11 @@ export class Cokey {
   readonly chainsRepo: ChainsRepo;
   readonly requestsRepo: RequestsRepo;
   readonly customEndpointsRepo: CustomEndpointsRepo;
+  readonly proxyPoolRepo: ProxyPoolRepo;
   readonly apiKeysRepo: ApiKeysRepo;
   readonly apiKeys: ApiKeyService;
+  /** Automatic per-credential egress, so one provider's keys do not share an IP. */
+  readonly proxyPool: ProxyPoolService;
 
   readonly settingsService: SettingsService;
   readonly cooldown: CooldownManager;
@@ -169,6 +187,8 @@ export class Cokey {
     this.chainsRepo = new ChainsRepo(this.db);
     this.requestsRepo = new RequestsRepo(this.db);
     this.customEndpointsRepo = new CustomEndpointsRepo(this.db);
+    this.proxyPoolRepo = new ProxyPoolRepo(this.db);
+    this.proxyPool = new ProxyPoolService(this.proxyPoolRepo);
     this.apiKeysRepo = new ApiKeysRepo(this.db);
     this.apiKeys = new ApiKeyService(this.apiKeysRepo);
 
@@ -199,6 +219,11 @@ export class Cokey {
     this.providers = new ProviderRegistry(this.customEndpointsRepo.list());
     this.selector = new CredentialSelector(this.credentials, this.cooldown);
     this.history = new RequestHistory(this.requestsRepo);
+
+    // A pool supplied through the environment is seeded once; the UI can add,
+    // disable and remove entries afterwards without touching the database by
+    // hand.
+    this.proxyPool.addMany(env.COKEY_PROXY_POOL);
     this.router = new RouterEngine(
       this.chains,
       this.credentials,
@@ -221,6 +246,7 @@ export class Cokey {
   start(): void {
     if (this.started) return;
     this.started = true;
+    this.syncProxyAssignments();
 
     // Expire elapsed cooldowns so the UI and router always see fresh state.
     this.sweeper = setInterval(() => {
@@ -255,7 +281,20 @@ export class Cokey {
   providerStatuses(): ProviderStatus[] {
     const counts = this.credentials.countsByProvider();
     return this.providers.getCatalog().map((entry) => {
-      const count = counts.get(entry.id);
+      // Keys connected under a collapsed id still count for the surviving one.
+      const aliases = [entry.id];
+      for (const [alias, target] of PROVIDER_ALIASES) {
+        if (target === entry.id) aliases.push(alias);
+      }
+      const count = aliases
+        .map((id) => counts.get(id))
+        .reduce<{ total: number; healthy: number } | undefined>((sum, part) => {
+          if (!part) return sum;
+          return {
+            total: (sum?.total ?? 0) + part.total,
+            healthy: (sum?.healthy ?? 0) + part.healthy,
+          };
+        }, undefined);
       return {
         ...entry,
         connected: (count?.total ?? 0) > 0,
@@ -287,7 +326,12 @@ export class Cokey {
       secret: input.secret,
       description: input.description,
       proxyUrl: input.proxyUrl,
+      proxyAuto: false,
     });
+
+    // A key only becomes independent of its siblings once it leaves through
+    // its own exit IP, so the pool is re-planned the moment a key appears.
+    this.syncProxyAssignments();
 
     const adapter = this.providers.get(providerId);
     const validation = await adapter.validateCredential(credential);
@@ -409,7 +453,8 @@ export class Cokey {
     const credential = this.credentials.getOrThrow(credentialId);
     // Validate before persisting so a typo cannot silently disable a key.
     const parsed = parseProxyUrl(proxyUrl);
-    this.credentials.updateProxyUrl(credentialId, parsed ? parsed.href : null);
+    // A hand-set proxy is permanent: the pool must never move this key again.
+    this.credentials.markProxyManual(credentialId, parsed ? parsed.href : null);
 
     this.events.emit({
       type: "credential.updated",
@@ -424,6 +469,251 @@ export class Cokey {
     });
 
     return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
+  }
+
+  // ---- automatic egress pool ----------------------------------------------
+
+  /**
+   * Re-plan every pool-owned credential so same-provider keys never share an
+   * exit IP.
+   *
+   * Called after a key is added or removed and whenever the pool changes. It
+   * is deliberately cheap and idempotent: credentials whose proxy already
+   * matches the plan are left untouched, and hand-set proxies are skipped
+   * entirely.
+   */
+  syncProxyAssignments(): number {
+    if (!this.settings.autoProxy) return 0;
+
+    const poolSize = this.proxyPool.size();
+    if (poolSize === 0) return 0;
+
+    const plan = this.proxyPool.plan(this.credentialRefs(), this.settings.autoProxyStrategy);
+    const byId = new Map(plan.map((entry) => [entry.credentialId, entry]));
+
+    let changed = 0;
+    for (const credential of this.credentials.listAll()) {
+      const target = byId.get(credential.id);
+      if (!target) continue;
+      // Only pool-owned credentials move. `proxyAuto` is false for a key the
+      // user pinned, and for one that has never been assigned.
+      if (credential.proxyUrl && !credential.proxyAuto) continue;
+      if (credential.proxyUrl === target.proxyUrl) continue;
+      this.credentials.setAutoProxyUrl(credential.id, target.proxyUrl);
+      changed += 1;
+    }
+
+    if (changed > 0) {
+      this.events.emit({
+        type: "credential.updated",
+        level: "info",
+        message: `${changed} credential(s) moved to a new egress IP`,
+        data: { changed, poolSize },
+      });
+    }
+    return changed;
+  }
+
+  listProxyPool(): ProxyPoolView[] {
+    return this.proxyPool.view(this.credentialRefs(), this.settings.autoProxyStrategy);
+  }
+
+  proxyPoolStatus(): ProxyPoolStatus {
+    return this.proxyPool.status(
+      this.credentialRefs(),
+      this.settings.autoProxy,
+      this.settings.autoProxyStrategy,
+    );
+  }
+
+  /** Add one proxy to the pool and re-plan immediately. */
+  addProxyToPool(url: string): ProxyPoolView[] {
+    this.proxyPool.add(url);
+    this.syncProxyAssignments();
+    return this.listProxyPool();
+  }
+
+  removeProxyFromPool(id: string): ProxyPoolView[] {
+    this.proxyPool.remove(id);
+    this.syncProxyAssignments();
+    return this.listProxyPool();
+  }
+
+  setProxyPoolEnabled(id: string, enabled: boolean): ProxyPoolView[] {
+    this.proxyPool.setEnabled(id, enabled);
+    this.syncProxyAssignments();
+    return this.listProxyPool();
+  }
+
+  private credentialRefs(): Array<{ id: string; providerId: string }> {
+    return this.credentials
+      .listAll()
+      .map((credential) => ({ id: credential.id, providerId: credential.providerId }));
+  }
+
+  // ---- model probe ---------------------------------------------------------
+
+  /**
+   * Prove one provider/model pair works right now, through one real request.
+   *
+   * This is what the catalog's play button calls. A 200 means the model and the
+   * key agree; anything else is returned verbatim so the UI can say why rather
+   * than showing a generic failure.
+   */
+  async probeModel(
+    providerId: string,
+    model: string,
+    credentialId?: string,
+    message: string = PROBE_MESSAGE,
+  ): Promise<ModelProbeResult> {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    if (!catalog) {
+      return {
+        ok: false,
+        providerId,
+        model,
+        latencyMs: 0,
+        classification: "unknown",
+        message: `Unknown provider: ${providerId}`,
+      };
+    }
+
+    const bound = this.credentials.listAll().filter((item) => item.providerId === providerId);
+    if (bound.length === 0) {
+      return {
+        ok: false,
+        providerId,
+        model,
+        latencyMs: 0,
+        classification: "unknown",
+        message: `${catalog.displayName} has no connected key`,
+      };
+    }
+
+    const credential = selectProbeCredential(bound, credentialId);
+    if (!credential) {
+      return {
+        ok: false,
+        providerId,
+        model,
+        latencyMs: 0,
+        classification: "unknown",
+        message: "No usable key for this provider",
+      };
+    }
+
+    const adapter = this.providers.get(providerId);
+    const entry = probeEntry(providerId, model, catalog.baseUrl);
+    const started = Date.now();
+
+    let status: number | undefined;
+    let reply: string | undefined;
+
+    try {
+      const result = await adapter.send(entry, credential, {
+        model,
+        messages: [{ role: "user", content: message }],
+        max_tokens: 16,
+        stream: false,
+      });
+
+      const latencyMs = Date.now() - started;
+
+      if (!result.ok) {
+        const classification = adapter.classifyError(result.error);
+        status = result.error.status;
+        this.recordProbeFailure(credential.id, classification);
+        return {
+          ok: false,
+          providerId,
+          model,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          status,
+          latencyMs,
+          classification,
+          message: result.error.message,
+          proxyLabel: proxyLabel(credential.proxyUrl),
+        };
+      }
+
+      status = result.response.status;
+      if (status !== 200) {
+        const classification = adapter.classifyError({ status, message: `HTTP ${status}` });
+        this.recordProbeFailure(credential.id, classification);
+        return {
+          ok: false,
+          providerId,
+          model,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          status,
+          latencyMs,
+          classification,
+          message: `${catalog.displayName} answered ${status}`,
+          proxyLabel: proxyLabel(credential.proxyUrl),
+        };
+      }
+
+      try {
+        const body = (await result.response.json()) as {
+          choices?: Array<{ message?: { content?: unknown } }>;
+        };
+        const content = body.choices?.[0]?.message?.content;
+        if (typeof content === "string") reply = content.slice(0, 200);
+      } catch {
+        // A 200 with a body we cannot parse is still a working model.
+      }
+
+      this.credentials.markVerified(credential.id);
+      this.events.emit({
+        type: "credential.verified",
+        level: "success",
+        message: `${model} answered through ${credential.description}`,
+        providerId,
+        model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        status,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+        data: { latencyMs, probe: true },
+      });
+
+      return {
+        ok: true,
+        providerId,
+        model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        status,
+        latencyMs,
+        classification: "success",
+        reply,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+      };
+    } catch (error) {
+      const latencyMs = Date.now() - started;
+      return {
+        ok: false,
+        providerId,
+        model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        status,
+        latencyMs,
+        classification: "network_error",
+        message: (error as Error).message,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+      };
+    }
+  }
+
+  private recordProbeFailure(credentialId: string, classification: ErrorClassification): void {
+    if (classification === "credential_invalid") {
+      this.credentials.markInvalid(credentialId);
+    } else if (classification === "credential_rate_limited" || classification === "quota_exhausted") {
+      this.credentials.putInCooldown(credentialId);
+    }
   }
 
   /** The live status payload: current route plus recent routing events. */
@@ -448,13 +738,20 @@ export class Cokey {
    * wish list.
    */
   modelCatalog(): ModelCatalogView[] {
-    const counts = this.credentials.countsByProvider();
+    const counts = new Map<string, { total: number; healthy: number }>();
     const working = new Map<string, string[]>();
     for (const credential of this.credentials.listAll()) {
-      if (credential.status !== "healthy") continue;
-      const ids = working.get(credential.providerId) ?? [];
-      ids.push(credential.id);
-      working.set(credential.providerId, ids);
+      // Fold a collapsed id onto the entry that survived deduplication, so a
+      // key connected as `aion-labs` still makes `aion` usable.
+      const providerId = PROVIDER_ALIASES.get(credential.providerId) ?? credential.providerId;
+
+      if (credential.status === "healthy") {
+        working.set(providerId, [...(working.get(providerId) ?? []), credential.id]);
+      }
+      const count = counts.get(providerId) ?? { total: 0, healthy: 0 };
+      count.total += 1;
+      if (credential.status === "healthy") count.healthy += 1;
+      counts.set(providerId, count);
     }
     return modelAvailability(this.providers.getBuiltInCatalog(), counts, working);
   }
