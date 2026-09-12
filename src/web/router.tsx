@@ -13,6 +13,8 @@ export interface Route {
   path: string;
   /** Optional tab within the page, for example `#/models/rankings`. */
   section?: string;
+  /** Optional deeper segment, for example the board in `#/models/rankings/rate`. */
+  sub?: string;
 }
 
 export type Navigate = (path: string) => void;
@@ -22,7 +24,7 @@ function parseHash(hash: string): Route {
   const clean = raw.split("?")[0] ?? "";
   const parts = clean.split("/").filter(Boolean);
   if (parts.length === 0) return { path: "/dashboard" };
-  return { path: `/${parts[0]}`, section: parts[1] };
+  return { path: `/${parts[0]}`, section: parts[1], sub: parts[2] };
 }
 
 export function useRoute(): { route: Route; navigate: Navigate } {

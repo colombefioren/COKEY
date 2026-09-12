@@ -133,7 +133,8 @@ env_key = "COKEY_API_KEY"`,
     id: "cursor",
     name: "Cursor",
     kind: "Editor",
-    blurb: "Cursor accepts an OpenAI-compatible base URL in its model settings and verifies it with a test call.",
+    blurb:
+      "Cursor accepts an OpenAI-compatible base URL in its model settings and verifies it with a test call.",
     steps: [
       {
         text: "Settings, Models, then add an OpenAI-compatible model:",
@@ -288,25 +289,25 @@ export function Tutorial() {
       <Panel title="Getting started">
         <ol className="steps-list">
           <li>
-            <strong>Connect two or three providers.</strong> Open the Providers tab and paste a key for
-            each. COKEY verifies every key before storing it, so a typo is caught immediately.
+            <strong>Connect two or three providers.</strong> Open the Providers tab and paste a key
+            for each. COKEY verifies every key before storing it, so a typo is caught immediately.
           </li>
           <li>
             <strong>Create one chain.</strong> Chains, then <em>New chain</em>. Name it whatever you
             will type into your editor, for example <code>cokey-best</code>.
           </li>
           <li>
-            <strong>Add nodes in the order you want them tried.</strong> Each node is a
-            provider plus a model plus the keys bound to it. Every key of a node is exhausted before
-            the next node runs.
+            <strong>Add nodes in the order you want them tried.</strong> Each node is a provider
+            plus a model plus the keys bound to it. Every key of a node is exhausted before the next
+            node runs.
           </li>
           <li>
             <strong>Press play in the Models tab.</strong> A green check means a real 200 came back
             through a real key, not that a database row says healthy.
           </li>
           <li>
-            <strong>Point your client at the gateway.</strong> Use one of the recipes below. The base
-            URL is always <code>{BASE_URL}</code>.
+            <strong>Point your client at the gateway.</strong> Use one of the recipes below. The
+            base URL is always <code>{BASE_URL}</code>.
           </li>
         </ol>
       </Panel>
@@ -337,9 +338,7 @@ export function Tutorial() {
                         {recipe.steps.map((step, index) => (
                           <li key={index}>
                             <div className="small">{step.text}</div>
-                            {step.code ? (
-                              <CodeBlock code={step.code} lang={step.lang} />
-                            ) : null}
+                            {step.code ? <CodeBlock code={step.code} lang={step.lang} /> : null}
                           </li>
                         ))}
                       </ol>
@@ -353,45 +352,22 @@ export function Tutorial() {
         </div>
       </Panel>
 
-      <Panel title="Why the provider is always COKEY">
-        <p className="small muted" style={{ marginTop: 0 }}>
-          Clients only ever see one provider. The model list reports <code>owned_by: COKEY</code>, and
-          a completion echoes back the chain alias you asked for rather than the vendor that happened
-          to answer. The real upstream is still reported, in the{" "}
-          <code>X-Cokey-Entry</code> response header and in this dashboard, which is where it belongs.
-        </p>
-        <div className="detail-grid">
-          <div className="detail-row">
-            <div className="detail-label">X-Cokey-Provider</div>
-            <div>Always COKEY</div>
-          </div>
-          <div className="detail-row">
-            <div className="detail-label">X-Cokey-Chain</div>
-            <div>The alias you requested</div>
-          </div>
-          <div className="detail-row">
-            <div className="detail-label">X-Cokey-State</div>
-            <div>
-              A plain sentence such as <em>chain changed state: cokey-best on groq/&hellip;</em>
-            </div>
-          </div>
-          <div className="detail-row">
-            <div className="detail-label">X-Cokey-Entry</div>
-            <div>The real provider and model that answered</div>
-          </div>
-        </div>
-      </Panel>
-
       <Panel title="Automatic egress proxies">
         <p className="small muted" style={{ marginTop: 0 }}>
-          Provider limits are usually tracked per key <em>and</em> per IP, so rotating five keys from
-          one address still trips the same limit. Fill the pool once and COKEY assigns the exits for
-          you:
+          Provider limits are usually tracked per key <em>and</em> per IP, so rotating five keys
+          from one address still trips the same limit. Fill the pool once and COKEY assigns the
+          exits for you:
         </p>
         <ul className="bullet-list">
           <li>Every key of one provider gets a different exit IP.</li>
-          <li>Keys of different providers may share an entry, because nothing correlates them upstream.</li>
-          <li>The mapping is stable across restarts, so a key does not appear to move cities every boot.</li>
+          <li>
+            Keys of different providers may share an entry, because nothing correlates them
+            upstream.
+          </li>
+          <li>
+            The mapping is stable across restarts, so a key does not appear to move cities every
+            boot.
+          </li>
           <li>A proxy you set by hand is never overwritten by the pool.</li>
         </ul>
         <p className="small faint">

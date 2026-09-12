@@ -1,0 +1,289 @@
+/*
+ * View-specific surfaces.
+ *
+ * Everything here is tied to one screen or one diagram: the resilience layers,
+ * the ranking boards, and the about/contact cards. Tokens only, so both themes
+ * come along for free.
+ */
+
+/* ---- resilience ----------------------------------------------------------- */
+
+.resilience {
+  display: grid;
+  gap: 16px;
+}
+
+.layer-stack {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.layer {
+  display: grid;
+  gap: 10px;
+  padding: 15px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+}
+
+.layer.is-hub {
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+}
+
+.layer.is-ok {
+  border-color: var(--sage-line);
+}
+
+.layer.is-bad {
+  border-color: var(--rose-line);
+}
+
+.layer.is-locked {
+  border-color: var(--peach-line);
+}
+
+.layer-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.layer-head-kicker {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.layer-head-scope {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.layer-title {
+  font-size: 14px;
+  font-weight: 620;
+  color: var(--text);
+}
+
+.layer-kicker {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.layer-copy {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.layer-track {
+  position: relative;
+  height: 3px;
+  border-radius: 3px;
+  background: var(--border-strong);
+  overflow: hidden;
+}
+
+.layer-rail {
+  position: absolute;
+  inset: 0;
+  border-radius: 3px;
+  background: var(--violet);
+  opacity: 0.5;
+}
+
+.layer.is-ok .layer-rail {
+  background: var(--sage);
+}
+
+.layer.is-bad .layer-rail {
+  background: var(--rose);
+}
+
+.layer-notes {
+  display: grid;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.layer-node {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.layer-key {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  background: var(--surface-3);
+  border: 1px solid var(--border-strong);
+  flex: none;
+}
+
+.layer-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+/* ---- ranking boards ------------------------------------------------------- */
+
+.swe-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swe-bar {
+  flex: 1;
+  min-width: 46px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.swe-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rose), var(--violet));
+  transition: width 0.5s var(--ease);
+}
+
+.source-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.source-list a {
+  color: var(--violet);
+}
+
+/* ---- about, chips and contact -------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--violet-line);
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+.btn:hover {
+  text-decoration: none;
+  border-color: var(--violet);
+}
+.btn.secondary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.about-hero {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.about-logo {
+  color: var(--violet);
+}
+.about-copy {
+  flex: 1 1 380px;
+  display: grid;
+  gap: 10px;
+}
+.about-copy h2 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: 0.01em;
+}
+.about-copy p {
+  margin: 0;
+  max-width: 74ch;
+}
+.about-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stack-chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.stack-chip.alt {
+  border-color: var(--violet-line);
+  color: var(--violet-strong);
+  background: var(--violet-soft);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.contact-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  transition:
+    transform 0.18s var(--ease),
+    border-color 0.18s ease;
+}
+.contact-card:hover {
+  text-decoration: none;
+  border-color: var(--violet-line);
+  transform: translateY(-2px);
+}
+.contact-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.contact-value {
+  color: var(--violet-strong);
+  font-size: 13px;
+}
+.contact-hint {
+  font-size: 11.5px;
+  color: var(--faint);
+}

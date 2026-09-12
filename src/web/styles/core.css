@@ -16,49 +16,49 @@
 :root {
   color-scheme: light;
 
-  /* Ground and surfaces */
-  --ground: #eef0f6;
+  /* Ground and surfaces: warm porcelain, not a cold grey slab. */
+  --ground: #fbf6f6;
   --surface: #ffffff;
-  --surface-2: #f6f7fb;
-  --surface-3: #eef0f7;
-  --surface-glass: rgba(255, 255, 255, 0.78);
+  --surface-2: #fdf8f9;
+  --surface-3: #f7eef1;
+  --surface-glass: rgba(255, 255, 255, 0.8);
 
-  --border: #e6e8f1;
-  --border-strong: #d7dbe9;
+  --border: #f0e4e8;
+  --border-strong: #e3d2d9;
 
-  --text: #22253a;
-  --muted: #5b6077;
-  --faint: #868ca2;
+  --text: #33262c;
+  --muted: #6d5c64;
+  --faint: #9d8b93;
 
-  /* Pastel accents. `-soft` is the tint used for fills, `-line` its border. */
-  --violet: #6c5cd4;
-  --violet-strong: #5747bd;
-  --violet-soft: #ece9fc;
-  --violet-line: #d8d2f7;
+  /* A pink-led pastel set. Rose is the brand, the rest support it. */
+  --violet: #8f7bc4;
+  --violet-strong: #745fb0;
+  --violet-soft: #f2eefb;
+  --violet-line: #ded4f3;
   --violet-ink: #ffffff;
 
-  --rose: #c9678f;
-  --rose-soft: #fceaf2;
-  --rose-line: #f4d3e1;
+  --rose: #cf6d92;
+  --rose-strong: #b85478;
+  --rose-soft: #fceaf1;
+  --rose-line: #f6d5e2;
 
-  --peach: #c9803f;
-  --peach-soft: #fdefe2;
-  --peach-line: #f6ddc4;
+  --peach: #cd8b58;
+  --peach-soft: #fdf0e5;
+  --peach-line: #f7ddc7;
 
-  --sage: #3f8c62;
-  --sage-soft: #e6f4ec;
-  --sage-line: #cbe8d8;
+  --sage: #5a9377;
+  --sage-soft: #ebf5ef;
+  --sage-line: #d3e9dd;
 
-  --sky: #4a82bd;
-  --sky-soft: #e8f1fa;
-  --sky-line: #cfe2f4;
+  --sky: #6d8fc0;
+  --sky-soft: #eef3fa;
+  --sky-line: #d9e5f4;
 
-  /* Semantic aliases kept stable for the components that reference them. */
-  --accent: var(--violet);
-  --accent-hover: var(--violet-strong);
+  --accent: var(--rose);
+  --accent-hover: var(--rose-strong);
   --accent-2: var(--violet);
-  --accent-3: var(--rose);
-  --accent-ink: var(--violet-ink);
+  --accent-3: var(--peach);
+  --accent-ink: #ffffff;
 
   --ok: var(--sage);
   --warn: var(--peach);
@@ -68,65 +68,64 @@
   --bad-bg: var(--rose-soft);
   --neutral-bg: var(--surface-3);
 
-  /* One low neutral shadow, reused everywhere. No coloured halo. */
-  --shadow: 0 1px 2px rgba(28, 31, 48, 0.05), 0 10px 30px -18px rgba(28, 31, 48, 0.22);
-  --shadow-lift: 0 2px 4px rgba(28, 31, 48, 0.06), 0 18px 40px -22px rgba(28, 31, 48, 0.28);
-  --shadow-pop: 0 4px 10px rgba(28, 31, 48, 0.08), 0 30px 60px -30px rgba(28, 31, 48, 0.34);
-  --hairline: rgba(108, 92, 212, 0.12);
-  --glow: rgba(108, 92, 212, 0.16);
+  /* Low, neutral shadows. Depth without a halo. */
+  --shadow: 0 1px 2px rgba(76, 52, 62, 0.05), 0 10px 28px -20px rgba(76, 52, 62, 0.18);
+  --shadow-lift: 0 2px 4px rgba(76, 52, 62, 0.06), 0 16px 36px -22px rgba(76, 52, 62, 0.22);
+  --shadow-pop: 0 4px 10px rgba(76, 52, 62, 0.08), 0 26px 54px -30px rgba(76, 52, 62, 0.28);
+  --hairline: rgba(207, 109, 146, 0.12);
 
-  --radius: 20px;
-  --radius-md: 14px;
+  --radius: 22px;
+  --radius-md: 15px;
   --radius-sm: 11px;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sidebar-w: 264px;
-  --sidebar-w-collapsed: 86px;
+  --sidebar-w-collapsed: 82px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ground: #141320;
-  --surface: #1d1c2b;
-  --surface-2: #242334;
-  --surface-3: #2a2939;
-  --surface-glass: rgba(29, 28, 43, 0.76);
+  --ground: #17131a;
+  --surface: #201a24;
+  --surface-2: #29212d;
+  --surface-3: #322836;
+  --surface-glass: rgba(32, 26, 36, 0.78);
 
-  --border: #2e2d40;
-  --border-strong: #3d3c52;
+  --border: #362c3a;
+  --border-strong: #493c4f;
 
-  --text: #eceaf6;
-  --muted: #a9a6bd;
-  --faint: #7e7c95;
+  --text: #f3ecf1;
+  --muted: #b6a6b0;
+  --faint: #8a7883;
 
-  --violet: #b3a4f7;
-  --violet-strong: #c6baff;
-  --violet-soft: #2b2748;
-  --violet-line: #3e3862;
-  --violet-ink: #1a1729;
+  --violet: #bda9ee;
+  --violet-strong: #cfbefc;
+  --violet-soft: #2e2640;
+  --violet-line: #453a60;
+  --violet-ink: #1a1622;
 
-  --rose: #f0a6c5;
-  --rose-soft: #3a2431;
-  --rose-line: #553349;
+  --rose: #f0a3c0;
+  --rose-strong: #f6bcd2;
+  --rose-soft: #3a2430;
+  --rose-line: #573547;
 
-  --peach: #efbd8b;
-  --peach-soft: #3a2c1f;
-  --peach-line: #55402c;
+  --peach: #eec199;
+  --peach-soft: #3a2c20;
+  --peach-line: #573f2d;
 
-  --sage: #8ad6ac;
-  --sage-soft: #1e3527;
-  --sage-line: #2f5540;
+  --sage: #95d6b2;
+  --sage-soft: #203429;
+  --sage-line: #33543f;
 
-  --sky: #9cc3ea;
-  --sky-soft: #1f2f3f;
-  --sky-line: #2f4759;
+  --sky: #a6c6ea;
+  --sky-soft: #212f40;
+  --sky-line: #33475c;
 
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 34px -20px rgba(0, 0, 0, 0.7);
-  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 22px 46px -24px rgba(0, 0, 0, 0.8);
-  --shadow-pop: 0 6px 14px rgba(0, 0, 0, 0.5), 0 34px 70px -34px rgba(0, 0, 0, 0.85);
-  --hairline: rgba(179, 164, 247, 0.16);
-  --glow: rgba(179, 164, 247, 0.2);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -20px rgba(0, 0, 0, 0.68);
+  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 42px -24px rgba(0, 0, 0, 0.76);
+  --shadow-pop: 0 6px 14px rgba(0, 0, 0, 0.5), 0 32px 66px -34px rgba(0, 0, 0, 0.82);
+  --hairline: rgba(240, 163, 192, 0.16);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -155,8 +154,7 @@ body {
   /* Two very soft pastel blooms over the flat ground. */
   background:
     radial-gradient(900px 620px at 4% -8%, var(--violet-soft), transparent 62%),
-    radial-gradient(760px 560px at 102% 4%, var(--rose-soft), transparent 58%),
-    var(--ground);
+    radial-gradient(760px 560px at 102% 4%, var(--rose-soft), transparent 58%), var(--ground);
   background-attachment: fixed;
   font:
     14px/1.62 ui-sans-serif,
@@ -194,7 +192,8 @@ h3 {
   transition: grid-template-columns 0.4s var(--ease);
 }
 
-.shell.nav-collapsed {
+.shell.nav-collapsed,
+.shell:has(.sidebar.collapsed) {
   grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr);
 }
 
@@ -886,12 +885,15 @@ textarea:focus {
 }
 select {
   appearance: none;
-  background-image: linear-gradient(45deg, transparent 50%, var(--faint) 50%),
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--faint) 50%),
     linear-gradient(135deg, var(--faint) 50%, transparent 50%);
   background-position:
     calc(100% - 16px) calc(50% - 2px),
     calc(100% - 11px) calc(50% - 2px);
-  background-size: 5px 5px, 5px 5px;
+  background-size:
+    5px 5px,
+    5px 5px;
   background-repeat: no-repeat;
   padding-right: 30px;
 }
@@ -2277,13 +2279,13 @@ tbody tr:nth-child(n + 6) {
   border-radius: 50%;
 }
 .starfield::before {
-  opacity: 0.5;
-  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
+  opacity: 0.26;
+  background: radial-gradient(closest-side, var(--rose-soft), transparent 70%);
   animation: wash 34s ease-in-out infinite alternate;
 }
 .starfield::after {
-  opacity: 0.45;
-  background: radial-gradient(closest-side, var(--rose-soft), transparent 70%);
+  opacity: 0.22;
+  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
   animation: wash 46s ease-in-out infinite alternate-reverse;
 }
 

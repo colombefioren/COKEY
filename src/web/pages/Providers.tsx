@@ -43,7 +43,13 @@ const KIND_LABEL: Record<ProviderDossier["kind"], string> = {
  * verdict rather than alphabetically, because "recommended" is the only ordering
  * a person actually needs when picking their first three keys.
  */
-export function Providers({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
+export function Providers({
+  refreshKey,
+  onChanged,
+}: {
+  refreshKey: number;
+  onChanged: () => void;
+}) {
   const toast = useToast();
   const [rows, setRows] = useState<CatalogProviderRow[]>([]);
   const [total, setTotal] = useState(0);
@@ -105,8 +111,8 @@ export function Providers({ refreshKey, onChanged }: { refreshKey: number; onCha
       >
         <div className="hint-box" style={{ marginBottom: 16 }}>
           A large part of this list is one underlying free pool re-exported under several names. The
-          verdict reflects that: start with the recommended tier, and treat anything marked avoid as a
-          provider you should not build on. The full reasoning is in the Models, Rankings tab.
+          verdict reflects that: start with the recommended tier, and treat anything marked avoid as
+          a provider you should not build on. The full reasoning is in the Models, Rankings tab.
         </div>
 
         {visible.length === 0 ? (
@@ -193,6 +199,7 @@ function ProviderDossierCard({
   onConnect: (provider: ProviderStatus) => void;
 }) {
   const dossier = row.dossier;
+  const [showModels, setShowModels] = useState(false);
   const credentialLabel = row.credentialFields.includes("accountId")
     ? "API token and account id"
     : "API key";
@@ -241,6 +248,14 @@ function ProviderDossierCard({
 
       <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
         <button onClick={() => onConnect(row)}>Connect</button>
+        <button
+          className="secondary"
+          type="button"
+          aria-expanded={showModels}
+          onClick={() => setShowModels((value) => !value)}
+        >
+          {showModels ? "Hide models" : `Show models (${row.knownModels.length})`}
+        </button>
         {dossier.sourceUrl ? (
           <a className="small" href={dossier.sourceUrl} target="_blank" rel="noreferrer">
             source
@@ -256,6 +271,29 @@ function ProviderDossierCard({
           {row.connected ? `${row.credentialCount} connected` : "not connected"}
         </span>
       </div>
+
+      {showModels ? (
+        <div className="model-list">
+          {row.knownModels.length === 0 ? (
+            <div className="sub faint">No curated models for this provider.</div>
+          ) : (
+            row.knownModels.map((model) => (
+              <div className="model-list-item" key={model}>
+                <span className="model-list-id">{model}</span>
+                <span className="spacer" />
+                <a
+                  className="small"
+                  href={`#/chains?model=${encodeURIComponent(model)}&provider=${encodeURIComponent(
+                    row.id,
+                  )}`}
+                >
+                  add to chain
+                </a>
+              </div>
+            ))
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }

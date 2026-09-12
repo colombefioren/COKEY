@@ -43,6 +43,8 @@ interface Glider {
  * single moving object. It is positioned before paint, so there is no frame in
  * which the current page looks unselected.
  */
+const COLLAPSE_KEY = "cokey.nav.collapsed";
+
 export function Sidebar({
   groups,
   activePath,
@@ -58,6 +60,13 @@ export function Sidebar({
 }) {
   const navRef = useRef<HTMLElement | null>(null);
   const [glider, setGlider] = useState<Glider | null>(null);
+  const [collapsed, setCollapsed] = useState(
+    () => window.localStorage.getItem(COLLAPSE_KEY) === "1",
+  );
+
+  useEffect(() => {
+    window.localStorage.setItem(COLLAPSE_KEY, collapsed ? "1" : "0");
+  }, [collapsed]);
 
   // The shell rebuilds `groups` on every render, so the effect cannot depend on
   // the array itself without re-measuring forever. A content signature is a
@@ -106,7 +115,25 @@ export function Sidebar({
   let index = 0;
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${collapsed ? " collapsed" : ""}`}>
+      <button
+        type="button"
+        className="sidebar-fold"
+        aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
+        aria-expanded={!collapsed}
+        onClick={() => setCollapsed((value) => !value)}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+          <path
+            d="M10 3.5 5.5 8l4.5 4.5"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+        </svg>
+      </button>
+
       <a className="sidebar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
         <CokeyLogo height={24} className="brand-logo" />
         <span className="sr-only">COKEY dashboard</span>

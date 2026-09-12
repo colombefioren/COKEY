@@ -26,7 +26,8 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
   const toast = useToast();
   const [data, setData] = useState<RankingsResponse | null>(null);
 
-  const board = (BOARDS.find((candidate) => candidate.id === route.section)?.id ?? "skill") as Board;
+  const requested = route.sub ?? route.section;
+  const board = (BOARDS.find((candidate) => candidate.id === requested)?.id ?? "skill") as Board;
 
   useEffect(() => {
     void (async () => {
@@ -105,21 +106,39 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                 <tr>
                   <th style={{ width: 44 }}>Tier</th>
                   <th>Model</th>
+                  <th style={{ width: 120 }}>SWE-bench</th>
                   <th>Provider</th>
                   <th>Why</th>
                 </tr>
               </thead>
               <tbody>
-                {rows.map((entry) => (
-                  <tr key={`${tier.name}-${entry.model}`}>
-                    <td>
-                      <span className={`badge tier-${tier.name.toLowerCase()}`}>{tier.name}</span>
-                    </td>
-                    <td className="mono small">{entry.model}</td>
-                    <td className="small muted">{entry.providerId ?? "vendor direct"}</td>
-                    <td className="small">{entry.reason}</td>
-                  </tr>
-                ))}
+                {[...rows]
+                  .sort((a, b) => (b.sweScore ?? -1) - (a.sweScore ?? -1))
+                  .map((entry) => (
+                    <tr key={`${tier.name}-${entry.model}`}>
+                      <td>
+                        <span className={`badge tier-${tier.name.toLowerCase()}`}>{tier.name}</span>
+                      </td>
+                      <td className="mono small">{entry.model}</td>
+                      <td>
+                        {entry.sweScore !== undefined ? (
+                          <span className="swe-score">
+                            <span className="swe-bar" aria-hidden="true">
+                              <span
+                                className="swe-fill"
+                                style={{ width: `${Math.min(100, entry.sweScore)}%` }}
+                              />
+                            </span>
+                            <span className="mono small">{entry.sweScore.toFixed(1)}%</span>
+                          </span>
+                        ) : (
+                          <span className="small faint">—</span>
+                        )}
+                      </td>
+                      <td className="small muted">{entry.providerId ?? "vendor direct"}</td>
+                      <td className="small">{entry.reason}</td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </Panel>
@@ -134,8 +153,9 @@ function RateBoard({ data }: { data: RankingsResponse }) {
     <>
       <Panel title="Rate limits">
         <p className="small muted" style={{ marginTop: 0 }}>
-          Ordered by how much a provider gives away, ignoring how good the models are. A provider can
-          top this table and still be useless for coding: that is what the other two boards are for.
+          Ordered by how much a provider gives away, ignoring how good the models are. A provider
+          can top this table and still be useless for coding: that is what the other two boards are
+          for.
         </p>
         <table>
           <thead>

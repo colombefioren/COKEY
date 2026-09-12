@@ -459,6 +459,7 @@ export interface SkillEntry {
   model: string;
   providerId?: string;
   tierName: "S" | "A" | "B" | "C";
+  sweScore?: number;
   reason: string;
 }
 

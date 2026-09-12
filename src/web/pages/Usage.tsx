@@ -24,14 +24,50 @@ const MODEL_PAGE_SIZE = 8;
  * much", the history answers "and what exactly happened", and the filters apply
  * to both.
  */
+type UsageTab = "overview" | "providers" | "requests";
+
 export function Usage({ refreshKey }: { refreshKey: number }) {
   const toast = useToast();
+  const [tab, setTab] = useState<UsageTab>("overview");
 
   return (
     <>
-      <ServingNow refreshKey={refreshKey} onError={(message) => toast.err(message)} />
-      <UsageRollup refreshKey={refreshKey} onError={(message) => toast.err(message)} />
-      <RequestHistory refreshKey={refreshKey} />
+      <div className="tabs tabs-inline">
+        <button
+          type="button"
+          className="tab"
+          aria-selected={tab === "overview"}
+          onClick={() => setTab("overview")}
+        >
+          Overview
+        </button>
+        <button
+          type="button"
+          className="tab"
+          aria-selected={tab === "providers"}
+          onClick={() => setTab("providers")}
+        >
+          Providers
+        </button>
+        <button
+          type="button"
+          className="tab"
+          aria-selected={tab === "requests"}
+          onClick={() => setTab("requests")}
+        >
+          Requests
+        </button>
+      </div>
+
+      {tab === "overview" ? (
+        <ServingNow refreshKey={refreshKey} onError={(message) => toast.err(message)} />
+      ) : null}
+
+      {tab === "providers" ? (
+        <UsageRollup refreshKey={refreshKey} onError={(message) => toast.err(message)} />
+      ) : null}
+
+      {tab === "requests" ? <RequestHistory refreshKey={refreshKey} /> : null}
     </>
   );
 }
@@ -70,12 +106,18 @@ function ServingNow({
           </span>
           <span className="small">
             <StatusDot status="healthy" /> {now.credentialDescription ?? now.credentialId}
-            {now.maskedSecret ? <span className="mono small faint"> {now.maskedSecret}</span> : null}
+            {now.maskedSecret ? (
+              <span className="mono small faint"> {now.maskedSecret}</span>
+            ) : null}
           </span>
-          {now.proxyLabel ? <span className="chip-proxy mono small">exit {now.proxyLabel}</span> : null}
+          {now.proxyLabel ? (
+            <span className="chip-proxy mono small">exit {now.proxyLabel}</span>
+          ) : null}
           {now.fallback ? <span className="badge warn">fallback</span> : null}
           <span className="small faint">{now.attempts} attempt(s)</span>
-          {now.startedAt ? <span className="small faint">started {timeAgo(now.startedAt)}</span> : null}
+          {now.startedAt ? (
+            <span className="small faint">started {timeAgo(now.startedAt)}</span>
+          ) : null}
         </div>
       ) : (
         <Empty>
@@ -143,12 +185,14 @@ function UsageRollup({
 
   const dayTotalPages = Math.max(1, Math.ceil((provider?.daily.length ?? 0) / daySize));
   const dayCurrent = Math.min(dayPage, dayTotalPages);
-  const dayRows = (provider?.daily ?? []).slice(
-    (dayCurrent - 1) * daySize,
-    dayCurrent * daySize,
-  );
+  const dayRows = (provider?.daily ?? []).slice((dayCurrent - 1) * daySize, dayCurrent * daySize);
 
-  if (!view) return <Panel title="Usage by provider"><Empty>Loading usage…</Empty></Panel>;
+  if (!view)
+    return (
+      <Panel title="Usage by provider">
+        <Empty>Loading usage…</Empty>
+      </Panel>
+    );
 
   return (
     <>
@@ -167,7 +211,11 @@ function UsageRollup({
                 </header>
                 <div className="stack">
                   {chain.entries.map((entry, index) => (
-                    <div key={entry.id} className="row wrap" style={{ gap: 8, alignItems: "center" }}>
+                    <div
+                      key={entry.id}
+                      className="row wrap"
+                      style={{ gap: 8, alignItems: "center" }}
+                    >
                       <span className="small faint">{index + 1}.</span>
                       <span className="mono">
                         {entry.providerId} / {entry.model}
@@ -328,7 +376,9 @@ function UsageRollup({
                           <tr key={day.day}>
                             <td className="mono small">
                               {day.day}
-                              {day.day === view.today ? <span className="badge"> today</span> : null}
+                              {day.day === view.today ? (
+                                <span className="badge"> today</span>
+                              ) : null}
                             </td>
                             <td className="small">{formatNumber(day.requests)}</td>
                             <td className="small muted">{formatNumber(day.inputTokens)}</td>
@@ -414,7 +464,10 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
             value={stats ? formatNumber(stats.fallbackCount) : "0"}
             hint="Requests that rotated to another key or node"
           />
-          <Stat label="Average latency" value={stats ? formatDuration(stats.averageLatencyMs) : "0ms"} />
+          <Stat
+            label="Average latency"
+            value={stats ? formatDuration(stats.averageLatencyMs) : "0ms"}
+          />
         </div>
       </Panel>
 
