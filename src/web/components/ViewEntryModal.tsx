@@ -4,6 +4,7 @@ import type { ChainEntryView, PublicCredential } from "../types.js";
 import { Modal } from "./Primitives.js";
 import { RateLabel, StatusDot } from "./Primitives.js";
 import { useToast } from "./Toast.js";
+import { AddCredentialModal } from "./AddCredentialModal.js";
 
 interface Props {
   entry: ChainEntryView;
@@ -15,6 +16,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
   const toast = useToast();
   const [testingCredId, setTestingCredId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, { ok: boolean; latencyMs?: number; message?: string }>>({});
+  const [addingCredential, setAddingCredential] = useState(false);
 
   async function testCredential(credential: PublicCredential) {
     setTestingCredId(credential.id);
@@ -68,13 +70,22 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
 
         <div className="field">
           <label>Status</label>
-          <span className="badge" style={{ backgroundColor: entry.enabled ? "var(--ok-bg)" : "var(--warn-bg)" }}>
-            {entry.enabled ? "enabled" : "disabled"}
+          <span className="badge" style={{ backgroundColor: entry.enabled ? "var(--ok-bg)" : "var(--warn-bg)", color: entry.enabled ? "var(--ok)" : "var(--warn)" }}>
+            {entry.enabled ? "✓ enabled" : "⊘ disabled"}
           </span>
         </div>
 
         <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid var(--border)" }}>
-          <h4 style={{ margin: "0 0 12px 0" }}>Credentials ({entry.credentials.length})</h4>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+            <h4 style={{ margin: 0 }}>Credentials ({entry.credentials.length})</h4>
+            <button
+              className="secondary"
+              style={{ padding: "4px 8px", fontSize: 12 }}
+              onClick={() => setAddingCredential(true)}
+            >
+              + Add
+            </button>
+          </div>
 
           {entry.credentials.length === 0 ? (
             <p className="small faint">No credentials linked to this entry.</p>
@@ -89,20 +100,23 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                   <div
                     key={credential.id}
                     style={{
-                      padding: 8,
+                      padding: 10,
                       border: "1px solid var(--border)",
-                      borderRadius: 4,
+                      borderRadius: 6,
                       display: "flex",
                       alignItems: "center",
-                      gap: 8,
-                      fontSize: 12,
+                      gap: 10,
+                      fontSize: 13,
                     }}
                   >
                     <StatusDot status={credential.status} />
-                    <span className="mono" style={{ flex: 1 }}>
-                      {credential.description}
-                    </span>
-                    <span className="mono small faint">{credential.maskedSecret}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="mono" style={{ fontWeight: 500 }}>
+                        {credential.description}
+                      </div>
+                      <div className="mono small faint">{credential.maskedSecret}</div>
+                    </div>
+
                     <RateLabel rate={credential.rate} compact />
 
                     {hasTested && (
@@ -111,6 +125,8 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                         style={{
                           backgroundColor: isPassed ? "var(--ok-bg)" : "var(--bad-bg)",
                           color: isPassed ? "var(--ok)" : "var(--bad)",
+                          fontSize: 11,
+                          padding: "3px 6px",
                         }}
                       >
                         {isPassed ? `✓ ${testResult.latencyMs}ms` : "✗ failed"}
@@ -122,16 +138,18 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                       style={{ padding: "2px 4px", fontSize: 12 }}
                       onClick={() => void testCredential(credential)}
                       disabled={testingCredId === credential.id}
+                      title={testingCredId === credential.id ? "Testing..." : "Test this credential"}
                     >
-                      {testingCredId === credential.id ? "testing…" : "test"}
+                      {testingCredId === credential.id ? "⟳" : "↻"}
                     </button>
 
                     <button
                       className="ghost danger"
                       style={{ padding: "2px 4px", fontSize: 12 }}
                       onClick={() => void removeCredential(credential)}
+                      title="Remove credential"
                     >
-                      remove
+                      ✕
                     </button>
                   </div>
                 );
@@ -140,6 +158,16 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
           )}
         </div>
       </div>
+
+      {addingCredential ? (
+        <AddCredentialModal
+          entry={entry}
+          onClose={() => setAddingCredential(false)}
+          onChanged={() => {
+            onChanged();
+          }}
+        />
+      ) : null}
     </Modal>
   );
 }
