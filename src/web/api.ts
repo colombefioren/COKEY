@@ -209,6 +209,8 @@ export const api = {
       status?: string;
       /** `null` clears the proxy and restores direct egress. */
       proxyUrl?: string | null;
+      /** Pin to a pool entry by id, or `null` to return the key to the pool. */
+      proxyPoolId?: string | null;
     },
   ) => request<PublicCredential>("PATCH", `/api/credentials/${id}`, body),
   deleteCredential: (id: string) => request<{ ok: boolean }>("DELETE", `/api/credentials/${id}`),

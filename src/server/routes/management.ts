@@ -402,7 +402,10 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       if (body.secret !== undefined) cokey.credentials.rotateSecret(id, body.secret);
       if (body.status !== undefined) cokey.credentials.setStatus(id, body.status);
       // Proxy changes go through the facade so validation and the live event
-      // feed stay in one place.
+      // feed stay in one place. A pool id wins over a raw URL: the browser
+      // never sees a pool proxy's credentials, so assigning from the pool must
+      // be resolved server-side.
+      if (body.proxyPoolId !== undefined) return cokey.assignCredentialProxy(id, body.proxyPoolId);
       if (body.proxyUrl !== undefined) return cokey.setCredentialProxy(id, body.proxyUrl);
 
       return cokey.credentials.toPublic(cokey.credentials.getOrThrow(id));

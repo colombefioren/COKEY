@@ -112,6 +112,12 @@ export const UpdateCredentialSchema = z
     status: z.enum(["healthy", "cooldown", "invalid", "disabled", "unverified"]).optional(),
     /** `null` clears the proxy and returns the key to direct egress. */
     proxyUrl: ProxyUrlSchema.nullable().optional(),
+    /**
+     * Pin this key to a specific egress pool entry by id, or `null` to hand it
+     * back to the automatic pool. Ids are used rather than URLs because the
+     * pool never exposes a proxy's own credentials to the browser.
+     */
+    proxyPoolId: z.string().min(1).nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
 

@@ -31,7 +31,7 @@ import { RequestHistory, type HistoryStats } from "./history.js";
 import { Logger } from "./logger.js";
 import { ProviderRegistry } from "./providers/registry.js";
 import { RouterEngine, type RouteResult } from "./router/engine.js";
-import { SettingsService } from "./settings.js";
+import { InvalidSettingError, SettingsService } from "./settings.js";
 import { assertSafeEndpoint } from "./security/ssrf.js";
 import type {
   Chain,
@@ -536,6 +536,30 @@ export class Cokey {
     this.proxyPool.remove(id);
     this.syncProxyAssignments();
     return this.listProxyPool();
+  }
+
+  /**
+   * Pin a credential to a specific pool entry, or hand it back to the pool.
+   *
+   * The browser only ever sees a pool entry's `host:port` label, never the
+   * proxy's own credentials, so the UI assigns by entry id and the URL is
+   * resolved here on the server. A pinned key is marked manual, which is what
+   * tells `syncProxyAssignments` to leave it alone from now on; passing `null`
+   * clears the pin and immediately re-runs the pool so the key lands on an exit
+   * again.
+   */
+  assignCredentialProxy(credentialId: string, poolId: string | null): PublicCredential {
+    if (poolId === null) {
+      const cleared = this.setCredentialProxy(credentialId, null);
+      this.syncProxyAssignments();
+      return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
+    }
+
+    const entry = this.proxyPool.find(poolId);
+    if (!entry) throw new InvalidSettingError("No such egress pool entry");
+    if (entry.enabled !== 1) throw new InvalidSettingError("That egress pool entry is disabled");
+
+    return this.setCredentialProxy(credentialId, entry.url);
   }
 
   setProxyPoolEnabled(id: string, enabled: boolean): ProxyPoolView[] {

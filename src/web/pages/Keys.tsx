@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError, timeAgo } from "../api.js";
-import type { ProviderStatus, PublicCredential } from "../types.js";
+import type { ProviderStatus, ProxyPoolEntryView, PublicCredential } from "../types.js";
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
 import {
   Empty,
+  Modal,
   Panel,
   QuotaLabel,
   RateLabel,
@@ -140,29 +141,39 @@ export function Keys({
     }
   }
 
-  /**
-   * Pin a key to a hand-picked exit IP, or hand it back to the pool.
-   *
-   * An empty value means "let the pool choose", which is the useful default now
-   * that assignment is automatic.
-   */
-  async function editProxy(credential: PublicCredential) {
-    const currentValue = credential.proxy.configured ? `socks5://...@${credential.proxy.label}` : "";
-    const answer = window.prompt(
-      `Egress proxy for "${credential.description}"\n\n` +
-        "Leave empty to let the automatic pool choose this key's exit IP.\n" +
-        "Set a value to pin it: socks5://user:pass@host:1080 or http://host:8080",
-      currentValue,
-    );
-    if (answer === null) return;
+  const [assignFor, setAssignFor] = useState<PublicCredential | null>(null);
+  const [pool, setPool] = useState<ProxyPoolEntryView[]>([]);
+  const [poolBusy, setPoolBusy] = useState(false);
 
+  async function openAssign(credential: PublicCredential) {
+    setAssignFor(credential);
+    setPoolBusy(true);
     try {
-      await api.updateCredential(credential.id, { proxyUrl: answer.trim() ? answer.trim() : null });
-      toast.ok(answer.trim() ? "Proxy pinned manually" : "Proxy returned to the automatic pool");
+      const result = await api.proxyPool();
+      setPool(result.entries);
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setPoolBusy(false);
+    }
+  }
+
+  async function assignProxy(credential: PublicCredential, poolId: string | null) {
+    setPoolBusy(true);
+    try {
+      await api.updateCredential(credential.id, { proxyPoolId: poolId });
+      toast.ok(
+        poolId
+          ? `${credential.description} pinned to a pool exit`
+          : `${credential.description} returned to the automatic pool`,
+      );
+      setAssignFor(null);
       await load();
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setPoolBusy(false);
     }
   }
 
@@ -259,8 +270,8 @@ export function Keys({
                           <button
                             className="ghost mono small"
                             style={{ padding: "2px 4px" }}
-                            title="Pin this key to its own exit IP, or return it to the automatic pool"
-                            onClick={() => void editProxy(credential)}
+                            title="Choose this key's exit IP: automatic pool, a specific pool exit, or direct"
+                            onClick={() => void openAssign(credential)}
                           >
                             {credential.proxy.configured
                               ? `${credential.proxy.label ?? "proxy"}${credential.proxy.auto ? " (auto)" : " (pinned)"}`
@@ -339,6 +350,63 @@ export function Keys({
             onChanged();
           }}
         />
+      ) : null}
+
+      {assignFor ? (
+        <Modal
+          title="Egress for this key"
+          subtitle={assignFor.description}
+          onClose={() => setAssignFor(null)}
+        >
+          <p className="small muted" style={{ marginTop: 0 }}>
+            COKEY already spreads exits automatically: add proxies to the pool once and every key
+            of a provider gets a different one. Leave this on the automatic pool, or pin this key to
+            one specific exit.
+          </p>
+
+          <div className="selected-list">
+            <button
+              type="button"
+              className={assignFor.proxy.auto ? "secondary" : "ghost"}
+              disabled={poolBusy}
+              onClick={() => void assignProxy(assignFor, null)}
+            >
+              Automatic pool
+              {assignFor.proxy.auto ? " (current)" : ""}
+            </button>
+
+            {poolBusy ? (
+              <div className="small faint">Loading the pool…</div>
+            ) : pool.length === 0 ? (
+              <Empty>
+                The pool is empty. Add proxies under Settings, Egress pool, or set{" "}
+                <code>COKEY_PROXY_POOL</code> before first start.
+              </Empty>
+            ) : (
+              pool.map((entry) => (
+                <button
+                  key={entry.id}
+                  type="button"
+                  className="secondary"
+                  disabled={poolBusy || !entry.enabled}
+                  onClick={() => void assignProxy(assignFor, entry.id)}
+                >
+                  <span className="mono">{entry.label}</span>
+                  <span className="spacer" />
+                  <span className="small faint">
+                    {entry.enabled ? `${entry.assignedTo} key(s)` : "disabled"}
+                  </span>
+                </button>
+              ))
+            )}
+          </div>
+
+          <div className="modal-actions">
+            <button className="ghost" onClick={() => setAssignFor(null)}>
+              Close
+            </button>
+          </div>
+        </Modal>
       ) : null}
     </>
   );

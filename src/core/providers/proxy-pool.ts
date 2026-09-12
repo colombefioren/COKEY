@@ -85,6 +85,11 @@ export class ProxyPoolService {
     return this.repo.count();
   }
 
+  /** Look one entry up by id, for the UI's assign-by-id flow. */
+  find(id: string): ProxyPoolRow | undefined {
+    return this.repo.get(id);
+  }
+
   entries(): Array<{ id: string; url: string; label: string; enabled: boolean }> {
     return this.repo.list().map((row) => ({
       id: row.id,
