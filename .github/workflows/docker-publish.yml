@@ -37,19 +37,18 @@ jobs:
             VERSION="${GITHUB_REF_NAME#v}"
           fi
 
-          TAGS="${IMAGE}:${VERSION}"
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            TAGS="${TAGS}"$'\n'"${IMAGE}:latest"
-          fi
-          if [[ "${GITHUB_REF}" == "refs/heads/prod" ]]; then
-            TAGS="${IMAGE}:nightly"
-          fi
-
           {
             echo "version=${VERSION}"
             echo "platforms=linux/amd64,linux/arm64"
             echo "tags<<EOF"
-            echo "${TAGS}"
+            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+              # A tag publishes the pinned version and moves latest.
+              printf '%s\n' "${IMAGE}:${VERSION}" "${IMAGE}:latest"
+            elif [[ "${GITHUB_REF}" == "refs/heads/prod" ]]; then
+              printf '%s\n' "${IMAGE}:nightly"
+            else
+              printf '%s\n' "${IMAGE}:${VERSION}"
+            fi
             echo "EOF"
           } >> "${GITHUB_OUTPUT}"
 
@@ -68,25 +67,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # `secrets` cannot be read from an `if` expression, so the presence of
+      # the credentials is detected in a step and the result is published as an
+      # output that later steps can branch on.
+      - name: Detect Docker Hub credentials
+        id: creds
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${DOCKERHUB_USERNAME:-}" ]]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Explain how to enable publishing
+        if: steps.creds.outputs.available != 'true'
+        run: |
+          echo "::notice::Add DOCKERHUB_USERNAME and DOCKERHUB_TOKEN repository secrets to publish images."
+
       - name: Set up QEMU
+        if: steps.creds.outputs.available == 'true'
         uses: docker/setup-qemu-action@v3
 
       - name: Set up Buildx
+        if: steps.creds.outputs.available == 'true'
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        if: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+        if: steps.creds.outputs.available == 'true'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push
+        if: steps.creds.outputs.available == 'true'
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: ${{ needs.metadata.outputs.platforms }}
-          push: ${{ secrets.DOCKERHUB_USERNAME != '' }}
+          push: true
           tags: ${{ needs.metadata.outputs.tags }}
           labels: |
             org.opencontainers.image.title=COKEY
