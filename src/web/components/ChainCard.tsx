@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ChainView } from "../types.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
 import { AddEntryModal } from "./AddEntryModal.js";
+import { ConfirmModal } from "./Primitives.js";
 import { EditEntryModal } from "./EditEntryModal.js";
 import { ViewEntryModal } from "./ViewEntryModal.js";
 import { useToast } from "./Toast.js";
@@ -23,6 +24,8 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   const [credentialTarget, setCredentialTarget] = useState<ChainEntryView | null>(null);
   const [editingEntry, setEditingEntry] = useState<ChainEntryView | null>(null);
   const [viewingEntry, setViewingEntry] = useState<ChainEntryView | null>(null);
+  const [removingEntry, setRemovingEntry] = useState<ChainEntryView | null>(null);
+  const [deletingChain, setDeletingChain] = useState(false);
 
   useEffect(() => {
     setEntries(chain.entries);
@@ -107,9 +110,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   }
 
   async function removeEntry(entry: ChainEntryView) {
-    if (!confirm(`Remove ${entry.providerId}/${entry.model} from ${chain.alias}?`)) return;
     try {
       await api.deleteEntry(entry.id);
+      setRemovingEntry(null);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -142,10 +145,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   }
 
   async function deleteChain() {
-    if (!confirm(`Delete chain ${chain.alias} and all of its entries?`)) return;
     try {
       await api.deleteChain(chain.id);
       toast.ok(`Deleted ${chain.alias}`);
+      setDeletingChain(false);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -192,7 +195,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
         <button className="ghost" onClick={() => void toggleChain()}>
           {chain.enabled ? "disable" : "enable"}
         </button>
-        <button className="danger" onClick={() => void deleteChain()}>
+        <button className="danger" onClick={() => setDeletingChain(true)}>
           delete
         </button>
       </div>
@@ -288,7 +291,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               <button
                 className="danger"
                 style={{ fontSize: 12 }}
-                onClick={() => void removeEntry(entry)}
+                onClick={() => setRemovingEntry(entry)}
               >
                 remove
               </button>
@@ -344,6 +347,26 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           onChanged={() => {
             onChanged();
           }}
+        />
+      ) : null}
+
+      {removingEntry ? (
+        <ConfirmModal
+          title="Remove entry"
+          message={`Remove ${removingEntry.providerId}/${removingEntry.model} from ${chain.alias}?`}
+          onConfirm={() => void removeEntry(removingEntry)}
+          onClose={() => setRemovingEntry(null)}
+          actionLabel="Remove"
+        />
+      ) : null}
+
+      {deletingChain ? (
+        <ConfirmModal
+          title="Delete chain"
+          message={`Delete chain ${chain.alias} and all of its entries?`}
+          onConfirm={() => void deleteChain()}
+          onClose={() => setDeletingChain(false)}
+          actionLabel="Delete"
         />
       ) : null}
     </div>

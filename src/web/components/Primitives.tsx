@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { CredentialRate, CredentialStatus } from "../types.js";
 
@@ -53,6 +53,98 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
       <div className="value">{value}</div>
       {hint ? <div className="hint">{hint}</div> : null}
     </div>
+  );
+}
+
+/**
+ * Simple confirmation dialog.
+ *
+ * Presents a message and two buttons: a left "Cancel" (ghost) and a right
+ * primary action (danger by default) labelled `actionLabel`.
+ */
+export function ConfirmModal({
+  title,
+  message,
+  onConfirm,
+  onClose,
+  actionLabel = "Delete",
+  danger = true,
+}: {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onClose: () => void;
+  actionLabel?: string;
+  danger?: boolean;
+}) {
+  return (
+    <Modal title={title} onClose={onClose}>
+      <p style={{ margin: 0 }}>{message}</p>
+      <div className="modal-actions">
+        <button className="ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <button className={danger ? "danger" : "secondary"} onClick={onConfirm}>
+          {actionLabel}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+/**
+ * Prompt-style modal with a text input.
+ *
+ * Pre-fills `defaultValue`, submits on Enter, and renders the value as a
+ * password field when `type` is `"password"`.
+ */
+export function PromptModal({
+  title,
+  message,
+  defaultValue = "",
+  onSubmit,
+  onClose,
+  placeholder,
+  type = "text",
+}: {
+  title: string;
+  message: string;
+  defaultValue?: string;
+  onSubmit: (value: string) => void;
+  onClose: () => void;
+  placeholder?: string;
+  type?: "text" | "password";
+}) {
+  const [value, setValue] = useState(defaultValue);
+
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
+  return (
+    <Modal title={title} onClose={onClose}>
+      <p style={{ margin: 0 }}>{message}</p>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onSubmit(value.trim());
+          }
+        }}
+        autoFocus
+        style={{ width: "100%", marginTop: 12, boxSizing: "border-box" }}
+      />
+      <div className="modal-actions">
+        <button className="ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <button onClick={() => onSubmit(value.trim())}>OK</button>
+      </div>
+    </Modal>
   );
 }
 

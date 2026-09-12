@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ChainEntryView, PublicCredential } from "../types.js";
-import { Modal } from "./Primitives.js";
+import { ConfirmModal, Modal } from "./Primitives.js";
 import { RateLabel, StatusDot } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
@@ -19,6 +19,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
     Record<string, { ok: boolean; latencyMs?: number; message?: string }>
   >({});
   const [addingCredential, setAddingCredential] = useState(false);
+  const [removingCredential, setRemovingCredential] = useState<PublicCredential | null>(null);
 
   async function testCredential(credential: PublicCredential) {
     setTestingCredId(credential.id);
@@ -36,10 +37,10 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
   }
 
   async function removeCredential(credential: PublicCredential) {
-    if (!confirm(`Remove ${credential.description}?`)) return;
     try {
       await api.removeEntryCredential(entry.id, credential.id);
       toast.ok("Credential removed");
+      setRemovingCredential(null);
       onChanged();
       onClose();
     } catch (error) {
@@ -177,7 +178,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                     <button
                       className="ghost danger"
                       style={{ padding: "2px 4px", fontSize: 12 }}
-                      onClick={() => void removeCredential(credential)}
+                      onClick={() => setRemovingCredential(credential)}
                       title="Remove credential"
                     >
                       ✕
@@ -197,6 +198,16 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
           onChanged={() => {
             onChanged();
           }}
+        />
+      ) : null}
+
+      {removingCredential ? (
+        <ConfirmModal
+          title="Remove credential"
+          message={`Remove ${removingCredential.description}?`}
+          onConfirm={() => void removeCredential(removingCredential)}
+          onClose={() => setRemovingCredential(null)}
+          actionLabel="Remove"
         />
       ) : null}
     </Modal>

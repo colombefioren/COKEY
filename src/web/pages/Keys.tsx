@@ -4,9 +4,11 @@ import type { ProviderStatus, ProxyPoolEntryView, PublicCredential } from "../ty
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
 import {
+  ConfirmModal,
   Empty,
   Modal,
   Panel,
+  PromptModal,
   QuotaLabel,
   RateLabel,
   StatusBadge,
@@ -117,21 +119,17 @@ export function Keys({
     }
   }
 
-  async function replace(credential: PublicCredential) {
-    const answer = window.prompt(
-      `Replace the API key for "${credential.description}"?\n\nThe new secret is verified before it is stored.`,
-      "",
-    );
-    if (answer === null) return;
-    if (!answer.trim()) {
+  async function replace(credential: PublicCredential, newSecret: string) {
+    if (!newSecret) {
       toast.err("A replacement key cannot be empty");
       return;
     }
     setBusyId(credential.id);
     try {
-      await api.updateCredential(credential.id, { secret: answer.trim() });
+      await api.updateCredential(credential.id, { secret: newSecret });
       await api.testCredential(credential.id);
       toast.ok("Key replaced");
+      setReplacingKey(null);
       await load();
       onChanged();
     } catch (error) {
@@ -141,6 +139,8 @@ export function Keys({
     }
   }
 
+  const [removingKey, setRemovingKey] = useState<PublicCredential | null>(null);
+  const [replacingKey, setReplacingKey] = useState<PublicCredential | null>(null);
   const [assignFor, setAssignFor] = useState<PublicCredential | null>(null);
   const [pool, setPool] = useState<ProxyPoolEntryView[]>([]);
   const [poolBusy, setPoolBusy] = useState(false);
@@ -178,11 +178,10 @@ export function Keys({
   }
 
   async function remove(credential: PublicCredential) {
-    if (!confirm(`Delete credential "${credential.description}"? It is detached from every chain.`))
-      return;
     try {
       await api.deleteCredential(credential.id);
       toast.ok("Credential deleted");
+      setRemovingKey(null);
       await load();
       onChanged();
     } catch (error) {
@@ -301,7 +300,7 @@ export function Keys({
                             >
                               {busyId === credential.id ? "…" : "Test"}
                             </button>
-                            <button className="ghost" onClick={() => void replace(credential)}>
+                            <button className="ghost" onClick={() => setReplacingKey(credential)}>
                               replace
                             </button>
                             <button className="ghost" onClick={() => void toggle(credential)}>
@@ -310,7 +309,7 @@ export function Keys({
                             <button
                               className="danger"
                               style={{ padding: "4px 9px" }}
-                              onClick={() => void remove(credential)}
+                              onClick={() => setRemovingKey(credential)}
                             >
                               revoke
                             </button>
@@ -349,6 +348,27 @@ export function Keys({
             void load();
             onChanged();
           }}
+        />
+      ) : null}
+
+      {replacingKey ? (
+        <PromptModal
+          title="Replace API key"
+          message={`Enter a new secret for "${replacingKey.description}". The key is verified before it is stored.`}
+          defaultValue=""
+          placeholder="sk-..."
+          onSubmit={(value) => void replace(replacingKey, value)}
+          onClose={() => setReplacingKey(null)}
+        />
+      ) : null}
+
+      {removingKey ? (
+        <ConfirmModal
+          title="Revoke key"
+          message={`Delete credential "${removingKey.description}"? It is detached from every chain.`}
+          onConfirm={() => void remove(removingKey)}
+          onClose={() => setRemovingKey(null)}
+          actionLabel="Revoke"
         />
       ) : null}
 

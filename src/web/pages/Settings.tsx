@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ProviderCatalogEntry, Settings as SettingsModel } from "../types.js";
 import { EgressPoolPanel } from "../components/EgressPoolPanel.js";
-import { Empty, Panel } from "../components/Primitives.js";
+import { ConfirmModal, Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
 /**
@@ -29,16 +29,17 @@ export function Settings({
   const [endpointModels, setEndpointModels] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [passwordBusy, setPasswordBusy] = useState(false);
+  const [confirmingPassword, setConfirmingPassword] = useState(false);
 
   async function savePassword() {
     if (!newPassword.trim()) return;
-    if (!confirm("Set this password permanently? It cannot be changed again.")) return;
     setPasswordBusy(true);
     try {
       await api.setPassword(newPassword.trim());
       setDraft((current) => (current ? { ...current, passwordLocked: true } : current));
       setNewPassword("");
       toast.ok("Password set. It is now permanent.");
+      setConfirmingPassword(false);
       onSaved();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -194,7 +195,7 @@ export function Settings({
                     />
                     <button
                       className="secondary"
-                      onClick={() => void savePassword()}
+                      onClick={() => setConfirmingPassword(true)}
                       disabled={passwordBusy || !newPassword.trim()}
                     >
                       {passwordBusy ? "Saving…" : "Set password"}
@@ -414,6 +415,16 @@ export function Settings({
           {busy ? "Saving…" : "Save settings"}
         </button>
       </div>
+
+      {confirmingPassword ? (
+        <ConfirmModal
+          title="Set password"
+          message="Set this password permanently? It cannot be changed again."
+          onConfirm={() => void savePassword()}
+          onClose={() => setConfirmingPassword(false)}
+          actionLabel="Set password"
+        />
+      ) : null}
     </>
   );
 }

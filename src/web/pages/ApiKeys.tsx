@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError, timeAgo } from "../api.js";
 import type { ApiKeyView } from "../types.js";
-import { Empty, Panel } from "../components/Primitives.js";
+import { ConfirmModal, Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
 export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
@@ -10,6 +10,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<string | null>(null);
+  const [revokingKey, setRevokingKey] = useState<ApiKeyView | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -45,12 +46,12 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
   }
 
   async function revoke(key: ApiKeyView) {
-    if (!confirm(`Revoke “${key.name}”? Clients using it stop working immediately.`)) return;
     try {
       await api.revokeApiKey(key.id);
       await load();
       onChanged();
       toast.ok("API key revoked");
+      setRevokingKey(null);
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
     }
@@ -131,7 +132,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
                     <button
                       className="danger"
                       style={{ padding: "4px 9px" }}
-                      onClick={() => void revoke(key)}
+                      onClick={() => setRevokingKey(key)}
                     >
                       revoke
                     </button>
@@ -142,6 +143,16 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
           </table>
         )}
       </Panel>
+
+      {revokingKey ? (
+        <ConfirmModal
+          title="Revoke API key"
+          message={`Revoke "${revokingKey.name}"? Clients using it stop working immediately.`}
+          onConfirm={() => void revoke(revokingKey)}
+          onClose={() => setRevokingKey(null)}
+          actionLabel="Revoke"
+        />
+      ) : null}
     </>
   );
 }

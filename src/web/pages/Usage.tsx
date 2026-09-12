@@ -3,6 +3,7 @@ import { api, ApiError, timeAgo } from "../api.js";
 import type { HistoryStats, RequestLogEntry, UsageProviderView, UsageView } from "../types.js";
 import { Pagination } from "../components/Pagination.js";
 import {
+  ConfirmModal,
   Empty,
   Panel,
   Stat,
@@ -424,6 +425,7 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
   const [pageSize, setPageSize] = useState(HISTORY_PAGE_SIZE);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [clearingHistory, setClearingHistory] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -442,11 +444,11 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
   }, [load, refreshKey]);
 
   async function clear() {
-    if (!confirm("Clear the local request history?")) return;
     try {
       await api.clearRequests();
       await load();
       toast.ok("History cleared");
+      setClearingHistory(false);
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
     }
@@ -496,7 +498,7 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
                 setPage(1);
               }}
             />
-            <button className="secondary" onClick={() => void clear()} disabled={total === 0}>
+            <button className="secondary" onClick={() => setClearingHistory(true)} disabled={total === 0}>
               Clear
             </button>
           </div>
@@ -565,6 +567,16 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
           }}
         />
       </Panel>
+
+      {clearingHistory ? (
+        <ConfirmModal
+          title="Clear request history"
+          message="Clear the local request history? This cannot be undone."
+          onConfirm={() => void clear()}
+          onClose={() => setClearingHistory(false)}
+          actionLabel="Clear"
+        />
+      ) : null}
     </>
   );
 }
