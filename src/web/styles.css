@@ -1799,7 +1799,12 @@ button.play.fail {
 .starfield {
   position: fixed;
   inset: 0;
-  z-index: 0;
+  /*
+   * Behind every page, including the login screen, which is not wrapped in
+   * `.shell` and so has no stacking context of its own. Negative rather than
+   * zero, or the stars would fall on top of the login card.
+   */
+  z-index: -1;
   pointer-events: none;
   /* The star layers are larger than the viewport so they can drift. */
   overflow: hidden;
