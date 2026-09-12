@@ -7,7 +7,7 @@ export {
 } from "./proxy.js";
 
 
-export { ProviderProxy } from "./proxy-provider.js";
+export { ProviderProxy, type ProxyPool as ProviderPool } from "./proxy-provider.js";
 export type {
   ProviderProxyConfig,
   ProviderProxyState,

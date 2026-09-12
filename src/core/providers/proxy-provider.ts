@@ -114,6 +114,17 @@ export class ProviderProxy {
     return this.byProvider.get(providerId) ?? EMPTY;
   }
 
+  /** Snapshot plus the rotor's next label. */
+  inspect(providerId: string): ProviderProxyState & { nextLabel?: string } {
+    const state = this.byProvider.get(providerId) ?? EMPTY;
+    return {
+      ...state,
+      nextLabel: state.nextLabel ?? state.config.source.kind !== "off"
+        ? this.poolFor(providerId).snapshot().addresses[0]?.label
+        : undefined,
+    };
+  }
+
   poolFor(providerId: string): ProxyPool {
     const key = `provider:${providerId}`;
     let pool = this.pools.get(key);
@@ -139,3 +150,5 @@ function makeState(config: ProviderProxyConfig, pool?: ProxyPool): ProviderProxy
         : undefined,
   };
 }
+
+export { ProxyPool } from "./pool.js";
