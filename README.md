@@ -72,6 +72,168 @@ node once every key of the current one is spent.
 
 <div align="center">
 
+## 🔌 Every client you already use
+
+**One base URL. Whatever you point at COKEY keeps working when a key rotates underneath it.**
+
+</div>
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/opencode/CDB0F0" width="28" height="28" alt="opencode" /><br />
+      <b>opencode</b><br />
+      <sub>the reference client</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/claude/CDB0F0" width="28" height="28" alt="Claude Code" /><br />
+      <b>Claude Code</b><br />
+      <sub>Anthropic wire format</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Codex CLI" /><br />
+      <b>Codex CLI</b><br />
+      <sub>OpenAI-compatible base URL</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.jsdelivr.net/gh/gilbarbara/logos@main/logos/visual-studio-code.svg" width="28" height="28" alt="VS Code" /><br />
+      <b>VS Code</b><br />
+      <sub>Cline, Roo, Copilot Chat</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/cursor/CDB0F0" width="28" height="28" alt="Cursor" /><br />
+      <b>Cursor</b><br />
+      <sub>custom OpenAI provider</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/jetbrains/CDB0F0" width="28" height="28" alt="JetBrains" /><br />
+      <b>JetBrains IDEs</b><br />
+      <sub>AI Assistant endpoint</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/cline/CDB0F0" width="28" height="28" alt="Cline" /><br />
+      <b>Cline and forks</b><br />
+      <sub>OpenAI-compatible</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/gnometerminal/CDB0F0" width="28" height="28" alt="Any CLI" /><br />
+      <b>Any other CLI</b><br />
+      <sub>base URL and a placeholder key</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/windsurf/CDB0F0" width="28" height="28" alt="Windsurf" /><br />
+      <b>Windsurf</b><br />
+      <sub>Cascade with a custom endpoint</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/zedindustries/CDB0F0" width="28" height="28" alt="Zed" /><br />
+      <b>Zed</b><br />
+      <sub>OpenAI-compatible provider</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Continue" /><br />
+      <b>Continue</b><br />
+      <sub>VS Code and JetBrains extension</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Kilo Code" /><br />
+      <b>Kilo Code</b><br />
+      <sub>agent frameworks</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+<div align="center">
+
+## 🧠 Every major free lab, through one endpoint
+
+**45 providers, 340 curated free models. Connect a key once and chain it anywhere.**
+
+</div>
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/googlegemini/CDB0F0" width="28" height="28" alt="Google Gemini" /><br />
+      <b>Google Gemini</b><br />
+      <sub>Flash and Pro tiers</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/mistralai/CDB0F0" width="28" height="28" alt="Mistral AI" /><br />
+      <b>Mistral AI</b><br />
+      <sub>free tier</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/nvidia/CDB0F0" width="28" height="28" alt="NVIDIA NIM" /><br />
+      <b>NVIDIA NIM</b><br />
+      <sub>hosted endpoints</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/cloudflare/CDB0F0" width="28" height="28" alt="Cloudflare Workers AI" /><br />
+      <b>Cloudflare Workers AI</b><br />
+      <sub>daily free allocation</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/huggingface/CDB0F0" width="28" height="28" alt="Hugging Face" /><br />
+      <b>Hugging Face</b><br />
+      <sub>Inference Providers</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/openrouter/CDB0F0" width="28" height="28" alt="OpenRouter" /><br />
+      <b>OpenRouter</b><br />
+      <sub><code>:free</code> models</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/ollama/CDB0F0" width="28" height="28" alt="Ollama Cloud" /><br />
+      <b>Ollama Cloud</b><br />
+      <sub>local and hosted</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/opencode/CDB0F0" width="28" height="28" alt="OpenCode Zen" /><br />
+      <b>OpenCode Zen</b><br />
+      <sub>the curated gateway</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Groq" /><br />
+      <b>Groq API</b><br />
+      <sub>very fast free tier</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Cerebras" /><br />
+      <b>Cerebras</b><br />
+      <sub>free inference</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Cohere AI" /><br />
+      <b>Cohere AI</b><br />
+      <sub>trial keys</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Z.AI" /><br />
+      <b>Z.AI (Zhipu AI)</b><br />
+      <sub>GLM free models</sub>
+    </td>
+  </tr>
+</table>
+
+<sub>Brand marks come from [Simple Icons](https://simpleicons.org) and belong to their owners. Where a
+project publishes no usable mark, the COKEY plate stands in. The full catalog, with free-tier limits
+and dossiers, is in the app under **Providers**.</sub>
+
+---
+
+<div align="center">
+
 ## 🩺 Resilience - three self-healing layers
 
 **The right layer for the right failure, so one dead key never costs a whole chain.**
@@ -197,6 +359,12 @@ Two exceptions exist, and both are deliberate:
     <td><a href="#-management-api">API</a></td>
   </tr>
   <tr>
+    <td align="right"><b>Clients</b></td>
+    <td><a href="#-every-client-you-already-use">Tools</a></td>
+    <td><a href="#-every-major-free-lab-through-one-endpoint">Providers</a></td>
+    <td><a href="#-resilience---three-self-healing-layers">Resilience</a></td>
+  </tr>
+  <tr>
     <td align="right"><b>Project</b></td>
     <td><a href="#-architecture">Architecture</a></td>
     <td><a href="#-credits">Credits</a></td>
@@ -223,21 +391,23 @@ npm install -g cokey
 cokey
 ```
 
-Running `cokey` prints the logo and starts everything:
+Running `cokey` prints the logo and starts everything. The mark is rasterised from the same
+geometry as the SVG, so the loops come out round in a terminal instead of squashed:
 
 ```
-                            ,/,
-                          ,'  /
-   _.-''''-._          _.-''''-._          █   █  █████  █   █
- .'          '.      .'          '.        █  █   █      █   █
-/              \    /              \       █ █    █       █ █
-|               \  /               |       ██     ████     █
-|                \/                |       █ █    █        █
-|                /\                |       █  █   █        █
-|               /  \               |       █   █  █████    █
-\              /    \              /
- '.          .'      '.          .'
-   '-......-'          '-......-'
+                                  ####
+                               #####
+        ####             #########
+    ############     ############ ####
+  #####      ##### #####      #####         ##     ##  ######### ##      ##
+ ####          #######          ####        ##   ####  ######### ###    ###
+####            #####            ####       #######     ##        ########
+###              ###              ###       ####       #######      ####
+####            #####            ####       ####       #######       ##
+ ####          #######          ####        #######     ##           ##
+  #####      ##### #####      #####         ##   ####  #########     ##
+    ############     ############           ##     ##  #########     ##
+        ####             ####
 
   C O K E Y  v0.1.0
   a tool for broke lads made by a broke princess
