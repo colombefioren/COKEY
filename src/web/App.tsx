@@ -81,10 +81,8 @@ function Shell() {
     void probe();
   }, [probe]);
 
-  if (authed === null) return null;
-  if (!authed) return <LoginForm onLogin={() => setAuthed(true)} />;
-
   const reload = useCallback(async () => {
+    if (authed !== true) return;
     try {
       const [health, settingsResult, nudgeResult, providerList, credentialList] = await Promise.all(
         [api.health(), api.settings(), api.nudge(), api.providers(), api.credentials()],
@@ -98,7 +96,7 @@ function Shell() {
     } catch {
       // The gateway may be restarting; the next poll will pick it up.
     }
-  }, []);
+  }, [authed]);
 
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 
@@ -111,6 +109,9 @@ function Shell() {
     const timer = window.setInterval(() => void reload(), 10_000);
     return () => window.clearInterval(timer);
   }, [reload]);
+
+  if (authed === null) return null;
+  if (!authed) return <LoginForm onLogin={() => setAuthed(true)} />;
 
   function dismissNudge() {
     window.localStorage.setItem(NUDGER_KEY, "1");
