@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
 import { CokeyMark } from "./Logo.js";
 import { Empty } from "./Primitives.js";
+import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 
 /**
  * The live route, drawn.
@@ -19,7 +20,15 @@ import { Empty } from "./Primitives.js";
 
 const POLL_MS = 3000;
 
-export function ChainFlow({ chains, refreshKey }: { chains: ChainView[]; refreshKey: number }) {
+export function ChainFlow({
+  chains,
+  refreshKey,
+  onChanged,
+}: {
+  chains: ChainView[];
+  refreshKey: number;
+  onChanged?: () => void;
+}) {
   const [route, setRoute] = useState<LiveRouteSnapshot | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -47,6 +56,8 @@ export function ChainFlow({ chains, refreshKey }: { chains: ChainView[]; refresh
     if (chains.length === 0) return null;
     return chains.find((chain) => chain.id === selectedId) ?? chains[0]!;
   }, [chains, selectedId]);
+
+  const sweep = useChainRefresh(selected, () => onChanged?.());
 
   const activeAlias = route?.chainAlias;
   const activeEntryKey =
@@ -95,6 +106,16 @@ export function ChainFlow({ chains, refreshKey }: { chains: ChainView[]; refresh
           )}
           {route?.fallback ? <span className="badge warn">fallback active</span> : null}
         </div>
+
+        <button
+          type="button"
+          className="ghost"
+          onClick={() => void sweep.refresh()}
+          disabled={sweep.busy}
+          title={sweep.busy ? "Testing nodes…" : "Test every node and go to the first that answers"}
+        >
+          {sweep.busy ? "testing…" : "⟳ refresh"}
+        </button>
       </div>
 
       <div className="flow-scroll">
@@ -118,12 +139,17 @@ export function ChainFlow({ chains, refreshKey }: { chains: ChainView[]; refresh
               .sort((a, b) => a.priority - b.priority)
               .map((entry, index) => (
                 <div className="flow-step" key={entry.id}>
-                  <FlowLink live={Boolean(route?.active)} dead={Boolean(activeEntryKey) && activeEntryKey !== `${entry.providerId}/${entry.model}`} />
+                  <FlowLink
+                    live={Boolean(route?.active)}
+                    dead={Boolean(activeEntryKey) && activeEntryKey !== `${entry.providerId}/${entry.model}`}
+                  />
                   <EntryNode
                     entry={entry}
                     index={index}
                     live={activeEntryKey === `${entry.providerId}/${entry.model}`}
                     activeCredentialId={route?.credentialId}
+                    sweepState={sweep.states[entry.id] ?? "idle"}
+                    current={sweep.winnerId === entry.id}
                   />
                 </div>
               ))
@@ -152,7 +178,14 @@ export function ChainFlow({ chains, refreshKey }: { chains: ChainView[]; refresh
         <span className="legend-item">
           <i className="flow-key unverified" /> unverified
         </span>
-        <span className="spacer" />
+        {sweep.winnerId ? (
+          <>
+            <span className="spacer" />
+            <span className="badge ok">current: first node that answered OK</span>
+          </>
+        ) : (
+          <span className="spacer" />
+        )}
         <span>nodes are tried top to bottom, keys left to right</span>
       </div>
     </div>
@@ -174,23 +207,35 @@ function EntryNode({
   index,
   live,
   activeCredentialId,
+  sweepState,
+  current,
 }: {
   entry: ChainEntryView;
   index: number;
   live: boolean;
   activeCredentialId?: string;
+  sweepState: RefreshState;
+  current?: boolean;
 }) {
   const failed =
     entry.credentials.length > 0 &&
     entry.credentials.every((credential) => credential.status === "invalid" || credential.status === "disabled");
 
   return (
-    <div className={`flow-node flow-entry${live ? " live" : ""}${failed ? " dead" : ""}`}>
+    <div
+      className={`flow-node flow-entry${live ? " live" : ""}${failed ? " dead" : ""}${
+        sweepState !== "idle" ? ` sweep-${sweepState}` : ""
+      }${current ? " sweep-current" : ""}`}
+    >
       <div className="flow-node-top">
         <span className="flow-priority">{index + 1}</span>
         <span className="flow-node-title" title={entry.model}>
           {entry.label ?? entry.model}
         </span>
+        {sweepState === "testing" ? <span className="badge neutral">testing…</span> : null}
+        {sweepState === "ok" ? <span className="badge ok">ok</span> : null}
+        {sweepState === "fail" ? <span className="badge bad">fail</span> : null}
+        {current ? <span className="badge ok">current</span> : null}
       </div>
       <span className="flow-node-sub small faint">
         {entry.providerId}
