@@ -43,7 +43,9 @@ export interface ParsedProxy {
  * supported proxy URL so a typo surfaces at configuration time rather than as a
  * confusing network error on the next request.
  */
-export function parseProxyUrl(raw: string | undefined | null): ParsedProxy | undefined {
+export function parseProxyUrl(
+  raw: string | undefined | null,
+): ParsedProxy | undefined {
   if (!raw) return undefined;
   const trimmed = raw.trim();
   if (!trimmed) return undefined;
@@ -67,16 +69,21 @@ export function parseProxyUrl(raw: string | undefined | null): ParsedProxy | und
   } else if (scheme === "socks" || scheme === "socks4" || scheme === "socks4a") {
     // SOCKS4 has no authentication and is not supported by undici.
     if (scheme !== "socks") {
-      throw new Error(`Unsupported proxy protocol: ${scheme} (use socks5://)`);
+      throw new Error(
+        `Unsupported proxy protocol: ${scheme} (use socks5://)`,
+      );
     }
     protocol = "socks5";
   } else if (scheme === "http" || scheme === "https") {
     protocol = "http";
   } else {
-    throw new Error(`Unsupported proxy protocol: ${scheme} (use socks5:// or http://)`);
+    throw new Error(
+      `Unsupported proxy protocol: ${scheme} (use socks5:// or http://)`,
+    );
   }
 
-  if (!url.hostname) throw new Error(`Proxy URL is missing a host: ${trimmed}`);
+  if (!url.hostname)
+    throw new Error(`Proxy URL is missing a host: ${trimmed}`);
 
   return {
     protocol,
@@ -90,9 +97,11 @@ export function parseProxyUrl(raw: string | undefined | null): ParsedProxy | und
  * Build (or reuse) the dispatcher for a proxy URL.
  *
  * Returns `undefined` when no proxy is configured, which tells the caller to
- * use the process default — direct egress.
+ * use the process default - direct egress.
  */
-export function dispatcherFor(proxyUrl: string | undefined | null): ProxyDispatcher | undefined {
+export function dispatcherFor(
+  proxyUrl: string | undefined | null,
+): ProxyDispatcher | undefined {
   const parsed = parseProxyUrl(proxyUrl);
   if (!parsed) return undefined;
 
@@ -100,14 +109,32 @@ export function dispatcherFor(proxyUrl: string | undefined | null): ProxyDispatc
   if (cached) return cached;
 
   const dispatcher =
-    parsed.protocol === "socks5" ? new Socks5ProxyAgent(parsed.href) : new ProxyAgent(parsed.href);
+    parsed.protocol === "socks5"
+      ? new Socks5ProxyAgent(parsed.href)
+      : new ProxyAgent(parsed.href);
 
   dispatcherCache.set(parsed.href, dispatcher);
   return dispatcher;
 }
 
+/**
+ * Build (or reuse) the dispatcher for a provider-level automatic proxy.
+ *
+ * When the proxy pool hands out an address, this is the function that turns the
+ * address into a cached undici dispatcher. It is exported separately so the
+ * provider proxy layer can keep per-address caching consistent with the rest of
+ * the gateway.
+ */
+export function providerProxyDispatcher(
+  proxyUrl: string,
+): ProxyDispatcher | undefined {
+  return dispatcherFor(proxyUrl);
+}
+
 /** `host:port` of a proxy URL, or `undefined`. Never includes credentials. */
-export function proxyLabel(proxyUrl: string | undefined | null): string | undefined {
+export function proxyLabel(
+  proxyUrl: string | undefined | null,
+): string | undefined {
   try {
     return parseProxyUrl(proxyUrl)?.label;
   } catch {
@@ -115,7 +142,9 @@ export function proxyLabel(proxyUrl: string | undefined | null): string | undefi
   }
 }
 
-/** Release every pooled connection. Used by tests and graceful shutdown. */
+/**
+ * Release every pooled connection. Used by tests and graceful shutdown.
+ */
 export async function closeProxyDispatchers(): Promise<void> {
   const dispatchers = [...dispatcherCache.values()];
   dispatcherCache.clear();

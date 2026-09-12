@@ -1,9 +1,11 @@
 export {
   parseProxyUrl,
   dispatcherFor,
+  providerProxyDispatcher,
   proxyLabel,
   closeProxyDispatchers,
 } from "./proxy.js";
+
 
 export { ProviderProxy } from "./proxy-provider.js";
 export type {
