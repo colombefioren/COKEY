@@ -15,6 +15,7 @@ import { Usage } from "./pages/Usage.js";
 import { Settings } from "./pages/Settings.js";
 import { Tutorial } from "./pages/Tutorial.js";
 import { Terms } from "./pages/Terms.js";
+import { About } from "./pages/About.js";
 
 const NUDGER_KEY = "cokey.nudger.dismissed";
 
@@ -66,6 +67,7 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
         { path: "/settings", label: "Settings", icon: "\u2261", hint: "Gateway, fallback and egress settings" },
         { path: "/tutorial", label: "Tutorial", icon: "\u203A", hint: "Wire COKEY into your editor or CLI" },
         { path: "/terms", label: "Terms", icon: "\u00A7", hint: "What you agree to by using COKEY" },
+        { path: "/about", label: "About", icon: "\u265E", hint: "The stack, the credits and how to reach the creator" },
       ],
     },
   ];
@@ -231,6 +233,8 @@ function titleFor(path: string): string {
       return "Tutorial";
     case "/terms":
       return "Terms of service";
+    case "/about":
+      return "About";
     default:
       return "Dashboard";
   }
@@ -277,6 +281,8 @@ function renderPage(path: string, context: PageContext) {
       return <Tutorial />;
     case "/terms":
       return <Terms />;
+    case "/about":
+      return <About />;
     default:
       return (
         <Dashboard
@@ -294,6 +300,7 @@ function renderPage(path: string, context: PageContext) {
 export function App() {
   return (
     <ToastProvider>
+      <div className="starfield" aria-hidden="true" />
       <Shell />
     </ToastProvider>
   );

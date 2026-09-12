@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { href, type Navigate } from "../router.js";
+import { CokeyLogo } from "./Logo.js";
+import { CREATOR, REPO_URL } from "../links.js";
 
 export interface NavItem {
   path: string;
@@ -36,8 +38,8 @@ export function Sidebar({
   return (
     <aside className="sidebar">
       <a className="sidebar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
-        <span className="brand-mark">CO</span>
-        <span className="brand-word">KEY</span>
+        <CokeyLogo height={24} className="brand-logo" />
+        <span className="sr-only">COKEY dashboard</span>
       </a>
 
       <nav className="sidebar-nav" aria-label="Sections">
@@ -69,9 +71,28 @@ export function Sidebar({
 
       <div className="sidebar-foot">
         {footer}
-        <p className="sidebar-tagline">
-          a tool for broke lads made by a broke princess
-        </p>
+
+        <div className="creator-card">
+          <div className="creator-line">
+            made by <a href={CREATOR.github} target="_blank" rel="noreferrer">@{CREATOR.name}</a>
+          </div>
+          <div className="creator-links">
+            <a href={CREATOR.github} target="_blank" rel="noreferrer" title="GitHub">
+              GitHub
+            </a>
+            <a href={CREATOR.linkedin} target="_blank" rel="noreferrer" title="LinkedIn">
+              LinkedIn
+            </a>
+            <a href={CREATOR.facebook} target="_blank" rel="noreferrer" title="Facebook">
+              Facebook
+            </a>
+            <a href={REPO_URL} target="_blank" rel="noreferrer" title="Source code">
+              Source
+            </a>
+          </div>
+        </div>
+
+        <p className="sidebar-tagline">a tool for broke lads made by a broke princess</p>
       </div>
     </aside>
   );

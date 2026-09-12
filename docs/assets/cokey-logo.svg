@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 104" role="img" aria-label="COKEY">
+  <title>COKEY</title>
+  <defs>
+    <linearGradient id="cokey-mark" x1="20" y1="12" x2="170" y2="92" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D9A9CC" />
+      <stop offset="0.55" stop-color="#C08FBF" />
+      <stop offset="1" stop-color="#9672A6" />
+    </linearGradient>
+    <linearGradient id="cokey-word" x1="236" y1="16" x2="410" y2="88" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ECD4E7" />
+      <stop offset="1" stop-color="#D9A9CC" />
+    </linearGradient>
+  </defs>
+
+  <!-- CO ligature: one line, two loops, the way an alias loops through keys -->
+  <path
+    d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"
+    fill="none"
+    stroke="url(#cokey-mark)"
+    stroke-width="13"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- two leaves, the "broke princess" sprout -->
+  <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="#D9A9CC" />
+  <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="#9672A6" />
+
+  <!-- KEY, drawn as strokes so it stays crisp at any size -->
+  <g
+    fill="none"
+    stroke="url(#cokey-word)"
+    stroke-width="10"
+    stroke-linecap="square"
+    stroke-linejoin="miter"
+  >
+    <path d="M236 16 V88 M278 16 L240 52 L278 88" />
+    <path d="M330 16 H300 V88 H330 M300 52 H322" />
+    <path d="M362 16 L386 48 L410 16 M386 48 V88" />
+  </g>
+</svg>

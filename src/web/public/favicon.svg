@@ -1,7 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <rect width="32" height="32" rx="7" fill="#0b0d10" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212 104" role="img" aria-label="COKEY">
   <path
-    d="M12 20.5a5.5 5.5 0 1 1 5.2-7.3h8.1v2.7h-2.1v2.4h-2.6v2.4h-3.4v-2.2A5.5 5.5 0 0 1 12 20.5Zm-1.4-5.5a1.9 1.9 0 1 0 3.8 0 1.9 1.9 0 0 0-3.8 0Z"
-    fill="#3d6bf6"
+    d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"
+    fill="none"
+    stroke="#D9A9CC"
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   />
+  <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="#D9A9CC" />
+  <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="#9672A6" />
 </svg>

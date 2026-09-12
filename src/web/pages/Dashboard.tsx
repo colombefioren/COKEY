@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, timeAgo } from "../api.js";
 import type { ChainView, Nudge, RequestLogEntry, Stats } from "../types.js";
 import { Nudger } from "../components/Nudger.js";
+import { ChainFlow } from "../components/ChainFlow.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
@@ -48,6 +49,13 @@ export function Dashboard({
   return (
     <>
       {nudgeBlock}
+
+      <Panel
+        title="Live route"
+        actions={<span className="small faint">the path a request actually walks</span>}
+      >
+        <ChainFlow chains={chains} refreshKey={refreshKey} />
+      </Panel>
 
       <Panel title="Gateway">
         <div className="grid cards">
