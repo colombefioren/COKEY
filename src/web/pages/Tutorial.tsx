@@ -12,13 +12,20 @@ interface Recipe {
 }
 
 const BASE_URL = "http://127.0.0.1:8787/v1";
+/**
+ * The placeholder every client recipe reuses. COKEY runs locally and its own
+ * keys are gateway API keys (optional) - the chat client just needs *a* value,
+ * so this exact string works in every config below.
+ */
+const PLACEHOLDER_KEY = "your_cokey_api_key";
 
 /**
  * Setup guides, one per client.
  *
  * Every recipe ends at the same place: point the client at the gateway's base
- * URL and give it any placeholder key. COKEY holds the real keys, so nothing
- * else in the client's configuration has to change when a credential rotates.
+ * URL and give it the shared placeholder key. COKEY holds the real keys, so
+ * nothing else in the client's configuration has to change when a credential
+ * rotates.
  */
 const RECIPES: Recipe[] = [
   {
@@ -37,7 +44,10 @@ const RECIPES: Recipe[] = [
     "cokey": {
       "npm": "@ai-sdk/openai-compatible",
       "name": "COKEY",
-      "options": { "baseURL": "${BASE_URL}" },
+      "options": {
+        "baseURL": "${BASE_URL}",
+        "apiKey": "${PLACEHOLDER_KEY}"
+      },
       "models": {
         "cokey-best": { "name": "My best chain" }
       }
@@ -47,9 +57,9 @@ const RECIPES: Recipe[] = [
 }`,
       },
       {
-        text: "Authenticate with any placeholder. COKEY ignores it unless you also created a gateway API key:",
+        text: "Authenticate with the same placeholder. COKEY ignores it unless you also created a gateway API key:",
         lang: "bash",
-        code: "opencode auth login   # choose COKEY, paste any value such as 'unused'",
+        code: `opencode auth login   # choose COKEY, paste ${PLACEHOLDER_KEY}`,
       },
       {
         text: "Ask once, then watch the state line. Every switch prints a notification rather than an error:",
@@ -71,7 +81,7 @@ const RECIPES: Recipe[] = [
         text: "Export the base URL and a placeholder key for the session:",
         lang: "bash",
         code: `export ANTHROPIC_BASE_URL="http://127.0.0.1:8787"
-export ANTHROPIC_API_KEY="unused-but-required"`,
+export ANTHROPIC_API_KEY="${PLACEHOLDER_KEY}"`,
       },
       {
         text: "Start it as usual and select the chain alias when asked for a model:",
@@ -102,7 +112,7 @@ env_key = "COKEY_API_KEY"`,
       {
         text: "Set the placeholder key the config refers to:",
         lang: "bash",
-        code: 'export COKEY_API_KEY="unused-but-required"',
+        code: `export COKEY_API_KEY="${PLACEHOLDER_KEY}"`,
       },
     ],
   },
@@ -118,7 +128,7 @@ env_key = "COKEY_API_KEY"`,
         lang: "json",
         code: `{
   "github.copilot.chat.byok.baseUrl": "${BASE_URL}",
-  "github.copilot.chat.byok.apiKey": "unused-but-required",
+  "github.copilot.chat.byok.apiKey": "${PLACEHOLDER_KEY}",
   "github.copilot.chat.byok.model": "cokey-best"
 }`,
       },
@@ -140,7 +150,7 @@ env_key = "COKEY_API_KEY"`,
         text: "Settings, Models, then add an OpenAI-compatible model:",
         lang: "text",
         code: `Base URL:  ${BASE_URL}
-API key:   unused-but-required
+API key:   ${PLACEHOLDER_KEY}
 Model:     cokey-best`,
       },
       {
@@ -162,7 +172,7 @@ Model:     cokey-best`,
         lang: "text",
         code: `Provider:  OpenAI compatible
 URL:       ${BASE_URL}
-API key:   unused-but-required
+API key:   ${PLACEHOLDER_KEY}
 Model:     cokey-best`,
       },
       { text: "Apply, then run any inline AI action to confirm traffic reaches the gateway." },
@@ -179,7 +189,7 @@ Model:     cokey-best`,
         text: "In the extension settings choose API Provider: OpenAI Compatible.",
         lang: "text",
         code: `Base URL:   ${BASE_URL}
-API Key:    unused-but-required
+API Key:    ${PLACEHOLDER_KEY}
 Model ID:   cokey-best`,
       },
       {
@@ -203,7 +213,7 @@ Model ID:   cokey-best`,
     provider: openai
     model: cokey-best
     apiBase: ${BASE_URL}
-    apiKey: unused-but-required`,
+    apiKey: ${PLACEHOLDER_KEY}`,
       },
       { text: "Reload Continue. The model appears in the chat and autocomplete pickers." },
     ],
@@ -219,7 +229,7 @@ Model ID:   cokey-best`,
         text: "Export the endpoint and a placeholder key before launching:",
         lang: "bash",
         code: `export OPENAI_BASE_URL="${BASE_URL}"
-export OPENAI_API_KEY="unused-but-required"
+export OPENAI_API_KEY="${PLACEHOLDER_KEY}"
 export HERMES_MODEL="cokey-best"`,
       },
       {
@@ -241,7 +251,7 @@ export HERMES_MODEL="cokey-best"`,
     "cokey": {
       "type": "openai",
       "baseUrl": "${BASE_URL}",
-      "apiKey": "unused-but-required",
+      "apiKey": "${PLACEHOLDER_KEY}",
       "model": "cokey-best"
     }
   }
@@ -261,7 +271,7 @@ export HERMES_MODEL="cokey-best"`,
         text: "Set the generic variables:",
         lang: "bash",
         code: `export OPENAI_BASE_URL="${BASE_URL}"
-export OPENAI_API_KEY="unused-but-required"`,
+export OPENAI_API_KEY="${PLACEHOLDER_KEY}"`,
       },
       {
         text: "Verify the endpoint by hand with curl. A 200 here means the gateway, not the client, is the next thing to look at:",

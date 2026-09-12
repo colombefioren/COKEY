@@ -120,7 +120,7 @@ node once every key of the current one is spent.
     <td align="center" width="25%">
       <img src="https://cdn.simpleicons.org/gnometerminal/CDB0F0" width="28" height="28" alt="Any CLI" /><br />
       <b>Any other CLI</b><br />
-      <sub>base URL and a placeholder key</sub>
+      <sub>base URL and a placeholder key like your_cokey_api_key</sub>
     </td>
   </tr>
   <tr>
@@ -421,7 +421,8 @@ Then open <http://localhost:8787> and:
 1. **Chains** → create a chain, for example `cokey-best`.
 2. **Providers** → paste an API key, COKEY verifies it inline. Keys land in the chain's **Keys** tab.
 3. Add nodes to the chain, pick the keys each node may use, drag them into your order.
-4. Point your tool at `http://127.0.0.1:8787/v1` with any placeholder API key.
+4. Point your tool at `http://127.0.0.1:8787/v1` with any placeholder API key, for example
+   `your_cokey_api_key`.
 
 Then watch the dashboard's **Live route** and **Resilience** panels: the first shows where a request
 went, the second shows which layer caught what.
@@ -443,16 +444,17 @@ Any OpenAI-compatible tool needs only a base URL. The provider is always `COKEY`
 whatever you called your chain.
 
 ```jsonc
-// OpenCode / Kilo Code style provider entry
+// OpenCode / Kilo Code style provider entry — apiKey is any placeholder value
 {
   "provider": "cokey",
   "baseURL": "http://127.0.0.1:8787/v1",
-  "apiKey": "unused-but-required-by-the-client"
+  "apiKey": "your_cokey_api_key"
 }
 ```
 
 > Verify the exact key names against your tool's current documentation. COKEY only cares about the
-> base URL and that the client sends an OpenAI-shaped request.
+> base URL and that the client sends an OpenAI-shaped request. The `your_cokey_api_key` value is a
+> placeholder: COKEY ignores it unless you also created a gateway API key in the app.
 
 Per-tool walkthroughs for Claude Code, Cursor, JetBrains, Cline, Continue, opencode, Hermes Agent,
 OpenClaw, Codex CLI and other CLIs live in the app under **Tutorial**.
