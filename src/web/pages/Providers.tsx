@@ -8,7 +8,7 @@ import type {
 } from "../types.js";
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
-import { Empty, Panel } from "../components/Primitives.js";
+import { Empty, Modal, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
 
@@ -201,7 +201,7 @@ function ProviderDossierCard({
   onConnect: (provider: ProviderStatus) => void;
 }) {
   const dossier = row.dossier;
-  const [showModels, setShowModels] = useState(false);
+  const [open, setOpen] = useState(false);
   const credentialLabel = row.credentialFields.includes("accountId")
     ? "API token and account id"
     : "API key";
@@ -210,91 +210,86 @@ function ProviderDossierCard({
     <div className="card provider-card">
       <div className="title">
         {row.displayName}
-        {row.freeTier.advertised ? (
-          <span className="badge">Free</span>
-        ) : (
-          <span className="badge neutral">Billed</span>
-        )}
         <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{dossier.verdict}</span>
       </div>
 
       <div className="sub">{dossier.summary}</div>
 
-      <dl className="dossier">
-        <div>
-          <dt>Operator</dt>
-          <dd>{dossier.operator}</dd>
-        </div>
-        <div>
-          <dt>Based in</dt>
-          <dd>{dossier.origin}</dd>
-        </div>
-        <div>
-          <dt>Type</dt>
-          <dd>{KIND_LABEL[dossier.kind]}</dd>
-        </div>
-        <div>
-          <dt>Free tier</dt>
-          <dd>{row.freeTier.summary}</dd>
-        </div>
-        <div>
-          <dt>Credential</dt>
-          <dd>
-            {credentialLabel} · {row.knownModels.length} curated model(s)
-          </dd>
-        </div>
-      </dl>
-
-      <div className="sub faint">{dossier.verdictReason}</div>
-      {row.notes ? <div className="sub faint">{row.notes}</div> : null}
-
       <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
         <button onClick={() => onConnect(row)}>Connect</button>
-        <button
-          className="secondary"
-          type="button"
-          aria-expanded={showModels}
-          onClick={() => setShowModels((value) => !value)}
-        >
-          {showModels ? "Hide models" : `Show models (${row.knownModels.length})`}
+        <button className="secondary" type="button" onClick={() => setOpen(true)}>
+          Models ({row.knownModels.length})
         </button>
-        {dossier.sourceUrl ? (
-          <a className="small" href={dossier.sourceUrl} target="_blank" rel="noreferrer">
-            source
-          </a>
-        ) : null}
-        {row.signupUrl ? (
-          <a className="small" href={row.signupUrl} target="_blank" rel="noreferrer">
-            get a free key
-          </a>
-        ) : null}
         <span className="spacer" />
         <span className="small faint">
           {row.connected ? `${row.credentialCount} connected` : "not connected"}
         </span>
       </div>
 
-      {showModels ? (
-        <div className="model-list">
-          {row.knownModels.length === 0 ? (
-            <div className="sub faint">No curated models for this provider.</div>
-          ) : (
-            row.knownModels.map((model) => (
-              <div className="model-list-item" key={model}>
-                <span className="model-list-id">{model}</span>
-                <span className="spacer" />
-                <a
-                  className="small"
-                  href={`#/chains?model=${encodeURIComponent(model)}&provider=${encodeURIComponent(
-                    row.id,
-                  )}`}
-                >
-                  add to chain
-                </a>
-              </div>
-            ))
-          )}
-        </div>
+      {open ? (
+        <Modal
+          title={row.displayName}
+          subtitle={`${dossier.operator} · ${dossier.origin}`}
+          onClose={() => setOpen(false)}
+          wide
+        >
+          <dl className="dossier">
+            <div>
+              <dt>Type</dt>
+              <dd>{KIND_LABEL[dossier.kind]}</dd>
+            </div>
+            <div>
+              <dt>Free tier</dt>
+              <dd>{row.freeTier.summary}</dd>
+            </div>
+            <div>
+              <dt>Credential</dt>
+              <dd>
+                {credentialLabel} · {row.knownModels.length} curated model(s)
+              </dd>
+            </div>
+          </dl>
+
+          <p className="small faint" style={{ marginTop: 0 }}>
+            {dossier.verdictReason}
+          </p>
+          {row.notes ? <p className="small faint">{row.notes}</p> : null}
+
+          <div className="model-list">
+            {row.knownModels.length === 0 ? (
+              <div className="sub faint">No curated models for this provider.</div>
+            ) : (
+              row.knownModels.map((model) => (
+                <div className="model-list-item" key={model}>
+                  <span className="model-list-id">{model}</span>
+                  <span className="spacer" />
+                  <a
+                    className="small"
+                    href={`#/chains?model=${encodeURIComponent(model)}&provider=${encodeURIComponent(
+                      row.id,
+                    )}`}
+                  >
+                    add to chain
+                  </a>
+                </div>
+              ))
+            )}
+          </div>
+
+          <div className="modal-actions">
+            {dossier.sourceUrl ? (
+              <a className="small" href={dossier.sourceUrl} target="_blank" rel="noreferrer">
+                source
+              </a>
+            ) : null}
+            {row.signupUrl ? (
+              <a className="small" href={row.signupUrl} target="_blank" rel="noreferrer">
+                get a free key
+              </a>
+            ) : null}
+            <button onClick={() => setOpen(false)}>Close</button>
+          </div>
+        </Modal>
       ) : null}
     </div>
   );
