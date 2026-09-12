@@ -550,7 +550,7 @@ export class Cokey {
    */
   assignCredentialProxy(credentialId: string, poolId: string | null): PublicCredential {
     if (poolId === null) {
-      const cleared = this.setCredentialProxy(credentialId, null);
+      this.setCredentialProxy(credentialId, null);
       this.syncProxyAssignments();
       return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
     }
