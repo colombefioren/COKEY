@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError, timeAgo } from "../api.js";
-import type { UsageProviderView, UsageView } from "../types.js";
+import type { HistoryStats, RequestLogEntry, UsageProviderView, UsageView } from "../types.js";
+import { Pagination } from "../components/Pagination.js";
 import {
   Empty,
   Panel,
@@ -11,26 +12,106 @@ import {
 } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
-/** Usage vs limits, per provider, key and model, plus the live route. */
+const HISTORY_PAGE_SIZE = 25;
+const DAILY_PAGE_SIZE = 10;
+const MODEL_PAGE_SIZE = 8;
+
+/**
+ * Everything the gateway observed, in one place.
+ *
+ * Usage and requests used to be two screens, which meant the number and the
+ * evidence for it lived apart. They are one screen now: the rollup answers "how
+ * much", the history answers "and what exactly happened", and the filters apply
+ * to both.
+ */
 export function Usage({ refreshKey }: { refreshKey: number }) {
   const toast = useToast();
+
+  return (
+    <>
+      <ServingNow refreshKey={refreshKey} onError={(message) => toast.err(message)} />
+      <UsageRollup refreshKey={refreshKey} onError={(message) => toast.err(message)} />
+      <RequestHistory refreshKey={refreshKey} />
+    </>
+  );
+}
+
+/** The chain, node and key serving the current request. */
+function ServingNow({
+  refreshKey,
+  onError,
+}: {
+  refreshKey: number;
+  onError: (message: string) => void;
+}) {
+  const [view, setView] = useState<UsageView | null>(null);
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        setView(await api.usage());
+      } catch (error) {
+        onError(error instanceof ApiError ? error.message : String(error));
+      }
+    })();
+  }, [refreshKey, onError]);
+
+  const now = view?.now;
+
+  return (
+    <Panel title="Serving now">
+      {!now ? (
+        <Empty>Loading…</Empty>
+      ) : now.active ? (
+        <div className="row" style={{ gap: 14, flexWrap: "wrap" }}>
+          <span className="badge">{now.chainAlias}</span>
+          <span className="mono">
+            {now.providerId} / {now.model}
+          </span>
+          <span className="small">
+            <StatusDot status="healthy" /> {now.credentialDescription ?? now.credentialId}
+            {now.maskedSecret ? <span className="mono small faint"> {now.maskedSecret}</span> : null}
+          </span>
+          {now.proxyLabel ? <span className="chip-proxy mono small">exit {now.proxyLabel}</span> : null}
+          {now.fallback ? <span className="badge warn">fallback</span> : null}
+          <span className="small faint">{now.attempts} attempt(s)</span>
+          {now.startedAt ? <span className="small faint">started {timeAgo(now.startedAt)}</span> : null}
+        </div>
+      ) : (
+        <Empty>
+          Idle. The next request shows the chain, node and key it lands on here.
+          {now.lastOutcome ? ` Last route: ${now.lastOutcome}.` : ""}
+        </Empty>
+      )}
+    </Panel>
+  );
+}
+
+/** Per-provider, per-key, per-model rollup with the daily table. */
+function UsageRollup({
+  refreshKey,
+  onError,
+}: {
+  refreshKey: number;
+  onError: (message: string) => void;
+}) {
   const [view, setView] = useState<UsageView | null>(null);
   const [providerId, setProviderId] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
-
-  const load = useCallback(async () => {
-    try {
-      const result = await api.usage();
-      setView(result);
-      setProviderId((current) => current ?? result.providers[0]?.providerId ?? null);
-    } catch (error) {
-      toast.err(error instanceof ApiError ? error.message : String(error));
-    }
-  }, [toast]);
+  const [dayPage, setDayPage] = useState(1);
+  const [daySize, setDaySize] = useState(DAILY_PAGE_SIZE);
 
   useEffect(() => {
-    void load();
-  }, [load, refreshKey]);
+    void (async () => {
+      try {
+        const result = await api.usage();
+        setView(result);
+        setProviderId((current) => current ?? result.providers[0]?.providerId ?? null);
+      } catch (error) {
+        onError(error instanceof ApiError ? error.message : String(error));
+      }
+    })();
+  }, [refreshKey, onError]);
 
   const provider: UsageProviderView | undefined = useMemo(
     () => view?.providers.find((candidate) => candidate.providerId === providerId),
@@ -60,47 +141,22 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
     };
   }, [provider]);
 
-  if (!view) return <Empty>Loading usage…</Empty>;
+  const dayTotalPages = Math.max(1, Math.ceil((provider?.daily.length ?? 0) / daySize));
+  const dayCurrent = Math.min(dayPage, dayTotalPages);
+  const dayRows = (provider?.daily ?? []).slice(
+    (dayCurrent - 1) * daySize,
+    dayCurrent * daySize,
+  );
 
-  const now = view.now;
+  if (!view) return <Panel title="Usage by provider"><Empty>Loading usage…</Empty></Panel>;
 
   return (
     <>
-      <Panel title="Serving now">
-        {now.active ? (
-          <div className="row" style={{ gap: 14, flexWrap: "wrap" }}>
-            <span className="badge">{now.chainAlias}</span>
-            <span className="mono">
-              {now.providerId} / {now.model}
-            </span>
-            <span className="small">
-              <StatusDot status="healthy" /> {now.credentialDescription ?? now.credentialId}
-              {now.maskedSecret ? (
-                <span className="mono small faint"> {now.maskedSecret}</span>
-              ) : null}
-            </span>
-            {now.proxyLabel ? (
-              <span className="chip-proxy mono small">⇢ {now.proxyLabel}</span>
-            ) : null}
-            {now.fallback ? <span className="badge warn">fallback</span> : null}
-            <span className="small faint">{now.attempts} attempt(s)</span>
-            {now.startedAt ? (
-              <span className="small faint">started {timeAgo(now.startedAt)}</span>
-            ) : null}
-          </div>
-        ) : (
-          <Empty>
-            Idle. The next request shows the chain, node and sub-key it lands on here.
-            {now.lastOutcome ? ` Last route: ${now.lastOutcome}.` : ""}
-          </Empty>
-        )}
-      </Panel>
-
       <Panel title="Chain state">
         {view.chains.length === 0 ? (
           <Empty>No chains configured.</Empty>
         ) : (
-          <div style={{ display: "grid", gap: 14 }}>
+          <div className="stack">
             {view.chains.map((chain) => (
               <div key={chain.id} className="model-provider">
                 <header>
@@ -109,13 +165,9 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
                   <span className="spacer" />
                   <span className="small faint">{chain.entries.length} nodes</span>
                 </header>
-                <div style={{ display: "grid", gap: 6 }}>
+                <div className="stack">
                   {chain.entries.map((entry, index) => (
-                    <div
-                      key={entry.id}
-                      className="row"
-                      style={{ gap: 8, alignItems: "center", flexWrap: "wrap" }}
-                    >
+                    <div key={entry.id} className="row wrap" style={{ gap: 8, alignItems: "center" }}>
                       <span className="small faint">{index + 1}.</span>
                       <span className="mono">
                         {entry.providerId} / {entry.model}
@@ -153,13 +205,17 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
           <Empty>No usage recorded yet. Send a request to /v1/chat/completions.</Empty>
         ) : (
           <>
-            <div className="tabs" style={{ marginBottom: 12 }}>
+            <div className="tabs tabs-inline" style={{ marginBottom: 12 }}>
               {view.providers.map((entry) => (
                 <button
                   key={entry.providerId}
                   className="tab"
                   aria-selected={entry.providerId === providerId}
-                  onClick={() => setProviderId(entry.providerId)}
+                  onClick={() => {
+                    setProviderId(entry.providerId);
+                    setDayPage(1);
+                    setModel(null);
+                  }}
                   type="button"
                 >
                   {entry.displayName}
@@ -176,11 +232,13 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
                   <Stat
                     label="30-day tokens"
                     value={formatNumber(monthTotals.inputTokens + monthTotals.outputTokens)}
-                    hint={`${formatNumber(monthTotals.inputTokens)} in · ${formatNumber(monthTotals.outputTokens)} out`}
+                    hint={`${formatNumber(monthTotals.inputTokens)} in · ${formatNumber(
+                      monthTotals.outputTokens,
+                    )} out`}
                   />
                 </div>
 
-                <div className="row" style={{ gap: 6, flexWrap: "wrap", margin: "14px 0" }}>
+                <div className="row wrap" style={{ gap: 6, margin: "14px 0" }}>
                   {provider.models.length === 0 ? (
                     <span className="small faint">No model usage yet.</span>
                   ) : (
@@ -199,22 +257,7 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
                 </div>
 
                 {selectedModel ? (
-                  <div style={{ display: "grid", gap: 10 }}>
-                    <div className="row" style={{ gap: 20, flexWrap: "wrap" }}>
-                      <span className="small">
-                        {formatNumber(selectedModel.requests)} req ·{" "}
-                        {formatNumber(selectedModel.success)} ok ·{" "}
-                        {formatNumber(selectedModel.failure)} failed
-                      </span>
-                      <span className="small muted">
-                        {formatNumber(selectedModel.inputTokens)} in ·{" "}
-                        {formatNumber(selectedModel.outputTokens)} out
-                      </span>
-                      <span className="small faint">
-                        avg {formatDuration(selectedModel.averageLatencyMs)}
-                      </span>
-                    </div>
-
+                  <div className="table-scroll">
                     <table>
                       <thead>
                         <tr>
@@ -228,11 +271,10 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
                         </tr>
                       </thead>
                       <tbody>
-                        {provider.credentials.map((credential) => {
+                        {provider.credentials.slice(0, MODEL_PAGE_SIZE * 4).map((credential) => {
                           const usage = selectedModel.perCredential.find(
                             (entry) => entry.credentialId === credential.id,
                           );
-                          const quota = credential.quota;
                           return (
                             <tr key={credential.id}>
                               <td>
@@ -250,10 +292,12 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
                               </td>
                               <td className="small">{credential.rate.requestsPerMinute}/min</td>
                               <td className="small">
-                                <QuotaVsLimit quota={quota} />
+                                <QuotaVsLimit quota={credential.quota} />
                               </td>
                               <td className="small faint">
-                                {quota?.available && quota.resetAt ? timeAgo(quota.resetAt) : "—"}
+                                {credential.quota?.available && credential.quota.resetAt
+                                  ? timeAgo(credential.quota.resetAt)
+                                  : "unknown"}
                               </td>
                             </tr>
                           );
@@ -265,34 +309,51 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
                   <Empty>No model usage for this provider yet.</Empty>
                 )}
 
-                <h4 style={{ marginTop: 20 }}>Daily rollup</h4>
+                <h4 className="section-title">Daily rollup</h4>
                 {provider.daily.length === 0 ? (
                   <Empty>No daily totals yet.</Empty>
                 ) : (
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Day</th>
-                        <th>Requests</th>
-                        <th>Tokens in</th>
-                        <th>Tokens out</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {provider.daily.map((day) => (
-                        <tr key={day.day}>
-                          <td className="mono small">
-                            {day.day}
-                            {day.day === view.today ? <span className="badge"> today</span> : null}
-                          </td>
-                          <td className="small">{formatNumber(day.requests)}</td>
-                          <td className="small muted">{formatNumber(day.inputTokens)}</td>
-                          <td className="small muted">{formatNumber(day.outputTokens)}</td>
+                  <div className="table-scroll">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Day</th>
+                          <th>Requests</th>
+                          <th>Tokens in</th>
+                          <th>Tokens out</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {dayRows.map((day) => (
+                          <tr key={day.day}>
+                            <td className="mono small">
+                              {day.day}
+                              {day.day === view.today ? <span className="badge"> today</span> : null}
+                            </td>
+                            <td className="small">{formatNumber(day.requests)}</td>
+                            <td className="small muted">{formatNumber(day.inputTokens)}</td>
+                            <td className="small muted">{formatNumber(day.outputTokens)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 )}
+
+                <Pagination
+                  page={dayCurrent}
+                  totalPages={dayTotalPages}
+                  total={provider.daily.length}
+                  pageSize={daySize}
+                  noun="days"
+                  onChange={(params) => {
+                    if (params.page) setDayPage(params.page);
+                    if (params.pageSize) {
+                      setDaySize(params.pageSize);
+                      setDayPage(1);
+                    }
+                  }}
+                />
               </>
             ) : null}
           </>
@@ -302,11 +363,164 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
   );
 }
 
+/** Local request history with filters and a real pager. */
+function RequestHistory({ refreshKey }: { refreshKey: number }) {
+  const toast = useToast();
+  const [entries, setEntries] = useState<RequestLogEntry[]>([]);
+  const [stats, setStats] = useState<HistoryStats | null>(null);
+  const [query, setQuery] = useState("");
+  const [outcome, setOutcome] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(HISTORY_PAGE_SIZE);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const load = useCallback(async () => {
+    try {
+      const result = await api.requests({ page, pageSize, q: query }, { outcome });
+      setEntries(result.data);
+      setStats(result.stats);
+      setTotal(result.total);
+      setTotalPages(result.totalPages);
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    }
+  }, [page, pageSize, query, outcome, toast]);
+
+  useEffect(() => {
+    void load();
+  }, [load, refreshKey]);
+
+  async function clear() {
+    if (!confirm("Clear the local request history?")) return;
+    try {
+      await api.clearRequests();
+      await load();
+      toast.ok("History cleared");
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    }
+  }
+
+  return (
+    <>
+      <Panel title="Request statistics">
+        <div className="grid cards">
+          <Stat label="Recorded" value={stats ? formatNumber(stats.total) : "0"} />
+          <Stat label="Succeeded" value={stats ? formatNumber(stats.success) : "0"} />
+          <Stat label="Failed" value={stats ? formatNumber(stats.failure) : "0"} />
+          <Stat
+            label="Used fallback"
+            value={stats ? formatNumber(stats.fallbackCount) : "0"}
+            hint="Requests that rotated to another key or node"
+          />
+          <Stat label="Average latency" value={stats ? formatDuration(stats.averageLatencyMs) : "0ms"} />
+        </div>
+      </Panel>
+
+      <Panel
+        title={`Request history (${total})`}
+        actions={
+          <div className="row" style={{ gap: 8 }}>
+            <select
+              value={outcome}
+              onChange={(event) => {
+                setOutcome(event.target.value);
+                setPage(1);
+              }}
+              style={{ width: 130 }}
+            >
+              <option value="">All outcomes</option>
+              <option value="success">Succeeded</option>
+              <option value="error">Failed</option>
+            </select>
+            <input
+              className="search"
+              placeholder="Search chain, model or key"
+              value={query}
+              onChange={(event) => {
+                setQuery(event.target.value);
+                setPage(1);
+              }}
+            />
+            <button className="secondary" onClick={() => void clear()} disabled={total === 0}>
+              Clear
+            </button>
+          </div>
+        }
+      >
+        {entries.length === 0 ? (
+          <Empty>Nothing recorded yet. Send a request to /v1/chat/completions.</Empty>
+        ) : (
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>When</th>
+                  <th>Chain</th>
+                  <th>Provider / model</th>
+                  <th>Key</th>
+                  <th>Result</th>
+                  <th>Attempts</th>
+                  <th>Latency</th>
+                  <th>Mode</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
+                  <tr key={entry.id}>
+                    <td className="small muted">{timeAgo(entry.at)}</td>
+                    <td className="mono small">{entry.chainAlias}</td>
+                    <td className="small">
+                      {entry.providerId} / {entry.model}
+                    </td>
+                    <td className="small">{entry.credentialDescription}</td>
+                    <td className="small">
+                      {entry.outcome === "success" ? (
+                        <span className="badge">ok</span>
+                      ) : (
+                        <span className="badge bad">{entry.classification}</span>
+                      )}
+                      {entry.fallback ? (
+                        <span className="badge warn" style={{ marginLeft: 4 }}>
+                          {entry.fallbackReason ?? "fallback"}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className="small muted">{entry.attempts}</td>
+                    <td className="small muted">{formatDuration(entry.latencyMs)}</td>
+                    <td className="small faint">{entry.stream ? "stream" : "buffered"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        <Pagination
+          page={page}
+          totalPages={totalPages}
+          total={total}
+          pageSize={pageSize}
+          noun="requests"
+          onChange={(params) => {
+            if (params.page) setPage(params.page);
+            if (params.pageSize) {
+              setPageSize(params.pageSize);
+              setPage(1);
+            }
+          }}
+        />
+      </Panel>
+    </>
+  );
+}
+
 /**
  * Remaining quota against the declared limit, or an honest "unknown".
  *
- * Providers rarely expose limits, so a missing number is shown as "no declared
- * limit" rather than a fabricated bar.
+ * Providers rarely expose limits, so a missing number is reported as unknown
+ * rather than drawn as a fabricated bar.
  */
 function QuotaVsLimit({
   quota,

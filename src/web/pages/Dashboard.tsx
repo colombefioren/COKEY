@@ -26,7 +26,7 @@ export function Dashboard({
       const [statsResult, chainResult, requestResult] = await Promise.all([
         api.stats(),
         api.chains(),
-        api.requests(6),
+        api.requests({ pageSize: 6 }),
       ]);
       setStats(statsResult);
       setChains(chainResult);
@@ -53,12 +53,12 @@ export function Dashboard({
         <div className="grid cards">
           <Stat
             label="Chains"
-            value={stats?.chains ?? "—"}
+            value={stats?.chains ?? "-"}
             hint="Each alias is a model id clients can call"
           />
           <Stat
             label="Credentials"
-            value={stats?.credentials ?? "—"}
+            value={stats?.credentials ?? "-"}
             hint={
               stats
                 ? `${stats.healthyCredentials} healthy · ${stats.cooldownCredentials} cooldown · ${stats.invalidCredentials} invalid`
@@ -67,12 +67,12 @@ export function Dashboard({
           />
           <Stat
             label="Providers connected"
-            value={stats?.providersConnected ?? "—"}
+            value={stats?.providersConnected ?? "-"}
             hint={stats ? `${stats.customEndpoints} custom endpoint(s)` : undefined}
           />
           <Stat
             label="Requests recorded"
-            value={stats ? formatNumber(stats.history.total) : "—"}
+            value={stats ? formatNumber(stats.history.total) : "-"}
             hint={
               stats
                 ? `${stats.history.fallbackCount} used fallback · avg ${formatDuration(stats.history.averageLatencyMs)}`
@@ -84,14 +84,16 @@ export function Dashboard({
 
       <Panel title="Chain summary">
         {chains.length === 0 ? (
-          <Empty>No chains yet. Use the “Add chain” tab to create your first one.</Empty>
+          <Empty>
+            No chains yet. Open Chains to create your first one, then add nodes to it.
+          </Empty>
         ) : (
           <table>
             <thead>
               <tr>
                 <th>Chain</th>
-                <th>Entries</th>
-                <th>Credential state</th>
+                <th>Nodes</th>
+                <th>Key state</th>
                 <th>Status</th>
               </tr>
             </thead>

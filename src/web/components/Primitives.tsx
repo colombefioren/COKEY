@@ -104,7 +104,7 @@ export function Modal({
 
 /** Human-readable duration, matching the CLI's formatting. */
 export function formatDuration(ms: number): string {
-  if (!Number.isFinite(ms) || ms < 0) return "—";
+  if (!Number.isFinite(ms) || ms < 0) return "-";
   if (ms < 1000) return `${Math.round(ms)}ms`;
   if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
   if (ms < 3_600_000) return `${Math.round(ms / 60_000)}m`;
@@ -135,7 +135,7 @@ export function Sparkline({ buckets, title }: { buckets: number[]; title?: strin
 /**
  * Observed throughput for one credential.
  *
- * "VPM" here means verified requests per minute, measured locally by COKEY —
+ * "VPM" here means verified requests per minute, measured locally by COKEY -
  * not a provider-declared quota. It is the only way to tell two keys of the
  * same provider apart.
  */
@@ -161,7 +161,7 @@ export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: 
   );
 }
 
-/** A credential's quota, or an explicit "unknown" — never a fabricated value. */
+/** A credential's quota, or an explicit "unknown" - never a fabricated value. */
 export function QuotaLabel({ quota }: { quota?: { available: boolean; requestsRemaining?: number; tokensRemaining?: number; requestsPerMinute?: number } }) {
   if (!quota || !quota.available) return <span className="faint">Quota: Unknown</span>;
 
