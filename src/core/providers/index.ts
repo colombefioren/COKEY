@@ -19,6 +19,3 @@ export type {
   ProxyPoolAddress,
   ProxyPoolSnapshot,
 } from "./pool.js";
-
-export { validateProxyLine, linesToUrls } from "./proxy-client.js";
-export type { ProxyListLine } from "./proxy-client.js";
