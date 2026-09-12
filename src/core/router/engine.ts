@@ -56,10 +56,25 @@ export class AllChainsExhaustedError extends Error {
   constructor(
     readonly attempts: AttemptLog[],
     readonly lastError?: unknown,
+    readonly routeInfo?: RouteErrorInfo,
   ) {
     super("All chains exhausted");
     this.name = "AllChainsExhaustedError";
   }
+}
+
+/**
+ * Everything needed to narrate a request-level failure to a client.
+ *
+ * Attached to the routing errors the gateway throws, so an error response can
+ * reuse the same `X-Cokey-*` transparency headers that a success does — the
+ * coding tool can read which provider failed the same way it reads which one
+ * succeeded.
+ */
+export interface RouteErrorInfo {
+  chainAlias?: string;
+  fallback: boolean;
+  fallbackReason?: string;
 }
 
 /** A request-shaped failure. Rotation would fail identically, so we stop. */
@@ -67,6 +82,7 @@ export class RequestScopedError extends Error {
   constructor(
     readonly classification: ErrorClassification,
     readonly providerError: ProviderError,
+    readonly attempts: AttemptLog[] = [],
   ) {
     super(providerError.message || classification);
     this.name = "RequestScopedError";
@@ -158,7 +174,7 @@ export class RouterEngine {
     const chain = this.resolveChain(chainAlias);
     const entries = this.chains.listEnabledEntries(chain.id);
 
-    if (entries.length === 0) throw new AllChainsExhaustedError([]);
+    if (entries.length === 0) throw new AllChainsExhaustedError([], undefined, { fallback: false });
 
     const state: RouteState = { attempts: [], fallback: false };
 
@@ -209,7 +225,11 @@ export class RouterEngine {
       data: { attempts: state.attempts.length },
     });
 
-    throw new AllChainsExhaustedError(state.attempts, state.lastError);
+    throw new AllChainsExhaustedError(state.attempts, state.lastError, {
+      chainAlias,
+      fallback: state.fallback,
+      fallbackReason: state.fallbackReason,
+    });
   }
 
   /** Walk every eligible credential of a single entry, in selector order. */
@@ -382,7 +402,7 @@ export class RouterEngine {
           lastClassification: classification,
           attempts: state.attempts.length,
         });
-        throw new RequestScopedError(classification, outcome.error);
+        throw new RequestScopedError(classification, outcome.error, state.attempts);
       }
 
       if (
