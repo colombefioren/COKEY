@@ -1,12 +1,18 @@
 import type {
   ApiKeyView,
+  CatalogProviderRow,
   ChainView,
   ConnectResult,
+  ModelProbeResult,
   ModelsResponse,
   Nudge,
+  PageParams,
+  Paginated,
   ProviderCatalogEntry,
   ProviderStatus,
+  ProxyPoolResponse,
   PublicCredential,
+  RankingsResponse,
   RequestLogEntry,
   Settings,
   Stats,
@@ -57,12 +63,53 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T;
 }
 
+/** Serialise `page` / `pageSize` / `q` into a query string. */
+export function pageQuery(params: PageParams = {}, extra: Record<string, string | number | undefined> = {}): string {
+  const search = new URLSearchParams();
+  if (params.page !== undefined) search.set("page", String(params.page));
+  if (params.pageSize !== undefined) search.set("pageSize", String(params.pageSize));
+  if (params.q) search.set("q", params.q);
+  for (const [key, value] of Object.entries(extra)) {
+    if (value !== undefined && value !== "") search.set(key, String(value));
+  }
+  const query = search.toString();
+  return query ? `?${query}` : "";
+}
+
 /** Typed wrapper around every management endpoint the UI uses. */
 export const api = {
   health: () => request<{ ok: boolean; version: string; dataDir: string }>("GET", "/health"),
   stats: () => request<Stats>("GET", "/api/stats"),
   nudge: () => request<Nudge>("GET", "/api/nudge"),
-  providers: () => request<ProviderStatus[]>("GET", "/api/providers"),
+
+  /** Paginated provider list. Use `allProviders` when you need everything. */
+  providers: (params: PageParams = {}) =>
+    request<Paginated<ProviderStatus>>("GET", `/api/providers${pageQuery(params)}`),
+  /** Every provider in one response. For pickers and joins, not tables. */
+  allProviders: async (): Promise<ProviderStatus[]> =>
+    (await request<Paginated<ProviderStatus>>("GET", "/api/providers?pageSize=0")).data,
+
+  /** Provider cards with operator dossiers attached. */
+  catalogProviders: (params: PageParams = {}) =>
+    request<Paginated<CatalogProviderRow>>("GET", `/api/catalog/providers${pageQuery(params)}`),
+
+  /** Skill, rate-limit and combined ranking boards, with their sources. */
+  rankings: () => request<RankingsResponse>("GET", "/api/catalog/rankings"),
+
+  /** Send a real hello through one working key. The play button. */
+  probeModel: (body: { providerId: string; model: string; credentialId?: string }) =>
+    request<ModelProbeResult>("POST", "/api/models/probe", body),
+
+  // ---- automatic egress pool ------------------------------------------------
+
+  proxyPool: () => request<ProxyPoolResponse>("GET", "/api/proxy-pool"),
+  addProxy: (url: string) => request<ProxyPoolResponse>("POST", "/api/proxy-pool", { url }),
+  setProxyEnabled: (id: string, enabled: boolean) =>
+    request<ProxyPoolResponse>("PATCH", `/api/proxy-pool/${id}`, { enabled }),
+  removeProxy: (id: string) => request<ProxyPoolResponse>("DELETE", `/api/proxy-pool/${id}`),
+  syncProxyPool: () =>
+    request<ProxyPoolResponse & { changed: number }>("POST", "/api/proxy-pool/sync"),
+
   connectProvider: (
     providerId: string,
     body: { secret: string; description: string; accountId?: string; proxyUrl?: string },
@@ -100,11 +147,24 @@ export const api = {
 
   addEntry: (
     chainId: string,
-    body: { providerId: string; model: string; credentialIds: string[]; routingStrategy?: string },
+    body: {
+      providerId: string;
+      model: string;
+      /** Optional user-chosen display name. */
+      label?: string;
+      credentialIds: string[];
+      routingStrategy?: string;
+    },
   ) => request<ChainView["entries"][number]>("POST", `/api/chains/${chainId}/entries`, body),
   updateEntry: (
     entryId: string,
-    body: { model?: string; enabled?: boolean; routingStrategy?: "sequential" | "round-robin" },
+    body: {
+      model?: string;
+      /** `null` or an empty string clears the display name. */
+      label?: string | null;
+      enabled?: boolean;
+      routingStrategy?: "sequential" | "round-robin";
+    },
   ) => request<ChainView["entries"][number]>("PATCH", `/api/entries/${entryId}`, body),
   deleteEntry: (entryId: string) => request<{ ok: boolean }>("DELETE", `/api/entries/${entryId}`),
   testEntry: (entryId: string) =>
@@ -134,7 +194,12 @@ export const api = {
   removeEntryCredential: (entryId: string, credentialId: string) =>
     request<{ ok: boolean }>("DELETE", `/api/entries/${entryId}/credentials/${credentialId}`),
 
-  credentials: () => request<PublicCredential[]>("GET", "/api/credentials"),
+  /** Paginated credential inventory. */
+  credentials: (params: PageParams = {}) =>
+    request<Paginated<PublicCredential>>("GET", `/api/credentials${pageQuery(params)}`),
+  /** Every credential in one response, for joins and exports. */
+  allCredentials: async (): Promise<PublicCredential[]> =>
+    (await request<Paginated<PublicCredential>>("GET", "/api/credentials?pageSize=0")).data,
   updateCredential: (
     id: string,
     body: {
@@ -154,10 +219,14 @@ export const api = {
       `/api/credentials/${id}/quota`,
     ),
 
-  requests: (limit = 100) =>
-    request<{ data: RequestLogEntry[]; stats: Stats["history"] }>(
+  /** Paginated request history, with the rollup stats alongside the page. */
+  requests: (
+    params: PageParams = { pageSize: 25 },
+    filters: { outcome?: string; providerId?: string } = {},
+  ) =>
+    request<Paginated<RequestLogEntry> & { stats: Stats["history"] }>(
       "GET",
-      `/api/requests?limit=${limit}`,
+      `/api/requests${pageQuery(params, filters)}`,
     ),
   clearRequests: () => request<{ ok: boolean }>("DELETE", "/api/requests"),
 
