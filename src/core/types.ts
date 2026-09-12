@@ -59,6 +59,7 @@ export interface UsageStats {
   outputTokens: number;
   totalTokens: number;
   rateLimitErrors: number;
+  quotaErrors: number;
   authErrors: number;
   serverErrors: number;
   averageLatencyMs: number;
@@ -75,6 +76,7 @@ export function emptyUsage(): UsageStats {
     outputTokens: 0,
     totalTokens: 0,
     rateLimitErrors: 0,
+    quotaErrors: 0,
     authErrors: 0,
     serverErrors: 0,
     averageLatencyMs: 0,

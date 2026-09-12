@@ -93,6 +93,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function toggleEntry(entry: ChainEntryView) {
     try {
       await api.updateEntry(entry.id, { enabled: !entry.enabled });
+      setEntries((prev) =>
+        prev.map((e) => (e.id === entry.id ? { ...e, enabled: !entry.enabled } : e)),
+      );
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -112,6 +115,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function removeEntry(entry: ChainEntryView) {
     try {
       await api.deleteEntry(entry.id);
+      setEntries((prev) => prev.filter((e) => e.id !== entry.id));
       setRemovingEntry(null);
       onChanged();
     } catch (error) {

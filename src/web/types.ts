@@ -26,6 +26,7 @@ export interface UsageStats {
   outputTokens: number;
   totalTokens: number;
   rateLimitErrors: number;
+  quotaErrors: number;
   authErrors: number;
   serverErrors: number;
   averageLatencyMs: number;

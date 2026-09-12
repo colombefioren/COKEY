@@ -403,6 +403,21 @@ export class Cokey {
         credentialDescription: credential.description,
         classification: validation.classification,
       });
+    } else if (
+      validation.classification === "quota_exhausted" ||
+      validation.classification === "credential_rate_limited"
+    ) {
+      this.credentials.putInCooldown(credential.id);
+      this.credentials.markFailure(credential.id, validation.classification);
+      this.events.emit({
+        type: "credential.cooldown",
+        level: "warn",
+        message: `${credential.description} ${validation.classification === "quota_exhausted" ? "quota exhausted" : "rate limited"} — cooling down`,
+        providerId: credential.providerId,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        classification: validation.classification,
+      });
     }
 
     return validation;
@@ -432,11 +447,13 @@ export class Cokey {
       this.credentials.markVerified(credential.id);
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
+      this.credentials.markFailure(credential.id, validation.classification);
     } else if (
       validation.classification === "credential_rate_limited" ||
       validation.classification === "quota_exhausted"
     ) {
       this.credentials.putInCooldown(credential.id);
+      this.credentials.markFailure(credential.id, validation.classification);
     }
 
     return { ...validation, credentialId: credential.id };

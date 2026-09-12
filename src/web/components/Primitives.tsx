@@ -251,6 +251,7 @@ export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: 
 /** A credential's quota, or an explicit "unknown" - never a fabricated value. */
 export function QuotaLabel({
   quota,
+  quotaErrors,
 }: {
   quota?: {
     available: boolean;
@@ -258,7 +259,11 @@ export function QuotaLabel({
     tokensRemaining?: number;
     requestsPerMinute?: number;
   };
+  quotaErrors?: number;
 }) {
+  if (quotaErrors && quotaErrors > 0) {
+    return <span className="badge bad" title={`${quotaErrors} quota exhaustion(s) observed`}>exhausted</span>;
+  }
   if (!quota || !quota.available) return <span className="faint">Quota: Unknown</span>;
 
   const parts: string[] = [];

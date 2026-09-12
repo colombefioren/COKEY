@@ -285,7 +285,7 @@ export function Keys({
                             : ""}
                         </td>
                         <td className="small">
-                          <QuotaLabel quota={credential.quota} />
+                          <QuotaLabel quota={credential.quota} quotaErrors={credential.usage.quotaErrors} />
                         </td>
                         <td className="small muted">
                           {credential.usage.lastUsedAt ? timeAgo(credential.usage.lastUsedAt) : "never"}
