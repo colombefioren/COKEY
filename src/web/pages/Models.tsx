@@ -4,7 +4,7 @@ import type { ModelCatalogView, ModelsResponse, SelectableModel } from "../types
 import { Empty, Panel } from "../components/Primitives.js";
 import { Pagination } from "../components/Pagination.js";
 import { useToast } from "../components/Toast.js";
-import { useRoute } from "../router.js";
+import { queryParam, useRoute } from "../router.js";
 import { Rankings } from "./Rankings.js";
 
 type ProbeState = { status: "running" | "ok" | "fail"; message: string; latencyMs?: number };
@@ -50,16 +50,28 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
       {tab === "rankings" ? (
         <Rankings refreshKey={refreshKey} />
       ) : (
-        <Catalog refreshKey={refreshKey} onChanged={onChanged} />
+        <Catalog
+          refreshKey={refreshKey}
+          onChanged={onChanged}
+          initialQuery={queryParam(route.query, "q") ?? ""}
+        />
       )}
     </>
   );
 }
 
-function Catalog({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
+function Catalog({
+  refreshKey,
+  onChanged,
+  initialQuery,
+}: {
+  refreshKey: number;
+  onChanged: () => void;
+  initialQuery: string;
+}) {
   const toast = useToast();
   const [data, setData] = useState<ModelsResponse | null>(null);
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery);
   const [availableOnly, setAvailableOnly] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(PROVIDERS_PER_PAGE);
@@ -113,7 +125,10 @@ function Catalog({ refreshKey, onChanged }: { refreshKey: number; onChanged: () 
   async function probe(provider: ModelCatalogView, model: SelectableModel) {
     const key = `${provider.providerId}/${model.id}`;
     setBusyKey(key);
-    setProbes((current) => ({ ...current, [key]: { status: "running", message: "sending hello" } }));
+    setProbes((current) => ({
+      ...current,
+      [key]: { status: "running", message: "sending hello" },
+    }));
 
     try {
       const result = await api.probeModel({ providerId: provider.providerId, model: model.id });
@@ -219,7 +234,9 @@ function Catalog({ refreshKey, onChanged }: { refreshKey: number; onChanged: () 
                     <span className="model-meta small faint">
                       {model.context ? <span>{model.context} ctx</span> : null}
                       {model.bestFor ? <span>{model.bestFor}</span> : null}
-                      {model.latencySeconds !== undefined ? <span>{model.latencySeconds}s</span> : null}
+                      {model.latencySeconds !== undefined ? (
+                        <span>{model.latencySeconds}s</span>
+                      ) : null}
                     </span>
 
                     <span className="model-actions">
@@ -261,7 +278,9 @@ function Catalog({ refreshKey, onChanged }: { refreshKey: number; onChanged: () 
                         title={probeState.message}
                       >
                         {probeState.status === "ok" ? "working" : "failed"}
-                        {probeState.latencyMs !== undefined ? ` \u00B7 ${probeState.latencyMs}ms` : ""}
+                        {probeState.latencyMs !== undefined
+                          ? ` \u00B7 ${probeState.latencyMs}ms`
+                          : ""}
                       </span>
                     ) : null}
                   </div>
@@ -289,7 +308,9 @@ function Catalog({ refreshKey, onChanged }: { refreshKey: number; onChanged: () 
 
       <p className="small faint" style={{ marginBottom: 0 }}>
         API equivalent:{" "}
-        <code>POST /api/models/probe {pageQuery({}, { providerId: "groq", model: "qwen/qwen3.8-27b" })}</code>
+        <code>
+          POST /api/models/probe {pageQuery({}, { providerId: "groq", model: "qwen/qwen3.8-27b" })}
+        </code>
       </p>
     </Panel>
   );

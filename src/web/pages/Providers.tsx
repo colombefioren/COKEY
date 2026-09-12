@@ -10,6 +10,7 @@ import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { queryParam, useRoute } from "../router.js";
 
 const VERDICT_ORDER: ProviderDossier["verdict"][] = ["recommended", "usable", "limited", "avoid"];
 
@@ -56,7 +57,8 @@ export function Providers({
   const [totalPages, setTotalPages] = useState(1);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [query, setQuery] = useState("");
+  const { route } = useRoute();
+  const [query, setQuery] = useState(queryParam(route.query, "q") ?? "");
   const [connectedOnly, setConnectedOnly] = useState(false);
   const [connecting, setConnecting] = useState<ProviderStatus | null>(null);
   const [custom, setCustom] = useState<ProviderCatalogEntry[]>([]);

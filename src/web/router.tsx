@@ -15,16 +15,18 @@ export interface Route {
   section?: string;
   /** Optional deeper segment, for example the board in `#/models/rankings/rate`. */
   sub?: string;
+  /** Raw query string after `?`, without the leading `?`. */
+  query: string;
 }
 
 export type Navigate = (path: string) => void;
 
 function parseHash(hash: string): Route {
   const raw = hash.replace(/^#/, "");
-  const clean = raw.split("?")[0] ?? "";
+  const [clean = "", query = ""] = raw.split("?");
   const parts = clean.split("/").filter(Boolean);
-  if (parts.length === 0) return { path: "/dashboard" };
-  return { path: `/${parts[0]}`, section: parts[1], sub: parts[2] };
+  if (parts.length === 0) return { path: "/dashboard", query };
+  return { path: `/${parts[0]}`, section: parts[1], sub: parts[2], query };
 }
 
 export function useRoute(): { route: Route; navigate: Navigate } {
@@ -50,4 +52,10 @@ export function useRoute(): { route: Route; navigate: Navigate } {
 /** Build a href for an anchor so links stay copyable and middle-clickable. */
 export function href(path: string): string {
   return path.startsWith("#") ? path : `#${path}`;
+}
+
+/** Read one value out of a route's raw query string. */
+export function queryParam(query: string, key: string): string | undefined {
+  const params = new URLSearchParams(query);
+  return params.get(key) ?? undefined;
 }

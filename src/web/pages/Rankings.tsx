@@ -119,7 +119,14 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                       <td>
                         <span className={`badge tier-${tier.name.toLowerCase()}`}>{tier.name}</span>
                       </td>
-                      <td className="mono small">{entry.model}</td>
+                      <td className="mono small">
+                        <a
+                          href={`#/models?q=${encodeURIComponent(entry.model)}`}
+                          title={`Find ${entry.model} in the catalog`}
+                        >
+                          {entry.model}
+                        </a>
+                      </td>
                       <td>
                         {entry.sweScore !== undefined ? (
                           <span className="swe-score">
@@ -135,7 +142,18 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                           <span className="small faint">—</span>
                         )}
                       </td>
-                      <td className="small muted">{entry.providerId ?? "vendor direct"}</td>
+                      <td className="small muted">
+                        {entry.providerId ? (
+                          <a
+                            href={`#/providers?q=${encodeURIComponent(entry.providerId)}`}
+                            title={`Open ${entry.providerId} in the provider catalog`}
+                          >
+                            {entry.providerId}
+                          </a>
+                        ) : (
+                          "vendor direct"
+                        )}
+                      </td>
                       <td className="small">{entry.reason}</td>
                     </tr>
                   ))}
