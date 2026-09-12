@@ -1,10 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "./api.js";
-import type { Nudge, ProviderStatus, PublicCredential, Settings as SettingsModel } from "./types.js";
+import type {
+  Nudge,
+  ProviderStatus,
+  PublicCredential,
+  Settings as SettingsModel,
+} from "./types.js";
 import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { Sidebar, type NavGroup } from "./components/Sidebar.js";
 import { LoginForm } from "./components/LoginForm.js";
+import { ThemeToggle } from "./components/ThemeToggle.js";
 import { href, useRoute } from "./router.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -25,7 +31,12 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
     {
       title: "Overview",
       items: [
-        { path: "/dashboard", label: "Dashboard", icon: "\u25C9", hint: "Gateway summary and live route" },
+        {
+          path: "/dashboard",
+          label: "Dashboard",
+          icon: "\u25C9",
+          hint: "Gateway summary and live route",
+        },
       ],
     },
     {
@@ -38,7 +49,12 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
           hint: "Your failover chains, their nodes and their keys",
           badge: counts.chains ? String(counts.chains) : undefined,
         },
-        { path: "/models", label: "Models", icon: "\u2699", hint: "Model catalog, live tests and rankings" },
+        {
+          path: "/models",
+          label: "Models",
+          icon: "\u2699",
+          hint: "Model catalog, live tests and rankings",
+        },
         {
           path: "/providers",
           label: "Providers",
@@ -46,7 +62,12 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
           hint: "Who runs each provider and whether to depend on it",
           badge: counts.providers ? String(counts.providers) : undefined,
         },
-        { path: "/api-keys", label: "API keys", icon: "\u26BF", hint: "Keys for talking to the gateway itself" },
+        {
+          path: "/api-keys",
+          label: "API keys",
+          icon: "\u26BF",
+          hint: "Keys for talking to the gateway itself",
+        },
       ],
     },
     {
@@ -64,10 +85,30 @@ function navGroups(counts: { chains: number; keys: number; providers: number }):
     {
       title: "Help",
       items: [
-        { path: "/settings", label: "Settings", icon: "\u2261", hint: "Gateway, fallback and egress settings" },
-        { path: "/tutorial", label: "Tutorial", icon: "\u203A", hint: "Wire COKEY into your editor or CLI" },
-        { path: "/terms", label: "Terms", icon: "\u00A7", hint: "What you agree to by using COKEY" },
-        { path: "/about", label: "About", icon: "\u265E", hint: "The stack, the credits and how to reach the creator" },
+        {
+          path: "/settings",
+          label: "Settings",
+          icon: "\u2261",
+          hint: "Gateway, fallback and egress settings",
+        },
+        {
+          path: "/tutorial",
+          label: "Tutorial",
+          icon: "\u203A",
+          hint: "Wire COKEY into your editor or CLI",
+        },
+        {
+          path: "/terms",
+          label: "Terms",
+          icon: "\u00A7",
+          hint: "What you agree to by using COKEY",
+        },
+        {
+          path: "/about",
+          label: "About",
+          icon: "\u265E",
+          hint: "The stack, the credits and how to reach the creator",
+        },
       ],
     },
   ];
@@ -109,13 +150,9 @@ function Shell() {
   const reload = useCallback(async () => {
     if (authed !== true) return;
     try {
-      const [health, settingsResult, nudgeResult, providerList, credentialList] = await Promise.all([
-        api.health(),
-        api.settings(),
-        api.nudge(),
-        api.allProviders(),
-        api.allCredentials(),
-      ]);
+      const [health, settingsResult, nudgeResult, providerList, credentialList] = await Promise.all(
+        [api.health(), api.settings(), api.nudge(), api.allProviders(), api.allCredentials()],
+      );
       setVersion(health.version);
       setDataDir(health.dataDir);
       setSettings(settingsResult);
@@ -147,7 +184,12 @@ function Shell() {
 
   if (authed === null) return null;
   if (!authed) {
-    return <LoginForm onLogin={() => setAuthed(true)} />;
+    return (
+      <>
+        <ThemeToggle className="login-theme" />
+        <LoginForm onLogin={() => setAuthed(true)} />
+      </>
+    );
   }
 
   function dismissNudge() {
@@ -180,7 +222,9 @@ function Shell() {
         onClose={() => setNavOpen(false)}
         footer={
           <div className="sidebar-stats">
-            <span title="Connected providers">{providers.filter((p) => p.connected).length} providers</span>
+            <span title="Connected providers">
+              {providers.filter((p) => p.connected).length} providers
+            </span>
             <span title="Stored credentials">{credentials.length} keys</span>
           </div>
         }
@@ -202,9 +246,14 @@ function Shell() {
             {titleFor(route.path)}
           </span>
           <span className="spacer" />
+          <ThemeToggle />
           <LiveStatus />
           {version ? <span className="faint">v{version}</span> : null}
-          {dataDir ? <span className="faint" title={dataDir}>data dir</span> : null}
+          {dataDir ? (
+            <span className="faint" title={dataDir}>
+              data dir
+            </span>
+          ) : null}
           <a href={href("/tutorial")} onClick={() => navigate("/tutorial")} className="small">
             setup guide
           </a>
