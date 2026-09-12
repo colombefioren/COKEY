@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { href, type Navigate } from "../router.js";
-import { CokeyLogo } from "./Logo.js";
+import { CokeyLogo, CokeyMark } from "./Logo.js";
 import { CREATOR, REPO_URL } from "../links.js";
 
 export interface NavItem {
@@ -135,7 +135,7 @@ export function Sidebar({
       </button>
 
       <a className="sidebar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
-        <CokeyLogo height={24} className="brand-logo" />
+        {collapsed ? <CokeyMark height={22} className="brand-logo" /> : <CokeyLogo height={24} className="brand-logo" />}
         <span className="sr-only">COKEY dashboard</span>
       </a>
 

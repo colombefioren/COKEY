@@ -7,6 +7,7 @@ import { ConfirmModal } from "./Primitives.js";
 import { EditEntryModal } from "./EditEntryModal.js";
 import { ViewEntryModal } from "./ViewEntryModal.js";
 import { useToast } from "./Toast.js";
+import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 
 /**
  * One chain: a user-ordered list of provider+model entries.
@@ -26,6 +27,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   const [viewingEntry, setViewingEntry] = useState<ChainEntryView | null>(null);
   const [removingEntry, setRemovingEntry] = useState<ChainEntryView | null>(null);
   const [deletingChain, setDeletingChain] = useState(false);
+  const sweep = useChainRefresh(chain, onChanged);
 
   useEffect(() => {
     setEntries(chain.entries);
@@ -193,6 +195,14 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           </>
         )}
         <span className="spacer" />
+        <button
+          className="ghost"
+          onClick={() => void sweep.refresh()}
+          disabled={sweep.busy}
+          title={sweep.busy ? "Testing nodes…" : "Test every node and go to the first that answers"}
+        >
+          {sweep.busy ? "testing…" : "⟳ refresh"}
+        </button>
         <button className="ghost" onClick={() => setRenaming(true)} title="Rename">
           rename
         </button>
@@ -216,6 +226,8 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             key={entry.id}
             className={`entry-node ${draggingId === entry.id ? "dragging" : ""} ${
               entry.enabled ? "" : "disabled"
+            }${sweep.states[entry.id] && sweep.states[entry.id] !== "idle" ? ` sweep-${sweep.states[entry.id]}` : ""}${
+              sweep.winnerId === entry.id ? " sweep-current" : ""
             }`}
             draggable
             tabIndex={0}
@@ -266,6 +278,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               ) : (
                 <span className="badge bad">no keys</span>
               )}
+              {sweepStateBadge(sweep.states[entry.id], sweep.winnerId === entry.id)}
               {entry.credentials.some((credential) => credential.proxy.auto) ? (
                 <span className="badge neutral" title="Automatic egress pool is assigning exits">
                   auto proxy
@@ -375,4 +388,36 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
       ) : null}
     </div>
   );
+}
+
+function sweepStateBadge(state: RefreshState | undefined, current: boolean) {
+  if (current) {
+    return (
+      <span className="badge ok" title="first node that answered OK">
+        ← current
+      </span>
+    );
+  }
+  if (state === "testing") {
+    return (
+      <span className="badge neutral" title="Testing this node's key">
+        testing…
+      </span>
+    );
+  }
+  if (state === "ok") {
+    return (
+      <span className="badge ok" title="Answered OK">
+        ok
+      </span>
+    );
+  }
+  if (state === "fail") {
+    return (
+      <span className="badge bad" title="Failed">
+        fail
+      </span>
+    );
+  }
+  return null;
 }

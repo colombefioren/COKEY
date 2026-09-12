@@ -957,6 +957,10 @@ label {
   background: var(--peach-soft);
   color: var(--peach);
 }
+.badge.ok {
+  background: var(--sage-soft);
+  color: var(--sage);
+}
 .badge.bad {
   background: var(--rose-soft);
   color: var(--rose);
@@ -1193,6 +1197,23 @@ code {
 }
 .entry-node.disabled {
   opacity: 0.55;
+}
+.entry-node.sweep-testing {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 2px var(--violet-soft);
+}
+.entry-node.sweep-ok {
+  border-color: var(--sage);
+  background: var(--sage-soft);
+}
+.entry-node.sweep-fail {
+  border-color: var(--rose);
+  background: var(--rose-soft);
+}
+.entry-node.sweep-current {
+  box-shadow:
+    0 0 0 2px var(--sage),
+    0 0 0 4px var(--sage-soft);
 }
 
 .entry-reorder {
@@ -2012,8 +2033,9 @@ button.play.fail {
   animation: modal-in 0.5s var(--ease) both;
 }
 .login-card .login-mark {
+  display: block;
+  margin: 0 auto 14px;
   color: var(--violet);
-  margin-bottom: 14px;
 }
 .login-card h1 {
   margin: 0 0 8px;
@@ -2518,6 +2540,49 @@ tbody tr:nth-child(n + 6) {
 }
 .flow-entry.dead {
   opacity: 0.55;
+}
+
+/* A node whose key is being probed during a chain sweep. */
+.flow-entry.sweep-testing {
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+.flow-entry.sweep-testing::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: calc(var(--radius-md) + 4px);
+  border: 1px solid transparent;
+  border-top-color: var(--violet);
+  animation: sweep-rotate 0.9s linear infinite;
+  pointer-events: none;
+}
+.flow-entry.sweep-ok {
+  border-color: var(--sage);
+  background: var(--sage-soft);
+  animation: sweep-pop 0.4s var(--ease);
+}
+.flow-entry.sweep-fail {
+  border-color: var(--rose);
+  background: var(--rose-soft);
+}
+.flow-entry.sweep-current {
+  box-shadow:
+    0 0 0 2px var(--sage),
+    0 0 0 5px var(--sage-soft);
+}
+@keyframes sweep-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes sweep-pop {
+  from {
+    transform: scale(0.98);
+  }
+  to {
+    transform: none;
+  }
 }
 
 .flow-link {

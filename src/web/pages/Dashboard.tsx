@@ -55,7 +55,7 @@ export function Dashboard({
         title="Live route"
         actions={<span className="small faint">the path a request actually walks</span>}
       >
-        <ChainFlow chains={chains} refreshKey={refreshKey} />
+        <ChainFlow chains={chains} refreshKey={refreshKey} onChanged={() => void load()} />
       </Panel>
 
       <Resilience />

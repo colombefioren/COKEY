@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { api, ApiError } from "../api.js";
+import { CokeyLogo } from "./Logo.js";
 
 /**
  * Full-screen password gate.
@@ -31,7 +32,7 @@ export function LoginForm({ onLogin }: { onLogin: () => void }) {
   return (
     <div className="login">
       <div className="login-card">
-        <h1>COKEY</h1>
+        <CokeyLogo height={48} className="login-mark" uid="login" />
         <p className="subtitle">Sign in to manage the gateway</p>
 
         <form onSubmit={handleSubmit}>
