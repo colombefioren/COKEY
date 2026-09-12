@@ -666,13 +666,22 @@ textarea {
   border: 1px solid var(--border-strong);
   border-radius: 7px;
   font: inherit;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+input:hover,
+select:hover,
+textarea:hover {
+  border-color: var(--accent-2);
 }
 input:focus,
 select:focus,
 textarea:focus {
-  outline: 2px solid rgba(217, 169, 204, 0.28);
-  outline-offset: 1px;
+  outline: none;
   border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(205, 176, 240, 0.16), 0 0 22px -10px var(--glow);
 }
 input[type="checkbox"] {
   width: auto;
@@ -1482,19 +1491,36 @@ button.play.fail {
   position: fixed;
   inset: 0;
   background: rgba(2, 4, 20, 0.76);
+  backdrop-filter: blur(4px);
   display: grid;
   place-items: center;
   padding: 20px;
   z-index: 50;
+  animation: scrim-in 0.22s ease both;
 }
 .modal {
-  background: var(--panel);
+  background: linear-gradient(180deg, rgba(30, 24, 88, 0.95), rgba(18, 13, 58, 0.97));
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   padding: 22px;
   width: min(560px, 100%);
   max-height: 86vh;
   overflow: auto;
+  box-shadow:
+    0 40px 80px -40px rgba(0, 0, 0, 0.95),
+    0 0 46px -22px var(--glow);
+  animation: modal-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .modal h3 {
   margin: 0 0 4px;
@@ -1551,13 +1577,25 @@ button.play.fail {
   z-index: 70;
 }
 .toast {
-  background: var(--panel-2);
+  background: linear-gradient(180deg, rgba(30, 24, 88, 0.95), rgba(18, 13, 58, 0.97));
   border: 1px solid var(--accent);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   max-width: 380px;
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.9);
   font-size: 13px;
+  animation: toast-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 .toast.err {
   border-color: var(--bad);
@@ -1624,11 +1662,30 @@ button.play.fail {
     var(--bg);
 }
 .login-card {
-  background: var(--panel);
+  position: relative;
+  background: linear-gradient(180deg, rgba(30, 24, 88, 0.92), rgba(18, 13, 58, 0.95));
   border: 1px solid var(--border-strong);
   border-radius: var(--radius);
   padding: 32px 28px;
   width: min(390px, 90vw);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 40px 80px -40px rgba(0, 0, 0, 0.95),
+    0 0 60px -30px var(--glow);
+  animation: modal-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* A slow bloom behind the sign-in card, so the first screen is not just a box. */
+.login-card::before {
+  content: "";
+  position: absolute;
+  inset: -60px -40px auto;
+  height: 200px;
+  pointer-events: none;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(141, 122, 224, 0.3), transparent);
+  filter: blur(12px);
+  animation: aurora 18s ease-in-out infinite alternate;
 }
 .login-card h1 {
   margin: 0 0 8px;
@@ -1649,6 +1706,195 @@ button.play.fail {
   font-size: 14px;
   padding: 10px 12px;
   font-family: var(--mono);
+}
+
+/* ---- chrome --------------------------------------------------------------- */
+
+::selection {
+  background: rgba(205, 176, 240, 0.28);
+}
+
+/*
+ * A themed scrollbar. The default light one is the single brightest thing on
+ * screen in a dark app, which is exactly what it should never be.
+ */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--border-strong), rgba(64, 56, 144, 0.55));
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, var(--accent-2), var(--border-strong));
+  background-clip: content-box;
+}
+
+/* ---- motion --------------------------------------------------------------- */
+
+/*
+ * Every screen arrives the same way: a short rise and fade, staggered a little
+ * per block, so moving between pages reads as a transition rather than a
+ * repaint. Nothing here moves a control the pointer is about to use: the
+ * animations are transform and opacity only, and they finish in under half a
+ * second.
+ */
+.page {
+  display: grid;
+  gap: 18px;
+  align-content: start;
+  animation: page-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes page-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.page > * {
+  animation: block-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page > *:nth-child(1) {
+  animation-delay: 0.03s;
+}
+.page > *:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.page > *:nth-child(3) {
+  animation-delay: 0.13s;
+}
+.page > *:nth-child(4) {
+  animation-delay: 0.18s;
+}
+.page > *:nth-child(5) {
+  animation-delay: 0.23s;
+}
+.page > *:nth-child(n + 6) {
+  animation-delay: 0.28s;
+}
+
+@keyframes block-in {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The page name crossfades instead of snapping when the route changes. */
+.topbar-title {
+  animation: title-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes title-in {
+  from {
+    opacity: 0;
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* A lilac shimmer that drifts along the topbar's hairline. */
+.topbar::after {
+  background-size: 220% 100%;
+  animation: hairline 9s linear infinite;
+}
+
+@keyframes hairline {
+  from {
+    background-position: 0% 0;
+  }
+  to {
+    background-position: 220% 0;
+  }
+}
+
+/* Rows arrive together rather than as one slab. */
+tbody tr {
+  animation: row-in 0.36s ease both;
+}
+tbody tr:nth-child(1) {
+  animation-delay: 0.04s;
+}
+tbody tr:nth-child(2) {
+  animation-delay: 0.07s;
+}
+tbody tr:nth-child(3) {
+  animation-delay: 0.1s;
+}
+tbody tr:nth-child(4) {
+  animation-delay: 0.13s;
+}
+tbody tr:nth-child(5) {
+  animation-delay: 0.16s;
+}
+tbody tr:nth-child(n + 6) {
+  animation-delay: 0.19s;
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Numbers settle instead of appearing already finished. */
+.stat .value {
+  animation: value-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes value-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* The live chip breathes while a request is in flight. */
+.live-chip.active {
+  animation: chip-breathe 2.6s ease-in-out infinite;
+}
+
+@keyframes chip-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(134, 230, 176, 0);
+  }
+  50% {
+    box-shadow: 0 0 18px -4px rgba(134, 230, 176, 0.5);
+  }
 }
 
 /* ---- responsive ----------------------------------------------------------- */

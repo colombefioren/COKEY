@@ -197,7 +197,10 @@ function Shell() {
           >
             {"\u2630"}
           </button>
-          <span className="topbar-title">{titleFor(route.path)}</span>
+          {/* Keyed on the route so the name animates in on a page change. */}
+          <span className="topbar-title" key={route.path}>
+            {titleFor(route.path)}
+          </span>
           <span className="spacer" />
           <LiveStatus />
           {version ? <span className="faint">v{version}</span> : null}
@@ -210,7 +213,15 @@ function Shell() {
           </a>
         </header>
 
-        <main>{page}</main>
+        {/*
+         * Keyed on the route so each page remounts: the entrance animation runs
+         * on a real navigation, and the pages already refetch on mount.
+         */}
+        <main>
+          <div className="page" key={route.path}>
+            {page}
+          </div>
+        </main>
       </div>
     </div>
   );
