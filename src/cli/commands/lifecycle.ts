@@ -18,6 +18,7 @@ import {
   type CommandContext,
 } from "../context.js";
 import { bold, bullet, cyan, dim, formatClock, green, humanizeDuration, red, yellow } from "../format.js";
+import { printBanner } from "../banner.js";
 
 /** Register lifecycle commands: start, stop, status, config, doctor. */
 export function registerLifecycleCommands(cli: CAC): void {
@@ -96,14 +97,14 @@ export function registerLifecycleCommands(cli: CAC): void {
         for (const chain of cokey.chains.listChains()) {
           const entries = cokey.chains.listEntries(chain.id);
           const label = chain.enabled ? chain.alias : `${chain.alias} ${dim("(disabled)")}`;
-          console.log(`  ${bold(label)} — ${entries.length} entries`);
+          console.log(`  ${bold(label)} - ${entries.length} entries`);
           for (const entry of entries) {
             const credentials = cokey.credentials.listByIds(entry.credentialIds);
             const healthy = credentials.filter((c) => c.status === "healthy").length;
             const cooldown = credentials.filter((c) => c.status === "cooldown").length;
             const flag = entry.enabled ? "" : dim(" [disabled]");
             console.log(
-              `    ${dim(`#${entry.priority}`)} ${entry.providerId} / ${entry.model} — ` +
+              `    ${dim(`#${entry.priority}`)} ${entry.providerId} / ${entry.model} - ` +
                 `${credentials.length} keys (${green(`${healthy} healthy`)}, ${yellow(`${cooldown} cooldown`)})${flag}`,
             );
           }
@@ -215,7 +216,7 @@ export function registerLifecycleCommands(cli: CAC): void {
         if (cokey.settings.showFreeProviderNudger) {
           console.log("");
           console.log(
-            `  ${bold("Maximize failover coverage")} — ${nudge.connectedFree} of ${nudge.target} free providers connected`,
+            `  ${bold("Maximize failover coverage")} - ${nudge.connectedFree} of ${nudge.target} free providers connected`,
           );
           for (const suggestion of nudge.suggestions.slice(0, 6)) {
             console.log(
@@ -284,7 +285,7 @@ async function startGateway(options: CommandContext): Promise<void> {
   const { app, url } = await startServer(cokey);
   writePidFile(dataDir, process.pid);
 
-  console.log(bold("COKEY"));
+  printBanner();
   console.log(`  gateway:  ${cyan(`${url}/v1`)}`);
   console.log(`  ui:       ${cyan(`${url}/`)}`);
   console.log(`  data dir: ${dim(cokey.dataDir)}`);

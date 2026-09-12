@@ -1,0 +1,89 @@
+/*
+ * Breakpoints.
+ *
+ * Every media query lives here so the mobile behaviour of the rail, the tables
+ * and the flow diagram can be read in one place instead of being scattered
+ * across the sheets that happen to style the element.
+ */
+
+@media (max-width: 860px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: fixed;
+    z-index: 60;
+    width: var(--sidebar-w);
+    transform: translateX(-104%);
+    transition: transform 0.3s var(--ease);
+  }
+
+  .shell.nav-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+  }
+
+  main {
+    padding: 16px 14px 48px;
+  }
+
+  .entry-node {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .entry-actions {
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+  }
+
+  .topbar {
+    padding: 10px 14px;
+    gap: 8px;
+  }
+
+  .topbar-meta {
+    gap: 8px;
+  }
+
+  .flow-node {
+    min-width: 138px;
+  }
+
+  .flow-entry {
+    min-width: 158px;
+  }
+
+  .about-hero {
+    gap: 14px;
+  }
+
+  .layer-stack {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 620px) {
+  .grid.cards {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tabs-inline {
+    width: 100%;
+  }
+
+  .panel-head {
+    gap: 8px;
+  }
+
+  .search {
+    max-width: 100%;
+  }
+
+  .contact-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

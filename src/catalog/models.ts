@@ -471,7 +471,19 @@ export const MODEL_CATALOG_SIZE = Object.values(MODELS_BY_PROVIDER).reduce(
   0,
 );
 
-/** Look up the curated models for a provider. */
+/**
+ * Look up the curated models for a provider.
+ *
+ * Duplicate rows for one model id are collapsed: the same model listed twice is
+ * one model, and the first row is the curated one.
+ */
 export function modelsForProvider(providerId: string): ModelSpec[] {
-  return MODELS_BY_PROVIDER[providerId] ?? [];
+  const models = MODELS_BY_PROVIDER[providerId] ?? [];
+  if (models.length <= 1) return models;
+  const seen = new Set<string>();
+  return models.filter((model) => {
+    if (seen.has(model.id)) return false;
+    seen.add(model.id);
+    return true;
+  });
 }

@@ -44,6 +44,8 @@ export interface AddEntryInput {
   chainId: string;
   providerId: string;
   model: string;
+  /** Optional display name. Never derived from the model id automatically. */
+  label?: string;
   baseUrl: string;
   credentialIds: string[];
   routingStrategy?: RoutingStrategy;
@@ -135,6 +137,7 @@ export class ChainManager {
       chainId: chain.id,
       providerId: input.providerId,
       model: input.model,
+      label: input.label,
       baseUrl: input.baseUrl.replace(/\/$/, ""),
       credentialIds: JSON.stringify(input.credentialIds),
       enabled: input.enabled ?? true,
@@ -186,6 +189,21 @@ export class ChainManager {
     });
   }
 
+  /**
+   * Set or clear the node's display name.
+   *
+   * An empty string clears it, which makes clients fall back to the raw model
+   * id. COKEY never invents a label such as "DeepSeek V4 Pro (xKiro)": the
+   * user decides what each node is called.
+   */
+  updateEntryLabel(id: string, label: string | null): void {
+    const trimmed = label?.trim();
+    this.repo.updateEntry(id, {
+      label: trimmed ? trimmed.slice(0, 120) : null,
+      updatedAt: Date.now(),
+    });
+  }
+
   deleteEntry(id: string): void {
     this.repo.deleteEntry(id);
   }
@@ -200,6 +218,7 @@ export class ChainManager {
       chainId: source.chainId,
       providerId: source.providerId,
       model: source.model,
+      label: source.label,
       baseUrl: source.baseUrl,
       credentialIds: [...source.credentialIds],
       routingStrategy: source.routingStrategy,
@@ -296,6 +315,7 @@ export class ChainManager {
       chainId: row.chain_id,
       providerId: row.provider_id,
       model: row.model,
+      label: row.label ?? undefined,
       baseUrl: row.base_url,
       credentialIds: parseIds(row.credential_ids),
       enabled: row.enabled === 1,

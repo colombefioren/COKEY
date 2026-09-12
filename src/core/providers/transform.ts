@@ -4,7 +4,7 @@ import type { TokenUsage } from "./adapter.js";
  * Builders for OpenAI-shaped payloads.
  *
  * The adapters whose upstream wire format differs use these so that every
- * client of COKEY — regardless of which provider actually served the request —
+ * client of COKEY - regardless of which provider actually served the request -
  * sees exactly one response shape.
  */
 

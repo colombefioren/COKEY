@@ -9,16 +9,29 @@ import {
 } from "../../core/router/engine.js";
 import { ChatCompletionSchema } from "../../core/validation/schemas.js";
 import { pipeStream } from "../streaming/sse.js";
+import {
+  COKEY_PROVIDER_NAME,
+  chainStateMessage,
+  identityHeaders,
+  withCokeyIdentity,
+} from "../openai/identity.js";
 
 /**
  * The OpenAI-compatible surface.
  *
- * Clients change one thing — their base URL — and everything else keeps
+ * Clients change one thing - their base URL - and everything else keeps
  * working, including streaming. Fallback decisions are exposed in `X-Cokey-*`
  * response headers so a user can always tell which credential actually served
  * a request.
  */
 export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
+  /**
+   * The model list a client sees.
+   *
+   * Everything is owned by COKEY, and each entry carries the chain alias as its
+   * id, so a picker shows one provider and the user's own chain names instead of
+   * whichever vendor happens to sit behind them.
+   */
   app.get("/v1/models", async () => {
     const created = Math.floor(Date.now() / 1000);
     const chains = cokey.chains.listChains();
@@ -28,13 +41,14 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         id: chain.alias,
         object: "model",
         created: Math.floor(chain.createdAt / 1000),
-        owned_by: "cokey",
+        owned_by: COKEY_PROVIDER_NAME,
         chain: true,
+        description: chain.description,
       })),
       ...cokey
         .listModelIds()
         .filter((id) => !chains.some((chain) => chain.alias === id))
-        .map((id) => ({ id, object: "model", created, owned_by: "cokey" })),
+        .map((id) => ({ id, object: "model", created, owned_by: COKEY_PROVIDER_NAME })),
     ];
 
     return { object: "list", data };
@@ -63,15 +77,11 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
       return sendRouteError(cokey, reply, error, body.model);
     }
 
-    // Transparency headers. These describe routing, never secrets.
-    reply.headers({
-      "x-cokey-chain": result.chainAlias,
-      "x-cokey-entry": `${result.providerId}/${result.entryModel}`,
-      "x-cokey-model": result.entryModel,
-      "x-cokey-credential": result.credentialDescription,
-      "x-cokey-fallback": String(result.fallback),
-      ...(result.fallbackReason ? { "x-cokey-fallback-reason": result.fallbackReason } : {}),
-    });
+    // Transparency headers. These describe routing, never secrets, and
+    // `x-cokey-state` is the plain-language "chain changed state" line a client
+    // can surface as an information toast.
+    reply.headers(identityHeaders(result));
+    cokey.logger.debug("chain state", { state: chainStateMessage(result) });
 
     const adapter = cokey.providers.get(result.providerId);
     const started = Date.now();
@@ -181,11 +191,16 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
       return reply
         .code(upstream.status)
         .type("application/json")
-        .send(adapter.transformResponse(parsedBody, result.context));
+        .send(withCokeyIdentity(adapter.transformResponse(parsedBody, result.context), result.chainAlias));
     }
 
     if (parsedBody !== undefined) {
-      return reply.code(upstream.status).type(contentType).send(parsedBody);
+      // The upstream model id is replaced by the chain alias so a chat window
+      // shows the user's own chain name. The vendor is still in X-Cokey-Entry.
+      return reply
+        .code(upstream.status)
+        .type(contentType)
+        .send(withCokeyIdentity(parsedBody, result.chainAlias));
     }
 
     return reply.code(upstream.status).type(contentType).send(text);

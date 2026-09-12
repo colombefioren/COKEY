@@ -116,17 +116,25 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   /**
    * Prove a credential works.
    *
-   * Prefers the catalog's declared strategy: a one-token chat ping for providers
-   * that validate per-model, otherwise a model listing. When the live model list
-   * is returned it is handed back so the UI can show reality rather than the
-   * curated seed.
+   * Always prefers a real inference call over a model listing, because
+   * GET /models succeeds even when the key's quota is fully depleted.
+   * Falls back to the models endpoint only when no model id is available.
    */
   async validateCredential(credential: Credential): Promise<ValidationResult> {
     const started = Date.now();
 
+    // 1. Catalog-declared chat verification model (e.g. cloudflare, groq).
     if (this.catalog.verification.method === "chat" && this.catalog.verification.model) {
       return this.validateViaChat(credential, this.catalog.verification.model, started);
     }
+
+    // 2. Even when the catalog says "models", exercise a real chat request
+    //    using the first known model so quota exhaustion is detected.
+    if (this.catalog.knownModels.length > 0) {
+      return this.validateViaChat(credential, this.catalog.knownModels[0], started);
+    }
+
+    // 3. Last resort: just prove the key authenticates.
     return this.validateViaModels(credential, started);
   }
 

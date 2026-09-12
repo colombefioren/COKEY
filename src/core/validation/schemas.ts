@@ -51,6 +51,8 @@ export const UpdateChainSchema = z
 export const AddEntrySchema = z.object({
   providerId: z.string().min(1),
   model: z.string().min(1),
+  /** Free-form display name chosen by the user. Never auto-generated. */
+  label: z.string().max(120).optional(),
   credentialIds: z.array(z.string().min(1)).min(1, "At least one credential is required"),
   routingStrategy: RoutingStrategySchema.optional(),
   enabled: z.boolean().optional(),
@@ -59,8 +61,34 @@ export const AddEntrySchema = z.object({
 export const UpdateEntrySchema = z
   .object({
     model: z.string().min(1).optional(),
+    /** `null` or an empty string clears the display name. */
+    label: z.string().max(120).nullable().optional(),
     enabled: z.boolean().optional(),
     routingStrategy: RoutingStrategySchema.optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
+
+/** A live probe of one model through one working key. */
+export const ProbeModelSchema = z.object({
+  providerId: z.string().min(1),
+  model: z.string().min(1),
+  /** Pin the probe to a specific key; otherwise the healthiest one is used. */
+  credentialId: z.string().min(1).optional(),
+  /** Override the probe text. Defaults to a plain hello. */
+  message: z.string().max(200).optional(),
+});
+
+export const ProxyPoolEntrySchema = z.object({
+  url: ProxyUrlSchema,
+});
+
+export const BulkProxyPoolSchema = z.object({
+  text: z.string().min(1, "Paste at least one proxy URL").max(20_000),
+});
+
+export const UpdateProxyPoolSchema = z
+  .object({
+    enabled: z.boolean().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
 
@@ -88,6 +116,12 @@ export const UpdateCredentialSchema = z
     status: z.enum(["healthy", "cooldown", "invalid", "disabled", "unverified"]).optional(),
     /** `null` clears the proxy and returns the key to direct egress. */
     proxyUrl: ProxyUrlSchema.nullable().optional(),
+    /**
+     * Pin this key to a specific egress pool entry by id, or `null` to hand it
+     * back to the automatic pool. Ids are used rather than URLs because the
+     * pool never exposes a proxy's own credentials to the browser.
+     */
+    proxyPoolId: z.string().min(1).nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
 
@@ -99,6 +133,9 @@ export const UpdateSettingsSchema = z
     showFreeProviderNudger: z.boolean().optional(),
     freeProviderTarget: z.number().int().min(0).max(50).optional(),
     allowPrivateEndpoints: z.boolean().optional(),
+    /** Distribute pool proxies across same-provider keys automatically. */
+    autoProxy: z.boolean().optional(),
+    autoProxyStrategy: z.enum(["per-provider", "round-robin"]).optional(),
     fallback: z
       .object({
         enabled: z.boolean().optional(),

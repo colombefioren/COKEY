@@ -24,6 +24,7 @@ export function AddEntryModal({
   const [credentials, setCredentials] = useState<PublicCredential[]>([]);
   const [providerId, setProviderId] = useState("");
   const [model, setModel] = useState("");
+  const [label, setLabel] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -31,8 +32,8 @@ export function AddEntryModal({
   useEffect(() => {
     void (async () => {
       const [providerList, credentialList] = await Promise.all([
-        api.providers(),
-        api.credentials(),
+        api.allProviders(),
+        api.allCredentials(),
       ]);
       setProviders(providerList);
       setCredentials(credentialList);
@@ -78,8 +79,13 @@ export function AddEntryModal({
     setBusy(true);
     setError(undefined);
     try {
-      await api.addEntry(chain.id, { providerId, model, credentialIds: selected });
-      toast.ok(`Added ${providerId}/${model} to ${chain.alias}`);
+      await api.addEntry(chain.id, {
+        providerId,
+        model,
+        label: label.trim() || undefined,
+        credentialIds: selected,
+      });
+      toast.ok(`Added ${label.trim() || `${providerId}/${model}`} to ${chain.alias}`);
       onChanged();
       onClose();
     } catch (err) {
@@ -158,6 +164,20 @@ export function AddEntryModal({
         </div>
         <span className="small faint">
           Only {provider?.displayName ?? providerId} models are listed.
+        </span>
+      </div>
+
+      <div className="field">
+        <label htmlFor="entry-label">Display name (optional)</label>
+        <input
+          id="entry-label"
+          value={label}
+          maxLength={120}
+          placeholder={`${model} on ${provider?.displayName ?? providerId}`}
+          onChange={(event) => setLabel(event.target.value)}
+        />
+        <span className="small faint">
+          This is the name COKEY shows for the node. It is never generated for you.
         </span>
       </div>
 

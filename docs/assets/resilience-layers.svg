@@ -1,0 +1,156 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 980 340"
+  width="980"
+  height="340"
+  role="img"
+  aria-label="Three layers of containment: chain fallback, key cooldown and model gating"
+>
+  <title>Three self-healing layers</title>
+  <desc>
+    Layer one moves a whole chain past a node that cannot serve. Layer two cools one key
+    down while its siblings keep serving. Layer three offers only the models a verified
+    key can actually run.
+  </desc>
+
+  <defs>
+    <linearGradient id="row" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#150F3D" />
+      <stop offset="1" stop-color="#100B30" />
+    </linearGradient>
+    <linearGradient id="hub" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#241C68" />
+      <stop offset="1" stop-color="#1B1554" />
+    </linearGradient>
+    <style>
+      .row-kicker {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 9.5px;
+        letter-spacing: 2.2px;
+        fill: #8b84c9;
+      }
+      .row-title {
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 14px;
+        fill: #f1eefc;
+      }
+      .row-blurb {
+        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+        font-size: 10.5px;
+        fill: #6f68a8;
+      }
+      .hub-text {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11.5px;
+        fill: #f1eefc;
+      }
+      .chip {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        fill: #f1eefc;
+      }
+      .chip-note {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 9.5px;
+        letter-spacing: 1.4px;
+      }
+    </style>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="979" height="339" rx="20" fill="#0A0620" stroke="#2C2570" />
+
+  <!-- ================= layer 1 · whole chain ================= -->
+  <rect x="16" y="18" width="948" height="96" rx="14" fill="url(#row)" stroke="#2C2570" />
+  <text class="row-kicker" x="40" y="42">LAYER 1 · SCOPE: WHOLE CHAIN</text>
+  <text class="row-title" x="40" y="68">Chain fallback</text>
+  <text class="row-blurb" x="40" y="86">a node that cannot serve is set aside, not retried forever</text>
+
+  <rect x="452" y="46" width="132" height="40" rx="10" fill="url(#hub)" stroke="#8D7AE0" />
+  <text class="hub-text" x="518" y="71" text-anchor="middle">cokey-best</text>
+  <line x1="584" y1="66" x2="616" y2="66" stroke="#403890" stroke-width="2" />
+
+  <rect x="616" y="32" width="318" height="30" rx="9" fill="#120C36" stroke="#F6C46E" stroke-opacity="0.55" />
+  <text class="chip" x="632" y="51">node 1 · groq</text>
+  <text class="chip-note" x="918" y="51" text-anchor="end" fill="#F6C46E">SET ASIDE</text>
+
+  <rect x="616" y="70" width="318" height="30" rx="9" fill="#120C36" stroke="#86E6B0" stroke-opacity="0.5" />
+  <text class="chip" x="632" y="89">node 2 · openrouter</text>
+  <text class="chip-note" x="918" y="89" text-anchor="end" fill="#86E6B0">NEXT</text>
+
+  <circle r="4" fill="#CDB0F0">
+    <animate attributeName="opacity" dur="4.4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.05;0.2;0.85;0.95" />
+    <animateMotion dur="4.4s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.05;0.85;1" path="M586 66 H614" />
+  </circle>
+
+  <!-- ================= layer 2 · one key ================= -->
+  <rect x="16" y="126" width="948" height="96" rx="14" fill="url(#row)" stroke="#2C2570" />
+  <text class="row-kicker" x="40" y="150">LAYER 2 · SCOPE: ONE KEY</text>
+  <text class="row-title" x="40" y="176">Key cooldown</text>
+  <text class="row-blurb" x="40" y="194">one rate-limited key sits out while its siblings keep serving</text>
+
+  <rect x="452" y="154" width="132" height="40" rx="10" fill="url(#hub)" stroke="#8D7AE0" />
+  <text class="hub-text" x="518" y="179" text-anchor="middle">node 1 · 3 keys</text>
+  <line x1="584" y1="174" x2="616" y2="174" stroke="#403890" stroke-width="2" />
+
+  <rect x="616" y="136" width="318" height="22" rx="8" fill="#120C36" stroke="#F6C46E" stroke-opacity="0.6" />
+  <circle cx="632" cy="147" r="4" fill="#F6C46E">
+    <animate attributeName="opacity" values="1;0.3;1" dur="1.6s" repeatCount="indefinite" />
+  </circle>
+  <text class="chip" x="646" y="151">key-1</text>
+  <text class="chip-note" x="918" y="151" text-anchor="end" fill="#F6C46E">COOLING DOWN</text>
+
+  <rect x="616" y="163" width="318" height="22" rx="8" fill="#120C36" stroke="#86E6B0" stroke-opacity="0.45" />
+  <circle cx="632" cy="174" r="4" fill="#86E6B0" />
+  <text class="chip" x="646" y="178">key-2</text>
+  <text class="chip-note" x="918" y="178" text-anchor="end" fill="#86E6B0">SERVING</text>
+
+  <rect x="616" y="190" width="318" height="22" rx="8" fill="#120C36" stroke="#2C2570" />
+  <circle cx="632" cy="201" r="4" fill="#6F68A8" />
+  <text class="chip" x="646" y="205" fill="#B4AEE6">key-3</text>
+  <text class="chip-note" x="918" y="205" text-anchor="end" fill="#6F68A8">READY</text>
+
+  <circle r="4" fill="#CDB0F0">
+    <animate attributeName="opacity" dur="4.4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.25;0.4;0.85;0.95" />
+    <animateMotion dur="4.4s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.25;0.85;1" path="M586 174 H614" />
+  </circle>
+
+  <!-- ================= layer 3 · one model ================= -->
+  <rect x="16" y="234" width="948" height="96" rx="14" fill="url(#row)" stroke="#2C2570" />
+  <text class="row-kicker" x="40" y="258">LAYER 3 · SCOPE: ONE MODEL</text>
+  <text class="row-title" x="40" y="284">Model gating</text>
+  <text class="row-blurb" x="40" y="302">only the models a verified key can actually run are offered</text>
+
+  <rect x="452" y="262" width="132" height="40" rx="10" fill="url(#hub)" stroke="#8D7AE0" />
+  <text class="hub-text" x="518" y="287" text-anchor="middle">key-1</text>
+  <line x1="584" y1="282" x2="616" y2="282" stroke="#403890" stroke-width="2" />
+
+  <rect x="616" y="244" width="318" height="22" rx="8" fill="#120C36" stroke="#86E6B0" stroke-opacity="0.45" />
+  <circle cx="632" cy="255" r="4" fill="#86E6B0" />
+  <text class="chip" x="646" y="259">model-a</text>
+  <text class="chip-note" x="918" y="259" text-anchor="end" fill="#86E6B0">OFFERED</text>
+
+  <rect
+    x="616"
+    y="271"
+    width="318"
+    height="22"
+    rx="8"
+    fill="#0E0A2A"
+    stroke="#403890"
+    stroke-dasharray="4 4"
+    opacity="0.68"
+  />
+  <circle cx="632" cy="282" r="3.5" fill="none" stroke="#6F68A8" />
+  <text class="chip" x="646" y="286" fill="#B4AEE6">model-b</text>
+  <text class="chip-note" x="918" y="286" text-anchor="end" fill="#6F68A8">NOT OFFERED</text>
+
+  <rect x="616" y="298" width="318" height="22" rx="8" fill="#120C36" stroke="#86E6B0" stroke-opacity="0.45" />
+  <circle cx="632" cy="309" r="4" fill="#86E6B0" />
+  <text class="chip" x="646" y="313">model-c</text>
+  <text class="chip-note" x="918" y="313" text-anchor="end" fill="#86E6B0">OFFERED</text>
+
+  <circle r="4" fill="#CDB0F0">
+    <animate attributeName="opacity" dur="4.4s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.45;0.6;0.85;0.95" />
+    <animateMotion dur="4.4s" repeatCount="indefinite" calcMode="linear" keyPoints="0;0;1;1" keyTimes="0;0.45;0.85;1" path="M586 282 H614" />
+  </circle>
+</svg>

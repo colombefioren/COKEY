@@ -47,7 +47,10 @@ export function modelAvailability(
 
   for (const entry of catalog) {
     const models = modelsForProvider(entry.id);
+    // A provider with nothing curated is not usable, so it never becomes a card
+    // the picker can offer.
     if (models.length === 0) continue;
+
 
     const credentialIds = working.get(entry.id) ?? [];
     const available = credentialIds.length > 0;

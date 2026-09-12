@@ -85,7 +85,7 @@ function listChains(cokey: Cokey, context: CommandContext): void {
     }
     for (const chain of chains) {
       const header = chain.enabled ? bold(chain.alias) : `${bold(chain.alias)} ${dim("(disabled)")}`;
-      console.log(header + (chain.description ? ` ${dim(`— ${chain.description}`)}` : ""));
+      console.log(header + (chain.description ? ` ${dim(`- ${chain.description}`)}` : ""));
       if (chain.entries.length === 0) {
         console.log(dim("  (no entries)"));
         continue;
@@ -108,7 +108,7 @@ function createChain(cokey: Cokey, context: CommandContext, alias?: string): voi
     alias: name,
     description: typeof context.description === "string" ? context.description : undefined,
   });
-  emit(context, chain, () => console.log(green(`Created chain ${bold(chain.alias)} (${chain.id}) — use ${chain.alias} as the model id.`)));
+  emit(context, chain, () => console.log(green(`Created chain ${bold(chain.alias)} (${chain.id}) - use ${chain.alias} as the model id.`)));
 }
 
 function deleteChain(cokey: Cokey, context: CommandContext, alias?: string): void {

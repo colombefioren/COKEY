@@ -1,4 +1,5 @@
-import { PROVIDER_CATALOG, findProvider } from "../../catalog/providers.js";
+import { PROVIDER_CATALOG, PROVIDER_ALIASES, findProvider } from "../../catalog/providers.js";
+import { mergeProviderEntries } from "../../catalog/dedupe.js";
 import type { ApiStyle, AuthScheme, ProviderCatalogEntry } from "../../catalog/types.js";
 import type { CustomEndpointRow } from "../db/database.js";
 import type { ProviderAdapter } from "./adapter.js";
@@ -23,7 +24,22 @@ export class ProviderRegistry {
   private readonly adapters = new Map<string, ProviderAdapter>();
 
   constructor(customEndpoints: CustomEndpointRow[] = []) {
-    for (const entry of PROVIDER_CATALOG) this.register(entry);
+    // The shipped catalog lists a few services more than once. Merging first
+    // means a sparse duplicate can never erase the curated model list of the
+    // entry it duplicates, and the UI shows one card per real service.
+    const canonical = mergeProviderEntries(PROVIDER_CATALOG);
+    for (const entry of canonical) this.register(entry);
+
+    // Stored chains and older exports may reference a collapsed id, so every
+    // alias resolves to the same catalog entry and the same adapter.
+    for (const [alias, target] of PROVIDER_ALIASES) {
+      const entry = this.entries.get(target);
+      const adapter = this.adapters.get(target);
+      if (!entry || !adapter) continue;
+      this.entries.set(alias, entry);
+      this.adapters.set(alias, adapter);
+    }
+
     for (const row of customEndpoints) this.registerCustom(row);
   }
 
@@ -50,13 +66,22 @@ export class ProviderRegistry {
     return entry;
   }
 
+  /** The canonical catalog, one entry per service, aliases excluded. */
   getCatalog(): ProviderCatalogEntry[] {
-    return [...this.entries.values()];
+    const aliases = new Set(PROVIDER_ALIASES.keys());
+    return [...this.entries.values()].filter((entry) => !aliases.has(entry.id));
   }
 
-  /** Only providers shipped with COKEY, excluding user custom endpoints. */
+  /**
+   * Only providers shipped with COKEY, excluding user custom endpoints.
+   *
+   * Aliases are filtered out so a merged service yields exactly one card.
+   */
   getBuiltInCatalog(): ProviderCatalogEntry[] {
-    return [...this.entries.values()].filter((entry) => !entry.id.startsWith(CUSTOM_PREFIX));
+    const aliases = new Set(PROVIDER_ALIASES.keys());
+    return [...this.entries.values()].filter(
+      (entry) => !entry.id.startsWith(CUSTOM_PREFIX) && !aliases.has(entry.id),
+    );
   }
 
   findCatalogEntry(id: string): ProviderCatalogEntry | undefined {

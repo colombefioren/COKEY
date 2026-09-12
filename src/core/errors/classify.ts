@@ -97,9 +97,9 @@ export function isCredentialScoped(c: ErrorClassification): boolean {
   return c === "credential_rate_limited" || c === "credential_invalid" || c === "quota_exhausted";
 }
 
-/** The request itself is malformed; rotating can never help. Stop everything. */
-export function isRequestScoped(c: ErrorClassification): boolean {
-  return c === "context_too_large" || c === "invalid_request";
+/** Reserved for future use. Currently no classification halts routing outright. */
+export function isRequestScoped(_c: ErrorClassification): boolean {
+  return false;
 }
 
 /** This entry's model is unreachable; try the next entry. */

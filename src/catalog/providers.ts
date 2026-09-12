@@ -1,5 +1,6 @@
 import type { ProviderCatalogEntry } from "./types.js";
 import { modelsForProvider } from "./models.js";
+import { catalogAliases, mergeProviderEntries } from "./dedupe.js";
 
 /**
  * The COKEY provider catalog.
@@ -1037,8 +1038,33 @@ for (const provider of PROVIDER_CATALOG) {
   if (curated.length > 0) provider.knownModels = curated.map((model) => model.id);
 }
 
-/** Catalog index for O(1) lookups. */
-const BY_ID = new Map(PROVIDER_CATALOG.map((p) => [p.id, p]));
+/**
+ * The catalog with duplicates collapsed.
+ *
+ * Consumers must use this rather than `PROVIDER_CATALOG`: the raw list carries
+ * a handful of services listed twice, and reading it directly means a sparse
+ * duplicate silently wins over the curated entry it duplicates.
+ */
+const CANONICAL = mergeProviderEntries(PROVIDER_CATALOG);
+
+/**
+ * Raw ids that were collapsed into a surviving entry, for example
+ * `aion-labs` into `aion`. Stored chains still reference the old id, so it has
+ * to keep resolving.
+ */
+export const PROVIDER_ALIASES: Map<string, string> = catalogAliases(PROVIDER_CATALOG, CANONICAL);
+
+/** Catalog index for O(1) lookups, including deprecated aliases. */
+const BY_ID = new Map(CANONICAL.map((p) => [p.id, p]));
+for (const [alias, target] of PROVIDER_ALIASES) {
+  const entry = BY_ID.get(target);
+  if (entry) BY_ID.set(alias, entry);
+}
+
+/** Deduplicated catalog, one entry per real service. */
+export function providerCatalog(): ProviderCatalogEntry[] {
+  return CANONICAL;
+}
 
 export function findProvider(id: string): ProviderCatalogEntry | undefined {
   return BY_ID.get(id);
@@ -1046,11 +1072,11 @@ export function findProvider(id: string): ProviderCatalogEntry | undefined {
 
 /** Providers that explicitly advertise a free tier. */
 export function freeProviders(): ProviderCatalogEntry[] {
-  return PROVIDER_CATALOG.filter((p) => p.freeTier.advertised);
+  return CANONICAL.filter((p) => p.freeTier.advertised);
 }
 
 export function paidProviders(): ProviderCatalogEntry[] {
-  return PROVIDER_CATALOG.filter((p) => !p.freeTier.advertised);
+  return CANONICAL.filter((p) => !p.freeTier.advertised);
 }
 
 export function isFreeProvider(id: string): boolean {
@@ -1060,8 +1086,8 @@ export function isFreeProvider(id: string): boolean {
 /** Case-insensitive search across id, display name and summary. */
 export function searchProviders(query: string): ProviderCatalogEntry[] {
   const q = query.trim().toLowerCase();
-  if (!q) return [...PROVIDER_CATALOG];
-  return PROVIDER_CATALOG.filter((p) =>
+  if (!q) return [...CANONICAL];
+  return CANONICAL.filter((p) =>
     [p.id, p.displayName, p.freeTier.summary, ...p.knownModels].some((field) =>
       field.toLowerCase().includes(q),
     ),
@@ -1069,5 +1095,5 @@ export function searchProviders(query: string): ProviderCatalogEntry[] {
 }
 
 export function providerIds(): string[] {
-  return PROVIDER_CATALOG.map((p) => p.id);
+  return CANONICAL.map((p) => p.id);
 }

@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ChainView } from "../types.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
 import { AddEntryModal } from "./AddEntryModal.js";
+import { ConfirmModal } from "./Primitives.js";
 import { EditEntryModal } from "./EditEntryModal.js";
 import { ViewEntryModal } from "./ViewEntryModal.js";
 import { useToast } from "./Toast.js";
@@ -23,6 +24,8 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   const [credentialTarget, setCredentialTarget] = useState<ChainEntryView | null>(null);
   const [editingEntry, setEditingEntry] = useState<ChainEntryView | null>(null);
   const [viewingEntry, setViewingEntry] = useState<ChainEntryView | null>(null);
+  const [removingEntry, setRemovingEntry] = useState<ChainEntryView | null>(null);
+  const [deletingChain, setDeletingChain] = useState(false);
 
   useEffect(() => {
     setEntries(chain.entries);
@@ -90,6 +93,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function toggleEntry(entry: ChainEntryView) {
     try {
       await api.updateEntry(entry.id, { enabled: !entry.enabled });
+      setEntries((prev) =>
+        prev.map((e) => (e.id === entry.id ? { ...e, enabled: !entry.enabled } : e)),
+      );
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -107,9 +113,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   }
 
   async function removeEntry(entry: ChainEntryView) {
-    if (!confirm(`Remove ${entry.providerId}/${entry.model} from ${chain.alias}?`)) return;
     try {
       await api.deleteEntry(entry.id);
+      setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+      setRemovingEntry(null);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -142,10 +149,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   }
 
   async function deleteChain() {
-    if (!confirm(`Delete chain ${chain.alias} and all of its entries?`)) return;
     try {
       await api.deleteChain(chain.id);
       toast.ok(`Deleted ${chain.alias}`);
+      setDeletingChain(false);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -192,7 +199,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
         <button className="ghost" onClick={() => void toggleChain()}>
           {chain.enabled ? "disable" : "enable"}
         </button>
-        <button className="danger" onClick={() => void deleteChain()}>
+        <button className="danger" onClick={() => setDeletingChain(true)}>
           delete
         </button>
       </div>
@@ -242,15 +249,28 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
               <button
-                className="model-name mono"
+                className="model-name"
                 title="View details"
                 onClick={() => setViewingEntry(entry)}
               >
-                {entry.model}
+                {entry.label ?? entry.model}
               </button>
+              {entry.label ? <span className="small faint mono">{entry.model}</span> : null}
               <span className="small faint" title={`Provider: ${entry.providerId}`}>
                 {entry.providerId}
               </span>
+              {entry.credentials.length > 0 ? (
+                <span className="badge neutral" title="Keys bound to this node">
+                  {entry.healthyCount}/{entry.credentials.length} keys
+                </span>
+              ) : (
+                <span className="badge bad">no keys</span>
+              )}
+              {entry.credentials.some((credential) => credential.proxy.auto) ? (
+                <span className="badge neutral" title="Automatic egress pool is assigning exits">
+                  auto proxy
+                </span>
+              ) : null}
               {!entry.enabled && <span className="badge warn">disabled</span>}
             </div>
 
@@ -275,7 +295,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               <button
                 className="danger"
                 style={{ fontSize: 12 }}
-                onClick={() => void removeEntry(entry)}
+                onClick={() => setRemovingEntry(entry)}
               >
                 remove
               </button>
@@ -331,6 +351,26 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           onChanged={() => {
             onChanged();
           }}
+        />
+      ) : null}
+
+      {removingEntry ? (
+        <ConfirmModal
+          title="Remove entry"
+          message={`Remove ${removingEntry.providerId}/${removingEntry.model} from ${chain.alias}?`}
+          onConfirm={() => void removeEntry(removingEntry)}
+          onClose={() => setRemovingEntry(null)}
+          actionLabel="Remove"
+        />
+      ) : null}
+
+      {deletingChain ? (
+        <ConfirmModal
+          title="Delete chain"
+          message={`Delete chain ${chain.alias} and all of its entries?`}
+          onConfirm={() => void deleteChain()}
+          onClose={() => setDeletingChain(false)}
+          actionLabel="Delete"
         />
       ) : null}
     </div>

@@ -1,105 +1,446 @@
-<h1 align="center">COKEY</h1>
+<div align="center">
 
-<p align="center">
-  <strong>Local LLM credential pool and chain-fallback gateway.</strong><br />
-  Point any OpenAI-compatible tool at <code>http://localhost:8787/v1</code> and let COKEY rotate
-  your free API keys — across accounts, across models, across providers — without ever
-  leaking a key or inventing a quota.
-</p>
+<img src="./docs/assets/cokey-logo.svg" alt="COKEY" width="440" />
 
-```
-OpenCode / Kilo Code / any OpenAI-compatible client
-                    ↓
-                 COKEY
-                    ↓
-┌──────────────────────────────────────────────┐
-│ Chain "cokey-best"                           │
-│                                              │
-│   groq / qwen3.8-27b                         │
-│     Key1 → Key2 → Key3     (keys first)      │
-│   ↓ only when every key is exhausted         │
-│   openrouter / deepseek-v4-flash:free        │
-│     Key1 → Key2                              │
-└──────────────────────────────────────────────┘
-```
+<br />
+<br />
 
-COKEY is a local gateway, not a service. It runs on your machine, keeps your keys
-encrypted at rest, and exposes one OpenAI-compatible endpoint. When a provider
-rate-limits a key, COKEY cools that key down and retries the next one **inside the
-same entry** — only falling through to the next entry once every key of the
-current one is spent.
+**Local LLM credential pool and chain-fallback gateway.**
+
+Point any OpenAI-compatible tool at `http://localhost:8787/v1` and let COKEY rotate your free API
+keys, across accounts, across models, across providers, without ever leaking a key or inventing a
+quota.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-CDB0F0?style=flat-square&labelColor=150F3D)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-8D7AE0?style=flat-square&labelColor=150F3D)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-8D7AE0?style=flat-square&labelColor=150F3D)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/tests-45%20passing-CDB0F0?style=flat-square&labelColor=150F3D)](tests)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-CDB0F0?style=flat-square&labelColor=150F3D)](https://github.com/colombefioren/COKEY/pulls)
+[![No telemetry](https://img.shields.io/badge/telemetry-none-8D7AE0?style=flat-square&labelColor=150F3D)](#-security)
+
+<sub><b>a tool for broke lads made by a broke princess</b></sub>
+
+</div>
 
 ---
 
-## The invariant
+<div align="center">
 
-Routing priority is, without exception:
+## 🧭 What it actually does
 
-```
-entry → credential → next credential → next entry
-```
+</div>
 
-A lower-priority entry is **never** attempted while a higher-priority entry still
-has an eligible, unattempted credential for the current request. Two exceptions
-exist, and both are deliberate:
+<img src="./docs/assets/chain-flow.svg" alt="A request entering COKEY, spending every key of node one, then falling back to node two" width="980" />
+
+COKEY is a **local gateway, not a service**. It runs on your machine, keeps your keys encrypted at
+rest, and exposes one OpenAI-compatible endpoint. When a provider rate-limits a key, COKEY cools
+that key down and retries the next one **inside the same node** - only falling through to the next
+node once every key of the current one is spent.
+
+<table>
+  <tr>
+    <td align="center" width="33%">
+      <b>🔁 Key-first rotation</b><br />
+      <sub>429, invalid key and provider 5xx rotate the key, not the chain</sub>
+    </td>
+    <td align="center" width="33%">
+      <b>🧱 Node fallback</b><br />
+      <sub>a node that cannot serve is skipped, in the order you chose</sub>
+    </td>
+    <td align="center" width="33%">
+      <b>🌐 One endpoint</b><br />
+      <sub>every client keeps working when a key rotates underneath it</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%">
+      <b>🩺 Live route</b><br />
+      <sub>the dashboard draws the node and key serving right now</sub>
+    </td>
+    <td align="center" width="33%">
+      <b>🛡️ Per-key egress</b><br />
+      <sub>two keys of one provider never share an exit IP</sub>
+    </td>
+    <td align="center" width="33%">
+      <b>📊 Honest quotas</b><br />
+      <sub>no rate-limit header means <code>Quota: Unknown</code>, never a guess</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+<div align="center">
+
+## 🔌 Every client you already use
+
+**One base URL. Whatever you point at COKEY keeps working when a key rotates underneath it.**
+
+</div>
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/opencode/CDB0F0" width="28" height="28" alt="opencode" /><br />
+      <b>opencode</b><br />
+      <sub>the reference client</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/claude/CDB0F0" width="28" height="28" alt="Claude Code" /><br />
+      <b>Claude Code</b><br />
+      <sub>Anthropic wire format</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Codex CLI" /><br />
+      <b>Codex CLI</b><br />
+      <sub>OpenAI-compatible base URL</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.jsdelivr.net/gh/gilbarbara/logos@main/logos/visual-studio-code.svg" width="28" height="28" alt="VS Code" /><br />
+      <b>VS Code</b><br />
+      <sub>Cline, Roo, Copilot Chat</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/cursor/CDB0F0" width="28" height="28" alt="Cursor" /><br />
+      <b>Cursor</b><br />
+      <sub>custom OpenAI provider</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/jetbrains/CDB0F0" width="28" height="28" alt="JetBrains" /><br />
+      <b>JetBrains IDEs</b><br />
+      <sub>AI Assistant endpoint</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/cline/CDB0F0" width="28" height="28" alt="Cline" /><br />
+      <b>Cline and forks</b><br />
+      <sub>OpenAI-compatible</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/gnometerminal/CDB0F0" width="28" height="28" alt="Any CLI" /><br />
+      <b>Any other CLI</b><br />
+      <sub>base URL and a placeholder key</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/windsurf/CDB0F0" width="28" height="28" alt="Windsurf" /><br />
+      <b>Windsurf</b><br />
+      <sub>Cascade with a custom endpoint</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/zedindustries/CDB0F0" width="28" height="28" alt="Zed" /><br />
+      <b>Zed</b><br />
+      <sub>OpenAI-compatible provider</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Continue" /><br />
+      <b>Continue</b><br />
+      <sub>VS Code and JetBrains extension</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Kilo Code" /><br />
+      <b>Kilo Code</b><br />
+      <sub>agent frameworks</sub>
+    </td>
+  </tr>
+</table>
+
+---
+
+<div align="center">
+
+## 🧠 Every major free lab, through one endpoint
+
+**45 providers, 340 curated free models. Connect a key once and chain it anywhere.**
+
+</div>
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/googlegemini/CDB0F0" width="28" height="28" alt="Google Gemini" /><br />
+      <b>Google Gemini</b><br />
+      <sub>Flash and Pro tiers</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/mistralai/CDB0F0" width="28" height="28" alt="Mistral AI" /><br />
+      <b>Mistral AI</b><br />
+      <sub>free tier</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/nvidia/CDB0F0" width="28" height="28" alt="NVIDIA NIM" /><br />
+      <b>NVIDIA NIM</b><br />
+      <sub>hosted endpoints</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/cloudflare/CDB0F0" width="28" height="28" alt="Cloudflare Workers AI" /><br />
+      <b>Cloudflare Workers AI</b><br />
+      <sub>daily free allocation</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/huggingface/CDB0F0" width="28" height="28" alt="Hugging Face" /><br />
+      <b>Hugging Face</b><br />
+      <sub>Inference Providers</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/openrouter/CDB0F0" width="28" height="28" alt="OpenRouter" /><br />
+      <b>OpenRouter</b><br />
+      <sub><code>:free</code> models</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/ollama/CDB0F0" width="28" height="28" alt="Ollama Cloud" /><br />
+      <b>Ollama Cloud</b><br />
+      <sub>local and hosted</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="https://cdn.simpleicons.org/opencode/CDB0F0" width="28" height="28" alt="OpenCode Zen" /><br />
+      <b>OpenCode Zen</b><br />
+      <sub>the curated gateway</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Groq" /><br />
+      <b>Groq API</b><br />
+      <sub>very fast free tier</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Cerebras" /><br />
+      <b>Cerebras</b><br />
+      <sub>free inference</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Cohere AI" /><br />
+      <b>Cohere AI</b><br />
+      <sub>trial keys</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Z.AI" /><br />
+      <b>Z.AI (Zhipu AI)</b><br />
+      <sub>GLM free models</sub>
+    </td>
+  </tr>
+</table>
+
+<sub>Brand marks come from [Simple Icons](https://simpleicons.org) and belong to their owners. Where a
+project publishes no usable mark, the COKEY plate stands in. The full catalog, with free-tier limits
+and dossiers, is in the app under **Providers**.</sub>
+
+---
+
+<div align="center">
+
+## 🩺 Resilience - three self-healing layers
+
+**The right layer for the right failure, so one dead key never costs a whole chain.**
+
+</div>
+
+<img src="./docs/assets/resilience-layers.svg" alt="Layer one: chain fallback. Layer two: key cooldown. Layer three: model gating" width="980" />
+
+Every failure COKEY knows about is contained at exactly one scope, and a scope that was not affected
+is never disturbed. A lower-priority node is **never** tried while a higher-priority node still has
+an eligible, unattempted key for the current request.
+
+| Layer | Scope | Handles | You see |
+| :---- | :---- | :------ | :------ |
+| **1** | whole chain | a node that cannot serve at all | the request walks on to the next node |
+| **2** | one key | `429`, invalid key, provider `5xx` | that key cools down, its siblings keep serving |
+| **3** | one model | a model whose key is not verified | the model is offered only when it can run |
+
+Two exceptions exist, and both are deliberate:
 
 | Error | Behaviour |
-| :-- | :-- |
-| `context_too_large`, `invalid_request` | Request-shaped. Stop immediately; rotating would fail identically. |
-| `model_unavailable` | Entry-shaped. Skip the entry's remaining keys; the other entries may still work. |
-
-Everything else — `429`, quota exhaustion, invalid keys, provider 5xx, network
-errors — rotates to the next key of the same entry first.
+| :---- | :-------- |
+| `context_too_large`, `invalid_request` | Request-shaped. Stop immediately, rotating would fail identically. |
+| `model_unavailable` | Node-shaped. Skip the node's remaining keys, the other nodes may still work. |
 
 ---
 
-## Features
+<div align="center">
 
-- **Credential-first failover** with a user-controlled entry order (drag, keyboard, or buttons).
-- **Verified keys only.** A key is proven against the provider (and, where the provider
-  validates per model, against the exact model) before it may join a chain.
-- **Live routing feed.** A status strip names the model, key and exit IP in use right
-  now, and raises a notification the moment the key or the model changes underneath a
-  client. Streamed over SSE from `/api/events`.
-- **Per-key egress proxies.** Bind a `socks5://` or `http://` proxy to each credential.
-  Several keys from one provider only fail over *independently* when they leave through
-  different IPs — otherwise they share the provider's IP-level limit.
-- **Per-key throughput.** Locally measured requests-per-minute and a trailing-minute
-  sparkline per credential, so two keys of the same provider are never indistinguishable.
-- **340 curated free models across 45 providers**, each annotated with context window,
-  best use and measured latency. A model is clickable only when its provider has a
-  working key.
-- **Honest quotas.** When a provider exposes no rate-limit headers, COKEY says
-  `Quota: Unknown`. It never fabricates numbers.
-- **OpenAI-compatible API**, including streaming, plus a full management API and CLI.
-- **Encrypted at rest**, AES-256-GCM, with the master key in the OS keychain or an env var.
+## ⚡ Why COKEY
+
+**Stop juggling dashboards, dead API keys and surprise bills.**
+
+</div>
+
+<table>
+  <tr>
+    <th align="left" width="50%">❌ The daily pain</th>
+    <th align="left" width="50%">✅ How COKEY fixes it</th>
+  </tr>
+  <tr>
+    <td>❌ A free tier dies mid-session and the tool just errors</td>
+    <td>✅ <b>Key-first failover</b> - the next key of the same node serves the request</td>
+  </tr>
+  <tr>
+    <td>❌ Every provider wants its own config, in its own format</td>
+    <td>✅ <b>One base URL</b> - the provider is always <code>COKEY</code>, the model is your alias</td>
+  </tr>
+  <tr>
+    <td>❌ Rate limits are per key <i>and</i> per IP, so rotating does nothing</td>
+    <td>✅ <b>Automatic egress pool</b> - keys of one provider leave from different IPs</td>
+  </tr>
+  <tr>
+    <td>❌ A key that looks fine fails the moment it is used</td>
+    <td>✅ <b>Verified keys only</b> - proven against the provider before it joins a chain</td>
+  </tr>
+  <tr>
+    <td>❌ Quota numbers in most tools are made up</td>
+    <td>✅ <b>Honest quotas</b> - unknown is reported as unknown</td>
+  </tr>
+  <tr>
+    <td>❌ You cannot tell two keys of the same provider apart</td>
+    <td>✅ <b>Per-key throughput</b> - measured requests per minute and a trailing-minute sparkline</td>
+  </tr>
+  <tr>
+    <td>❌ Failover is invisible until something breaks</td>
+    <td>✅ <b>The live route</b> - the node, key and exit IP in use right now, over SSE</td>
+  </tr>
+  <tr>
+    <td>❌ Your keys sit in a plaintext file somewhere</td>
+    <td>✅ <b>Encrypted at rest</b> - AES-256-GCM, master key in the OS keychain or an env var</td>
+  </tr>
+  <tr>
+    <td>❌ You have to trust someone else's cloud with your prompts</td>
+    <td>✅ <b>Local-first</b> - your machine, your keys, no telemetry, no phone-home</td>
+  </tr>
+</table>
 
 ---
 
-## Quick start
+<div align="center">
+
+## 🖥️ Where COKEY runs - anywhere
+
+**Same app, your machine, your rules. From a global npm install to a container on a Pi.**
+
+</div>
+
+| Platform | Install | Highlights |
+| :------- | :------ | :--------- |
+| 📦 **npm (global)** | `npm install -g cokey` | one command, any OS |
+| 🐳 **Docker** | `docker run -p 8787:8787 -v cokey:/data colombefioren/cokey` | multi-arch, data volume on `/data` |
+| 🧑‍💻 **From source** | `npm install && npm run build && npm start` | hack on it, contribute |
+| 🍓 **ARM / Raspberry Pi** | `native arm64` | runs on ARM hosts, Apple Silicon and small boxes |
+| 🖨️ **Any OpenAI-compatible client** | base URL only | editors, CLIs, agents, your own code |
+| 🧩 **Programmatic API** | `import { Cokey } from "cokey"` | embed the gateway in a script or test |
+
+---
+
+<div align="center">
+
+## 📖 Contents
+
+</div>
+
+<table>
+  <tr>
+    <td align="right"><b>Start</b></td>
+    <td><a href="#-quick-start">Quick start</a></td>
+    <td><a href="#-client-configuration">Client config</a></td>
+    <td><a href="#-cli">CLI</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Concepts</b></td>
+    <td><a href="#-the-invariant">The invariant</a></td>
+    <td><a href="#-how-a-request-is-routed">Routing</a></td>
+    <td><a href="#-the-live-route">Live route</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Features</b></td>
+    <td><a href="#-features">Features</a></td>
+    <td><a href="#-automatic-egress-pool">Egress pool</a></td>
+    <td><a href="#-management-api">API</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Clients</b></td>
+    <td><a href="#-every-client-you-already-use">Tools</a></td>
+    <td><a href="#-every-major-free-lab-through-one-endpoint">Providers</a></td>
+    <td><a href="#-resilience---three-self-healing-layers">Resilience</a></td>
+  </tr>
+  <tr>
+    <td align="right"><b>Project</b></td>
+    <td><a href="#-architecture">Architecture</a></td>
+    <td><a href="#-credits">Credits</a></td>
+    <td><a href="#-contributing">Contributing</a></td>
+  </tr>
+</table>
+
+---
+
+<div align="center">
+
+## 🚀 Quick start
+
+</div>
 
 ```bash
 # from the repository
 npm install
 npm run build
-npm start            # serves the UI and the gateway on http://127.0.0.1:8787
+npm start            # UI and gateway on http://127.0.0.1:8787
 
 # or install globally
 npm install -g cokey
 cokey
 ```
 
+Running `cokey` prints the logo and starts everything. The mark is rasterised from the same
+geometry as the SVG, so the loops come out round in a terminal instead of squashed:
+
+```
+                                  ####
+                               #####
+        ####             #########
+    ############     ############ ####
+  #####      ##### #####      #####         ##     ##  ######### ##      ##
+ ####          #######          ####        ##   ####  ######### ###    ###
+####            #####            ####       #######     ##        ########
+###              ###              ###       ####       #######      ####
+####            #####            ####       ####       #######       ##
+ ####          #######          ####        #######     ##           ##
+  #####      ##### #####      #####         ##   ####  #########     ##
+    ############     ############           ##     ##  #########     ##
+        ####             ####
+
+  C O K E Y  v0.1.0
+  a tool for broke lads made by a broke princess
+
+  gateway:  http://127.0.0.1:8787/v1
+  ui:       http://127.0.0.1:8787/
+```
+
 Then open <http://localhost:8787> and:
 
-1. **Providers** → pick a provider card, paste a key, COKEY verifies it inline.
-   (Optionally give the key its own proxy.)
-2. **Models** → pick a model. Only models whose provider has a working key are clickable.
-3. **Chains** → name the chain `cokey-best`, add more entries, drag them into your order.
+1. **Chains** → create a chain, for example `cokey-best`.
+2. **Providers** → paste an API key, COKEY verifies it inline. Keys land in the chain's **Keys** tab.
+3. Add nodes to the chain, pick the keys each node may use, drag them into your order.
 4. Point your tool at `http://127.0.0.1:8787/v1` with any placeholder API key.
 
-### Client configuration
+Then watch the dashboard's **Live route** and **Resilience** panels: the first shows where a request
+went, the second shows which layer caught what.
 
-Any OpenAI-compatible tool needs only a base URL.
+<!---->
+
+> **Contact, bug reports and provider tips** live inside the app under **Terms** (and **About**),
+> because that is where someone running COKEY actually is. The README carries no contact block.
+
+---
+
+<div align="center">
+
+## 🔌 Client configuration
+
+</div>
+
+Any OpenAI-compatible tool needs only a base URL. The provider is always `COKEY` and the model is
+whatever you called your chain.
 
 ```jsonc
 // OpenCode / Kilo Code style provider entry
@@ -110,82 +451,169 @@ Any OpenAI-compatible tool needs only a base URL.
 }
 ```
 
-> Verify the exact key names against your tool's current documentation — COKEY itself
-> only cares about the base URL and that the client sends an OpenAI-shaped request.
+> Verify the exact key names against your tool's current documentation. COKEY only cares about the
+> base URL and that the client sends an OpenAI-shaped request.
+
+Per-tool walkthroughs for Claude Code, Cursor, JetBrains, Cline, Continue, opencode, Hermes Agent,
+OpenClaw, Codex CLI and other CLIs live in the app under **Tutorial**.
 
 ---
 
-## Proxy support
+<div align="center">
 
-Provider rate limits are usually tracked per **key and per IP**, so rotating keys
-from one address still trips them. Bind a distinct proxy per credential:
+## 🧱 The invariant
 
-```bash
-# in the UI: Keys → Egress → set proxy
-# or over the API
-curl -X PATCH http://localhost:8787/api/credentials/<id> \
-  -H 'content-type: application/json' \
-  -d '{"proxyUrl":"socks5://user:pass@host:1080"}'
+</div>
+
+Routing priority is, without exception:
+
+```
+node -> key -> next key -> next node
 ```
 
-- `socks5://`, `socks://`, `socks5h://` and `http(s)://` are supported (SOCKS5 via
-  undici's `Socks5ProxyAgent`, HTTP CONNECT via `ProxyAgent`).
-- Dispatchers are pooled per proxy URL; one key, one pool, one exit IP.
-- Proxy credentials are stored with the key and are **never** returned by the API —
-  responses expose `host:port` only.
-- `proxyUrl: null` returns the key to direct egress.
+A lower-priority node is **never** attempted while a higher-priority node still has an eligible,
+unattempted key for the current request. Everything else rotates to the next key of the same node
+first: `429`, quota exhaustion, invalid keys, provider `5xx`, network errors.
 
 ---
 
-## Live status and notifications
+<div align="center">
 
-`GET /api/events` streams server-sent events. The first frame is a snapshot, so a UI
-that connects mid-request still renders correctly:
+## ✨ Features
 
-```
-data: {"kind":"snapshot","route":{...},"recent":[...]}
+</div>
 
-data: {"kind":"event","event":{"type":"route.attempt", ...}}
-data: {"kind":"event","event":{"type":"route.switch","message":"Switched: key → Backup",
-        "previous":{"credentialDescription":"Main"},"data":{"changedCredential":true}}}
-data: {"kind":"event","event":{"type":"credential.cooldown","data":{"cooldownUntil":...}}}
-```
-
-`GET /api/status` returns the same snapshot plus recent events for polling clients.
-Every event is local-only; there is no telemetry anywhere in COKEY.
+- **Key-first failover** with a user-controlled node order (drag, keyboard, or buttons).
+- **Verified keys only.** A key is proven against the provider, and against the exact model where
+  the provider validates per model, before it may join a chain.
+- **The live route.** A dashboard diagram draws the chain as it is walked, lighting up the node
+  and the exact key serving the current request. The topbar chip narrates every key or model
+  change the moment it happens, over SSE from `/api/events`.
+- **Resilience you can see.** The dashboard names the three containment layers - chain fallback,
+  key cooldown, model gating - and which failure trips which one.
+- **Automatic egress pool.** Add proxies once and COKEY spreads them so two keys of the *same*
+  provider never share an exit IP, while keys of different providers may share one. No manual
+  wiring, stable across restarts.
+- **Per-key throughput.** Locally measured requests-per-minute and a trailing-minute sparkline per
+  credential, so two keys of the same provider are never indistinguishable.
+- **Model test button.** The play button in Models sends one real hello through a working key and
+  only turns green on a `200`, with the reply and latency shown.
+- **Rankings you can audit.** Coding skill, rate limits and a combined board, each row naming its
+  source so a third-party blog post is never mistaken for provider documentation.
+- **Honest quotas.** When a provider exposes no rate-limit headers, COKEY says `Quota: Unknown`. It
+  never fabricates numbers.
+- **340 curated free models across 45 providers**, each annotated with context window, best use and
+  measured latency.
+- **Your name for the model.** A node's display label is free text you type. COKEY never invents
+  something like `DeepSeek V4 Pro (xKiro)`.
+- **OpenAI-compatible API** including streaming, plus a full management API and CLI.
+- **Encrypted at rest**, AES-256-GCM, with the master key in the OS keychain or an env var.
 
 ---
 
-## How a request is routed
+<div align="center">
+
+## 🔀 How a request is routed
+
+</div>
 
 1. The client asks for a chain alias (`model: "cokey-best"`).
-2. Each entry is tried in the user's order.
-3. Inside an entry, keys are ordered by the entry's strategy:
-   - **sequential** — the order you bound them in;
-   - **round-robin** — rotated per request, preferring the least-contended key so
-     concurrent requests never stampede the same credential.
-4. On a credential-scoped failure the key is cooled down (honouring `Retry-After`
-   when present, otherwise exponential backoff with jitter) and the next key is tried.
+2. Each node is tried in the user's order.
+3. Inside a node, keys are ordered by the node's strategy:
+   - **sequential**, the order you bound them in;
+   - **round-robin**, rotated per request, preferring the least-contended key so concurrent
+     requests never stampede the same credential.
+4. On a credential-scoped failure the key is cooled down, honouring `Retry-After` when present and
+   otherwise using exponential backoff with jitter, and the next key is tried.
 5. `X-Cokey-*` response headers record the decision:
 
 ```
+X-Cokey-Provider: COKEY
 X-Cokey-Chain: cokey-best
 X-Cokey-Entry: groq/qwen3.8-27b
 X-Cokey-Credential: main-account
 X-Cokey-Fallback: true
 X-Cokey-Fallback-Reason: rate_limit
+X-Cokey-State: chain changed state: cokey-best now on groq/qwen3.8-27b via main-account (rate_limit)
 ```
 
-Headers never contain a secret.
+Headers never contain a secret. Clients that surface headers, which most CLIs do, pick up the state
+change notification from `X-Cokey-State` without any integration work.
 
 ---
 
-## Management API
+<div align="center">
+
+## 📡 The live route
+
+</div>
+
+`GET /api/events` streams server-sent events. The first frame is a snapshot, so a UI that connects
+mid-request still renders correctly:
+
+```
+data: {"kind":"snapshot","route":{...},"recent":[...]}
+
+data: {"kind":"event","event":{"type":"route.attempt", ...}}
+data: {"kind":"event","event":{"type":"chain.state","message":"chain changed state: cokey-best now on ..."}}
+data: {"kind":"event","event":{"type":"credential.cooldown","data":{"cooldownUntil":...}}}
+```
+
+`GET /api/status` returns the same snapshot plus recent events for polling clients. Every event is
+local-only. There is no telemetry anywhere in COKEY.
+
+---
+
+<div align="center">
+
+## 🌐 Automatic egress pool
+
+</div>
+
+Provider limits are usually tracked per **key and per IP**, so rotating keys from one address still
+trips them. The pool fixes that without any manual wiring:
+
+- every key of a provider gets a different pool entry, so two keys of one provider never share an
+  exit IP;
+- two keys of *different* providers may share an entry, because nothing correlates them upstream;
+- the mapping is derived from the provider id and the pool order, so it is stable across restarts.
+
+```bash
+# seed a pool without touching the UI
+COKEY_PROXY_POOL="socks5://user:pass@host:1080,http://host:3128" cokey
+```
+
+Or bind a single key by hand, which pins it and takes it out of the pool:
+
+```bash
+curl -X PATCH http://localhost:8787/api/credentials/<id> \
+  -H 'content-type: application/json' \
+  -d '{"proxyUrl":"socks5://user:pass@host:1080"}'
+```
+
+- `socks5://`, `socks://`, `socks5h://` and `http(s)://` are supported (SOCKS5 via undici's
+  `Socks5ProxyAgent`, HTTP CONNECT via `ProxyAgent`).
+- Dispatchers are pooled per proxy URL. One key, one pool, one exit IP.
+- Proxy credentials are stored with the key and are **never** returned by the API. Responses expose
+  `host:port` only.
+- `proxyUrl: null` returns the key to direct egress.
+
+---
+
+<div align="center">
+
+## 🧰 Management API
+
+</div>
 
 ```
 GET    /api/models                    # curated free models + availability
+POST   /api/models/probe              # real hello through a working key
 GET    /api/providers                 # catalog + connection status
 POST   /api/providers/:id/connect     # { secret, description, accountId?, proxyUrl? }
+
+GET    /api/catalog/rankings          # skill, rate, combined and redundancy boards
+GET    /api/catalog/providers         # provider dossiers
 
 GET    /api/chains
 POST   /api/chains
@@ -200,9 +628,10 @@ DELETE /api/entries/:id
 POST   /api/entries/:id/duplicate
 POST   /api/entries/:id/move
 
-GET    /api/entries/:id/credentials
-POST   /api/entries/:id/credentials   # { secret, description, proxyUrl?, addAnyway? }
-DELETE /api/entries/:id/credentials/:credentialId
+GET    /api/proxy-pool                # pool entries + assignment plan
+POST   /api/proxy-pool
+PATCH  /api/proxy-pool/:id
+DELETE /api/proxy-pool/:id
 
 GET    /api/credentials
 PATCH  /api/credentials/:id           # { description?, secret?, status?, proxyUrl? }
@@ -225,7 +654,11 @@ No response ever contains a stored secret.
 
 ---
 
-## CLI
+<div align="center">
+
+## ⌨️ CLI
+
+</div>
 
 ```bash
 cokey                        # start the gateway and UI
@@ -234,7 +667,7 @@ cokey stop                   # stop a background gateway
 cokey status                 # gateway, chain and credential summary
 cokey doctor                 # local diagnostics
 cokey chains                 # list chains; also create/delete/add/remove/reorder/move
-cokey entries                # every entry across all chains
+cokey entries                # every node across all chains
 cokey providers              # catalog + free tier + connection state
 cokey models [provider]      # curated free models, marking usable providers
 cokey keys                   # credential inventory with per-key rate and egress
@@ -250,7 +683,11 @@ cokey catalog                # dump the provider catalog
 
 ---
 
-## Programmatic API
+<div align="center">
+
+## 🧩 Programmatic API
+
+</div>
 
 ```ts
 import { Cokey } from "cokey";
@@ -275,52 +712,63 @@ await cokey.addChain({
 
 ---
 
-## Security
+<div align="center">
 
-- Secrets are encrypted with **AES-256-GCM**; the on-disk value is
-  `v1:` + `base64(iv ‖ authTag ‖ ciphertext)`.
-- The master key comes from `COKEY_MASTER_KEY`, a passphrase
-  (`COKEY_PASSPHRASE`), the OS keychain, or a `0600` key file — in that order.
-- The log redactor drops sensitive field names and rewrites token-shaped values,
-  so an `Authorization` header cannot reach a log line.
-- A credential is never serialised raw: HTTP responses use a masked projection.
-- Custom endpoints pass an SSRF guard; private ranges are refused unless explicitly
-  allowed in settings.
-- Redirects are never followed, so an upstream cannot bounce an `Authorization`
-  header to another origin.
+## 🔒 Security
+
+</div>
+
+- Secrets are encrypted with **AES-256-GCM**. The on-disk value is
+  `v1:` + `base64(iv, authTag, ciphertext)`.
+- The master key comes from `COKEY_MASTER_KEY`, a passphrase (`COKEY_PASSPHRASE`), the OS keychain,
+  or a `0600` key file, in that order.
+- The log redactor drops sensitive field names and rewrites token-shaped values, so an
+  `Authorization` header cannot reach a log line.
+- A credential is never serialised raw. HTTP responses use a masked projection.
+- Custom endpoints pass an SSRF guard. Private ranges are refused unless explicitly allowed in
+  settings.
+- Redirects are never followed, so an upstream cannot bounce an `Authorization` header to another
+  origin.
 - Local-only by default. No telemetry, no phone-home.
 
 ---
 
-## Testing
+<div align="center">
+
+## 🧪 Testing
+
+</div>
 
 ```bash
 npm test          # vitest
 npm run typecheck # server, tests and web UI
 ```
 
-The suite covers the routing invariant (key rotation before entry fallback,
-cross-entry fallback order, request-scoped early exit, user reordering, cooldown
-skipping), live event emission, proxy parsing and wiring, per-credential rate
-tracking, and model-availability gating.
+The suite covers the routing invariant (key rotation before node fallback, cross-node fallback
+order, request-scoped early exit, user reordering, cooldown skipping), live event emission, proxy
+parsing and wiring, per-credential rate tracking, and model-availability gating.
 
 ---
 
-## Architecture
+<div align="center">
+
+## 🏗️ Architecture
+
+</div>
 
 ```
 src/
-├── catalog/          curated provider + free-model data (data, not code paths)
-├── cli/              command-line interface
+├── catalog/          curated provider + free-model data, dossiers and rankings
+├── cli/              command-line interface and the ASCII logo
 ├── core/
-│   ├── chains/       chain and entry ordering
+│   ├── chains/       chain and node ordering
 │   ├── credentials/  lifecycle, cooldowns, selection, rate tracking
 │   ├── crypto/       AES-256-GCM vault and master-key resolution
-│   ├── db/           SQLite schema, migrations and repositories
+│   ├── db/           SQLite schema, migrations, repositories
 │   ├── errors/       provider error classification
 │   ├── events/       routing event bus
-│   ├── models/       model catalog × credential availability
-│   ├── providers/    adapters, HTTP executor, proxy dispatchers
+│   ├── models/       model catalog, availability and live probes
+│   ├── providers/    adapters, HTTP executor, proxy dispatchers, egress pool
 │   ├── quota/        rate-limit header parsing
 │   ├── router/       the fallback engine
 │   └── security/     SSRF guard
@@ -328,11 +776,75 @@ src/
 └── web/              React + Vite UI
 ```
 
-Adding a provider is a data change: append to the catalog. No router, adapter or UI
-code needs to change for another OpenAI-compatible service.
+Adding a provider is a data change: append to the catalog. No router, adapter or UI code needs to
+change for another OpenAI-compatible service.
 
 ---
 
-## License
+<div align="center">
 
-MIT.
+## 📚 Credits
+
+</div>
+
+The provider and free-tier catalog is built in part from
+**[awesome-free-byok-models](https://github.com/velo4705/awesome-free-byok-models)** by
+[velo4705](https://github.com/velo4705). Thank you for collecting and keeping that list honest.
+
+Rate limits and capabilities change constantly, so every ranking board in the app names its source
+and leaves the judgement to you.
+
+---
+
+<div align="center">
+
+## 🤝 Contributing
+
+</div>
+
+COKEY is MIT licensed and open source. Fork it, branch, and open a pull request:
+
+```bash
+git clone https://github.com/colombefioren/COKEY.git
+cd COKEY
+npm install
+npm run typecheck && npm test
+```
+
+1. Fork the repository.
+2. Create your branch (`git checkout -b feat/amazing-feature`).
+3. Run `npm run typecheck` and `npm test` before pushing.
+4. Open a pull request with a clear description of what changed and why.
+
+---
+
+<div align="center">
+
+## 🧱 Stack
+
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js%2020%2B-339933?style=flat-square&logo=node.js&logoColor=white)
+![Fastify](https://img.shields.io/badge/Fastify-000000?style=flat-square&logo=fastify&logoColor=white)
+![SQLite](https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white)
+![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white)
+![React](https://img.shields.io/badge/React%2018-61DAFB?style=flat-square&logo=react&logoColor=150F3D)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white)
+![Vitest](https://img.shields.io/badge/Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
+![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?style=flat-square&logo=githubactions&logoColor=white)
+
+</div>
+
+---
+
+<div align="center">
+
+## 📄 License
+
+MIT. See [LICENSE](LICENSE).
+
+<img src="./docs/assets/cokey-mark.svg" alt="COKEY" width="72" />
+
+<sub>a tool for broke lads made by a broke princess</sub>
+
+</div>

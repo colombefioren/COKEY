@@ -8,47 +8,126 @@ import type {
 } from "./types.js";
 import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
+import { Sidebar, type NavGroup } from "./components/Sidebar.js";
 import { LoginForm } from "./components/LoginForm.js";
+import { ThemeToggle } from "./components/ThemeToggle.js";
+import {
+  IconActivity,
+  IconBook,
+  IconCpu,
+  IconGrid,
+  IconKey,
+  IconLayers,
+  IconRoute,
+  IconScroll,
+  IconSliders,
+  IconSparkle,
+} from "./components/Icons.js";
+import { href, useRoute } from "./router.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
-import { AddChain } from "./pages/AddChain.js";
 import { Models } from "./pages/Models.js";
 import { Providers } from "./pages/Providers.js";
-import { Keys } from "./pages/Keys.js";
 import { ApiKeys } from "./pages/ApiKeys.js";
-import { Requests } from "./pages/Requests.js";
 import { Usage } from "./pages/Usage.js";
 import { Settings } from "./pages/Settings.js";
-
-type Tab =
-  | "dashboard"
-  | "chains"
-  | "add"
-  | "models"
-  | "providers"
-  | "keys"
-  | "api-keys"
-  | "requests"
-  | "usage"
-  | "settings";
-
-const TABS: Array<[Tab, string]> = [
-  ["dashboard", "Dashboard"],
-  ["chains", "Chains"],
-  ["models", "Models"],
-  ["add", "Add chain"],
-  ["providers", "Providers"],
-  ["keys", "Keys"],
-  ["api-keys", "API keys"],
-  ["requests", "Requests"],
-  ["usage", "Usage"],
-  ["settings", "Settings"],
-];
+import { Tutorial } from "./pages/Tutorial.js";
+import { Terms } from "./pages/Terms.js";
+import { About } from "./pages/About.js";
 
 const NUDGER_KEY = "cokey.nudger.dismissed";
 
+/** The whole navigation, in one place, so the sidebar and the router agree. */
+function navGroups(counts: { chains: number; keys: number; providers: number }): NavGroup[] {
+  return [
+    {
+      title: "Overview",
+      items: [
+        {
+          path: "/dashboard",
+          label: "Dashboard",
+          icon: <IconLayers />,
+          hint: "Gateway summary and live route",
+        },
+      ],
+    },
+    {
+      title: "Configure",
+      items: [
+        {
+          path: "/chains",
+          label: "Chains",
+          icon: <IconRoute />,
+          hint: "Your failover chains, their nodes and their keys",
+          badge: counts.chains ? String(counts.chains) : undefined,
+        },
+        {
+          path: "/models",
+          label: "Models",
+          icon: <IconCpu />,
+          hint: "Model catalog, live tests and rankings",
+        },
+        {
+          path: "/providers",
+          label: "Providers",
+          icon: <IconGrid />,
+          hint: "Who runs each provider and whether to depend on it",
+          badge: counts.providers ? String(counts.providers) : undefined,
+        },
+        {
+          path: "/api-keys",
+          label: "API keys",
+          icon: <IconKey />,
+          hint: "Keys for talking to the gateway itself",
+        },
+      ],
+    },
+    {
+      title: "Observe",
+      items: [
+        {
+          path: "/usage",
+          label: "Usage",
+          icon: <IconActivity />,
+          hint: "Request history and token usage together",
+          badge: counts.keys ? String(counts.keys) : undefined,
+        },
+      ],
+    },
+    {
+      title: "Help",
+      items: [
+        {
+          path: "/settings",
+          label: "Settings",
+          icon: <IconSliders />,
+          hint: "Gateway, fallback and egress settings",
+        },
+        {
+          path: "/tutorial",
+          label: "Tutorial",
+          icon: <IconBook />,
+          hint: "Wire COKEY into your editor or CLI",
+        },
+        {
+          path: "/terms",
+          label: "Terms",
+          icon: <IconScroll />,
+          hint: "What you agree to by using COKEY",
+        },
+        {
+          path: "/about",
+          label: "About",
+          icon: <IconSparkle />,
+          hint: "The stack, the credits and how to reach the creator",
+        },
+      ],
+    },
+  ];
+}
+
 function Shell() {
-  const [tab, setTab] = useState<Tab>("dashboard");
+  const { route, navigate } = useRoute();
   const [version, setVersion] = useState("");
   const [dataDir, setDataDir] = useState("");
   const [settings, setSettings] = useState<SettingsModel | null>(null);
@@ -57,11 +136,10 @@ function Shell() {
   const [credentials, setCredentials] = useState<PublicCredential[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [dismissed, setDismissed] = useState(() => window.localStorage.getItem(NUDGER_KEY) === "1");
+  const [navOpen, setNavOpen] = useState(false);
 
-  // ---- auth gate ----
-
-  // The gateway always requires a session cookie. On first load we probe an
-  // authenticated endpoint; a 401 means show the password form.
+  // The gateway always requires a session cookie, so the first authenticated
+  // call decides whether to render the login form.
   const [authed, setAuthed] = useState<boolean | null>(null);
 
   const probe = useCallback(async () => {
@@ -85,7 +163,7 @@ function Shell() {
     if (authed !== true) return;
     try {
       const [health, settingsResult, nudgeResult, providerList, credentialList] = await Promise.all(
-        [api.health(), api.settings(), api.nudge(), api.providers(), api.credentials()],
+        [api.health(), api.settings(), api.nudge(), api.allProviders(), api.allCredentials()],
       );
       setVersion(health.version);
       setDataDir(health.dataDir);
@@ -94,7 +172,7 @@ function Shell() {
       setProviders(providerList);
       setCredentials(credentialList);
     } catch {
-      // The gateway may be restarting; the next poll will pick it up.
+      // The gateway may be restarting; the next poll picks it up.
     }
   }, [authed]);
 
@@ -104,95 +182,197 @@ function Shell() {
     void reload();
   }, [reload, refreshKey]);
 
-  // Light polling so credential cooldowns and stats stay current.
+  // Light polling so cooldowns and stats stay current, plus an immediate refresh
+  // whenever the route changes.
   useEffect(() => {
     const timer = window.setInterval(() => void reload(), 10_000);
     return () => window.clearInterval(timer);
   }, [reload]);
 
+  useEffect(() => {
+    setNavOpen(false);
+    void reload();
+  }, [route.path, reload]);
+
   if (authed === null) return null;
-  if (!authed) return <LoginForm onLogin={() => setAuthed(true)} />;
+  if (!authed) {
+    return (
+      <>
+        <ThemeToggle className="login-theme" />
+        <LoginForm onLogin={() => setAuthed(true)} />
+      </>
+    );
+  }
 
   function dismissNudge() {
     window.localStorage.setItem(NUDGER_KEY, "1");
     setDismissed(true);
   }
 
+  const groups = navGroups({
+    chains: 0,
+    keys: credentials.length,
+    providers: providers.filter((provider) => provider.connected).length,
+  });
+
+  const page = renderPage(route.path, {
+    refreshKey,
+    bump,
+    nudge: dismissed ? null : nudge,
+    onDismissNudge: dismissNudge,
+    settings,
+    providers,
+    credentials,
+  });
+
   return (
-    <div className="app">
-      <header className="topbar">
-        <div className="brand">
-          CO<span>KEY</span>
-        </div>
-        <nav className="tabs">
-          {TABS.map(([id, label]) => (
-            <button
-              key={id}
-              className="tab"
-              aria-selected={tab === id}
-              onClick={() => setTab(id)}
-              type="button"
-            >
-              {label}
-            </button>
-          ))}
-        </nav>
-        <div className="topbar-meta">
+    <div className={`shell${navOpen ? " nav-open" : ""}`}>
+      <Sidebar
+        groups={groups}
+        activePath={route.path}
+        navigate={navigate}
+        onClose={() => setNavOpen(false)}
+        footer={
+          <div className="sidebar-stats">
+            <span title="Connected providers">
+              {providers.filter((p) => p.connected).length} providers
+            </span>
+            <span title="Stored credentials">{credentials.length} keys</span>
+          </div>
+        }
+      />
+
+      <div className="content">
+        <header className="topbar">
+          <button
+            type="button"
+            className="ghost nav-toggle"
+            aria-label="Toggle navigation"
+            aria-expanded={navOpen}
+            onClick={() => setNavOpen((open) => !open)}
+          >
+            {"\u2630"}
+          </button>
+          {/* Keyed on the route so the name animates in on a page change. */}
+          <span className="topbar-title" key={route.path}>
+            {titleFor(route.path)}
+          </span>
+          <span className="spacer" />
+          <ThemeToggle />
           <LiveStatus />
-          {version ? <span>v{version}</span> : null}
-          {dataDir ? <span title={dataDir}>{dataDir}</span> : null}
-          <a href="/v1/models" target="_blank" rel="noreferrer">
-            /v1/models ↗
+          {version ? <span className="faint">v{version}</span> : null}
+          {dataDir ? (
+            <span className="faint" title={dataDir}>
+              data dir
+            </span>
+          ) : null}
+          <a href={href("/tutorial")} onClick={() => navigate("/tutorial")} className="small">
+            setup guide
           </a>
-        </div>
-      </header>
+          <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
+            /v1/models
+          </a>
+        </header>
 
-      <main>
-        {tab === "dashboard" ? (
-          <Dashboard
-            nudge={dismissed ? null : nudge}
-            onDismissNudge={dismissNudge}
-            onGoToProviders={() => setTab("providers")}
-            refreshKey={refreshKey}
-          />
-        ) : null}
-
-        {tab === "chains" ? <Chains refreshKey={refreshKey} onChanged={bump} /> : null}
-
-        {tab === "add" ? (
-          <AddChain
-            providers={providers}
-            credentials={credentials}
-            onCreated={() => {
-              bump();
-              setTab("chains");
-            }}
-          />
-        ) : null}
-
-        {tab === "models" ? <Models refreshKey={refreshKey} onChanged={bump} /> : null}
-
-        {tab === "providers" ? <Providers refreshKey={refreshKey} onChanged={bump} /> : null}
-
-        {tab === "keys" ? <Keys refreshKey={refreshKey} onChanged={bump} /> : null}
-
-        {tab === "api-keys" ? <ApiKeys refreshKey={refreshKey} onChanged={bump} /> : null}
-
-        {tab === "requests" ? <Requests refreshKey={refreshKey} /> : null}
-
-        {tab === "usage" ? <Usage refreshKey={refreshKey} /> : null}
-
-        {tab === "settings" ? (
-          <Settings settings={settings} onSaved={bump} refreshKey={refreshKey} />
-        ) : null}
-      </main>
+        {/*
+         * Keyed on the route so each page remounts: the entrance animation runs
+         * on a real navigation, and the pages already refetch on mount.
+         */}
+        <main>
+          <div className="page" key={route.path}>
+            {page}
+          </div>
+        </main>
+      </div>
     </div>
   );
+}
+
+function titleFor(path: string): string {
+  switch (path) {
+    case "/chains":
+      return "Chains";
+    case "/models":
+      return "Models";
+    case "/providers":
+      return "Providers";
+    case "/api-keys":
+      return "API keys";
+    case "/usage":
+      return "Usage";
+    case "/settings":
+      return "Settings";
+    case "/tutorial":
+      return "Tutorial";
+    case "/terms":
+      return "Terms of service";
+    case "/about":
+      return "About";
+    default:
+      return "Dashboard";
+  }
+}
+
+interface PageContext {
+  refreshKey: number;
+  bump: () => void;
+  nudge: Nudge | null;
+  onDismissNudge: () => void;
+  settings: SettingsModel | null;
+  providers: ProviderStatus[];
+  credentials: PublicCredential[];
+}
+
+function renderPage(path: string, context: PageContext) {
+  switch (path) {
+    case "/chains":
+      return (
+        <Chains
+          refreshKey={context.refreshKey}
+          onChanged={context.bump}
+          providers={context.providers}
+        />
+      );
+    case "/models":
+      return <Models refreshKey={context.refreshKey} onChanged={context.bump} />;
+    case "/providers":
+      return <Providers refreshKey={context.refreshKey} onChanged={context.bump} />;
+    case "/api-keys":
+      return <ApiKeys refreshKey={context.refreshKey} onChanged={context.bump} />;
+    case "/usage":
+      return <Usage refreshKey={context.refreshKey} />;
+    case "/settings":
+      return (
+        <Settings
+          settings={context.settings}
+          onSaved={context.bump}
+          refreshKey={context.refreshKey}
+        />
+      );
+    case "/tutorial":
+      return <Tutorial />;
+    case "/terms":
+      return <Terms />;
+    case "/about":
+      return <About />;
+    default:
+      return (
+        <Dashboard
+          nudge={context.nudge}
+          onDismissNudge={context.onDismissNudge}
+          onGoToProviders={() => {
+            window.location.hash = "#/providers";
+          }}
+          refreshKey={context.refreshKey}
+        />
+      );
+  }
 }
 
 export function App() {
   return (
     <ToastProvider>
+      <div className="starfield" aria-hidden="true" />
       <Shell />
     </ToastProvider>
   );

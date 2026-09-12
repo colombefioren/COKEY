@@ -26,6 +26,7 @@ export interface UsageStats {
   outputTokens: number;
   totalTokens: number;
   rateLimitErrors: number;
+  quotaErrors: number;
   authErrors: number;
   serverErrors: number;
   averageLatencyMs: number;
@@ -36,6 +37,8 @@ export interface UsageStats {
 /** Proxy state of a credential. Never carries the proxy's own credentials. */
 export interface CredentialProxyInfo {
   configured: boolean;
+  /** True when the automatic pool chose this exit rather than the user. */
+  auto: boolean;
   /** `host:port` of the egress proxy. */
   label?: string;
 }
@@ -79,6 +82,13 @@ export interface ChainEntryView {
   chainId: string;
   providerId: string;
   model: string;
+  /**
+   * Display name chosen by the user.
+   *
+   * COKEY never derives this from the model id: "DeepSeek V4 Pro (xKiro)" is
+   * something a person types, not something the gateway invents.
+   */
+  label?: string;
   baseUrl: string;
   credentialIds: string[];
   enabled: boolean;
@@ -187,8 +197,76 @@ export interface Settings {
   showFreeProviderNudger: boolean;
   freeProviderTarget: number;
   allowPrivateEndpoints: boolean;
+  /** Spread pool proxies across same-provider keys without manual wiring. */
+  autoProxy: boolean;
+  autoProxyStrategy: AutoProxyStrategy;
+  proxyPoolSize: number;
   fallback: FallbackPolicy;
   passwordLocked: boolean;
+}
+
+export type AutoProxyStrategy = "per-provider" | "round-robin";
+
+/** The envelope every paginated endpoint returns. */
+export interface Paginated<T> {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+export interface PageParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+}
+
+/** One entry in the automatic egress pool. */
+export interface ProxyPoolEntryView {
+  id: string;
+  /** `host:port` only. The proxy's own credentials never leave the server. */
+  label: string;
+  enabled: boolean;
+  createdAt: number;
+  assignedTo: number;
+}
+
+export interface ProxyPoolStatus {
+  enabled: boolean;
+  size: number;
+  enabledCount: number;
+  providerCount: number;
+  assignments: number;
+  /** Providers with more keys than the pool, so sharing is unavoidable. */
+  saturatedProviders: string[];
+  strategy: AutoProxyStrategy;
+}
+
+export interface ProxyPoolResponse {
+  entries: ProxyPoolEntryView[];
+  status: ProxyPoolStatus;
+}
+
+export interface ProxyPoolBulkResponse extends ProxyPoolResponse {
+  added: number;
+  skipped: number;
+}
+
+/** Result of the model play button: a real request, not a cached status. */
+export interface ModelProbeResult {
+  ok: boolean;
+  providerId: string;
+  model: string;
+  credentialId?: string;
+  credentialDescription?: string;
+  status?: number;
+  latencyMs: number;
+  classification: string;
+  message?: string;
+  reply?: string;
+  proxyLabel?: string;
 }
 
 export interface ApiKeyView {
@@ -246,6 +324,7 @@ export interface CokeyEvent {
     | "route.start"
     | "route.attempt"
     | "route.switch"
+    | "chain.state"
     | "route.success"
     | "route.failure"
     | "credential.cooldown"
@@ -353,4 +432,82 @@ export interface UsageView {
   today: string;
   providers: UsageProviderView[];
   chains: UsageChainView[];
+}
+
+// ---- catalog intelligence -------------------------------------------------
+
+export type ProviderKind = "lab" | "inference-cloud" | "aggregator" | "gateway" | "local";
+export type ProviderVerdict = "recommended" | "usable" | "limited" | "avoid";
+
+export interface ProviderDossier {
+  operator: string;
+  origin: string;
+  kind: ProviderKind;
+  summary: string;
+  verdict: ProviderVerdict;
+  verdictReason: string;
+  sourceUrl?: string;
+}
+
+/** A provider card with its dossier folded in. */
+export interface CatalogProviderRow extends ProviderStatus {
+  dossier: ProviderDossier;
+}
+
+export type QuotaProvenance = "operator" | "third-party" | "unpublished";
+
+export interface RankingSource {
+  label: string;
+  url: string;
+}
+
+export interface SkillEntry {
+  model: string;
+  providerId?: string;
+  tierName: "S" | "A" | "B" | "C";
+  sweScore?: number;
+  reason: string;
+}
+
+export interface SkillTier {
+  name: "S" | "A" | "B" | "C";
+  label: string;
+  blurb: string;
+}
+
+export interface RateLimitEntry {
+  providerId: string;
+  provider: string;
+  tier: 1 | 2 | 3 | 4;
+  quota: string;
+  provenance: QuotaProvenance;
+  reliability: "solid" | "watch" | "avoid";
+  note?: string;
+}
+
+export interface CombinedEntry {
+  rank: number;
+  providerId: string;
+  model: string;
+  why: string;
+  tier: RateLimitEntry["tier"];
+}
+
+export interface RedundancyEntry {
+  family: string;
+  alsoOn: string[];
+  keep: string;
+  fallback: string;
+}
+
+export interface RankingsResponse {
+  tiers: SkillTier[];
+  skill: SkillEntry[];
+  rateLimit: RateLimitEntry[];
+  combined: CombinedEntry[];
+  redundancy: RedundancyEntry[];
+  dropList: Array<{ provider: string; reason: string }>;
+  bottomLine: string;
+  disclaimer: string;
+  sources: RankingSource[];
 }

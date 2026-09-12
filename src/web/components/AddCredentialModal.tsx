@@ -36,10 +36,11 @@ export function AddCredentialModal({
 
   useEffect(() => {
     void (async () => {
-      const all = await api.credentials();
+      const all = await api.allCredentials();
       const bindable = all.filter(
         (credential) =>
-          credential.providerId === entry.providerId && !entry.credentialIds.includes(credential.id),
+          credential.providerId === entry.providerId &&
+          !entry.credentialIds.includes(credential.id),
       );
       setCandidates(bindable);
       if (bindable.length === 0) setMode("new");
@@ -179,16 +180,18 @@ export function AddCredentialModal({
           ) : null}
 
           <div className="field">
-            <label htmlFor="credential-proxy">Egress proxy (optional)</label>
+            <label htmlFor="credential-proxy">Egress proxy (optional override)</label>
             <input
               id="credential-proxy"
               value={proxyUrl}
-              placeholder="socks5://user:pass@host:1080"
+              placeholder="Leave empty to use the automatic pool"
               onChange={(event) => setProxyUrl(event.target.value)}
             />
             <span className="small faint">
-              Give each key its own exit IP so their rate limits are independent. Leave empty for direct
-              egress.
+              COKEY already assigns exit IPs on its own: add proxies to the egress pool once and
+              every key of a provider gets a different one, re-planned as keys appear. Leave this
+              empty to inherit that. Type a URL here only to pin this key to a specific exit, which
+              overrides the pool for it.
             </span>
           </div>
 

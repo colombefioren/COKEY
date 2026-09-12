@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [preprod, prod]
+    branches: [preprod, prod, freebuff-web]
   pull_request:
-    branches: [preprod, prod]
+    branches: [preprod, prod, freebuff-web]
 
 jobs:
   test:

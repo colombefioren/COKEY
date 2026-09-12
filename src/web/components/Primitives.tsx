@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import type { CredentialRate, CredentialStatus } from "../types.js";
 
 /** Coloured status indicator for a credential. */
@@ -45,21 +46,105 @@ export function Empty({ children }: { children: ReactNode }) {
   return <div className="empty">{children}</div>;
 }
 
-export function Stat({
-  label,
-  value,
-  hint,
-}: {
-  label: string;
-  value: ReactNode;
-  hint?: string;
-}) {
+export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: string }) {
   return (
     <div className="stat">
       <div className="label">{label}</div>
       <div className="value">{value}</div>
       {hint ? <div className="hint">{hint}</div> : null}
     </div>
+  );
+}
+
+/**
+ * Simple confirmation dialog.
+ *
+ * Presents a message and two buttons: a left "Cancel" (ghost) and a right
+ * primary action (danger by default) labelled `actionLabel`.
+ */
+export function ConfirmModal({
+  title,
+  message,
+  onConfirm,
+  onClose,
+  actionLabel = "Delete",
+  danger = true,
+}: {
+  title: string;
+  message: string;
+  onConfirm: () => void;
+  onClose: () => void;
+  actionLabel?: string;
+  danger?: boolean;
+}) {
+  return (
+    <Modal title={title} onClose={onClose}>
+      <p style={{ margin: 0 }}>{message}</p>
+      <div className="modal-actions">
+        <button className="ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <button className={danger ? "danger" : "secondary"} onClick={onConfirm}>
+          {actionLabel}
+        </button>
+      </div>
+    </Modal>
+  );
+}
+
+/**
+ * Prompt-style modal with a text input.
+ *
+ * Pre-fills `defaultValue`, submits on Enter, and renders the value as a
+ * password field when `type` is `"password"`.
+ */
+export function PromptModal({
+  title,
+  message,
+  defaultValue = "",
+  onSubmit,
+  onClose,
+  placeholder,
+  type = "text",
+}: {
+  title: string;
+  message: string;
+  defaultValue?: string;
+  onSubmit: (value: string) => void;
+  onClose: () => void;
+  placeholder?: string;
+  type?: "text" | "password";
+}) {
+  const [value, setValue] = useState(defaultValue);
+
+  useEffect(() => {
+    setValue(defaultValue);
+  }, [defaultValue]);
+
+  return (
+    <Modal title={title} onClose={onClose}>
+      <p style={{ margin: 0 }}>{message}</p>
+      <input
+        type={type}
+        value={value}
+        placeholder={placeholder}
+        onChange={(event) => setValue(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onSubmit(value.trim());
+          }
+        }}
+        autoFocus
+        style={{ width: "100%", marginTop: 12, boxSizing: "border-box" }}
+      />
+      <div className="modal-actions">
+        <button className="ghost" onClick={onClose}>
+          Cancel
+        </button>
+        <button onClick={() => onSubmit(value.trim())}>OK</button>
+      </div>
+    </Modal>
   );
 }
 
@@ -77,15 +162,16 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
 }) {
-  return (
-    <div
-      className="overlay"
-      onClick={onClose}
-      onKeyDown={(event) => {
-        if (event.key === "Escape") onClose();
-      }}
-      role="presentation"
-    >
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return createPortal(
+    <div className="overlay" onClick={onClose} role="presentation">
       <div
         className="modal"
         style={wide ? { width: "min(820px, 100%)" } : undefined}
@@ -98,13 +184,14 @@ export function Modal({
         {subtitle ? <div className="modal-sub">{subtitle}</div> : null}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
 /** Human-readable duration, matching the CLI's formatting. */
 export function formatDuration(ms: number): string {
-  if (!Number.isFinite(ms) || ms < 0) return "—";
+  if (!Number.isFinite(ms) || ms < 0) return "-";
   if (ms < 1000) return `${Math.round(ms)}ms`;
   if (ms < 60_000) return `${(ms / 1000).toFixed(1)}s`;
   if (ms < 3_600_000) return `${Math.round(ms / 60_000)}m`;
@@ -135,7 +222,7 @@ export function Sparkline({ buckets, title }: { buckets: number[]; title?: strin
 /**
  * Observed throughput for one credential.
  *
- * "VPM" here means verified requests per minute, measured locally by COKEY —
+ * "VPM" here means verified requests per minute, measured locally by COKEY -
  * not a provider-declared quota. It is the only way to tell two keys of the
  * same provider apart.
  */
@@ -161,13 +248,29 @@ export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: 
   );
 }
 
-/** A credential's quota, or an explicit "unknown" — never a fabricated value. */
-export function QuotaLabel({ quota }: { quota?: { available: boolean; requestsRemaining?: number; tokensRemaining?: number; requestsPerMinute?: number } }) {
+/** A credential's quota, or an explicit "unknown" - never a fabricated value. */
+export function QuotaLabel({
+  quota,
+  quotaErrors,
+}: {
+  quota?: {
+    available: boolean;
+    requestsRemaining?: number;
+    tokensRemaining?: number;
+    requestsPerMinute?: number;
+  };
+  quotaErrors?: number;
+}) {
+  if (quotaErrors && quotaErrors > 0) {
+    return <span className="badge bad" title={`${quotaErrors} quota exhaustion(s) observed`}>exhausted</span>;
+  }
   if (!quota || !quota.available) return <span className="faint">Quota: Unknown</span>;
 
   const parts: string[] = [];
-  if (typeof quota.requestsRemaining === "number") parts.push(`${quota.requestsRemaining} req left`);
-  if (typeof quota.tokensRemaining === "number") parts.push(`${formatNumber(quota.tokensRemaining)} tok left`);
+  if (typeof quota.requestsRemaining === "number")
+    parts.push(`${quota.requestsRemaining} req left`);
+  if (typeof quota.tokensRemaining === "number")
+    parts.push(`${formatNumber(quota.tokensRemaining)} tok left`);
   if (typeof quota.requestsPerMinute === "number") parts.push(`${quota.requestsPerMinute} RPM`);
   if (parts.length === 0) return <span className="faint">Quota: Unknown</span>;
   return <span className="muted">{parts.join(" · ")}</span>;

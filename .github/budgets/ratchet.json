@@ -1,0 +1,7 @@
+{
+  "webBytes": 198000,
+  "serverBytes": 498000,
+  "totalBytes": 696000,
+  "files": 130,
+  "note": "Hard floor. A measurement below this is treated as bogus and refuses to bank, so raising it requires a maintainer override."
+}
