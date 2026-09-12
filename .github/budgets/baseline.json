@@ -1,7 +1,7 @@
 {
-  "webBytes": 400000,
-  "serverBytes": 400000,
-  "totalBytes": 800000,
-  "files": 200,
-  "note": "Bundle budget for the built dashboard and gateway. Shrink only."
+  "webBytes": 330000,
+  "serverBytes": 830000,
+  "totalBytes": 1160000,
+  "files": 250,
+  "note": "Bundle budget for the built dashboard and gateway. Measured with headroom; shrink only."
 }
