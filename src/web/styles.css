@@ -31,7 +31,12 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 14px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font:
+    14px/1.55 ui-sans-serif,
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
 }
 
 a {
@@ -575,6 +580,17 @@ label {
 
 .rate.limited span.mono {
   color: var(--warn);
+}
+
+.provider-group {
+  margin-bottom: 22px;
+}
+
+.provider-group-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
 .spark {

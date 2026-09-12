@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ChainView, PublicCredential } from "../types.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
 import { AddEntryModal } from "./AddEntryModal.js";
+import { EditEntryModal } from "./EditEntryModal.js";
 import { RateLabel, StatusDot } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 
@@ -20,6 +21,8 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   const [aliasDraft, setAliasDraft] = useState(chain.alias);
   const [addingEntry, setAddingEntry] = useState(false);
   const [credentialTarget, setCredentialTarget] = useState<ChainEntryView | null>(null);
+  const [editingEntry, setEditingEntry] = useState<ChainEntryView | null>(null);
+  const [testingId, setTestingId] = useState<string | null>(null);
 
   useEffect(() => {
     setEntries(chain.entries);
@@ -102,17 +105,6 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
     }
   }
 
-  async function setModel(entry: ChainEntryView, model: string) {
-    if (model === entry.model) return;
-    try {
-      await api.updateEntry(entry.id, { model });
-      toast.ok(`${entry.providerId} model changed to ${model}`);
-      onChanged();
-    } catch (error) {
-      toast.err(error instanceof ApiError ? error.message : String(error));
-    }
-  }
-
   async function duplicate(entry: ChainEntryView) {
     try {
       await api.duplicateEntry(entry.id);
@@ -146,10 +138,29 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
     try {
       const result = await api.testCredential(credential.id);
       if (result.ok) toast.ok(`${credential.description}: verified in ${result.latencyMs ?? 0}ms`);
-      else toast.err(`${credential.description}: ${result.classification} — ${result.message ?? ""}`);
+      else
+        toast.err(`${credential.description}: ${result.classification} — ${result.message ?? ""}`);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
+    }
+  }
+
+  async function testEntry(entry: ChainEntryView) {
+    setTestingId(entry.id);
+    try {
+      const result = await api.testEntry(entry.id);
+      if (result.ok)
+        toast.ok(`${entry.providerId}/${entry.model}: operational in ${result.latencyMs ?? 0}ms`);
+      else
+        toast.err(
+          `${entry.providerId}/${entry.model}: ${result.classification} — ${result.message ?? ""}`,
+        );
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setTestingId(null);
     }
   }
 
@@ -270,26 +281,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             </span>
             <span className="priority">{index + 1}.</span>
             <span className="model" title={entry.baseUrl}>
-              {entry.providerId} /{" "}
-              {entry.provider && entry.provider.knownModels.length > 0 ? (
-                <select
-                  value={entry.model}
-                  onChange={(event) => void setModel(entry, event.target.value)}
-                  style={{ width: "auto", maxWidth: 260, display: "inline-block", padding: "2px 6px" }}
-                  title="Change the model this entry routes to"
-                >
-                  {(entry.provider.knownModels.includes(entry.model)
-                    ? entry.provider.knownModels
-                    : [entry.model, ...entry.provider.knownModels]
-                  ).map((knownModel) => (
-                    <option key={knownModel} value={knownModel}>
-                      {knownModel}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                entry.model
-              )}
+              {entry.providerId} / {entry.model}
             </span>
 
             <span className="creds">
@@ -313,7 +305,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                     <span className="mono small faint">{credential.maskedSecret}</span>
                     <RateLabel rate={credential.rate} compact />
                     {credential.proxy.label ? (
-                      <span className="chip-proxy mono small" title={`egress via ${credential.proxy.label}`}>
+                      <span
+                        className="chip-proxy mono small"
+                        title={`egress via ${credential.proxy.label}`}
+                      >
                         ⇢ {credential.proxy.label}
                       </span>
                     ) : null}
@@ -356,6 +351,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <button className="ghost" title="Move down" onClick={() => move(entry.id, 1)}>
               ↓
             </button>
+            <button className="ghost" title="Edit model" onClick={() => setEditingEntry(entry)}>
+              edit
+            </button>
             <button className="ghost" title="Duplicate" onClick={() => void duplicate(entry)}>
               ⧉
             </button>
@@ -369,11 +367,24 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <button
               className="secondary"
               style={{ padding: "4px 9px" }}
+              onClick={() => void testEntry(entry)}
+              disabled={testingId === entry.id}
+              title={`Probe ${entry.providerId}/${entry.model} with a bound key`}
+            >
+              {testingId === entry.id ? "testing…" : "test"}
+            </button>
+            <button
+              className="secondary"
+              style={{ padding: "4px 9px" }}
               onClick={() => setCredentialTarget(entry)}
             >
               + key
             </button>
-            <button className="danger" style={{ padding: "4px 9px" }} onClick={() => void removeEntry(entry)}>
+            <button
+              className="danger"
+              style={{ padding: "4px 9px" }}
+              onClick={() => void removeEntry(entry)}
+            >
               remove
             </button>
           </div>
@@ -401,6 +412,16 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
         <AddCredentialModal
           entry={credentialTarget}
           onClose={() => setCredentialTarget(null)}
+          onChanged={() => {
+            onChanged();
+          }}
+        />
+      ) : null}
+
+      {editingEntry ? (
+        <EditEntryModal
+          entry={editingEntry}
+          onClose={() => setEditingEntry(null)}
           onChanged={() => {
             onChanged();
           }}

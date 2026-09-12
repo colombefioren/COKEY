@@ -60,11 +60,17 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 export const api = {
   health: () => request<{ ok: boolean; version: string; dataDir: string }>("GET", "/health"),
   stats: () => request<Stats>("GET", "/api/stats"),
-  nudge: () => request<Nudge>("GET", "/api/nudge"),  providers: () => request<ProviderStatus[]>("GET", "/api/providers"),
+  nudge: () => request<Nudge>("GET", "/api/nudge"),
+  providers: () => request<ProviderStatus[]>("GET", "/api/providers"),
   connectProvider: (
     providerId: string,
     body: { secret: string; description: string; accountId?: string; proxyUrl?: string },
-  ) => request<ConnectResult>("POST", `/api/providers/${encodeURIComponent(providerId)}/connect`, body),
+  ) =>
+    request<ConnectResult>(
+      "POST",
+      `/api/providers/${encodeURIComponent(providerId)}/connect`,
+      body,
+    ),
 
   /**
    * The curated free-model catalog with availability folded in.
@@ -83,8 +89,10 @@ export const api = {
   chains: () => request<ChainView[]>("GET", "/api/chains"),
   createChain: (body: { alias: string; description?: string }) =>
     request<ChainView>("POST", "/api/chains", body),
-  updateChain: (id: string, body: { alias?: string; description?: string | null; enabled?: boolean }) =>
-    request<ChainView>("PATCH", `/api/chains/${id}`, body),
+  updateChain: (
+    id: string,
+    body: { alias?: string; description?: string | null; enabled?: boolean },
+  ) => request<ChainView>("PATCH", `/api/chains/${id}`, body),
   deleteChain: (id: string) => request<{ ok: boolean }>("DELETE", `/api/chains/${id}`),
   reorderChain: (id: string, entryIds: string[]) =>
     request<{ ok: boolean }>("POST", `/api/chains/${id}/reorder`, { entryIds }),
@@ -98,6 +106,8 @@ export const api = {
     body: { model?: string; enabled?: boolean; routingStrategy?: "sequential" | "round-robin" },
   ) => request<ChainView["entries"][number]>("PATCH", `/api/entries/${entryId}`, body),
   deleteEntry: (entryId: string) => request<{ ok: boolean }>("DELETE", `/api/entries/${entryId}`),
+  testEntry: (entryId: string) =>
+    request<ValidationResult & { credentialId?: string }>("POST", `/api/entries/${entryId}/test`),
   duplicateEntry: (entryId: string) =>
     request<ChainView["entries"][number]>("POST", `/api/entries/${entryId}/duplicate`),
   moveEntry: (entryId: string, toIndex: number) =>
@@ -114,11 +124,12 @@ export const api = {
       addAnyway?: boolean;
     },
   ) =>
-    request<{ credential: PublicCredential; validation: ValidationResult; attached: boolean; error?: { message: string } }>(
-      "POST",
-      `/api/entries/${entryId}/credentials`,
-      body,
-    ),
+    request<{
+      credential: PublicCredential;
+      validation: ValidationResult;
+      attached: boolean;
+      error?: { message: string };
+    }>("POST", `/api/entries/${entryId}/credentials`, body),
   removeEntryCredential: (entryId: string, credentialId: string) =>
     request<{ ok: boolean }>("DELETE", `/api/entries/${entryId}/credentials/${credentialId}`),
 
@@ -143,11 +154,15 @@ export const api = {
     ),
 
   requests: (limit = 100) =>
-    request<{ data: RequestLogEntry[]; stats: Stats["history"] }>("GET", `/api/requests?limit=${limit}`),
+    request<{ data: RequestLogEntry[]; stats: Stats["history"] }>(
+      "GET",
+      `/api/requests?limit=${limit}`,
+    ),
   clearRequests: () => request<{ ok: boolean }>("DELETE", "/api/requests"),
 
   settings: () => request<Settings>("GET", "/api/settings"),
-  updateSettings: (body: Record<string, unknown>) => request<Settings>("PATCH", "/api/settings", body),
+  updateSettings: (body: Record<string, unknown>) =>
+    request<Settings>("PATCH", "/api/settings", body),
   resetSettings: () => request<Settings>("POST", "/api/settings/reset"),
 
   customEndpoints: () => request<ProviderCatalogEntry[]>("GET", "/api/custom-endpoints"),
@@ -159,13 +174,17 @@ export const api = {
     models?: string[];
   }) => request<ProviderCatalogEntry>("POST", "/api/custom-endpoints", body),
   deleteCustomEndpoint: (providerId: string) =>
-    request<{ ok: boolean }>("DELETE", `/api/custom-endpoints/${encodeURIComponent(providerId.replace(/^custom:/, ""))}`),
+    request<{ ok: boolean }>(
+      "DELETE",
+      `/api/custom-endpoints/${encodeURIComponent(providerId.replace(/^custom:/, ""))}`,
+    ),
 
   // ---- management auth ------------------------------------------------------
 
   authTokenStatus: () => request<{ authTokenConfigured: boolean }>("GET", "/api/auth-token"),
   generateAuthToken: () => request<{ authToken: string }>("POST", "/api/auth-token"),
-  revokeAuthToken: () => request<{ ok: boolean; authTokenConfigured: boolean }>("DELETE", "/api/auth-token"),
+  revokeAuthToken: () =>
+    request<{ ok: boolean; authTokenConfigured: boolean }>("DELETE", "/api/auth-token"),
 };
 
 /** Human-friendly relative time for tables. */

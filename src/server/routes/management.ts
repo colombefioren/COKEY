@@ -72,7 +72,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     withErrors(() => cokey.providerStatuses()),
   );
 
-
   app.post(
     "/api/providers/:id/connect",
     withErrors(async (request) => {
@@ -199,6 +198,14 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         cokey.chains.setEntryRoutingStrategy(id, body.routingStrategy);
       }
       return cokey.entryView(cokey.chains.getEntryOrThrow(id));
+    }),
+  );
+
+  app.post(
+    "/api/entries/:id/test",
+    withErrors((request) => {
+      const { id } = request.params as { id: string };
+      return cokey.testEntry(id);
     }),
   );
 

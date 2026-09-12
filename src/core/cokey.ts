@@ -362,6 +362,40 @@ export class Cokey {
   }
 
   /**
+   * Prove an entry's model is operational with one of its own keys.
+   *
+   * The best-ranked bound credential is probed against the entry's exact model,
+   * and the verdict updates that credential's state so the result is durable.
+   */
+  async testEntry(entryId: string): Promise<ValidationResult & { credentialId?: string }> {
+    const entry = this.chains.getEntryOrThrow(entryId);
+    const credentials = this.credentials.listByIds(entry.credentialIds);
+
+    if (credentials.length === 0) {
+      return { ok: false, classification: "unknown", message: "No keys bound to this entry" };
+    }
+
+    const rank = (credential: Credential): number =>
+      credential.status === "healthy" ? 0 : credential.status === "cooldown" ? 1 : 2;
+    const credential = [...credentials].sort((a, b) => rank(a) - rank(b))[0]!;
+
+    const validation = await this.verifyCredential(entry.providerId, entry.model, credential);
+
+    if (validation.ok) {
+      this.credentials.markVerified(credential.id);
+    } else if (validation.classification === "credential_invalid") {
+      this.credentials.markInvalid(credential.id);
+    } else if (
+      validation.classification === "credential_rate_limited" ||
+      validation.classification === "quota_exhausted"
+    ) {
+      this.credentials.putInCooldown(credential.id);
+    }
+
+    return { ...validation, credentialId: credential.id };
+  }
+
+  /**
    * Point a credential at a different egress proxy, or back to direct traffic.
    *
    * Changing the exit IP mid-flight is safe: the next request picks up the new
@@ -429,7 +463,8 @@ export class Cokey {
    */
   async addChain(input: AddChainInput): Promise<{ chainId: string; entryIds: string[] }> {
     const existing = this.chains.getChainByAlias(input.alias);
-    const chain = existing ?? this.chains.createChain({ alias: input.alias, description: input.description });
+    const chain =
+      existing ?? this.chains.createChain({ alias: input.alias, description: input.description });
 
     const entryIds: string[] = [];
     const createdCredentials: string[] = [];
@@ -451,7 +486,9 @@ export class Cokey {
           if (!secret) {
             throw new Error(
               `No secret supplied for "${credentialInput.description}"` +
-                (credentialInput.env ? ` (environment variable ${credentialInput.env} is unset)` : ""),
+                (credentialInput.env
+                  ? ` (environment variable ${credentialInput.env} is unset)`
+                  : ""),
             );
           }
 

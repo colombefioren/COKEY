@@ -30,7 +30,10 @@ export function AddEntryModal({
 
   useEffect(() => {
     void (async () => {
-      const [providerList, credentialList] = await Promise.all([api.providers(), api.credentials()]);
+      const [providerList, credentialList] = await Promise.all([
+        api.providers(),
+        api.credentials(),
+      ]);
       setProviders(providerList);
       setCredentials(credentialList);
       const firstConnected = providerList.find((p) => p.connected) ?? providerList[0];
@@ -86,6 +89,21 @@ export function AddEntryModal({
     }
   }
 
+  async function testSelected() {
+    if (!providerId || !model || selected.length === 0) return;
+    setBusy(true);
+    setError(undefined);
+    try {
+      const result = await api.testCredential(selected[0]!);
+      if (result.ok) toast.ok(`${providerId}/${model}: operational in ${result.latencyMs ?? 0}ms`);
+      else toast.err(`${providerId}/${model}: ${result.classification} — ${result.message ?? ""}`);
+    } catch (err) {
+      toast.err(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <Modal
       title={`Add entry to ${chain.alias}`}
@@ -115,21 +133,40 @@ export function AddEntryModal({
 
       <div className="field">
         <label htmlFor="entry-model">Model</label>
-        <select id="entry-model" value={model} onChange={(event) => setModel(event.target.value)}>
-          {(provider?.knownModels ?? []).map((knownModel) => (
-            <option key={knownModel} value={knownModel}>
-              {knownModel}
-            </option>
-          ))}
-        </select>
+        <div className="row">
+          <select
+            id="entry-model"
+            value={model}
+            onChange={(event) => setModel(event.target.value)}
+            style={{ flex: 1 }}
+          >
+            {(provider?.knownModels ?? []).map((knownModel) => (
+              <option key={knownModel} value={knownModel}>
+                {knownModel}
+              </option>
+            ))}
+          </select>
+          <button
+            className="secondary"
+            type="button"
+            onClick={() => void testSelected()}
+            disabled={busy || !model || selected.length === 0}
+            title="Probe this model with a selected key"
+          >
+            test
+          </button>
+        </div>
+        <span className="small faint">
+          Only {provider?.displayName ?? providerId} models are listed.
+        </span>
       </div>
 
       <div className="field">
         <label>Credentials</label>
         {providerCredentials.length === 0 ? (
           <div className="hint-box">
-            No credentials for {provider?.displayName ?? providerId} yet. Connect one from the Providers
-            tab first — COKEY will not create an entry with an unverified key.
+            No credentials for {provider?.displayName ?? providerId} yet. Connect one from the
+            Providers tab first — COKEY will not create an entry with an unverified key.
           </div>
         ) : (
           <div className="selected-list">
