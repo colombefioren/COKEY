@@ -125,19 +125,22 @@ export class ProxyPoolService {
   }
 
   /** Seed from a comma or newline separated list. Used by `COKEY_PROXY_POOL`. */
-  addMany(rawList: string | undefined): number {
-    if (!rawList) return 0;
+  addMany(rawList: string | undefined): { added: number; skipped: number } {
+    if (!rawList) return { added: 0, skipped: 0 };
     let added = 0;
+    let skipped = 0;
     for (const part of rawList.split(/[\n,]+/)) {
       const value = part.trim();
       if (!value) continue;
       try {
         if (this.add(value).created) added += 1;
+        else skipped += 1;
       } catch {
         // A malformed entry is skipped rather than breaking startup.
+        skipped += 1;
       }
     }
-    return added;
+    return { added, skipped };
   }
 
   setEnabled(id: string, enabled: boolean): void {

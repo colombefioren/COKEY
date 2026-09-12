@@ -1,6 +1,10 @@
 import type { FastifyInstance } from "fastify";
 import type { Cokey } from "../../core/cokey.js";
-import { ProxyPoolEntrySchema, UpdateProxyPoolSchema } from "../../core/validation/schemas.js";
+import {
+  BulkProxyPoolSchema,
+  ProxyPoolEntrySchema,
+  UpdateProxyPoolSchema,
+} from "../../core/validation/schemas.js";
 import { withErrors } from "./http-errors.js";
 
 /**
@@ -51,6 +55,21 @@ export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): voi
       const { id } = request.params as { id: string };
       return {
         entries: cokey.removeProxyFromPool(id),
+        status: cokey.proxyPoolStatus(),
+      };
+    }),
+  );
+
+  app.post(
+    "/api/proxy-pool/bulk",
+    withErrors((request, reply) => {
+      const body = BulkProxyPoolSchema.parse(request.body);
+      const result = cokey.addProxiesToPool(body.text);
+      reply.code(201);
+      return {
+        added: result.added,
+        skipped: result.skipped,
+        entries: result.entries,
         status: cokey.proxyPoolStatus(),
       };
     }),

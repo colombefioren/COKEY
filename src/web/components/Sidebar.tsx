@@ -100,7 +100,7 @@ export function Sidebar({
     void document.fonts?.ready.then(measure).catch(() => undefined);
     window.addEventListener("resize", measure);
     return () => window.removeEventListener("resize", measure);
-  }, [activePath, signature]);
+  }, [activePath, signature, collapsed]);
 
   // Keep the drawer honest: Escape closes it, the way every other overlay does.
   useEffect(() => {

@@ -10,6 +10,7 @@ import type {
   Paginated,
   ProviderCatalogEntry,
   ProviderStatus,
+  ProxyPoolBulkResponse,
   ProxyPoolResponse,
   PublicCredential,
   RankingsResponse,
@@ -104,6 +105,8 @@ export const api = {
 
   proxyPool: () => request<ProxyPoolResponse>("GET", "/api/proxy-pool"),
   addProxy: (url: string) => request<ProxyPoolResponse>("POST", "/api/proxy-pool", { url }),
+  addProxiesBulk: (text: string) =>
+    request<ProxyPoolBulkResponse>("POST", "/api/proxy-pool/bulk", { text }),
   setProxyEnabled: (id: string, enabled: boolean) =>
     request<ProxyPoolResponse>("PATCH", `/api/proxy-pool/${id}`, { enabled }),
   removeProxy: (id: string) => request<ProxyPoolResponse>("DELETE", `/api/proxy-pool/${id}`),

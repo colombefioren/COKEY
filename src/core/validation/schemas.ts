@@ -82,6 +82,10 @@ export const ProxyPoolEntrySchema = z.object({
   url: ProxyUrlSchema,
 });
 
+export const BulkProxyPoolSchema = z.object({
+  text: z.string().min(1, "Paste at least one proxy URL").max(20_000),
+});
+
 export const UpdateProxyPoolSchema = z
   .object({
     enabled: z.boolean().optional(),

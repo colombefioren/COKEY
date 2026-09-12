@@ -248,6 +248,11 @@ export interface ProxyPoolResponse {
   status: ProxyPoolStatus;
 }
 
+export interface ProxyPoolBulkResponse extends ProxyPoolResponse {
+  added: number;
+  skipped: number;
+}
+
 /** Result of the model play button: a real request, not a cached status. */
 export interface ModelProbeResult {
   ok: boolean;

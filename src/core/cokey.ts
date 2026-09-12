@@ -532,6 +532,13 @@ export class Cokey {
     return this.listProxyPool();
   }
 
+  /** Add many proxies from one pasted blob, then re-plan once. */
+  addProxiesToPool(rawList: string): { added: number; skipped: number; entries: ProxyPoolView[] } {
+    const result = this.proxyPool.addMany(rawList);
+    this.syncProxyAssignments();
+    return { ...result, entries: this.listProxyPool() };
+  }
+
   removeProxyFromPool(id: string): ProxyPoolView[] {
     this.proxyPool.remove(id);
     this.syncProxyAssignments();

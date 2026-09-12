@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ProxyPoolResponse, Settings as SettingsModel } from "../types.js";
 import { Empty, Panel } from "./Primitives.js";
 import { Pagination } from "./Pagination.js";
+import { BulkProxyModal } from "./BulkProxyModal.js";
 import { useToast } from "./Toast.js";
 
 const POOL_PAGE_SIZE = 10;
@@ -35,6 +36,7 @@ export function EgressPoolPanel({
   const [data, setData] = useState<ProxyPoolResponse | null>(null);
   const [draft, setDraft] = useState("");
   const [busy, setBusy] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
@@ -132,6 +134,9 @@ export function EgressPoolPanel({
       title={`Egress pool (${entries.length})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
+          <button className="secondary" onClick={() => setBulkOpen(true)} disabled={busy}>
+            bulk paste
+          </button>
           <button className="secondary" onClick={() => void sync()} disabled={busy}>
             re-run assignment
           </button>
@@ -262,6 +267,16 @@ export function EgressPoolPanel({
           if (params.page) setPage(params.page);
         }}
       />
+
+      {bulkOpen ? (
+        <BulkProxyModal
+          onClose={() => setBulkOpen(false)}
+          onChanged={(next) => {
+            setData(next);
+            onSettingsChanged();
+          }}
+        />
+      ) : null}
     </Panel>
   );
 }

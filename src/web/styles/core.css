@@ -200,6 +200,7 @@ h3 {
 .sidebar {
   position: sticky;
   top: 16px;
+  z-index: 30;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -481,14 +482,14 @@ h3 {
   flex: none;
 }
 
-/* The round handle that folds the rail, sitting on the sidebar's edge. */
+/* The round handle that folds the rail, sitting proud of the sidebar's edge. */
 .sidebar-fold {
   position: absolute;
-  top: 26px;
-  right: -15px;
-  z-index: 10;
-  width: 30px;
-  height: 30px;
+  top: 22px;
+  right: -19px;
+  z-index: 90;
+  width: 38px;
+  height: 38px;
   padding: 0;
   display: grid;
   place-items: center;
@@ -510,15 +511,17 @@ h3 {
   transform: rotate(180deg);
 }
 
-/* Collapsed rail: icons only, labels clipped rather than reflowed. */
+/* Collapsed rail: a clean icon column. Text is removed, not squeezed, and the
+   flex gap goes with it so the icons sit on the rail's true center line. */
 .sidebar.collapsed {
   padding: 18px 12px 16px;
 }
 .sidebar.collapsed .nav-item,
 .sidebar.collapsed .sidebar-brand {
   justify-content: center;
-  padding-left: 8px;
-  padding-right: 8px;
+  gap: 0;
+  padding-left: 0;
+  padding-right: 0;
 }
 .sidebar.collapsed .nav-icon {
   width: 20px;
@@ -530,31 +533,16 @@ h3 {
 }
 .sidebar.collapsed .nav-label,
 .sidebar.collapsed .nav-badge,
-.sidebar.collapsed .nav-chevron {
-  opacity: 0;
-  transform: translateX(-8px);
-  pointer-events: none;
-  width: 0;
-  flex: 0 0 0;
-}
-.sidebar.collapsed .nav-group-title {
-  opacity: 0;
-  height: 9px;
-  padding: 0;
-  margin: 8px 12px;
-  border-top: 1px solid var(--border);
-  overflow: hidden;
+.sidebar.collapsed .nav-chevron,
+.sidebar.collapsed .nav-group-title,
+.sidebar.collapsed .brand-word,
+.sidebar.collapsed .sidebar-foot {
+  display: none;
 }
 .sidebar.collapsed .nav-children {
   display: none;
 }
 .sidebar.collapsed .nav-glider::before {
-  display: none;
-}
-.sidebar.collapsed .brand-word,
-.sidebar.collapsed .sidebar-tagline,
-.sidebar.collapsed .creator-line,
-.sidebar.collapsed .sidebar-stats {
   display: none;
 }
 
