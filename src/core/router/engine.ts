@@ -385,11 +385,15 @@ export class RouterEngine {
         throw new RequestScopedError(classification, outcome.error);
       }
 
-      if (classification === "model_unavailable") {
+      if (
+        classification === "model_unavailable" ||
+        classification === "context_too_large" ||
+        classification === "invalid_request"
+      ) {
         state.fallback = true;
-        state.fallbackReason ??= "model_unavailable";
-        // The model is wrong for this entry, so its other credentials would
-        // fail the same way: skip straight to the next entry.
+        state.fallbackReason ??= reasonFor(classification);
+        // The model is wrong, unavailable, or can't handle this request:
+        // skip straight to the next entry — a different model may work.
         return policy.entryFallback ? { kind: "next_entry" } : { kind: "stop" };
       }
 
@@ -661,6 +665,12 @@ function reasonFor(classification: ErrorClassification): string {
       return "provider_error";
     case "network_error":
       return "network_error";
+    case "context_too_large":
+      return "context_too_large";
+    case "invalid_request":
+      return "invalid_request";
+    case "model_unavailable":
+      return "model_unavailable";
     default:
       return "provider_error";
   }
