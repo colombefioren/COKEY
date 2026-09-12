@@ -1,0 +1,6 @@
+{
+  "webBytes": 340000,
+  "serverBytes": 340000,
+  "totalBytes": 680000,
+  "note": "Hard floor. The ratchet moves down only; raising it requires a maintainer override."
+}
