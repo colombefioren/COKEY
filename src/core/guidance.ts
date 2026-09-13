@@ -38,7 +38,10 @@ export type GuidanceKind =
   | "chain.node-unhealthy"
   | "chain.none"
   | "egress.saturated"
-  | "coverage.free-providers";
+  | "coverage.free-providers"
+  | "content.files-broken"
+  | "content.dossiers-outdated"
+  | "content.unsupported";
 
 /**
  * What the user can do about a notice.
@@ -50,7 +53,8 @@ export type GuidanceKind =
 export type GuidanceAction =
   | { kind: "navigate"; label: string; path: string }
   | { kind: "refresh-models"; label: string; providerId: string }
-  | { kind: "reverify-credential"; label: string; credentialId: string };
+  | { kind: "reverify-credential"; label: string; credentialId: string }
+  | { kind: "reload-content"; label: string };
 
 export interface GuidanceNotice {
   /** Stable across snapshots, so the UI can remember a dismissal. */
@@ -126,7 +130,30 @@ export interface GuidanceInput {
     target: number;
     suggestions: Array<{ id: string; displayName: string }>;
   };
+  /**
+   * State of the curated content repository.
+   *
+   * Content is edited by hand, often in another checkout, so it fails in ways
+   * code cannot: a file mid-write, a JSON comma, a dossier nobody has looked at
+   * since last spring. These are the conditions worth a notice because the
+   * remedy is a button — re-read the directory — rather than a code change.
+   */
+  content: GuidanceContent;
 }
+
+export interface GuidanceContent {
+  /** True when a content directory was found and read. */
+  available: boolean;
+  /** Files that could not be parsed, with the reason. */
+  issues: Array<{ file: string; message: string }>;
+  /** Curated dossiers whose review is older than the freshness window. */
+  staleDossiers: string[];
+  /** Providers the content documents that this build has no endpoint for. */
+  unsupported: string[];
+}
+
+/** A dossier nobody has checked in this long is worth re-reading. */
+export const CONTENT_FRESHNESS_DAYS = 180;
 
 /** A cooldown longer than this is worth mentioning; anything shorter is normal. */
 const COOLDOWN_NOTICE_MS = 5 * 60 * 1000;
@@ -394,6 +421,53 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
         `${input.egress.saturatedProviders.slice(0, 4).join(", ")} have more keys than the pool has exits, ` +
         `so those keys share a rate limit. Adding exits is what separates them.`,
       actions: [{ kind: "navigate", label: "Open egress pool", path: "/settings" }],
+    });
+  }
+
+  // ---- curated content ----------------------------------------------------
+
+  if (input.content.issues.length > 0) {
+    const first = input.content.issues[0]!;
+    push({
+      id: "content.files-broken",
+      kind: "content.files-broken",
+      severity: "warn",
+      title: `${input.content.issues.length} content file(s) could not be read`,
+      detail:
+        `Starting with ${first.file}: ${first.message}. COKEY is serving the catalog compiled into ` +
+        `this build for whatever failed, so nothing is broken — but an edit you made is not live. ` +
+        `Re-reading after fixing the file picks it up.`,
+      actions: [
+        { kind: "reload-content", label: "Re-read content" },
+        { kind: "navigate", label: "See the details", path: "/dashboard" },
+      ],
+    });
+  }
+
+  if (input.content.staleDossiers.length > 0) {
+    push({
+      id: "content.dossiers-outdated",
+      kind: "content.dossiers-outdated",
+      severity: "info",
+      title: `${input.content.staleDossiers.length} dossier(s) due for review`,
+      detail:
+        `A catalog is a perishable good: ${input.content.staleDossiers.slice(0, 5).join(", ")}` +
+        `${input.content.staleDossiers.length > 5 ? " and more" : ""} have not been checked in ` +
+        `${CONTENT_FRESHNESS_DAYS} days. Free tiers move faster than that.`,
+      actions: [{ kind: "navigate", label: "Review providers", path: "/providers" }],
+    });
+  }
+
+  if (input.content.unsupported.length > 0) {
+    push({
+      id: "content.unsupported",
+      kind: "content.unsupported",
+      severity: "info",
+      title: `${input.content.unsupported.length} documented provider(s) cannot be served`,
+      detail:
+        `${input.content.unsupported.slice(0, 6).join(", ")} have dossiers in the content ` +
+        `repository but no endpoint in this build, so they never appear in the catalog.`,
+      actions: [{ kind: "navigate", label: "Open the dashboard", path: "/dashboard" }],
     });
   }
 

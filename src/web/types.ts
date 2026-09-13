@@ -378,6 +378,9 @@ export type GuidanceKind =
   | "chain.node-unhealthy"
   | "chain.none"
   | "egress.saturated"
+  | "content.files-broken"
+  | "content.dossiers-outdated"
+  | "content.unsupported"
   | "coverage.free-providers";
 
 /**
@@ -390,7 +393,9 @@ export type GuidanceKind =
 export type GuidanceAction =
   | { kind: "navigate"; label: string; path: string }
   | { kind: "refresh-models"; label: string; providerId: string }
-  | { kind: "reverify-credential"; label: string; credentialId: string };
+  | { kind: "reverify-credential"; label: string; credentialId: string }
+  /** Re-read the curated content directory; does not cross a credential. */
+  | { kind: "reload-content"; label: string };
 
 export interface GuidanceNotice {
   /** Stable across snapshots, so a dismissal can be remembered. */
