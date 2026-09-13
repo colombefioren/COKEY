@@ -40,8 +40,8 @@
   /* The lead voice: a real lilac violet. Pink is the companion, never the
      subject — that one decision is what turns a stack of pinks into a
      palette, and it is why the buttons read as considered rather than cute. */
-  --violet: #7b5cf5;
-  --violet-strong: #6244dd;
+  --violet: #7452f0;
+  --violet-strong: #5b39d4;
   --violet-soft: #f1ecff;
   --violet-line: #d6c9ff;
   --violet-ink: #ffffff;
@@ -608,25 +608,36 @@ h3 {
   min-width: 0;
 }
 
+/*
+ * The topbar is a floating shelf, not a strip that was pasted across the page:
+ * it is inset from the column, has its own hairline and lip, and the page's
+ * content slides under it in glass rather than disappearing behind an opaque
+ * band. The radius matches the panels below it, so the whole column reads as a
+ * stack of the same object at different sizes.
+ */
 .topbar {
   position: sticky;
-  top: 0;
+  top: 10px;
   z-index: 20;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 -6px;
-  padding: 12px 14px;
+  margin: 0 -2px 6px;
+  padding: 10px 16px;
   font-size: 12px;
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
   background: var(--surface-glass);
-  backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 10px 26px -24px rgba(43, 26, 47, 0.4);
 }
 
 .topbar-title {
-  font-weight: 650;
-  font-size: 14.5px;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.005em;
+  color: var(--text);
 }
 .nav-toggle {
   display: none;
@@ -831,10 +842,10 @@ main {
 section.panel {
   position: relative;
   border-radius: var(--radius);
-  border: 2px solid var(--border-strong);
+  border: 1.5px solid var(--border-strong);
   background: var(--surface);
   box-shadow:
-    1.5px 2px 0 0 var(--border),
+    1px 1px 0 0 var(--border),
     var(--shadow);
   overflow: hidden;
   transition:
@@ -850,35 +861,45 @@ section.panel.soft {
   background: var(--surface-2);
 }
 
+/*
+ * The panel header carries the section's name in the display face at reading
+ * size, not as a letter-spaced uppercase label. Small-caps micro-labels are the
+ * house style of every generated dashboard; a title someone can actually read
+ * is friendlier and, at this size, still no louder than the data under it.
+ */
 .window-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px 14px;
+  padding: 15px 20px 13px;
   border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-2), transparent);
   flex-wrap: wrap;
 }
 
 .window-title {
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* A pebble, not a square: four unequal radii, and an inner ring taken from the
+   icon's own colour so the five hues stay five hues. */
 .window-icon {
   display: grid;
   place-items: center;
   flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px 13px 10px 14px;
   background: var(--window-accent-soft, var(--violet-soft));
   color: var(--window-accent, var(--violet));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
 }
 .window-icon svg {
   width: 15px;
@@ -955,11 +976,11 @@ section.panel.soft {
 }
 .panel-head h2 {
   margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--faint);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.005em;
+  color: var(--text);
+  font-weight: 700;
 }
 .panel-head .spacer {
   flex: 1;

@@ -257,7 +257,13 @@ function EntryNode({
       </div>
       {sweepState !== "idle" || current ? (
         <span className="flow-node-flag">
-          {current ? "current" : sweepState === "testing" ? "testing" : sweepState === "ok" ? "ok" : "fail"}
+          {current
+            ? "current"
+            : sweepState === "testing"
+              ? "testing"
+              : sweepState === "ok"
+                ? "ok"
+                : "fail"}
         </span>
       ) : null}
     </div>
