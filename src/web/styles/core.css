@@ -1018,53 +1018,64 @@ section.panel.soft {
  * number that changes from card to card, not the wallpaper behind it.
  */
 /*
- * Stat tiles are the stickers of the page: each one borrows a different
- * pastel from the rotating tint set and leans a degree off true, like a
- * handful of paper cutouts pressed onto the page rather than five identical
- * spreadsheet cells.
+ * Stat tiles.
+ *
+ * Each one fades out of its own pastel rather than being filled with it — a
+ * gradient from white to a tint reads as light falling across the tile, while a
+ * flat tint reads as a coloured rectangle — and each carries a short rule of
+ * its tint along the top edge. No rotation: leaning stickers were the right
+ * gesture for a scrapbook, not for a number someone has to read.
  */
 .stat {
   position: relative;
   overflow: hidden;
-  padding: 14px 15px;
+  padding: 15px 16px;
   border-radius: var(--radius-md);
-  border: 2px solid var(--border);
-  background: var(--surface);
-  transform: rotate(var(--tilt, 0deg));
-  transition: transform 0.2s var(--ease);
+  border: 1.5px solid var(--tint-line, var(--border));
+  background: linear-gradient(155deg, var(--surface) 34%, var(--tint, var(--surface-2)));
+  transition:
+    transform 0.22s var(--ease),
+    box-shadow 0.22s ease;
+}
+.stat::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--tint-line, var(--border));
 }
 .stat:hover {
-  transform: translateY(-2px) rotate(0deg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
 }
 .stat:nth-child(5n + 1) {
-  background: var(--tint-1);
-  border-color: var(--tint-1-line);
-  --tilt: -1.1deg;
+  --tint: var(--tint-1);
+  --tint-line: var(--tint-1-line);
 }
 .stat:nth-child(5n + 2) {
-  background: var(--tint-2);
-  border-color: var(--tint-2-line);
-  --tilt: 0.9deg;
+  --tint: var(--tint-2);
+  --tint-line: var(--tint-2-line);
 }
 .stat:nth-child(5n + 3) {
-  background: var(--tint-3);
-  border-color: var(--tint-3-line);
-  --tilt: -0.7deg;
+  --tint: var(--tint-3);
+  --tint-line: var(--tint-3-line);
 }
 .stat:nth-child(5n + 4) {
-  background: var(--tint-4);
-  border-color: var(--tint-4-line);
-  --tilt: 1.2deg;
+  --tint: var(--tint-4);
+  --tint-line: var(--tint-4-line);
 }
 .stat:nth-child(5n + 5) {
-  background: var(--tint-5);
-  border-color: var(--tint-5-line);
-  --tilt: -0.9deg;
+  --tint: var(--tint-5);
+  --tint-line: var(--tint-5-line);
 }
 .stat .value {
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 700;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
@@ -1083,12 +1094,12 @@ section.panel.soft {
 }
 
 .card {
-  padding: 15px;
+  padding: 16px;
   border-radius: var(--radius-md);
-  border: 2px solid var(--border);
+  border: 1.5px solid var(--border);
   background: var(--surface);
   box-shadow:
-    1.5px 2px 0 0 var(--border),
+    1px 1px 0 0 var(--border),
     var(--shadow);
   transition:
     border-color 0.22s ease,
@@ -1096,10 +1107,10 @@ section.panel.soft {
     box-shadow 0.22s ease;
 }
 .card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--violet-line);
   transform: translateY(-2px);
   box-shadow:
-    1.5px 2px 0 0 var(--border-strong),
+    1px 1px 0 0 var(--violet-line),
     var(--shadow-lift);
 }
 .card .title {
@@ -1117,15 +1128,21 @@ section.panel.soft {
 
 /* ---- controls ------------------------------------------------------------- */
 
+/*
+ * The primary button is the one place the brand ramp is filled in solid, which
+ * is what makes it read as the thing to press without needing to be bigger,
+ * brighter or a different hue from the rest of the page. Everything else is an
+ * outline, because there is only ever one primary action on a screen.
+ */
 button {
-  background: var(--violet);
+  background: linear-gradient(140deg, var(--violet), var(--violet-strong));
   border: 1px solid transparent;
   color: var(--violet-ink);
-  padding: 8px 14px;
-  border-radius: 11px;
+  padding: 8px 15px;
+  border-radius: 12px;
   cursor: pointer;
   font: inherit;
-  font-weight: 580;
+  font-weight: 600;
   transition:
     background 0.18s ease,
     border-color 0.18s ease,
@@ -1134,7 +1151,7 @@ button {
     transform 0.18s var(--ease);
 }
 button:hover:not(:disabled) {
-  background: var(--violet-strong);
+  background: linear-gradient(140deg, var(--violet-strong), var(--violet-strong));
   box-shadow:
     1.5px 2px 0 0 var(--violet-line),
     var(--shadow);
@@ -1158,7 +1175,7 @@ button.secondary {
 }
 button.secondary:hover:not(:disabled) {
   border-color: var(--violet-line);
-  background: var(--violet-soft);
+  background: linear-gradient(140deg, var(--surface), var(--violet-soft));
   color: var(--violet-strong);
 }
 button.danger {
@@ -1472,10 +1489,11 @@ label {
   display: inline-flex;
   gap: 3px;
   flex-wrap: wrap;
-  padding: 3px;
+  padding: 4px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
+  box-shadow: inset 0 1px 2px rgba(43, 26, 47, 0.05);
 }
 .tab {
   background: transparent;
@@ -1494,13 +1512,15 @@ label {
   box-shadow: none;
 }
 .tab[aria-selected="true"] {
-  color: var(--text);
+  color: var(--violet-strong);
   background: var(--surface);
-  border-color: var(--border);
-  box-shadow: var(--shadow);
+  border-color: transparent;
+  box-shadow:
+    0 1px 2px rgba(43, 26, 47, 0.06),
+    0 8px 18px -12px rgba(43, 26, 47, 0.35);
 }
 .tabs-inline .tab[aria-selected="true"] {
-  color: var(--text);
+  color: var(--violet-strong);
 }
 
 /* ---- pager ---------------------------------------------------------------- */
@@ -1553,13 +1573,14 @@ table {
 }
 th {
   text-align: left;
-  color: var(--faint);
-  font-weight: 600;
+  color: var(--muted);
+  font-weight: 650;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 8px;
+  padding: 9px 8px;
   border-bottom: 1px solid var(--border-strong);
+  background: var(--surface-2);
   white-space: nowrap;
 }
 td {
@@ -1576,24 +1597,44 @@ tbody tr {
 tbody tr:hover td {
   background: var(--surface-2);
 }
+/* The hovered row is marked on its leading edge, so a wide table tells you
+   where you are without tinting five columns at once. */
+tbody tr td:first-child {
+  box-shadow: inset 3px 0 0 0 transparent;
+  transition: box-shadow 0.15s ease;
+}
+tbody tr:hover td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--violet-line);
+}
 
 .empty {
-  color: var(--faint);
-  padding: 22px;
+  color: var(--muted);
+  padding: 26px 22px;
   text-align: center;
-  border: 1px dashed var(--border-strong);
+  border: 1.5px dashed var(--border-strong);
   border-radius: var(--radius-md);
-  background: var(--surface-2);
+  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
 }
 
 .hint-box {
-  border: 1px solid var(--violet-line);
+  position: relative;
+  border: 1.5px solid var(--violet-line);
   border-radius: var(--radius-md);
-  padding: 13px 15px;
+  padding: 13px 16px 13px 18px;
   color: var(--muted);
   font-size: 12px;
-  background: var(--violet-soft);
+  background: linear-gradient(140deg, var(--violet-soft), var(--surface));
   line-height: 1.7;
+}
+.hint-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
 }
 
 code {
