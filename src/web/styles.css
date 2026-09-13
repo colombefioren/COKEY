@@ -3,18 +3,27 @@
  *
  * The sheets are split by what they describe, not by size:
  *
- *   core.css        design tokens, light and dark palettes, base elements,
- *                   the shell and sidebar, surfaces, controls, tables, the
- *                   screens that are mostly layout, and the motion rules.
+ *   fonts.css       generated @font-face rules for the self-hosted faces.
+ *   core.css        design tokens, base elements, the shell and sidebar,
+ *                   surfaces, controls, tables, the screens that are mostly
+ *                   layout, and the original motion rules.
  *   views.css       the diagram-heavy surfaces: the resilience layers, the
  *                   ranking boards, the about and contact cards.
  *   responsive.css  every breakpoint, in one place, so the mobile behaviour of
  *                   the rail can be read without hunting through the sheets.
+ *   retro.css       the design system: the kawaii-desktop palette, window
+ *                   chrome, hard-shadow surfaces, and the motion policy.
  *
- * Import order matters: tokens and base elements first, then the views that
- * style them, then the breakpoints that override both.
+ * Import order matters. Fonts and tokens and base elements first, then the
+ * views that style them, then the breakpoints, and finally the design system,
+ * which redefines the token layer and every surface on top of all of it. That
+ * last position is deliberate: retro.css is the only sheet that should carry
+ * the visual language, so the twelve screens that consume it can be re-skinned
+ * without being touched.
  */
 
+@import "./styles/fonts.css";
 @import "./styles/core.css";
 @import "./styles/views.css";
 @import "./styles/responsive.css";
+@import "./styles/retro.css";
