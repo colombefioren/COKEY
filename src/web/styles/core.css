@@ -1,83 +1,97 @@
 /*
  * COKEY dashboard theme.
  *
- * A hand-drawn, scrapbook-y workspace built around one cute bubblegum pink.
- * The page itself is white paper; the sidebar is a solid tinted panel rather
- * than another white slab, and small cards borrow a rotating set of pastel
- * tints so a row of them reads as a handful of stickers, not a spreadsheet.
- * Borders get a hand-inked wobble from a shared SVG filter (see `#rough` in
- * App.tsx) instead of a razor-straight machine line.
+ * Two voices, not one colour at five brightnesses. Everything expressive is
+ * drawn from a single family — baby pink through lilac to violet — and the
+ * page is only ever asked to hold one of them at a time as the subject, with
+ * the other as its companion. The supporting accents (jade, apricot, coral,
+ * periwinkle) are deliberately the *only* things outside that family, which is
+ * what keeps status readable instead of drowned in pink.
  *
- * Only one theme: there is no dark mode. A single considered palette beats
- * two half-considered ones, and the ink-on-paper feel this is going for does
- * not survive an inversion anyway.
+ * The page is warm paper rather than white: a bare white ground makes every
+ * pastel look like it is fading. The rail is a pink-to-lilac wash so the shell
+ * reads as one object, and small cards borrow a rotating set of tints so a row
+ * of them looks like a handful of stickers, not a spreadsheet.
  *
- * Every colour is still a token — nothing hex-coded outside this block —
- * so the palette can move again without hunting through every sheet.
+ * Only one theme: there is no dark mode. A single considered palette beats two
+ * half-considered ones, and the ink-on-paper feel does not survive an inversion.
+ *
+ * Every colour is still a token — nothing hex-coded outside this block — so the
+ * palette can move again without hunting through every sheet.
  */
 
 :root {
   color-scheme: light;
 
-  /* The page is paper: plain white, full stop. */
-  --ground: #ffffff;
+  /* Warm paper. Not white — baby pink needs something to sit on. */
+  --ground: #fffbfd;
   --surface: #ffffff;
-  --surface-2: #fff5f9;
-  --surface-3: #ffe9f2;
-  --surface-glass: rgba(255, 255, 255, 0.88);
+  --surface-2: #fdf6fa;
+  --surface-3: #f8ecf4;
+  --surface-glass: rgba(255, 251, 253, 0.82);
 
-  --border: #ffd6e8;
-  --border-strong: #ffb8d9;
+  --border: #f0dcea;
+  --border-strong: #e3c6dc;
 
-  --text: #2b1420;
-  --muted: #7a5c6b;
-  --faint: #b592a4;
+  --text: #2b1a2f;
+  --muted: #6d5871;
+  --faint: #a394a9;
 
-  /* A cute, confident bubblegum pink, with tomato/amber/moss/periwinkle in
-     support so the page reads as one hand-picked set, not a rainbow. */
-  --violet: #ff4f93;
-  --violet-strong: #e83b7d;
-  --violet-soft: #ffe3ee;
-  --violet-line: #ffc2dc;
+  /* The lead voice: a real lilac violet. Pink is the companion, never the
+     subject — that one decision is what turns a stack of pinks into a
+     palette, and it is why the buttons read as considered rather than cute. */
+  --violet: #7b5cf5;
+  --violet-strong: #6244dd;
+  --violet-soft: #f1ecff;
+  --violet-line: #d6c9ff;
   --violet-ink: #ffffff;
 
-  --rose: #e5484d;
-  --rose-strong: #c9383d;
-  --rose-soft: #fde4e2;
-  --rose-line: #f7c3c1;
+  /* Baby pink: soft and warm, and always the second voice. */
+  --pink: #f482b4;
+  --pink-strong: #dd5c95;
+  --pink-soft: #ffeaf4;
+  --pink-line: #ffc8e1;
+  --pink-ink: #ffffff;
 
-  --peach: #d68a1b;
-  --peach-soft: #fbedd3;
-  --peach-line: #f0d59d;
+  --rose: #e2565a;
+  --rose-strong: #c9424a;
+  --rose-soft: #fde8e7;
+  --rose-line: #f7c6c4;
 
-  --sage: #2f9e6e;
-  --sage-soft: #e3f5ec;
-  --sage-line: #c3e9d6;
+  --peach: #d98830;
+  --peach-soft: #fceedb;
+  --peach-line: #f2d7a8;
 
-  --sky: #6c8cf5;
-  --sky-soft: #edf0fe;
-  --sky-line: #d1d9fb;
+  --sage: #2f9d74;
+  --sage-soft: #e2f5ec;
+  --sage-line: #bde6d4;
 
-  /* The sidebar is its own tinted panel, not another white card. */
-  --sidebar-bg: #ffe3ee;
-  --sidebar-border: #ffc9de;
+  --sky: #6b86e8;
+  --sky-soft: #ecf0fe;
+  --sky-line: #cfd9fc;
+
+  /* The rail is its own wash, not another white card: pink at the top,
+     lilac by the foot, so the column has a direction. */
+  --sidebar-bg: linear-gradient(168deg, #fff3f9 0%, #f7efff 56%, #f2ecff 100%);
+  --sidebar-border: #eed6e8;
+  --sidebar-wash: #fff3f9;
 
   /* The rotating sticker tints small cards and stat tiles borrow from. */
-  --tint-1: #ffe3ee;
-  --tint-1-line: #ffc2dc;
-  --tint-2: #fff3c9;
-  --tint-2-line: #f5e08f;
-  --tint-3: #dcf5e6;
-  --tint-3-line: #b7e8c9;
-  --tint-4: #e3e8ff;
-  --tint-4-line: #c6cffb;
-  --tint-5: #ffe6d1;
-  --tint-5-line: #f6cda3;
+  --tint-1: #ffeaf4;
+  --tint-1-line: #ffc8e1;
+  --tint-2: #f1ecff;
+  --tint-2-line: #d6c9ff;
+  --tint-3: #e2f5ec;
+  --tint-3-line: #bde6d4;
+  --tint-4: #fceedb;
+  --tint-4-line: #f2d7a8;
+  --tint-5: #ecf0fe;
+  --tint-5-line: #cfd9fc;
 
   --accent: var(--violet);
   --accent-hover: var(--violet-strong);
-  --accent-2: var(--peach);
-  --accent-3: var(--rose);
+  --accent-2: var(--pink);
+  --accent-3: var(--peach);
   --accent-ink: #ffffff;
 
   --ok: var(--sage);
@@ -88,23 +102,35 @@
   --bad-bg: var(--rose-soft);
   --neutral-bg: var(--surface-3);
 
-  /* Low, neutral shadows. Depth without a halo. */
-  --shadow: 0 1px 2px rgba(43, 20, 32, 0.05), 0 10px 28px -20px rgba(43, 20, 32, 0.18);
-  --shadow-lift: 0 2px 4px rgba(43, 20, 32, 0.06), 0 16px 36px -22px rgba(43, 20, 32, 0.22);
-  --shadow-pop: 0 4px 10px rgba(43, 20, 32, 0.08), 0 26px 54px -30px rgba(43, 20, 32, 0.28);
-  --hairline: rgba(255, 79, 147, 0.16);
+  /* Low, plum-tinted shadows. Grey shadows on a pink page read as dirt. */
+  --shadow: 0 1px 2px rgba(43, 26, 47, 0.05), 0 10px 26px -18px rgba(43, 26, 47, 0.2);
+  --shadow-lift: 0 2px 5px rgba(43, 26, 47, 0.07), 0 18px 38px -22px rgba(43, 26, 47, 0.24);
+  --shadow-pop: 0 6px 14px rgba(43, 26, 47, 0.08), 0 30px 60px -30px rgba(43, 26, 47, 0.3);
+  --hairline: rgba(123, 92, 245, 0.16);
 
-  --radius: 20px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
+  --radius: 22px;
+  --radius-md: 15px;
+  --radius-sm: 11px;
   --font-body:
     "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Headings and titles only — a script face slows body reading down. */
   --font-display: "Shantell Sans", var(--font-body);
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  --sidebar-w: 260px;
-  --sidebar-w-collapsed: 80px;
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 84px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* The three stops every gradient in the app interpolates through, so no two
+     gradients meet at a seam of a different warmth. */
+  --bloom-1: #ffd7ea;
+  --bloom-2: #d9cbff;
+  --bloom-3: #ffe6cf;
+
+  /* The mark's own pink-to-violet ramp, shared by the logo, the favicon and
+     the hub orb so the brand is one gradient wherever it appears. */
+  --mark-1: #ffb3d4;
+  --mark-2: #b98cf6;
+  --mark-3: #6b4be0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -130,10 +156,11 @@ body,
 body {
   margin: 0;
   color: var(--text);
-  /* Two very soft pastel blooms over the flat ground. */
+  /* Three very soft blooms — pink, lilac, apricot — over the warm ground. */
   background:
-    radial-gradient(900px 620px at 4% -8%, var(--violet-soft), transparent 62%),
-    radial-gradient(760px 560px at 102% 4%, var(--rose-soft), transparent 58%), var(--ground);
+    radial-gradient(1000px 680px at -4% -10%, var(--pink-soft), transparent 62%),
+    radial-gradient(880px 620px at 104% -6%, var(--violet-soft), transparent 60%),
+    radial-gradient(820px 600px at 52% 114%, var(--bloom-3), transparent 66%), var(--ground);
   background-attachment: fixed;
   font: 14px/1.62 var(--font-body);
   -webkit-font-smoothing: antialiased;
