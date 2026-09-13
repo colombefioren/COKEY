@@ -748,10 +748,11 @@ await cokey.addChain({
 
 Who runs a provider, whether their free tier is infrastructure or a demo, which models are worth
 your time, and what the terms actually say — that is content, not code. It lives in its own Git
-repository (`cokey-cms`) so it can be corrected, reviewed and reverted without shipping a build.
+repository ([`COKEY--CMS`](https://github.com/colombefioren/COKEY--CMS)) so it can be corrected,
+reviewed and reverted without shipping a build.
 
 ```
-cokey-cms/
+COKEY--CMS/
 ├── content/
 │   ├── providers/    one dossier per provider: verdict, argument, operator, free models
 │   ├── terms/        the terms document, one Markdown section per file
@@ -760,8 +761,8 @@ cokey-cms/
 └── tests/
 ```
 
-COKEY looks for that checkout in three places, in order: `COKEY_CMS_DIR`, then `./cms/content`, then
-`../cokey-cms/content`. It watches whichever it finds, so **editing a dossier updates the dashboard
+COKEY looks for that checkout in four places, in order: `COKEY_CMS_DIR`, then `./cms/content`, then
+`../COKEY--CMS/content`, then `../cokey-cms/content`. It watches whichever it finds, so **editing a dossier updates the dashboard
 while it is open** — no restart, no rebuild. With no checkout present, COKEY serves the catalog
 compiled into this build, which is why a fresh clone is useful with zero setup.
 

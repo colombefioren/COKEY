@@ -121,6 +121,7 @@ export function cmsDirectoryCandidates(env: NodeJS.ProcessEnv, cwd = process.cwd
   const candidates: string[] = [];
   if (configured) candidates.push(resolve(cwd, configured));
   candidates.push(join(cwd, "cms", "content"));
+  candidates.push(join(cwd, "..", "COKEY--CMS", "content"));
   candidates.push(join(cwd, "..", "cokey-cms", "content"));
   return candidates;
 }
