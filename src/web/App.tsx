@@ -1,28 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "./api.js";
-import type {
-  Nudge,
-  ProviderStatus,
-  PublicCredential,
-  Settings as SettingsModel,
-} from "./types.js";
+import type { Nudge, ProviderStatus, PublicCredential, Settings as SettingsModel } from "./types.js";
 import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
-import { Sidebar, type NavGroup } from "./components/Sidebar.js";
 import { LoginForm } from "./components/LoginForm.js";
 import { ThemeToggle } from "./components/ThemeToggle.js";
+import { BookmarkTabs, type BookmarkItem } from "./components/BookmarkTabs.js";
+import { StatusBar } from "./components/StatusBar.js";
 import {
-  IconActivity,
-  IconBook,
-  IconCpu,
-  IconGrid,
-  IconKey,
-  IconLayers,
-  IconRoute,
-  IconScroll,
-  IconSliders,
-  IconSparkle,
-} from "./components/Icons.js";
+  PixelChart,
+  PixelFolder,
+  PixelHeart,
+  PixelInfo,
+  PixelLock,
+  PixelPlug,
+  PixelScroll,
+  PixelServer,
+  PixelStar,
+  PixelWrench,
+} from "./components/PixelIcons.js";
 import { href, useRoute } from "./router.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -37,91 +33,91 @@ import { About } from "./pages/About.js";
 
 const NUDGER_KEY = "cokey.nudger.dismissed";
 
-/** The whole navigation, in one place, so the sidebar and the router agree. */
-function navGroups(counts: { chains: number; keys: number; providers: number }): NavGroup[] {
+/** Page titles, in one place so the title bar and the router agree. */
+const TITLES: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/chains": "Chains",
+  "/models": "Models",
+  "/providers": "Providers",
+  "/api-keys": "API keys",
+  "/usage": "Usage",
+  "/settings": "Settings",
+  "/tutorial": "Tutorial",
+  "/terms": "Terms of service",
+  "/about": "About",
+};
+
+/**
+ * The whole navigation, in one place.
+ *
+ * Ten sections is the most a bookmark row can carry before it becomes a menu,
+ * and it is the reason the row collapses to a native picker on a phone rather
+ * than scrolling horizontally out of reach.
+ */
+function bookmarks(counts: { chains: number; keys: number; providers: number }): BookmarkItem[] {
   return [
     {
-      title: "Overview",
-      items: [
-        {
-          path: "/dashboard",
-          label: "Dashboard",
-          icon: <IconLayers />,
-          hint: "Gateway summary and live route",
-        },
-      ],
+      path: "/dashboard",
+      label: "Dashboard",
+      icon: <PixelFolder />,
+      hint: "Gateway summary, the live route and the resilience layers",
     },
     {
-      title: "Configure",
-      items: [
-        {
-          path: "/chains",
-          label: "Chains",
-          icon: <IconRoute />,
-          hint: "Your failover chains, their nodes and their keys",
-          badge: counts.chains ? String(counts.chains) : undefined,
-        },
-        {
-          path: "/models",
-          label: "Models",
-          icon: <IconCpu />,
-          hint: "Model catalog, live tests and rankings",
-        },
-        {
-          path: "/providers",
-          label: "Providers",
-          icon: <IconGrid />,
-          hint: "Who runs each provider and whether to depend on it",
-          badge: counts.providers ? String(counts.providers) : undefined,
-        },
-        {
-          path: "/api-keys",
-          label: "API keys",
-          icon: <IconKey />,
-          hint: "Keys for talking to the gateway itself",
-        },
-      ],
+      path: "/chains",
+      label: "Chains",
+      icon: <PixelServer />,
+      hint: "Your failover chains, their nodes and their keys",
+      count: counts.chains || undefined,
     },
     {
-      title: "Observe",
-      items: [
-        {
-          path: "/usage",
-          label: "Usage",
-          icon: <IconActivity />,
-          hint: "Request history and token usage together",
-          badge: counts.keys ? String(counts.keys) : undefined,
-        },
-      ],
+      path: "/models",
+      label: "Models",
+      icon: <PixelStar />,
+      hint: "Model catalog, live probes and rankings",
     },
     {
-      title: "Help",
-      items: [
-        {
-          path: "/settings",
-          label: "Settings",
-          icon: <IconSliders />,
-          hint: "Gateway, fallback and egress settings",
-        },
-        {
-          path: "/tutorial",
-          label: "Tutorial",
-          icon: <IconBook />,
-          hint: "Wire COKEY into your editor or CLI",
-        },
-        {
-          path: "/terms",
-          label: "Terms",
-          icon: <IconScroll />,
-          hint: "What you agree to by using COKEY",
-        },
-        {
-          path: "/about",
-          label: "About",
-          icon: <IconSparkle />,
-          hint: "The stack, the credits and how to reach the creator",
-        },
-      ],
+      path: "/providers",
+      label: "Providers",
+      icon: <PixelPlug />,
+      hint: "Who runs each provider and whether to depend on it",
+      count: counts.providers || undefined,
+    },
+    {
+      path: "/api-keys",
+      label: "API keys",
+      icon: <PixelLock />,
+      hint: "Keys for talking to the gateway itself",
+    },
+    {
+      path: "/usage",
+      label: "Usage",
+      icon: <PixelChart />,
+      hint: "Request history and token usage together",
+      count: counts.keys || undefined,
+    },
+    {
+      path: "/settings",
+      label: "Settings",
+      icon: <PixelWrench />,
+      hint: "Gateway, fallback and egress settings",
+    },
+    {
+      path: "/tutorial",
+      label: "Tutorial",
+      icon: <PixelScroll />,
+      hint: "Wire COKEY into your editor or CLI",
+    },
+    {
+      path: "/terms",
+      label: "Terms",
+      icon: <PixelInfo />,
+      hint: "What you agree to by using COKEY",
+    },
+    {
+      path: "/about",
+      label: "About",
+      icon: <PixelHeart />,
+      hint: "The stack, the credits and how to reach the creator",
     },
   ];
 }
@@ -134,9 +130,9 @@ function Shell() {
   const [nudge, setNudge] = useState<Nudge | null>(null);
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [credentials, setCredentials] = useState<PublicCredential[]>([]);
+  const [chainCount, setChainCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [dismissed, setDismissed] = useState(() => window.localStorage.getItem(NUDGER_KEY) === "1");
-  const [navOpen, setNavOpen] = useState(false);
 
   // The gateway always requires a session cookie, so the first authenticated
   // call decides whether to render the login form.
@@ -162,37 +158,61 @@ function Shell() {
   const reload = useCallback(async () => {
     if (authed !== true) return;
     try {
-      const [health, settingsResult, nudgeResult, providerList, credentialList] = await Promise.all(
-        [api.health(), api.settings(), api.nudge(), api.allProviders(), api.allCredentials()],
-      );
+      const [health, settingsResult, nudgeResult, providerList, credentialList, chainList] =
+        await Promise.all([
+          api.health(),
+          api.settings(),
+          api.nudge(),
+          api.allProviders(),
+          api.allCredentials(),
+          api.chains(),
+        ]);
       setVersion(health.version);
       setDataDir(health.dataDir);
       setSettings(settingsResult);
       setNudge(nudgeResult);
       setProviders(providerList);
       setCredentials(credentialList);
+      setChainCount(chainList.length);
     } catch {
-      // The gateway may be restarting; the next poll picks it up.
+      // The gateway may be restarting; the next refresh picks it up.
     }
   }, [authed]);
 
+  /**
+   * Ask every page to refetch.
+   *
+   * This is what the live event stream calls the moment the gateway reports a
+   * change, so there is no polling interval to tune and nothing goes stale:
+   * a key that verifies in one tab updates the counts in another.
+   */
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 
   useEffect(() => {
     void reload();
   }, [reload, refreshKey]);
 
-  // Light polling so cooldowns and stats stay current, plus an immediate refresh
-  // whenever the route changes.
+  // Expiring cooldowns and throughput buckets change without an event, so a
+  // slow heartbeat keeps the gauges honest. Everything else is event-driven.
   useEffect(() => {
-    const timer = window.setInterval(() => void reload(), 10_000);
+    const timer = window.setInterval(() => void reload(), 20_000);
     return () => window.clearInterval(timer);
   }, [reload]);
 
   useEffect(() => {
-    setNavOpen(false);
     void reload();
   }, [route.path, reload]);
+
+  const counts = useMemo(
+    () => ({
+      chains: chainCount,
+      keys: credentials.length,
+      providers: providers.filter((provider) => provider.connected).length,
+    }),
+    [chainCount, credentials.length, providers],
+  );
+
+  const items = useMemo(() => bookmarks(counts), [counts]);
 
   if (authed === null) return null;
   if (!authed) {
@@ -209,12 +229,6 @@ function Shell() {
     setDismissed(true);
   }
 
-  const groups = navGroups({
-    chains: 0,
-    keys: credentials.length,
-    providers: providers.filter((provider) => provider.connected).length,
-  });
-
   const page = renderPage(route.path, {
     refreshKey,
     bump,
@@ -226,91 +240,47 @@ function Shell() {
   });
 
   return (
-    <div className={`shell${navOpen ? " nav-open" : ""}`}>
-      <Sidebar
-        groups={groups}
-        activePath={route.path}
-        navigate={navigate}
-        onClose={() => setNavOpen(false)}
-        footer={
-          <div className="sidebar-stats">
-            <span title="Connected providers">
-              {providers.filter((p) => p.connected).length} providers
-            </span>
-            <span title="Stored credentials">{credentials.length} keys</span>
-          </div>
-        }
-      />
-
+    <div className="shell">
       <div className="content">
-        <header className="topbar">
-          <button
-            type="button"
-            className="ghost nav-toggle"
-            aria-label="Toggle navigation"
-            aria-expanded={navOpen}
-            onClick={() => setNavOpen((open) => !open)}
-          >
-            {"\u2630"}
-          </button>
-          {/* Keyed on the route so the name animates in on a page change. */}
-          <span className="topbar-title" key={route.path}>
-            {titleFor(route.path)}
-          </span>
-          <span className="spacer" />
-          <ThemeToggle />
-          <LiveStatus />
-          {version ? <span className="faint">v{version}</span> : null}
-          {dataDir ? (
-            <span className="faint" title={dataDir}>
-              data dir
+        <div className="chrome-stack">
+          <header className="topbar">
+            <a className="topbar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
+              COKEY
+            </a>
+            <span className="faint small topbar-title" key={route.path}>
+              {TITLES[route.path] ?? "Dashboard"}
             </span>
-          ) : null}
-          <a href={href("/tutorial")} onClick={() => navigate("/tutorial")} className="small">
-            setup guide
-          </a>
-          <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
-            /v1/models
-          </a>
-        </header>
+            <span className="spacer" />
+            <LiveStatus />
+            <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
+              /v1/models
+            </a>
+            <ThemeToggle />
+          </header>
+
+          <BookmarkTabs items={items} activePath={route.path} navigate={navigate} />
+        </div>
 
         {/*
-         * Keyed on the route so each page remounts: the entrance animation runs
-         * on a real navigation, and the pages already refetch on mount.
+         * Keyed on the route so each page remounts: the windows pop in on a real
+         * navigation, and the pages already refetch on mount.
          */}
         <main>
           <div className="page" key={route.path}>
             {page}
           </div>
+
+          <StatusBar
+            version={version}
+            dataDir={dataDir}
+            providers={counts.providers}
+            keys={counts.keys}
+            chains={counts.chains}
+          />
         </main>
       </div>
     </div>
   );
-}
-
-function titleFor(path: string): string {
-  switch (path) {
-    case "/chains":
-      return "Chains";
-    case "/models":
-      return "Models";
-    case "/providers":
-      return "Providers";
-    case "/api-keys":
-      return "API keys";
-    case "/usage":
-      return "Usage";
-    case "/settings":
-      return "Settings";
-    case "/tutorial":
-      return "Tutorial";
-    case "/terms":
-      return "Terms of service";
-    case "/about":
-      return "About";
-    default:
-      return "Dashboard";
-  }
 }
 
 interface PageContext {

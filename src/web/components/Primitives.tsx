@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { CredentialRate, CredentialStatus } from "../types.js";
+import { Window, type WindowHue } from "./Window.js";
 
 /** Coloured status indicator for a credential. */
 export function StatusDot({ status, title }: { status: CredentialStatus; title?: string }) {
@@ -19,26 +20,35 @@ export function StatusBadge({ status }: { status: CredentialStatus }) {
   return <span className={`badge ${tone}`}>{status}</span>;
 }
 
+/**
+ * A titled content block.
+ *
+ * Thin wrapper over the Window component so every screen on the dashboard gets
+ * the same mock-OS chrome from one definition. The `panel` class is carried
+ * alongside `window` because a couple of hand-rolled sections still select it.
+ *
+ * `hue` is usually left unset: the stylesheet alternates hues down a page so a
+ * stack of panels is colour-blocked without each call site choosing a colour.
+ */
 export function Panel({
   title,
   actions,
   children,
+  hue,
+  icon,
+  label,
 }: {
-  title?: string;
+  title?: ReactNode;
   actions?: ReactNode;
   children: ReactNode;
+  hue?: WindowHue;
+  icon?: ReactNode;
+  label?: string;
 }) {
   return (
-    <section className="panel">
-      {(title || actions) && (
-        <div className="panel-head">
-          {title ? <h2>{title}</h2> : null}
-          <span className="spacer" />
-          {actions}
-        </div>
-      )}
+    <Window title={title} actions={actions} hue={hue} icon={icon} label={label} className="panel">
       {children}
-    </section>
+    </Window>
   );
 }
 

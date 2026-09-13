@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
+import { burstSparkles } from "../lib/motion.js";
 
 type ToastKind = "info" | "ok" | "err";
 
@@ -16,15 +25,34 @@ interface ToastApi {
 
 const ToastContext = createContext<ToastApi | undefined>(undefined);
 
-/** Minimal toast queue: no dependency, auto-dismissing, capped at five. */
+/**
+ * Minimal toast queue: no dependency, auto-dismissing, capped at five.
+ *
+ * A success fires a small star burst from the toast itself. That is the one
+ * reward in the UI, and it is deliberately tied to this theme's motif rather
+ * than pulled in from a generic confetti library — which is also why it lives
+ * in the motion helper rather than here.
+ */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+  const [toasts, setToasts] = useState<Toast[]>(
+    []);
+  const nodes = useRef(new Map<number, HTMLDivElement>());
 
   const push = useCallback((message: string, kind: ToastKind) => {
     const id = Date.now() + Math.random();
     setToasts((current) => [...current.slice(-4), { id, message, kind }]);
+
+    if (kind === "ok") {
+      // Wait one frame so the node exists before anchoring a burst to it.
+      window.requestAnimationFrame(() => {
+        const node = nodes.current.get(id);
+        if (node) burstSparkles(node, { count: 7, hue: "butter" });
+      });
+    }
+
     setTimeout(() => {
       setToasts((current) => current.filter((toast) => toast.id !== id));
+      nodes.current.delete(id);
     }, 4000);
   }, []);
 
@@ -42,7 +70,15 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="toasts">
         {toasts.map((toast) => (
-          <div key={toast.id} className={`toast ${toast.kind === "info" ? "" : toast.kind}`}>
+          <div
+            key={toast.id}
+            ref={(node) => {
+              if (node) nodes.current.set(toast.id, node);
+              else nodes.current.delete(toast.id);
+            }}
+            className={`toast ${toast.kind === "info" ? "" : toast.kind}`}
+            role="status"
+          >
             {toast.message}
           </div>
         ))}
