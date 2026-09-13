@@ -609,15 +609,22 @@
   background: var(--surface);
   font-variant-numeric: tabular-nums;
 }
+/* The dot is drawn here and nowhere else: it is the one thing on this bar that
+   is ever coloured, so it is worth getting to be a single mark. */
+.statusbar .live-flag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+  background: transparent;
+}
 .statusbar .live-flag.on {
   border-color: var(--sage-line);
   background: var(--sage-soft);
 }
 .statusbar .live-flag.on::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
+  border-color: var(--sage);
   background: var(--sage);
   animation: flow-blink 2.2s ease-in-out infinite;
 }
