@@ -109,6 +109,7 @@ describe("topicFor", () => {
       "credential.updated",
       "chain.updated",
       "models.updated",
+      "content.updated",
     ];
 
     for (const type of types) {
@@ -121,6 +122,9 @@ describe("topicFor", () => {
     expect(topicFor("credential.cooldown")).toBe("credentials");
     expect(topicFor("models.updated")).toBe("models");
     expect(topicFor("chain.updated")).toBe("chains");
+    // Curated content is its own subject: a subscriber that only renders
+    // dossiers should not be woken by a key going into cooldown.
+    expect(topicFor("content.updated")).toBe("content");
   });
 
   it("keeps chain.state with the route it narrates", () => {
