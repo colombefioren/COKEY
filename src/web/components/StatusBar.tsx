@@ -14,6 +14,7 @@ export function StatusBar({
   providers,
   keys,
   chains,
+  live = false,
 }: {
   version: string;
   dataDir: string;
@@ -21,9 +22,27 @@ export function StatusBar({
   providers: number;
   keys: number;
   chains: number;
+  /**
+   * Whether the event stream is open.
+   *
+   * Worth a cell of its own: every count on this bar updates because of that
+   * stream, so a user who sees stale numbers deserves to know why rather than
+   * being left to guess whether the dashboard is slow or broken.
+   */
+  live?: boolean;
 }) {
   return (
     <footer className="statusbar">
+      <span
+        className={`status-cell live-flag${live ? " on" : ""}`}
+        title={
+          live
+            ? "Connected to the live event stream — this page updates as the gateway changes"
+            : "Event stream offline — falling back to a periodic refresh"
+        }
+      >
+        {live ? "● live" : "○ offline"}
+      </span>
       <span className="status-cell" title="Connected providers">
         <strong>{providers}</strong> providers
       </span>

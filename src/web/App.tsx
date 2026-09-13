@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "./api.js";
-import type { Nudge, ProviderStatus, PublicCredential, Settings as SettingsModel } from "./types.js";
+import type {
+  Nudge,
+  ProviderStatus,
+  PublicCredential,
+  Settings as SettingsModel,
+} from "./types.js";
 import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { LoginForm } from "./components/LoginForm.js";
@@ -20,6 +25,7 @@ import {
   PixelWrench,
 } from "./components/PixelIcons.js";
 import { href, useRoute } from "./router.js";
+import { useLive, useLiveInvalidation } from "./live.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
 import { Models } from "./pages/Models.js";
@@ -188,14 +194,25 @@ function Shell() {
    */
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 
+  // The gateway's event bus is the source of truth. Every stored-state change
+  // arrives here and invalidates the reads, coalesced so a burst of events
+  // causes one refetch rather than one per event.
+  const live = useLive();
+  useLiveInvalidation(bump);
+
   useEffect(() => {
     void reload();
   }, [reload, refreshKey]);
 
-  // Expiring cooldowns and throughput buckets change without an event, so a
-  // slow heartbeat keeps the gauges honest. Everything else is event-driven.
+  /*
+   * A slow safety net, and nothing more. Cooldown expiry and throughput buckets
+   * both emit events, so this is not how the UI stays current — it is the floor
+   * for the case where the stream cannot connect at all (a proxy that buffers
+   * SSE, a browser with EventSource disabled). A dashboard should degrade to
+   * being a minute behind, not to being wrong forever.
+   */
   useEffect(() => {
-    const timer = window.setInterval(() => void reload(), 20_000);
+    const timer = window.setInterval(() => void reload(), 60_000);
     return () => window.clearInterval(timer);
   }, [reload]);
 
@@ -244,7 +261,11 @@ function Shell() {
       <div className="content">
         <div className="chrome-stack">
           <header className="topbar">
-            <a className="topbar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
+            <a
+              className="topbar-brand"
+              href={href("/dashboard")}
+              onClick={() => navigate("/dashboard")}
+            >
               COKEY
             </a>
             <span className="faint small topbar-title" key={route.path}>
@@ -276,6 +297,7 @@ function Shell() {
             providers={counts.providers}
             keys={counts.keys}
             chains={counts.chains}
+            live={live.connected}
           />
         </main>
       </div>
