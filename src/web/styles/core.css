@@ -1649,12 +1649,32 @@ code {
 
 /* ---- chains --------------------------------------------------------------- */
 
+/*
+ * One chain, as a card with a short ramp rule across its leading edge. The rule
+ * is the only decoration on the card: it marks the top of a group without
+ * needing a coloured header block or a heavier border than everything around
+ * it, and it ties the chain list to the route diagram on the dashboard.
+ */
 .chain {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 15px;
+  position: relative;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 17px 18px;
   margin-bottom: 14px;
-  background: var(--surface-2);
+  background: linear-gradient(170deg, var(--surface), var(--surface-2));
+  box-shadow:
+    1px 1px 0 0 var(--border),
+    var(--shadow);
+}
+.chain::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: -1.5px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 45%, transparent);
 }
 .chain-head {
   display: flex;
@@ -1663,8 +1683,10 @@ code {
   flex-wrap: wrap;
 }
 .chain-head .alias {
-  font-weight: 650;
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 .chain-head .spacer {
   flex: 1;
@@ -1673,26 +1695,30 @@ code {
 .entries {
   display: grid;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
+/* A node in the order, cut rather than stamped: four unequal radii again, which
+   is what stops a stack of them reading as a settings list. */
 .entry-node {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  padding: 12px 15px;
+  border-radius: 14px 16px 13px 17px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   transition:
     border-color 0.18s ease,
     background 0.18s ease,
+    box-shadow 0.18s ease,
     transform 0.18s var(--ease);
 }
 .entry-node:hover {
   border-color: var(--violet-line);
   transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 .entry-node.dragging {
   opacity: 0.45;
@@ -1730,11 +1756,26 @@ code {
 .entry-reorder {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 .entry-reorder button {
-  padding: 3px 7px;
-  font-size: 10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 18px;
+  padding: 0;
+  font-size: 8px;
+  line-height: 1;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--faint);
+}
+.entry-reorder button:hover:not(:disabled) {
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  box-shadow: none;
 }
 
 .entry-model {
@@ -1745,12 +1786,22 @@ code {
   min-width: 0;
   flex-wrap: wrap;
 }
+/* The stop number, as the same hand-cut tab the route diagram uses, so the
+   order you set here and the order you see routed are visibly the same thing. */
 .entry-model .priority {
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-  min-width: 20px;
-  text-align: right;
-  font-weight: 650;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mark-3);
+  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
 .entry-model .model-name,
 button.model-name {
@@ -1794,12 +1845,13 @@ button.model-name:hover {
 }
 
 .drop-hint {
-  border: 1px dashed var(--border-strong);
+  border: 1.5px dashed var(--border-strong);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 18px;
   text-align: center;
-  color: var(--faint);
+  color: var(--muted);
   font-size: 12px;
+  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
 }
 
 /* ---- credentials ---------------------------------------------------------- */
@@ -1808,10 +1860,10 @@ button.model-name:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--surface);
+  background: linear-gradient(140deg, var(--surface), var(--surface-2));
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  padding: 3px 10px 3px 8px;
+  padding: 3px 11px 3px 9px;
   font-size: 11px;
   color: var(--muted);
 }
@@ -1846,9 +1898,9 @@ button.model-name:hover {
 }
 .spark i {
   width: 3px;
-  background: var(--violet);
-  border-radius: 1px;
-  opacity: 0.75;
+  background: linear-gradient(180deg, var(--mark-2), var(--mark-3));
+  border-radius: 2px 2px 1px 1px;
+  opacity: 0.85;
 }
 .rate.limited .spark i {
   background: var(--peach);
