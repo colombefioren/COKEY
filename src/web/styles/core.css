@@ -1,17 +1,17 @@
 /*
  * COKEY dashboard theme.
  *
- * Two voices, not one colour at five brightnesses. Everything expressive is
- * drawn from a single family — baby pink through lilac to violet — and the
- * page is only ever asked to hold one of them at a time as the subject, with
- * the other as its companion. The supporting accents (jade, apricot, coral,
- * periwinkle) are deliberately the *only* things outside that family, which is
- * what keeps status readable instead of drowned in pink.
+ * Pink is the lead voice, full stop — not a companion to a lilac-violet
+ * accent. `--violet` is kept as a token name only so the hundreds of call
+ * sites that already reference it do not need to change; its value is the
+ * real pink. `--pink` holds the secondary lilac tone instead. The supporting
+ * accents (jade, apricot, coral, periwinkle) are deliberately the *only*
+ * things outside that family, which is what keeps status readable instead of
+ * drowned in pink.
  *
  * The page is warm paper rather than white: a bare white ground makes every
- * pastel look like it is fading. The rail is a pink-to-lilac wash so the shell
- * reads as one object, and small cards borrow a rotating set of tints so a row
- * of them looks like a handful of stickers, not a spreadsheet.
+ * pastel look like it is fading. Small cards borrow a rotating set of tints
+ * so a row of them looks like a handful of stickers, not a spreadsheet.
  *
  * Only one theme: there is no dark mode. A single considered palette beats two
  * half-considered ones, and the ink-on-paper feel does not survive an inversion.
@@ -37,20 +37,20 @@
   --muted: #6d5871;
   --faint: #a394a9;
 
-  /* The lead voice: a real lilac violet. Pink is the companion, never the
-     subject — that one decision is what turns a stack of pinks into a
-     palette, and it is why the buttons read as considered rather than cute. */
-  --violet: #7452f0;
-  --violet-strong: #5b39d4;
-  --violet-soft: #f1ecff;
-  --violet-line: #d6c9ff;
+  /* The lead voice: one real, solid pink — everything that reads as "the
+     brand" (buttons, links, the logo, the active nav item) draws from this. */
+  --violet: #f482b4;
+  --violet-strong: #dd5c95;
+  --violet-soft: #ffeaf4;
+  --violet-line: #ffc8e1;
   --violet-ink: #ffffff;
 
-  /* Baby pink: soft and warm, and always the second voice. */
-  --pink: #f482b4;
-  --pink-strong: #dd5c95;
-  --pink-soft: #ffeaf4;
-  --pink-line: #ffc8e1;
+  /* The secondary lilac tone, used sparingly as a companion — never the
+     subject. */
+  --pink: #7452f0;
+  --pink-strong: #5b39d4;
+  --pink-soft: #f1ecff;
+  --pink-line: #d6c9ff;
   --pink-ink: #ffffff;
 
   --rose: #e2565a;
@@ -70,11 +70,11 @@
   --sky-soft: #ecf0fe;
   --sky-line: #cfd9fc;
 
-  /* The rail is its own wash, not another white card: pink at the top,
-     lilac by the foot, so the column has a direction. */
-  --sidebar-bg: linear-gradient(168deg, #fff3f9 0%, #f7efff 56%, #f2ecff 100%);
-  --sidebar-border: #eed6e8;
-  --sidebar-wash: #fff3f9;
+  /* The rail is its own solid wash, not another white card and not a
+     gradient — one flat pink tint. */
+  --sidebar-bg: #ffeaf4;
+  --sidebar-border: #ffc8e1;
+  --sidebar-wash: #ffeaf4;
 
   /* The rotating sticker tints small cards and stat tiles borrow from. */
   --tint-1: #ffeaf4;
@@ -106,7 +106,7 @@
   --shadow: 0 1px 2px rgba(43, 26, 47, 0.05), 0 10px 26px -18px rgba(43, 26, 47, 0.2);
   --shadow-lift: 0 2px 5px rgba(43, 26, 47, 0.07), 0 18px 38px -22px rgba(43, 26, 47, 0.24);
   --shadow-pop: 0 6px 14px rgba(43, 26, 47, 0.08), 0 30px 60px -30px rgba(43, 26, 47, 0.3);
-  --hairline: rgba(123, 92, 245, 0.16);
+  --hairline: rgba(244, 130, 180, 0.18);
 
   --radius: 22px;
   --radius-md: 15px;
@@ -238,14 +238,15 @@ h3 {
 }
 
 /*
- * The brand is the drawn lockup, so there is no text to colour: the gradient
- * lives in the svg itself and the whole thing lifts as one object.
+ * The brand is the drawn lockup: one solid pink via `currentColor`, no
+ * gradient standing in for an identity.
  */
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 2px 6px 0;
+  color: var(--violet);
   transition: transform 0.3s var(--ease);
 }
 .sidebar-brand:hover {
