@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError, pageQuery, timeAgo } from "../api.js";
-import type { ModelCatalogView, ModelsResponse, SelectableModel } from "../types.js";
+import type {
+  ModelCatalogView,
+  ModelsResponse,
+  MyModelRanking,
+  SelectableModel,
+} from "../types.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { Pagination } from "../components/Pagination.js";
 import { IconSparkle } from "../components/Icons.js";
@@ -25,7 +30,8 @@ const PROVIDERS_PER_PAGE = 6;
  */
 export function Models({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const { route, navigate } = useRoute();
-  const tab = route.section === "rankings" ? "rankings" : "catalog";
+  const tab =
+    route.section === "rankings" ? "rankings" : route.section === "mine" ? "mine" : "catalog";
 
   return (
     <>
@@ -41,6 +47,14 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
         <button
           type="button"
           className="tab"
+          aria-selected={tab === "mine"}
+          onClick={() => navigate("/models/mine")}
+        >
+          My models
+        </button>
+        <button
+          type="button"
+          className="tab"
           aria-selected={tab === "rankings"}
           onClick={() => navigate("/models/rankings")}
         >
@@ -50,6 +64,8 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
 
       {tab === "rankings" ? (
         <Rankings refreshKey={refreshKey} />
+      ) : tab === "mine" ? (
+        <MyModels refreshKey={refreshKey} />
       ) : (
         <Catalog
           refreshKey={refreshKey}
@@ -58,6 +74,101 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
         />
       )}
     </>
+  );
+}
+
+/**
+ * "My models": only the models this user can actually reach right now,
+ * ranked by what happened the times they were asked — not by a curated tier.
+ * A model no chain has ever probed still appears (it is usable, after all),
+ * just at the bottom, clearly marked as untested rather than ranked zero.
+ */
+function MyModels({ refreshKey }: { refreshKey: number }) {
+  const toast = useToast();
+  const [rankings, setRankings] = useState<MyModelRanking[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await api.myModels();
+        if (!cancelled) setRankings(response.rankings);
+      } catch (error) {
+        if (!cancelled) toast.err(error instanceof Error ? error.message : String(error));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshKey, toast]);
+
+  const tested = rankings?.filter((row) => row.attempts > 0).length ?? 0;
+
+  return (
+    <Panel
+      hue="mint"
+      icon={<IconSparkle size={14} />}
+      title={`My models (${rankings?.length ?? 0} usable)`}
+    >
+      <p className="small muted" style={{ marginTop: 0 }}>
+        Every model behind a working key, ranked by what actually happened when it was asked: the
+        success rate and average latency of your own probes and requests — not a curated tier.{" "}
+        {tested} of {rankings?.length ?? 0} have been tested at least once.
+      </p>
+
+      {rankings && rankings.length === 0 ? (
+        <Empty>Connect a provider to see your models ranked here.</Empty>
+      ) : null}
+
+      {rankings ? (
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Model</th>
+                <th>Provider</th>
+                <th>Success rate</th>
+                <th>Avg latency</th>
+                <th>Last checked</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rankings.map((row, index) => {
+                const tested = row.attempts > 0;
+                return (
+                  <tr key={`${row.providerId}/${row.model}`}>
+                    <td className="small faint">{index + 1}</td>
+                    <td className="mono small">{row.model}</td>
+                    <td className="small">{row.displayName}</td>
+                    <td>
+                      {tested ? (
+                        <span className={`badge ${row.lastOk ? "ok" : "bad"}`}>
+                          {Math.round((row.successRate ?? 0) * 100)}%
+                        </span>
+                      ) : (
+                        <span className="badge neutral">untested</span>
+                      )}
+                    </td>
+                    <td className="small">
+                      {row.avgLatencyMs !== undefined ? `${row.avgLatencyMs}ms` : "—"}
+                    </td>
+                    <td className="small faint">
+                      {row.lastCheckedAt ? timeAgo(row.lastCheckedAt) : "never"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      <p className="small faint" style={{ marginBottom: 0 }}>
+        Ranked by success rate, then by speed among equally reliable models. Run a model from the{" "}
+        <a href="#/models">Catalog</a> tab to start building its record.
+      </p>
+    </Panel>
   );
 }
 

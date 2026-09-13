@@ -210,6 +210,28 @@ export const MIGRATIONS: Migration[] = [
         ON provider_models(provider_id, available);
     `,
   },
+  {
+    version: 9,
+    name: "model_probes",
+    sql: `
+      -- One row per play-button probe: did this model answer through this key,
+      -- and how long did it take. This is what the "My models" ranking is built
+      -- from — a model's own answered-when-asked record, not a curated tier.
+      CREATE TABLE IF NOT EXISTS model_probes (
+        id             TEXT PRIMARY KEY,
+        provider_id    TEXT NOT NULL,
+        model          TEXT NOT NULL,
+        credential_id  TEXT,
+        ok             INTEGER NOT NULL,
+        classification TEXT NOT NULL,
+        latency_ms     INTEGER NOT NULL,
+        checked_at     INTEGER NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_model_probes_model
+        ON model_probes(provider_id, model, checked_at);
+    `,
+  },
 ];
 
 /**
@@ -385,4 +407,15 @@ export interface ProviderModelRow {
   first_seen: number;
   last_seen: number;
   last_checked: number;
+}
+
+export interface ModelProbeRow {
+  id: string;
+  provider_id: string;
+  model: string;
+  credential_id: string | null;
+  ok: number;
+  classification: string;
+  latency_ms: number;
+  checked_at: number;
 }

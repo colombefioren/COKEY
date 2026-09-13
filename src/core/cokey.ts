@@ -11,6 +11,7 @@ import { CredentialsRepo } from "./db/credentials.repo.js";
 import { CustomEndpointsRepo } from "./db/custom-endpoints.repo.js";
 import { DatabaseClient } from "./db/database.js";
 import { ProviderModelsRepo, type ProviderModelRecord } from "./db/provider-models.repo.js";
+import { ModelProbesRepo } from "./db/model-probes.repo.js";
 import { ProxyPoolRepo } from "./db/proxy-pool.repo.js";
 import { RequestsRepo } from "./db/requests.repo.js";
 import { SettingsRepo } from "./db/settings.repo.js";
@@ -169,6 +170,20 @@ export interface FreeProviderNudge {
   suggestions: ProviderCatalogEntry[];
 }
 
+/** One usable model, ranked by this user's own probe history. */
+export interface MyModelRanking {
+  providerId: string;
+  displayName: string;
+  model: string;
+  attempts: number;
+  successes: number;
+  /** 0-1. Undefined when never probed. */
+  successRate?: number;
+  avgLatencyMs?: number;
+  lastCheckedAt?: number;
+  lastOk?: boolean;
+}
+
 export class BadCredentialError extends Error {
   constructor(
     message: string,
@@ -198,6 +213,7 @@ export class Cokey {
   readonly requestsRepo: RequestsRepo;
   readonly customEndpointsRepo: CustomEndpointsRepo;
   readonly providerModelsRepo: ProviderModelsRepo;
+  readonly modelProbesRepo: ModelProbesRepo;
   readonly proxyPoolRepo: ProxyPoolRepo;
   readonly apiKeysRepo: ApiKeysRepo;
   readonly apiKeys: ApiKeyService;
@@ -244,6 +260,7 @@ export class Cokey {
     this.requestsRepo = new RequestsRepo(this.db);
     this.customEndpointsRepo = new CustomEndpointsRepo(this.db);
     this.providerModelsRepo = new ProviderModelsRepo(this.db);
+    this.modelProbesRepo = new ModelProbesRepo(this.db);
     this.proxyPoolRepo = new ProxyPoolRepo(this.db);
     this.proxyPool = new ProxyPoolService(this.proxyPoolRepo);
     this.apiKeysRepo = new ApiKeysRepo(this.db);
@@ -1149,6 +1166,7 @@ export class Cokey {
         const classification = adapter.classifyError(result.error);
         status = result.error.status;
         this.recordProbeFailure(credential.id, classification);
+        this.recordModelProbe(providerId, model, credential.id, false, classification, latencyMs);
         return {
           ok: false,
           providerId,
@@ -1167,6 +1185,7 @@ export class Cokey {
       if (status !== 200) {
         const classification = adapter.classifyError({ status, message: `HTTP ${status}` });
         this.recordProbeFailure(credential.id, classification);
+        this.recordModelProbe(providerId, model, credential.id, false, classification, latencyMs);
         return {
           ok: false,
           providerId,
@@ -1204,6 +1223,7 @@ export class Cokey {
         proxyLabel: proxyLabel(credential.proxyUrl),
         data: { latencyMs, probe: true },
       });
+      this.recordModelProbe(providerId, model, credential.id, true, "success", latencyMs);
 
       return {
         ok: true,
@@ -1219,6 +1239,7 @@ export class Cokey {
       };
     } catch (error) {
       const latencyMs = Date.now() - started;
+      this.recordModelProbe(providerId, model, credential.id, false, "network_error", latencyMs);
       return {
         ok: false,
         providerId,
@@ -1243,6 +1264,77 @@ export class Cokey {
     ) {
       this.credentials.putInCooldown(credentialId);
     }
+  }
+
+  /** Log one play-button attempt so "My models" can rank on what actually happened. */
+  private recordModelProbe(
+    providerId: string,
+    model: string,
+    credentialId: string,
+    ok: boolean,
+    classification: string,
+    latencyMs: number,
+  ): void {
+    this.modelProbesRepo.record({
+      providerId,
+      model,
+      credentialId,
+      ok,
+      classification,
+      latencyMs,
+      checkedAt: Date.now(),
+    });
+  }
+
+  /**
+   * The user's own models, ranked by their own probe history.
+   *
+   * Scoped to models the user can actually use right now (their provider has
+   * a healthy key), which is what makes this a *usable* ranking rather than a
+   * curated opinion: a model with a five-star community verdict is worth
+   * nothing here if this user's key cannot reach it. Within that scope, a
+   * model that has answered every time it was asked, quickly, outranks one
+   * that has not — and a model never probed sorts last, clearly marked, since
+   * there is nothing yet to rank it on.
+   */
+  myModelRankings(): MyModelRanking[] {
+    const statsByKey = new Map(
+      this.modelProbesRepo.allStats().map((stats) => [`${stats.providerId} ${stats.model}`, stats]),
+    );
+
+    const rankings: MyModelRanking[] = [];
+    for (const provider of this.modelCatalog()) {
+      if (!provider.available) continue;
+      for (const model of provider.models) {
+        if (!model.selectable) continue;
+        const stats = statsByKey.get(`${provider.providerId} ${model.id}`);
+        rankings.push({
+          providerId: provider.providerId,
+          displayName: provider.displayName,
+          model: model.id,
+          attempts: stats?.attempts ?? 0,
+          successes: stats?.successes ?? 0,
+          successRate: stats?.successRate,
+          avgLatencyMs: stats?.avgLatencyMs,
+          lastCheckedAt: stats?.lastCheckedAt,
+          lastOk: stats?.lastOk,
+        });
+      }
+    }
+
+    // Tested models first — best success rate, then fastest, ties broken by
+    // most recently checked. Untested models keep catalog order at the tail.
+    return rankings.sort((a, b) => {
+      const aTested = a.attempts > 0;
+      const bTested = b.attempts > 0;
+      if (aTested !== bTested) return aTested ? -1 : 1;
+      if (!aTested) return 0;
+      if (b.successRate! !== a.successRate!) return b.successRate! - a.successRate!;
+      const aLatency = a.avgLatencyMs ?? Number.POSITIVE_INFINITY;
+      const bLatency = b.avgLatencyMs ?? Number.POSITIVE_INFINITY;
+      if (aLatency !== bLatency) return aLatency - bLatency;
+      return (b.lastCheckedAt ?? 0) - (a.lastCheckedAt ?? 0);
+    });
   }
 
   /** The live status payload: current route plus recent routing events. */
