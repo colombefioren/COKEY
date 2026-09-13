@@ -540,6 +540,54 @@
   color: var(--violet-strong);
 }
 
+/* ---- status bar ----------------------------------------------------------- */
+
+/*
+ * The strip along the bottom edge.
+ *
+ * An OS puts the things you glance at and never touch in a bar like this, so it
+ * is allowed to be quiet — but not invisible. The counts get their numbers in
+ * the display face, the live flag is the only thing that is ever coloured, and
+ * the creator links stay at the far right where they are read once and then
+ * ignored forever.
+ */
+.statusbar {
+  gap: 14px;
+  margin-top: 20px;
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(160deg, var(--surface), var(--surface-2));
+  font-size: 11.5px;
+}
+.statusbar .status-cell strong {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+}
+.statusbar .live-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+.statusbar .live-flag.on {
+  border-color: var(--sage-line);
+  background: var(--sage-soft);
+}
+.statusbar .live-flag.on::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sage);
+  animation: flow-blink 2.2s ease-in-out infinite;
+}
+
 /* ---- chrome --------------------------------------------------------------- */
 
 ::selection {
