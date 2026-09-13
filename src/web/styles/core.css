@@ -698,7 +698,7 @@ h3 {
   padding: 0 3px;
   border-radius: 999px;
   background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
-  color: #ffffff;
+  color: var(--violet-ink);
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
