@@ -20,6 +20,16 @@ import { CooldownManager } from "./credentials/cooldown.js";
 import { RateTracker } from "./credentials/rate.js";
 import { CredentialSelector } from "./credentials/selector.js";
 import { EventBus, type CokeyEvent } from "./events.js";
+import {
+  CmsStore,
+  curateProvider,
+  rankingsView,
+  undocumentedProviders,
+  type CmsStatus,
+  type CmsTermsSection,
+  type CuratedDossier,
+  type RankingsView,
+} from "./cms/index.js";
 import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
 import { checkProxyUrl, collectHealthy } from "./providers/proxy-health.js";
 import {
@@ -201,6 +211,13 @@ export class Cokey {
   readonly selector: CredentialSelector;
   readonly router: RouterEngine;
   readonly history: RequestHistory;
+  /**
+   * The curated content repository: provider dossiers, terms and rankings.
+   *
+   * It is optional by design. With no content checkout beside COKEY the compiled
+   * catalog is served instead, so a fresh clone is useful with zero setup.
+   */
+  readonly cms: CmsStore;
   /** Live routing narration: what is running now, and every switch. */
   readonly events = new EventBus();
   /** Locally measured per-credential throughput. */
@@ -259,6 +276,24 @@ export class Cokey {
     this.selector = new CredentialSelector(this.credentials, this.cooldown);
     this.history = new RequestHistory(this.requestsRepo);
 
+    // The store starts watching in `start()`; a reload that changes something
+    // visible is announced on the event bus so every open dashboard refetches
+    // without a reload.
+    this.cms = new CmsStore({
+      env,
+      onChange: (snapshot) => {
+        const counts = snapshot.providers.size;
+        this.events.emit({
+          type: "content.updated",
+          level: "info",
+          message: counts
+            ? `Content reloaded: ${counts} provider dossier(s)`
+            : "Content reloaded: no provider dossiers found",
+          data: { providers: counts, terms: snapshot.terms.length },
+        });
+      },
+    });
+
     // A pool supplied through the environment is seeded once; the UI can add,
     // disable and remove entries afterwards without touching the database by
     // hand.
@@ -286,6 +321,7 @@ export class Cokey {
     if (this.started) return;
     this.started = true;
     this.syncProxyAssignments();
+    this.cms.watch();
 
     // Expire elapsed cooldowns so the UI and router always see fresh state.
     this.sweeper = setInterval(() => {
@@ -310,8 +346,46 @@ export class Cokey {
   stop(): void {
     if (this.sweeper) clearInterval(this.sweeper);
     this.sweeper = undefined;
+    this.cms.close();
     this.db.close();
     this.started = false;
+  }
+
+  // ---- curated content ----------------------------------------------------
+
+  /**
+   * The dossier for a provider, content repository first.
+   *
+   * A dossier is an opinion with an argument, and both live in the content
+   * repository so they can be corrected without a release. Everything the
+   * repository does not state falls back to the compiled catalog.
+   */
+  curateProvider(providerId: string): CuratedDossier {
+    return curateProvider(providerId, this.cms.current);
+  }
+
+  /** The ranking boards, from the content repository when it has them. */
+  rankings(): RankingsView {
+    return rankingsView(this.cms.current);
+  }
+
+  /** The terms document, in reading order. Empty when no content is checked out. */
+  termsSections(): CmsTermsSection[] {
+    return this.cms.current.terms;
+  }
+
+  /** Providers the content repository documents but the compiled catalog does not. */
+  undocumentedProviders(): string[] {
+    return undocumentedProviders(this.cms.current);
+  }
+
+  /** Re-read the content directory on demand. Returns whether anything changed. */
+  reloadContent(): boolean {
+    return this.cms.reload();
+  }
+
+  contentStatus(): CmsStatus {
+    return this.cms.status();
   }
 
   // ---- providers ----------------------------------------------------------

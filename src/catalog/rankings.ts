@@ -29,6 +29,13 @@ export type QuotaProvenance =
   /** Operator publishes nothing; treat the free tier as unknown. */
   | "unpublished";
 
+/** One band of the skill board: the letter, what it means, and who belongs in it. */
+export interface SkillTier {
+  name: SkillEntry["tierName"];
+  label: string;
+  blurb: string;
+}
+
 export interface SkillEntry {
   model: string;
   /** Provider id in this catalog, when the model is reachable through it. */
@@ -87,7 +94,7 @@ export const RANKING_SOURCES: RankingSource[] = [
 export const RANKING_DISCLAIMER =
   "Benchmark scores move every month and vendor-run numbers flatter the vendor. Treat this as a starting shortlist, then use the play button: the only score that matters is the one your own key reproduces.";
 
-export const SKILL_TIERS: Array<{ name: SkillEntry["tierName"]; label: string; blurb: string }> = [
+export const SKILL_TIERS: SkillTier[] = [
   {
     name: "S",
     label: "Purpose-built coding models",

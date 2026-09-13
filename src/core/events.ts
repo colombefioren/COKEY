@@ -22,7 +22,9 @@ export type CokeyEventType =
   | "credential.verified"
   | "credential.updated"
   | "chain.updated"
-  | "models.updated";
+  | "models.updated"
+  /** The curated content repository was reloaded from disk. */
+  | "content.updated";
 
 export type CokeyEventLevel = "info" | "success" | "warn" | "error";
 
@@ -34,13 +36,14 @@ export type CokeyEventLevel = "info" | "success" | "warn" | "error";
  * cares about the rare ones and would be woken constantly by the frequent ones,
  * so the stream can be filtered by topic.
  */
-export type CokeyEventTopic = "route" | "chains" | "credentials" | "models";
+export type CokeyEventTopic = "route" | "chains" | "credentials" | "models" | "content";
 
 export const COKEY_EVENT_TOPICS: readonly CokeyEventTopic[] = [
   "route",
   "chains",
   "credentials",
   "models",
+  "content",
 ];
 
 /**
@@ -54,6 +57,7 @@ export const COKEY_EVENT_TOPICS: readonly CokeyEventTopic[] = [
  */
 export function topicFor(type: CokeyEventType): CokeyEventTopic {
   if (type === "chain.state") return "route";
+  if (type.startsWith("content.")) return "content";
   if (type.startsWith("models.")) return "models";
   if (type.startsWith("chain.")) return "chains";
   if (type.startsWith("credential.")) return "credentials";
