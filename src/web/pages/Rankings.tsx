@@ -182,9 +182,8 @@ function RateBoard({ data }: { data: RankingsResponse }) {
     <>
       <Panel title="Rate limits">
         <p className="small muted" style={{ marginTop: 0 }}>
-          Ordered by how much a provider gives away, ignoring how good the models are. A provider
-          can top this table and still be useless for coding: that is what the other two boards are
-          for.
+          Ordered by how much a provider gives away, not how good it is — a provider can top this
+          board and still be useless for coding.
         </p>
         <table>
           <thead>

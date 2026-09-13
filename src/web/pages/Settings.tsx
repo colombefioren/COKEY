@@ -327,8 +327,8 @@ export function Settings({
           />
         </div>
         <div className="hint-box">
-          The check is entirely local - COKEY never phones home. It only counts providers whose free
-          tier they advertise themselves.
+          Entirely local — COKEY never phones home, and only providers that advertise a free tier
+          are counted.
         </div>
       </Panel>
 
@@ -378,9 +378,8 @@ export function Settings({
               Allow private, loopback and plain-HTTP endpoints
             </label>
             <div className="hint-box">
-              Off by default: custom URLs are checked against the SSRF guard, which blocks loopback,
-              private ranges, link-local and cloud metadata addresses. Turn this on only for a
-              service you run yourself.
+              Off by default. Custom URLs are SSRF-checked: loopback, private ranges, link-local and
+              cloud metadata are all blocked. Enable only for a service you run.
             </div>
 
             <div className="selected-list" style={{ marginTop: 14 }}>

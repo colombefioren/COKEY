@@ -115,14 +115,14 @@ function ServingNow({
             <span className="chip-proxy mono small">exit {now.proxyLabel}</span>
           ) : null}
           {now.fallback ? <span className="badge warn">fallback</span> : null}
-          <span className="small faint">{now.attempts} attempt(s)</span>
+          <span className="small faint">{now.attempts} tries</span>
           {now.startedAt ? (
             <span className="small faint">started {timeAgo(now.startedAt)}</span>
           ) : null}
         </div>
       ) : (
         <Empty>
-          Idle. The next request shows the chain, node and key it lands on here.
+          Idle — the next request lands here.
           {now.lastOutcome ? ` Last route: ${now.lastOutcome}.` : ""}
         </Empty>
       )}
@@ -251,7 +251,9 @@ function UsageRollup({
 
       <Panel title="Usage by provider">
         {view.providers.length === 0 ? (
-          <Empty>No usage recorded yet. Send a request to /v1/chat/completions.</Empty>
+          <Empty>
+            Nothing recorded yet. Send a request to <code>/v1/chat/completions</code>.
+          </Empty>
         ) : (
           <>
             <div className="tabs tabs-inline" style={{ marginBottom: 12 }}>
@@ -509,7 +511,9 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
         }
       >
         {entries.length === 0 ? (
-          <Empty>Nothing recorded yet. Send a request to /v1/chat/completions.</Empty>
+          <Empty>
+            Nothing recorded yet. Send a request to <code>/v1/chat/completions</code>.
+          </Empty>
         ) : (
           <div className="table-scroll">
             <table>
