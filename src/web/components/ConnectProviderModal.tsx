@@ -32,11 +32,17 @@ export function ConnectProviderModal({
   const [error, setError] = useState<string | undefined>();
 
   const needsAccountId = provider.credentialFields.includes("accountId");
-  const hasFields = Boolean(description.trim() && secret.trim() && (!needsAccountId || accountId.trim()));
+  const hasFields = Boolean(
+    description.trim() && secret.trim() && (!needsAccountId || accountId.trim()),
+  );
 
   async function test() {
     if (!hasFields) {
-      setError(needsAccountId ? "Description, key and account id are required" : "Description and key are both required");
+      setError(
+        needsAccountId
+          ? "Description, key and account id are required"
+          : "Description and key are both required",
+      );
       return;
     }
     setBusy(true);
@@ -58,7 +64,11 @@ export function ConnectProviderModal({
 
   async function save() {
     if (!hasFields) {
-      setError(needsAccountId ? "Description, key and account id are required" : "Description and key are both required");
+      setError(
+        needsAccountId
+          ? "Description, key and account id are required"
+          : "Description and key are both required",
+      );
       return;
     }
     setBusy(true);
@@ -73,10 +83,23 @@ export function ConnectProviderModal({
         useProxy,
       });
       setResult(response.validation);
+
+      // Saving a key is also the first moment this provider can be asked what it
+      // serves, so the confirmation reports the model list rather than making
+      // the user go and find out.
+      const found = response.models;
+      const modelNote =
+        found && found.ok
+          ? ` · ${found.discovered} models${found.removed.length ? `, ${found.removed.length} retired` : ""}`
+          : found?.message
+            ? ` · model list: ${found.message}`
+            : "";
+
       toast.ok(
-        response.validation.ok
+        (response.validation.ok
           ? `${provider.displayName} key verified in ${response.validation.latencyMs ?? 0}ms`
-          : `${provider.displayName} key saved (${response.validation.classification})`,
+          : `${provider.displayName} key saved (${response.validation.classification})`) +
+          modelNote,
       );
       onConnected();
       onClose();

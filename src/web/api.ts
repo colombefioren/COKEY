@@ -3,12 +3,15 @@ import type {
   CatalogProviderRow,
   ChainView,
   ConnectResult,
+  GuidanceResponse,
+  ModelDiscoveryReport,
   ModelProbeResult,
   ModelsResponse,
   Nudge,
   PageParams,
   Paginated,
   ProviderCatalogEntry,
+  ProviderModelInventory,
   ProviderStatus,
   ProxyPoolBulkResponse,
   ProxyPoolCheckResponse,
@@ -66,7 +69,10 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 }
 
 /** Serialise `page` / `pageSize` / `q` into a query string. */
-export function pageQuery(params: PageParams = {}, extra: Record<string, string | number | undefined> = {}): string {
+export function pageQuery(
+  params: PageParams = {},
+  extra: Record<string, string | number | undefined> = {},
+): string {
   const search = new URLSearchParams();
   if (params.page !== undefined) search.set("page", String(params.page));
   if (params.pageSize !== undefined) search.set("pageSize", String(params.pageSize));
@@ -166,11 +172,57 @@ export const api = {
    */
   models: () => request<ModelsResponse>("GET", "/api/models"),
 
+  /**
+   * Ask one provider what it serves now and reconcile the inventory.
+   *
+   * Returns the change set, so the caller can say what happened — which models
+   * were added, restored or retired — rather than just redrawing the list.
+   */
+  refreshProviderModels: (providerId: string) =>
+    request<ModelDiscoveryReport>(
+      "POST",
+      `/api/providers/${encodeURIComponent(providerId)}/refresh-models`,
+    ),
+
+  /** Refresh every connected provider, sequentially. */
+  refreshAllProviderModels: () =>
+    request<{
+      reports: ModelDiscoveryReport[];
+      refreshed: number;
+      failed: number;
+      added: number;
+      removed: number;
+      stale: number;
+    }>("POST", "/api/providers/refresh-models"),
+
+  /** The stored model inventory for one provider, checked-at included. */
+  providerModels: (providerId: string) =>
+    request<ProviderModelInventory>(
+      "GET",
+      `/api/providers/${encodeURIComponent(providerId)}/models`,
+    ),
+
+  /**
+   * Actionable notices derived from live state: a rejected key, a chain node
+   * whose model was retired, a model list that has gone stale.
+   */
+  guidance: () => request<GuidanceResponse>("GET", "/api/guidance"),
+
   /** Current route plus recent routing events. */
   status: (limit = 30) => request<StatusResponse>("GET", `/api/status?limit=${limit}`),
 
-  /** URL of the live routing event stream, consumed with EventSource. */
-  eventsUrl: () => "/api/events",
+  /**
+   * URL of the live event stream, consumed with EventSource.
+   *
+   * With `topics`, only those subjects are streamed: a page that needs to know
+   * when stored data changed subscribes to `chains,credentials,models` and is
+   * never woken by the per-attempt chatter of requests in flight. Without it the
+   * full routing narration is streamed, which is what the live-route chip wants.
+   */
+  eventsUrl: (topics?: readonly string[]) =>
+    topics && topics.length > 0
+      ? `/api/events?topics=${encodeURIComponent(topics.join(","))}`
+      : "/api/events",
 
   chains: () => request<ChainView[]>("GET", "/api/chains"),
   createChain: (body: { alias: string; description?: string }) =>

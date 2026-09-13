@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { api, ApiError, pageQuery } from "../api.js";
+import { api, ApiError, pageQuery, timeAgo } from "../api.js";
 import type { ModelCatalogView, ModelsResponse, SelectableModel } from "../types.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { Pagination } from "../components/Pagination.js";
+import { PixelStar } from "../components/PixelIcons.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
 import { Rankings } from "./Rankings.js";
@@ -77,6 +78,7 @@ function Catalog({
   const [pageSize, setPageSize] = useState(PROVIDERS_PER_PAGE);
   const [probes, setProbes] = useState<Record<string, ProbeState>>({});
   const [busyKey, setBusyKey] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -117,6 +119,40 @@ function Catalog({
   const visible = providers.slice((current - 1) * pageSize, current * pageSize);
 
   const availableProviders = data?.providers.filter((provider) => provider.available).length ?? 0;
+
+  /**
+   * Re-ask one provider what it serves and reconcile.
+   *
+   * The point of this button is that a free tier is not stable. Models appear
+   * and disappear without notice, and a catalog that is a week old is a catalog
+   * that is offering things the provider retired. Running it tells you exactly
+   * what changed instead of silently redrawing.
+   */
+  async function refreshModels(provider: ModelCatalogView) {
+    setRefreshing(provider.providerId);
+    try {
+      const report = await api.refreshProviderModels(provider.providerId);
+      if (!report.ok) {
+        toast.err(report.message ?? `${provider.displayName} could not be checked`);
+      } else {
+        const parts = [
+          report.added.length ? `${report.added.length} new` : "",
+          report.restored.length ? `${report.restored.length} restored` : "",
+          report.removed.length ? `${report.removed.length} retired` : "",
+        ].filter(Boolean);
+        toast.ok(
+          parts.length
+            ? `${provider.displayName}: ${parts.join(", ")} model(s)`
+            : `${provider.displayName} is unchanged (${report.discovered} models) · ${report.latencyMs}ms`,
+        );
+      }
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setRefreshing(null);
+    }
+  }
 
   /**
    * Run the play button: one real completion through the healthiest key.
@@ -167,6 +203,8 @@ function Catalog({
 
   return (
     <Panel
+      hue="pink"
+      icon={<PixelStar size={14} />}
       title={`Model catalog (${data?.total ?? 0} models)`}
       actions={
         <div className="row" style={{ gap: 8 }}>
@@ -200,6 +238,19 @@ function Catalog({
         answers 200.
       </p>
 
+      {/*
+       * A single line naming the catalog drift, rather than making the user
+       * notice by subtraction that a model they were using is missing.
+       */}
+      {data && data.stale > 0 ? (
+        <div className="hint-box" style={{ marginBottom: 14 }}>
+          {data.stale} catalogued model(s) were not returned by their provider on the last check, so
+          they are hidden from the picker. Use a provider's <strong>re-check</strong> button to
+          refresh, and see the Dashboard&apos;s needs-attention panel for the chains that depend on
+          one.
+        </div>
+      ) : null}
+
       {visible.length === 0 ? <Empty>No models match that search.</Empty> : null}
 
       <div className="model-providers">
@@ -210,6 +261,37 @@ function Catalog({
               <strong>{provider.displayName}</strong>
               <span className="small faint">{provider.freeTier.summary}</span>
               <span className="spacer" />
+
+              {/* What the provider actually returned, versus what the catalog claims. */}
+              <span
+                className="badge neutral"
+                title={
+                  provider.inventoryCheckedAt
+                    ? `Last checked ${timeAgo(provider.inventoryCheckedAt)}`
+                    : "Never checked — showing the curated catalog only"
+                }
+              >
+                {provider.inventoryCheckedAt
+                  ? `${provider.counts.live}/${provider.counts.curated} live`
+                  : "not checked"}
+              </span>
+              {provider.counts.discovered > 0 ? (
+                <span
+                  className="badge"
+                  title="Models this provider returns that the curated catalog does not list"
+                >
+                  +{provider.counts.discovered} new
+                </span>
+              ) : null}
+              {provider.staleModels.length > 0 ? (
+                <span
+                  className="badge bad"
+                  title={`No longer returned: ${provider.staleModels.slice(0, 6).join(", ")}`}
+                >
+                  {provider.staleModels.length} retired
+                </span>
+              ) : null}
+
               {provider.available ? (
                 <span className="badge">
                   {provider.healthyCount} key{provider.healthyCount === 1 ? "" : "s"}
@@ -221,6 +303,20 @@ function Catalog({
                   get a free key
                 </a>
               )}
+
+              <button
+                type="button"
+                className="secondary small"
+                disabled={provider.credentialCount === 0 || refreshing !== null}
+                title={
+                  provider.credentialCount === 0
+                    ? `Connect a ${provider.displayName} key to check its model list`
+                    : `Ask ${provider.displayName} what it serves right now`
+                }
+                onClick={() => void refreshModels(provider)}
+              >
+                {refreshing === provider.providerId ? "checking…" : "re-check"}
+              </button>
             </header>
 
             <div className="model-grid">

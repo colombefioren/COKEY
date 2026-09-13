@@ -300,6 +300,116 @@ export interface Nudge {
 export interface ConnectResult {
   credential: PublicCredential;
   validation: ValidationResult;
+  /** What the provider reported serving, when the key verified. */
+  models?: ModelDiscoveryReport;
+}
+
+// ---- provider model inventory --------------------------------------------
+
+/**
+ * What changed about a provider's model list on the last check.
+ *
+ * The three lists are kept apart because they mean different things to a user:
+ * `added` is new capability, `restored` is a model that came back after being
+ * retired, and `removed` is a model that stopped being served. Collapsing them
+ * into one count would lose exactly the information that makes the refresh
+ * worth running.
+ */
+export interface ModelDiscoveryReport {
+  added: string[];
+  restored: string[];
+  removed: string[];
+  /** Missing models old enough to be forgotten entirely. */
+  pruned: number;
+  /** Catalogued models the provider did not return. */
+  stale: string[];
+  /** Returned models the curated catalog does not list. */
+  uncurated: string[];
+  /** Records that were already live and still are. */
+  unchanged: number;
+  providerId: string;
+  displayName: string;
+  ok: boolean;
+  /** Why the check could not be trusted, when `ok` is false. */
+  message?: string;
+  latencyMs: number;
+  checkedAt: number;
+  /** How many models the provider returned. */
+  discovered: number;
+  /** How many rows the provider's inventory holds after the check. */
+  tracked: number;
+}
+
+/** One observed model, with the provenance of the observation. */
+export interface ProviderModelRecordView {
+  providerId: string;
+  model: string;
+  /** True when the shipped catalog also lists this model. */
+  curated: boolean;
+  /** True when the provider returned it on the most recent check. */
+  available: boolean;
+  firstSeen: number;
+  lastSeen: number;
+  lastChecked: number;
+}
+
+export interface ProviderModelInventory {
+  providerId: string;
+  displayName: string;
+  /** Absent when this provider's model list has never been fetched. */
+  checkedAt?: number;
+  models: ProviderModelRecordView[];
+}
+
+// ---- guidance -------------------------------------------------------------
+
+export type GuidanceSeverity = "info" | "warn" | "critical";
+
+export type GuidanceKind =
+  | "credential.rejected"
+  | "credential.struggling"
+  | "credential.never-verified"
+  | "provider.all-keys-unusable"
+  | "provider.models-stale"
+  | "provider.models-never-checked"
+  | "provider.models-outdated"
+  | "chain.model-retired"
+  | "chain.node-unkeyed"
+  | "chain.node-unhealthy"
+  | "chain.none"
+  | "egress.saturated"
+  | "coverage.free-providers";
+
+/**
+ * What a notice's button does.
+ *
+ * A closed set rather than a free-form callback: these cross a JSON boundary,
+ * and the UI has to be able to render every one of them as a button that does
+ * something real. A notice without an action is a complaint.
+ */
+export type GuidanceAction =
+  | { kind: "navigate"; label: string; path: string }
+  | { kind: "refresh-models"; label: string; providerId: string }
+  | { kind: "reverify-credential"; label: string; credentialId: string };
+
+export interface GuidanceNotice {
+  /** Stable across snapshots, so a dismissal can be remembered. */
+  id: string;
+  kind: GuidanceKind;
+  severity: GuidanceSeverity;
+  title: string;
+  detail: string;
+  actions: GuidanceAction[];
+  providerId?: string;
+  credentialId?: string;
+  chainId?: string;
+  entryId?: string;
+}
+
+export interface GuidanceResponse {
+  notices: GuidanceNotice[];
+  summary: Record<GuidanceSeverity, number>;
+  checkedAt: number;
 }
 
 /** What the router is doing right now. */
@@ -366,7 +476,14 @@ export interface StatusResponse {
   subscribers: number;
 }
 
-/** A curated free model, selectable only when its provider has a working key. */
+/**
+ * A model the user might pick.
+ *
+ * Three independent questions, kept as three fields rather than collapsed into
+ * one: is it in the hand-written catalog (`curated`), does the provider still
+ * serve it (`live`), and may the user select it right now (`selectable`, which
+ * is true only when the provider holds a verified key).
+ */
 export interface SelectableModel {
   id: string;
   providerId: string;
@@ -374,6 +491,10 @@ export interface SelectableModel {
   bestFor?: string;
   latencySeconds?: number;
   selectable: boolean;
+  curated: boolean;
+  live: boolean;
+  firstSeenAt?: number;
+  lastSeenAt?: number;
 }
 
 export interface ModelCatalogView {
@@ -388,6 +509,17 @@ export interface ModelCatalogView {
   credentialCount: number;
   healthyCount: number;
   credentialIds: string[];
+  /** Catalogued models the provider did not return on the last check. */
+  staleModels: string[];
+  /** Absent when this provider's model list has never been fetched. */
+  inventoryCheckedAt?: number;
+  counts: {
+    curated: number;
+    /** Curated models the provider still returns. */
+    live: number;
+    /** Models the provider returns that the catalog does not list. */
+    discovered: number;
+  };
   models: SelectableModel[];
 }
 
@@ -395,6 +527,8 @@ export interface ModelsResponse {
   providers: ModelCatalogView[];
   total: number;
   available: number;
+  /** Catalogued models no provider returns any more, summed. */
+  stale: number;
 }
 
 /** Per-model usage inside one provider. */

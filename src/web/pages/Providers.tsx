@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { api, ApiError } from "../api.js";
+import { api, ApiError, timeAgo } from "../api.js";
 import type {
   CatalogProviderRow,
+  ModelCatalogView,
   ProviderCatalogEntry,
   ProviderDossier,
   ProviderStatus,
@@ -9,6 +10,7 @@ import type {
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
 import { Empty, Modal, Panel } from "../components/Primitives.js";
+import { PixelPlug } from "../components/PixelIcons.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
 
@@ -62,21 +64,63 @@ export function Providers({
   const [connectedOnly, setConnectedOnly] = useState(false);
   const [connecting, setConnecting] = useState<ProviderStatus | null>(null);
   const [custom, setCustom] = useState<ProviderCatalogEntry[]>([]);
+  /**
+   * The observed model inventory, joined onto the cards.
+   *
+   * Fetched from the same `/api/models` the Models screen uses rather than
+   * duplicated onto the provider row, so there is one source of truth for what a
+   * provider serves and the two screens can never disagree.
+   */
+  const [inventory, setInventory] = useState<Map<string, ModelCatalogView>>(new Map());
+  const [refreshing, setRefreshing] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [catalog, endpoints] = await Promise.all([
+      const [catalog, endpoints, models] = await Promise.all([
         api.catalogProviders({ page, pageSize, q: query }),
         api.customEndpoints(),
+        api.models(),
       ]);
       setRows(catalog.data);
       setTotal(catalog.total);
       setTotalPages(catalog.totalPages);
       setCustom(endpoints);
+      setInventory(new Map(models.providers.map((view) => [view.providerId, view])));
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
     }
   }, [page, pageSize, query, toast]);
+
+  /** Ask one provider what it serves now, and report what changed. */
+  const refreshModels = useCallback(
+    async (providerId: string, displayName: string) => {
+      setRefreshing(providerId);
+      try {
+        const report = await api.refreshProviderModels(providerId);
+        if (!report.ok) {
+          toast.err(report.message ?? `${displayName} could not be checked`);
+        } else {
+          const parts = [
+            report.added.length ? `${report.added.length} new` : "",
+            report.restored.length ? `${report.restored.length} restored` : "",
+            report.removed.length ? `${report.removed.length} retired` : "",
+          ].filter(Boolean);
+          toast.ok(
+            parts.length
+              ? `${displayName}: ${parts.join(", ")} model(s)`
+              : `${displayName} is unchanged (${report.discovered} models)`,
+          );
+        }
+        await load();
+        onChanged();
+      } catch (error) {
+        toast.err(error instanceof ApiError ? error.message : String(error));
+      } finally {
+        setRefreshing(null);
+      }
+    },
+    [load, onChanged, toast],
+  );
 
   useEffect(() => {
     void load();
@@ -87,6 +131,8 @@ export function Providers({
   return (
     <>
       <Panel
+        hue="sky"
+        icon={<PixelPlug size={14} />}
         title={`Provider catalog (${total})`}
         actions={
           <div className="row" style={{ gap: 8 }}>
@@ -131,7 +177,14 @@ export function Providers({
                 </h3>
                 <div className="grid cards">
                   {group.map((row) => (
-                    <ProviderDossierCard key={row.id} row={row} onConnect={setConnecting} />
+                    <ProviderDossierCard
+                      key={row.id}
+                      row={row}
+                      inventory={inventory.get(row.id)}
+                      refreshing={refreshing === row.id}
+                      onConnect={setConnecting}
+                      onRefreshModels={refreshModels}
+                    />
                   ))}
                 </div>
               </section>
@@ -195,10 +248,17 @@ export function Providers({
 /** One provider card: identity, jurisdiction, verdict and connection state. */
 function ProviderDossierCard({
   row,
+  inventory,
+  refreshing,
   onConnect,
+  onRefreshModels,
 }: {
   row: CatalogProviderRow;
+  /** Observed model inventory, when this provider has ever been checked. */
+  inventory?: ModelCatalogView;
+  refreshing: boolean;
   onConnect: (provider: ProviderStatus) => void;
+  onRefreshModels: (providerId: string, displayName: string) => void;
 }) {
   const dossier = row.dossier;
   const [open, setOpen] = useState(false);
@@ -206,19 +266,56 @@ function ProviderDossierCard({
     ? "API token and account id"
     : "API key";
 
+  const stale = inventory?.staleModels ?? [];
+  const checkedAt = inventory?.inventoryCheckedAt;
+
   return (
     <div className="card provider-card">
       <div className="title">
         {row.displayName}
         <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{dossier.verdict}</span>
+        {stale.length > 0 ? (
+          <span className="badge bad" title={`No longer returned: ${stale.slice(0, 6).join(", ")}`}>
+            {stale.length} retired
+          </span>
+        ) : checkedAt ? (
+          <span className="badge" title={`Model list checked ${timeAgo(checkedAt)}`}>
+            live
+          </span>
+        ) : null}
       </div>
 
       <div className="sub">{dossier.summary}</div>
+
+      {/*
+       * The state that used to be invisible: whether this provider's model list
+       * has ever been checked, and whether it has gone stale since.
+       */}
+      <div className="sub faint" style={{ marginTop: 4 }}>
+        {checkedAt
+          ? `model list checked ${timeAgo(checkedAt)}`
+          : row.connected
+            ? "model list never checked"
+            : "connect a key to check the model list"}
+      </div>
 
       <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
         <button onClick={() => onConnect(row)}>Connect</button>
         <button className="secondary" type="button" onClick={() => setOpen(true)}>
           Models ({row.knownModels.length})
+        </button>
+        <button
+          className="secondary"
+          type="button"
+          disabled={!row.connected || refreshing}
+          title={
+            row.connected
+              ? `Ask ${row.displayName} what it serves right now`
+              : "Connect a key first"
+          }
+          onClick={() => onRefreshModels(row.id, row.displayName)}
+        >
+          {refreshing ? "checking…" : "Re-check models"}
         </button>
         <span className="spacer" />
         <span className="small faint">
@@ -275,6 +372,26 @@ function ProviderDossierCard({
               ))
             )}
           </div>
+
+          {/*
+           * Models the provider stopped returning. Shown rather than hidden,
+           * because "the model you were using is gone" is the single most
+           * confusing thing a free tier does.
+           */}
+          {stale.length > 0 ? (
+            <div className="model-list">
+              <div className="small faint">
+                Retired — not returned on the last check ({timeAgo(checkedAt ?? Date.now())}):
+              </div>
+              {stale.map((model) => (
+                <div className="model-list-item" key={model}>
+                  <span className="model-list-id">{model}</span>
+                  <span className="spacer" />
+                  <span className="badge bad">retired</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           <div className="modal-actions">
             {dossier.sourceUrl ? (
