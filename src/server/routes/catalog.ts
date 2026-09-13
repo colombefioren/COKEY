@@ -69,4 +69,16 @@ export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void 
       return cokey.probeModel(body.providerId, body.model, body.credentialId, body.message);
     }),
   );
+
+  /**
+   * "My models": every model this user can currently use, ranked by their own
+   * probe history rather than a curated tier — see `Cokey.myModelRankings`.
+   */
+  app.get(
+    "/api/models/mine",
+    withErrors(() => {
+      const rankings = cokey.myModelRankings();
+      return { rankings, tested: rankings.filter((row) => row.attempts > 0).length };
+    }),
+  );
 }

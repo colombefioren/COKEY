@@ -536,6 +536,25 @@ export interface ModelsResponse {
   stale: number;
 }
 
+/** One usable model, ranked by this user's own probe history. */
+export interface MyModelRanking {
+  providerId: string;
+  displayName: string;
+  model: string;
+  attempts: number;
+  successes: number;
+  /** 0-1. Undefined when never probed. */
+  successRate?: number;
+  avgLatencyMs?: number;
+  lastCheckedAt?: number;
+  lastOk?: boolean;
+}
+
+export interface MyModelsResponse {
+  rankings: MyModelRanking[];
+  tested: number;
+}
+
 /** Per-model usage inside one provider. */
 export interface UsageModelView {
   model: string;

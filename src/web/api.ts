@@ -8,6 +8,7 @@ import type {
   ModelDiscoveryReport,
   ModelProbeResult,
   ModelsResponse,
+  MyModelsResponse,
   Nudge,
   PageParams,
   Paginated,
@@ -190,6 +191,12 @@ export const api = {
    * the UI can show the whole list while only allowing usable picks.
    */
   models: () => request<ModelsResponse>("GET", "/api/models"),
+
+  /**
+   * "My models": every model this user can use right now, ranked by their own
+   * probe history rather than a curated tier.
+   */
+  myModels: () => request<MyModelsResponse>("GET", "/api/models/mine"),
 
   /**
    * Ask one provider what it serves now and reconcile the inventory.
