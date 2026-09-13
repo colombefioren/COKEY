@@ -585,6 +585,14 @@ export interface UsageView {
 export type ProviderKind = "lab" | "inference-cloud" | "aggregator" | "gateway" | "local";
 export type ProviderVerdict = "recommended" | "usable" | "limited" | "avoid";
 
+export interface CuratedModel {
+  id: string;
+  /** Advertised context window, as a display string (e.g. "262K"). */
+  context?: string;
+  bestFor?: string;
+  latencySeconds?: number;
+}
+
 export interface ProviderDossier {
   operator: string;
   origin: string;
@@ -593,6 +601,66 @@ export interface ProviderDossier {
   verdict: ProviderVerdict;
   verdictReason: string;
   sourceUrl?: string;
+  /** `cms` when the content repository supplied this entry, `compiled` otherwise. */
+  source?: "cms" | "compiled";
+  /** ISO date a human last checked these claims. */
+  reviewedAt?: string;
+  /** One-line free-tier summary, when the content records one. */
+  freeTierSummary?: string;
+  /** The editor's caveat, when there is one. */
+  notes?: string;
+  /** Free model list as curated, when the content repository lists one. */
+  models?: CuratedModel[];
+}
+
+export interface ProviderDossierResponse {
+  providerId: string;
+  dossier: ProviderDossier;
+  /** Whether the provider exists in the live catalog at all. */
+  known: boolean;
+}
+
+/* -------------------------------------------------------------------------- *\
+ * Curated content
+\* -------------------------------------------------------------------------- */
+
+export interface CmsIssue {
+  file: string;
+  message: string;
+}
+
+/** Where the curated content came from, and what was wrong with it. */
+export interface ContentStatusResponse {
+  /** True when a content directory was found and read. */
+  available: boolean;
+  directory: string;
+  watching: boolean;
+  loadedAt: number;
+  counts: {
+    providers: number;
+    models: number;
+    terms: number;
+    ranked: number;
+    skill: number;
+    issues: number;
+  };
+  issues: CmsIssue[];
+  /** Providers the content documents that this build cannot serve. */
+  unsupportedProviders: string[];
+}
+
+export interface TermsSection {
+  slug: string;
+  title: string;
+  order: number;
+  updatedAt: string;
+  /** Markdown body. */
+  body: string;
+}
+
+export interface TermsResponse {
+  sections: TermsSection[];
+  updatedAt?: string;
 }
 
 /** A provider card with its dossier folded in. */
@@ -656,4 +724,8 @@ export interface RankingsResponse {
   bottomLine: string;
   disclaimer: string;
   sources: RankingSource[];
+  /** Where these boards came from, so the screen can say so honestly. */
+  source: "cms" | "compiled";
+  /** ISO date of the newest review behind the boards. */
+  reviewedAt?: string;
 }

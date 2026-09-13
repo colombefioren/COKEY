@@ -20,21 +20,28 @@ import type { CokeyEvent, LiveRouteSnapshot } from "./types.js";
  *      with the last. Ten components wanting live data still cost one socket,
  *      and a route change does not tear down a connection that is working.
  *
- *   2. Narrow topics. The UI subscribes to `chains,credentials,models`. Route
- *      events fire several times per request; invalidating cached reads on each
- *      one would refetch the whole dashboard on every attempt of every request
- *      in flight. The routing narration has its own subscriber in LiveStatus,
- *      which wants exactly that chatter.
+ *   2. Narrow topics. The UI subscribes to `chains,credentials,models,content`.
+ *      Route events fire several times per request; invalidating cached reads on
+ *      each one would refetch the whole dashboard on every attempt of every
+ *      request in flight. The routing narration has its own subscriber in
+ *      LiveStatus, which wants exactly that chatter.
  *
  *   3. EventSource already reconnects. The browser retries on its own, so this
  *      store does not implement a backoff loop — it only tracks whether the
  *      connection is currently open, so the UI can say so honestly.
  */
 
-/** The subjects whose events mean stored data changed. */
-export const DATA_TOPICS = ["chains", "credentials", "models"] as const;
+/**
+ * The subjects whose events mean stored data changed.
+ *
+ * `content` is included because the curated dossiers, terms and ranking boards
+ * are read from a directory that can change while the dashboard is open — a
+ * `git pull` in the content checkout should not require a page reload to be
+ * seen.
+ */
+export const DATA_TOPICS = ["chains", "credentials", "models", "content"] as const;
 
-export type LiveTopic = "route" | "chains" | "credentials" | "models";
+export type LiveTopic = "route" | "chains" | "credentials" | "models" | "content";
 
 /**
  * Which topic an event belongs to.
@@ -45,6 +52,7 @@ export type LiveTopic = "route" | "chains" | "credentials" | "models";
  */
 export function topicForEvent(type: CokeyEvent["type"]): LiveTopic {
   if (type === "chain.state") return "route";
+  if (type.startsWith("content.")) return "content";
   if (type.startsWith("models.")) return "models";
   if (type.startsWith("chain.")) return "chains";
   if (type.startsWith("credential.")) return "credentials";
