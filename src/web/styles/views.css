@@ -832,3 +832,77 @@
   color: var(--sage);
   font-weight: 600;
 }
+
+/* ---- live route readout --------------------------------------------------- */
+/*
+ * The topbar chip and its feed.
+ *
+ * The chip has to hold three facts in one pill: which model, which key, whether
+ * traffic is moving. So the model is set in the display face at reading size,
+ * the key recedes behind it, and the state is a single breathing dot on the
+ * leading edge — not three badges fighting over the same line.
+ */
+.live-chip {
+  max-width: 460px;
+  gap: 9px;
+  padding: 6px 13px 6px 11px;
+  border: 1px solid var(--border-strong);
+  background: linear-gradient(140deg, var(--surface), var(--surface-2));
+  font-size: 11.5px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.live-chip:hover {
+  border-color: var(--violet-line);
+  box-shadow: var(--shadow);
+}
+.live-model {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  font-weight: 650;
+}
+.live-dot {
+  font-size: 8px;
+  line-height: 1;
+}
+.live-chip.active {
+  border-color: var(--sage-line);
+  background: linear-gradient(140deg, var(--surface), var(--sage-soft));
+}
+.live-count {
+  padding: 1px 8px;
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  font-weight: 650;
+}
+
+/*
+ * The feed, as a tray. Same reasoning as the notices dropdown: the rows scroll
+ * inside a rounded holder rather than against a hard clip, which is what keeps
+ * a long routing feed from looking broken the moment it moves.
+ */
+.live-panel {
+  width: min(482px, 88vw);
+  max-height: none;
+  overflow: visible;
+  padding: 14px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 22px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  box-shadow: var(--shadow-pop);
+}
+.live-list {
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+.live-item {
+  grid-template-columns: 66px 84px minmax(0, 1fr);
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+.live-time {
+  font-variant-numeric: tabular-nums;
+}

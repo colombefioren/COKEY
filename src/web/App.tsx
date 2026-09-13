@@ -320,7 +320,13 @@ function Shell() {
           <span className="spacer" />
           <NotificationsBell refreshKey={refreshKey} onChanged={bump} />
           <LiveStatus />
-          <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
+          <a
+            href="/v1/models"
+            target="_blank"
+            rel="noreferrer"
+            className="topbar-link mono"
+            title="The public model list, as any OpenAI client would see it"
+          >
             /v1/models
           </a>
         </header>

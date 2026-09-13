@@ -188,8 +188,7 @@
   border-radius: 26px;
   padding: 24px 26px;
   background:
-    radial-gradient(520px 300px at 100% 0%, var(--violet-soft), transparent 62%),
-    var(--surface);
+    radial-gradient(520px 300px at 100% 0%, var(--violet-soft), transparent 62%), var(--surface);
   box-shadow: var(--shadow-pop);
   animation: modal-in 0.34s var(--ease) both;
 }
@@ -270,6 +269,33 @@
 
 .login-card input[type="password"] {
   border-radius: 14px;
+}
+
+/* ---- topbar affordances --------------------------------------------------- */
+
+/* The public endpoint, as a chip rather than a bare link: it is a thing you
+   might copy or open, not a place in the app. */
+.topbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
+}
+.topbar-link:hover {
+  text-decoration: none;
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+  color: var(--violet-strong);
 }
 
 /* ---- chrome --------------------------------------------------------------- */
