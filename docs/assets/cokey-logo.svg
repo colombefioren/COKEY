@@ -2,13 +2,13 @@
   <title>COKEY</title>
   <defs>
     <linearGradient id="cokey-mark" x1="24" y1="24" x2="200" y2="118" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F2A468" />
-      <stop offset="0.55" stop-color="#E2662C" />
-      <stop offset="1" stop-color="#A1481F" />
+      <stop offset="0" stop-color="#A68AF7" />
+      <stop offset="0.55" stop-color="#6D3DF0" />
+      <stop offset="1" stop-color="#3D1FA1" />
     </linearGradient>
     <linearGradient id="cokey-word" x1="246" y1="42" x2="430" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F7CBA0" />
-      <stop offset="1" stop-color="#F2A468" />
+      <stop offset="0" stop-color="#D9CAF9" />
+      <stop offset="1" stop-color="#A68AF7" />
     </linearGradient>
   </defs>
 
@@ -28,8 +28,8 @@
   />
 
   <!-- two leaves, the "broke princess" sprout -->
-  <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#F2A468" />
-  <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#A1481F" />
+  <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#A68AF7" />
+  <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#3D1FA1" />
 
   <!-- KEY, drawn as strokes so it stays crisp at any size -->
   <g
