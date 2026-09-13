@@ -1,0 +1,300 @@
+/*
+ * Shared chrome.
+ *
+ * The surfaces the shell owns rather than any one screen: the toast stack, the
+ * overlay and its modal, the login card, the scrollbars and the ambient wash.
+ * They are gathered here instead of being scattered through the tail of the
+ * largest sheet, so everything that sits *above* the page can be read together
+ * and changes to the palette reach all of it at once.
+ *
+ * Imported after core.css, so the rules here are the ones that win.
+ */
+
+/* ---- notifications -------------------------------------------------------- */
+
+/*
+ * A toast as a tag rather than a bar.
+ *
+ * Three decisions: one square corner so it reads as a label that was pinned
+ * down rather than a rounded rectangle that appeared; a gradient rule on the
+ * leading edge carrying the state, in the same ramp as everything else; and a
+ * hairline under the message that drains over the four seconds the toast lives,
+ * so "how long have I got" is answered by looking, not by remembering.
+ *
+ * Toasts are stacked from the oldest at the top, which is the order they were
+ * read in, and each one is dismissable by clicking anywhere on it — a notice
+ * you have already read costs one gesture to get out of the way.
+ */
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 70;
+  display: grid;
+  gap: 10px;
+  width: min(370px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  --toast-accent: var(--violet);
+  --toast-accent-2: var(--violet-strong);
+  --toast-bg: var(--surface);
+  --toast-line: var(--violet-line);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 12px 12px 16px;
+  border-radius: 18px 18px 18px 7px;
+  border: 1px solid var(--toast-line);
+  background: var(--toast-bg);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: left;
+  box-shadow: var(--shadow-pop);
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+  animation: toast-in 0.38s var(--ease) both;
+}
+
+.toast.err {
+  --toast-accent: var(--rose);
+  --toast-accent-2: var(--rose-strong);
+  --toast-line: var(--rose-line);
+}
+.toast.ok {
+  --toast-accent: var(--sage);
+  --toast-accent-2: var(--sage);
+  --toast-line: var(--sage-line);
+  --toast-bg: linear-gradient(140deg, var(--surface), var(--sage-soft));
+}
+.toast:not(.ok):not(.err) {
+  --toast-bg: linear-gradient(140deg, var(--surface), var(--violet-soft));
+}
+
+/* The leading rule: the state, stated once and quietly. */
+.toast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--toast-accent), var(--toast-accent-2));
+}
+
+/* The life line, draining left to right over the toast's four seconds. */
+.toast::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--toast-accent);
+  opacity: 0.45;
+  transform-origin: left;
+  animation: toast-life 4s linear forwards;
+}
+
+.toast-glyph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--toast-accent) 14%, transparent);
+  color: var(--toast-accent);
+}
+.toast-glyph::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+}
+.toast.ok .toast-glyph::before {
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+}
+.toast.err .toast-glyph::before {
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
+}
+.toast:not(.ok):not(.err) .toast-glyph::before {
+  border-radius: 50% 50% 50% 12%;
+}
+
+.toast-close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--faint);
+  font-size: 15px;
+  line-height: 1;
+}
+.toast-close:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--toast-accent) 16%, transparent);
+  color: var(--toast-accent);
+  box-shadow: none;
+  transform: none;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) translateX(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-life {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- overlay and modal ---------------------------------------------------- */
+
+/*
+ * The scrim is plum, not black: a neutral grey veil over a warm page reads as
+ * dirt, and it is the single most visible "this was a default" tell in any UI.
+ */
+.overlay {
+  background: color-mix(in srgb, var(--text) 42%, transparent);
+  backdrop-filter: blur(6px) saturate(120%);
+  animation: scrim-in 0.24s ease both;
+}
+
+.modal {
+  position: relative;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 26px;
+  padding: 24px 26px;
+  background:
+    radial-gradient(520px 300px at 100% 0%, var(--violet-soft), transparent 62%),
+    var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: modal-in 0.34s var(--ease) both;
+}
+
+/* A hairline of the brand ramp along the top edge, so a dialog is branded by
+   one drawn detail rather than by a coloured header block. */
+.modal::before {
+  content: "";
+  position: absolute;
+  left: 26px;
+  right: 26px;
+  top: -1.5px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--mark-1), var(--mark-2), var(--mark-3));
+  opacity: 0.9;
+}
+
+.modal h3 {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.modal .modal-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+/* ---- login ---------------------------------------------------------------- */
+
+.login {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Two slow blooms behind the card, so the sign-in screen is part of the same
+   room as the dashboard rather than a bare page that was never styled. */
+.login::before,
+.login::after {
+  content: "";
+  position: absolute;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.login::before {
+  top: -240px;
+  left: -180px;
+  background: radial-gradient(closest-side, var(--pink-soft), transparent 70%);
+}
+.login::after {
+  bottom: -280px;
+  right: -160px;
+  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 30px;
+  padding: 36px 32px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--shadow-pop);
+}
+
+.login-card h1 {
+  font-family: var(--font-display);
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.login-card input[type="password"] {
+  border-radius: 14px;
+}
+
+/* ---- chrome --------------------------------------------------------------- */
+
+::selection {
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--faint);
+}
+
+/* ---- ambient wash --------------------------------------------------------- */
+
+/* The two drifting blooms behind the whole app, on the new ramp: pink on one
+   side, lilac on the other, both far too faint to compete with a table. */
+.starfield::before {
+  opacity: 0.3;
+  background: radial-gradient(closest-side, var(--pink-soft), transparent 70%);
+}
+.starfield::after {
+  opacity: 0.26;
+  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
+}

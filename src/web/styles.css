@@ -6,6 +6,8 @@
  *   fonts.css       generated @font-face rules for the self-hosted faces.
  *   core.css        design tokens, base elements, the shell and sidebar,
  *                   surfaces, controls, tables and the motion rules.
+ *   surfaces.css    the chrome that sits above the page: toasts, the overlay
+ *                   and its modal, the login card, scrollbars, the ambient wash.
  *   views.css       the diagram-heavy surfaces: the live route, the resilience
  *                   layers, the ranking boards, the about and contact cards.
  *   responsive.css  every breakpoint, in one place, so the mobile behaviour of
@@ -18,5 +20,6 @@
 
 @import "./styles/fonts.css";
 @import "./styles/core.css";
+@import "./styles/surfaces.css";
 @import "./styles/views.css";
 @import "./styles/responsive.css";
