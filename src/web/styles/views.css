@@ -1078,3 +1078,106 @@
 .closing span {
   font-size: 12.5px;
 }
+
+/* ---- boards, cards and chips ---------------------------------------------- */
+/*
+ * The surfaces that are really just lists.
+ *
+ * The work here is making one row legible at a glance: a bar that reads as a
+ * measurement, a heading that reads as a name, a chip that reads as something
+ * you could pick up.
+ */
+
+.swe-score {
+  gap: 9px;
+}
+.swe-bar {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-3);
+  box-shadow: inset 0 1px 2px rgba(43, 26, 47, 0.07);
+}
+.swe-fill {
+  background: linear-gradient(90deg, var(--mark-1), var(--mark-3));
+}
+
+/* Verdict headings are names, not micro-labels: display face, sentence case,
+   with the same hand-cut tab the rest of the app uses. */
+.provider-section-title {
+  gap: 9px;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  text-transform: none;
+  color: var(--text);
+}
+.provider-section-title::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+}
+.provider-section:nth-of-type(2) .provider-section-title::before,
+.provider-section:nth-of-type(3) .provider-section-title::before,
+.provider-section:nth-of-type(4) .provider-section-title::before {
+  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+}
+
+.provider-card .dossier {
+  border-radius: 14px;
+}
+.provider-card .dossier > div {
+  padding: 8px 12px;
+}
+.provider-card .dossier dt {
+  color: var(--muted);
+  font-weight: 650;
+}
+
+.model-provider {
+  border: 1.5px solid var(--border);
+  border-radius: 18px 20px 16px 19px;
+  background: linear-gradient(165deg, var(--surface-2), var(--surface));
+}
+
+.model-chip {
+  border: 1.5px solid var(--border);
+  border-radius: 14px 16px 13px 17px;
+  background: var(--surface);
+}
+.model-chip:hover {
+  border-color: var(--violet-line);
+  box-shadow: var(--shadow);
+}
+
+.model-list-item {
+  border: 1.5px solid var(--border);
+  border-radius: 12px 14px 11px 15px;
+  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+}
+
+.stack-chip {
+  border: 1.5px solid var(--border-strong);
+  background: linear-gradient(150deg, var(--surface), var(--surface-3));
+  font-weight: 550;
+}
+.stack-chip.alt {
+  border-color: var(--violet-line);
+  background: linear-gradient(150deg, var(--surface), var(--violet-soft));
+}
+
+.about-logo {
+  display: flex;
+}
+
+/* The resilience panel's own heading, in the same voice as a window title. */
+.layers-panel .layer-head {
+  align-items: baseline;
+}
+.layers-panel .layer-head-kicker {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+}

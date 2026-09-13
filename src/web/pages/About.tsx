@@ -41,11 +41,10 @@ export function About() {
           <div className="about-copy">
             <h2>a tool for broke lads made by a broke princess</h2>
             <p className="muted">
-              COKEY pools the free API keys you already have, arranges them into ordered chains, and
-              serves the whole lot behind one OpenAI-compatible endpoint. When a key runs out of
-              quota the next one takes over, silently, and the client only ever sees your chain
-              alias. It runs on your machine, keeps every secret encrypted at rest, and sends
-              nothing anywhere.
+              Pool the free API keys you already have into ordered chains, behind one
+              OpenAI-compatible endpoint. When a key runs out, the next one takes over and the
+              client never notices. It runs on your machine, encrypted at rest, and sends nothing
+              anywhere.
             </p>
             <div className="about-actions">
               <a className="btn" href={REPO_URL} target="_blank" rel="noreferrer">
@@ -79,7 +78,7 @@ export function About() {
       <Panel title="Contact the creator">
         <p className="small muted" style={{ marginTop: 0 }}>
           Built and maintained by <strong>@{CREATOR.name}</strong>. Bug reports, provider tips and
-          pull requests are all welcome.
+          pull requests welcome.
         </p>
         <ContactGrid />
       </Panel>
@@ -90,8 +89,8 @@ export function About() {
           <a href={DATA_CREDIT.url} target="_blank" rel="noreferrer">
             {DATA_CREDIT.label}
           </a>
-          , with thanks. Rate limits and capabilities change constantly, so the ranking boards in
-          Models always name their source and let you decide.
+          , with thanks. Rate limits change constantly, so the ranking boards always name their
+          source and let you decide.
         </p>
       </Panel>
     </>
