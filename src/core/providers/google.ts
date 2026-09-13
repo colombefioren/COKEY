@@ -76,15 +76,21 @@ export class GoogleAdapter extends OpenAICompatibleAdapter {
     return streamFrom(this.translateStream(body, context));
   }
 
-  override async listModels(credential: Credential): Promise<ModelInfo[]> {
+  override async listModels(
+    credential: Credential,
+    options?: { timeoutMs?: number },
+  ): Promise<ModelInfo[]> {
     const base = this.catalog.baseUrl.replace(/\/+$/, "");
-    const result = await performRequest({
-      url: `${base}/models?key=${encodeURIComponent(credential.secret)}`,
-      method: "GET",
-      headers: { "user-agent": "cokey/0.1.0" },
-      stream: false,
-      proxyUrl: credential.proxyUrl,
-    });
+    const result = await performRequest(
+      {
+        url: `${base}/models?key=${encodeURIComponent(credential.secret)}`,
+        method: "GET",
+        headers: { "user-agent": "cokey/0.1.0" },
+        stream: false,
+        proxyUrl: credential.proxyUrl,
+      },
+      { timeoutMs: options?.timeoutMs },
+    );
     if (!result.ok) throw new Error(result.error.message);
     const body = (await result.response.json()) as { models?: Array<{ name?: string }> };
     return (body.models ?? [])

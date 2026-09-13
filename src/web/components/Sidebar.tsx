@@ -1,7 +1,10 @@
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { href, type Navigate } from "../router.js";
 import { CokeyLogo } from "./Logo.js";
 import { IconChevron } from "./Icons.js";
+
+/** Must match the sidebar-becomes-a-drawer breakpoint in responsive.css. */
+const MOBILE_QUERY = "(max-width: 860px)";
 
 export interface NavItem {
   path: string;
@@ -33,6 +36,7 @@ export function Sidebar({
   onToggleCollapsed,
   keyCount,
   chainCount,
+  mobileOpen,
 }: {
   items: NavItem[];
   activePath: string;
@@ -41,22 +45,49 @@ export function Sidebar({
   onToggleCollapsed: () => void;
   keyCount: number;
   chainCount: number;
+  /** Whether the mobile drawer is currently open. Ignored above the breakpoint. */
+  mobileOpen: boolean;
 }) {
   const navRef = useRef<HTMLElement>(null);
   const activeRef = useRef<HTMLAnchorElement | null>(null);
   const [glider, setGlider] = useState<{ top: number; height: number } | null>(null);
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches,
+  );
+
+  useEffect(() => {
+    const mql = window.matchMedia(MOBILE_QUERY);
+    const onChange = () => setIsMobile(mql.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
 
   useLayoutEffect(() => {
-    const active = activeRef.current;
-    if (!active) {
-      setGlider(null);
-      return;
-    }
-    setGlider({ top: active.offsetTop, height: active.offsetHeight });
+    const measure = () => {
+      const active = activeRef.current;
+      if (!active) {
+        setGlider(null);
+        return;
+      }
+      setGlider({ top: active.offsetTop, height: active.offsetHeight });
+    };
+    measure();
+    // A text-zoom or font change can resize nav rows without touching any of
+    // the other dependencies below, so the glider still needs to catch it.
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, [activePath, collapsed, items.length]);
 
+  // Below the breakpoint the drawer is only ever a transform away, so its
+  // links stay in the tab order and screen-reader tree unless explicitly
+  // retired while closed.
+  const hidden = isMobile && !mobileOpen;
+  // `inert` is a real DOM boolean attribute React forwards as-is, but the
+  // installed @types/react predates its addition to the JSX typings.
+  const inertProps = { inert: hidden || undefined } as React.HTMLAttributes<HTMLElement>;
+
   return (
-    <aside className={`sidebar${collapsed ? " collapsed" : ""}`}>
+    <aside className={`sidebar${collapsed ? " collapsed" : ""}`} {...inertProps}>
       <a className="sidebar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
         <CokeyLogo height={26} withWordmark={false} uid="sidebar-mark" className="brand-logo" />
         <span className="brand-word">COKEY</span>

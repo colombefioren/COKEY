@@ -87,8 +87,14 @@ export interface ProviderAdapter {
   /** Prove a credential works before it is allowed into a chain. */
   validateCredential(credential: Credential): Promise<ValidationResult>;
 
-  /** Cheap model listing, when the provider supports it. */
-  listModels(credential: Credential): Promise<ModelInfo[]>;
+  /**
+   * Cheap model listing, when the provider supports it.
+   *
+   * `timeoutMs` lets a bulk caller (re-checking every connected provider in
+   * one pass) budget far less than a single completion's timeout, so one
+   * unresponsive free tier costs seconds instead of minutes.
+   */
+  listModels(credential: Credential, options?: { timeoutMs?: number }): Promise<ModelInfo[]>;
 
   /** Map an upstream failure onto a routing decision. */
   classifyError(error: ProviderError): ErrorClassification;

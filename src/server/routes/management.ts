@@ -137,8 +137,9 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
    * Refresh every connected provider.
    *
    * A distinct path rather than a magic id, so the "refresh everything" action
-   * reads as what it is at the call site. Sequentially and politely, because
-   * these are third-party endpoints answering an administrative question.
+   * reads as what it is at the call site. Bounded concurrency and a short
+   * per-provider timeout, because these are third-party endpoints answering an
+   * administrative question — see `refreshAllProviderModels` for why.
    */
   app.post(
     "/api/providers/refresh-models",

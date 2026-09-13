@@ -741,12 +741,6 @@ section.panel.soft {
   white-space: nowrap;
 }
 
-/* The three mock-OS lights are retired: a modern card names itself with the
-   icon and title alone. */
-.window-dots {
-  display: none;
-}
-
 .window-icon {
   display: grid;
   place-items: center;
@@ -767,6 +761,30 @@ section.panel.soft {
   align-items: center;
   gap: 8px;
   margin-left: auto;
+}
+
+.window-control {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--faint);
+}
+.window-control:hover:not(:disabled) {
+  background: var(--surface-3);
+  color: var(--text);
+  box-shadow: none;
+  transform: none;
+}
+.window-control svg {
+  transition: transform 0.3s var(--ease);
+}
+.window-control svg.flip {
+  transform: rotate(-90deg);
 }
 
 .window-body {

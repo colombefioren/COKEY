@@ -10,7 +10,7 @@ import type {
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
 import { Empty, Modal, Panel } from "../components/Primitives.js";
-import { IconCpu } from "../components/Icons.js";
+import { IconGrid } from "../components/Icons.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
 
@@ -132,7 +132,7 @@ export function Providers({
     <>
       <Panel
         hue="sky"
-        icon={<IconCpu size={14} />}
+        icon={<IconGrid size={14} />}
         title={`Provider catalog (${total})`}
         actions={
           <div className="row" style={{ gap: 8 }}>

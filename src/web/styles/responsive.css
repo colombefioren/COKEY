@@ -23,6 +23,15 @@
     transform: translateX(0);
   }
 
+  /* A dim scrim behind the open drawer: tapping it closes the drawer, and it
+     visually separates the rail from the page it is covering. */
+  .nav-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: color-mix(in srgb, var(--text) 40%, transparent);
+  }
+
   .nav-toggle {
     display: inline-flex;
   }
