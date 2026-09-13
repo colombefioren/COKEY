@@ -1302,27 +1302,147 @@ label {
   color: var(--rose);
 }
 
+/*
+ * Status marks.
+ *
+ * Each state is given a silhouette, not just a hue: a burst for healthy, a
+ * crescent for cooling, a crack for invalid, a dotted ring for one that has
+ * never been proven, a bar for paused. Five dots in five colours is a colour
+ * question; five shapes is a reading question, and a five-colour dot row is
+ * exactly what made the old state column feel machine-made.
+ */
 .dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 9px;
+  height: 9px;
   flex: 0 0 auto;
+  background: currentColor;
 }
 .dot.healthy {
-  background: var(--sage);
+  color: var(--sage);
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: glyph-breathe 2.8s ease-in-out infinite;
 }
 .dot.cooldown {
-  background: var(--peach);
+  color: var(--peach);
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 3px 0 0 0 currentColor;
 }
 .dot.invalid {
-  background: var(--rose);
+  color: var(--rose);
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
 }
 .dot.disabled {
-  background: var(--faint);
+  color: var(--faint);
+  clip-path: polygon(0% 40%, 100% 40%, 100% 60%, 0% 60%);
 }
 .dot.unverified {
-  background: var(--sky);
+  color: var(--sky);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px dashed currentColor;
+  background: none;
+}
+
+@keyframes glyph-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.78);
+    opacity: 0.7;
+  }
+}
+
+/*
+ * The same five silhouettes, wrapped in a word.
+ *
+ * Used wherever there is room to name the state — tables, legends, the route
+ * diagram — so the mark and the meaning always arrive together.
+ */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pill-line, var(--border));
+  background: var(--pill-bg, var(--surface-3));
+  color: var(--pill-ink, var(--muted));
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s ease;
+}
+.status-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.status-pill.compact {
+  gap: 0;
+  padding: 4px 5px;
+}
+.status-glyph {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+}
+.status-pill.healthy {
+  --pill-bg: var(--sage-soft);
+  --pill-line: var(--sage-line);
+  --pill-ink: var(--sage);
+}
+.status-pill.cooldown {
+  --pill-bg: var(--peach-soft);
+  --pill-line: var(--peach-line);
+  --pill-ink: var(--peach);
+}
+.status-pill.invalid {
+  --pill-bg: var(--rose-soft);
+  --pill-line: var(--rose-line);
+  --pill-ink: var(--rose);
+}
+.status-pill.disabled {
+  --pill-bg: var(--surface-3);
+  --pill-line: var(--border);
+  --pill-ink: var(--muted);
+}
+.status-pill.unverified {
+  --pill-bg: var(--sky-soft);
+  --pill-line: var(--sky-line);
+  --pill-ink: var(--sky);
+}
+.status-pill.healthy .status-glyph {
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: glyph-breathe 2.8s ease-in-out infinite;
+}
+.status-pill.cooldown .status-glyph {
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 3px 0 0 0 currentColor;
+}
+.status-pill.invalid .status-glyph {
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
+}
+.status-pill.disabled .status-glyph {
+  clip-path: polygon(0% 40%, 100% 40%, 100% 60%, 0% 60%);
+}
+.status-pill.unverified .status-glyph {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px dashed currentColor;
+  background: none;
 }
 
 /* Segmented switch, used for every tab row in the app. */

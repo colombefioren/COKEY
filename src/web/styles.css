@@ -3,11 +3,11 @@
  *
  * The sheets are split by what they describe, not by size:
  *
- *   fonts.css       generated @font-face rules for the self-hosted Inter face.
+ *   fonts.css       generated @font-face rules for the self-hosted faces.
  *   core.css        design tokens, base elements, the shell and sidebar,
  *                   surfaces, controls, tables and the motion rules.
- *   views.css       the diagram-heavy surfaces: the resilience layers, the
- *                   ranking boards, the about and contact cards.
+ *   views.css       the diagram-heavy surfaces: the live route, the resilience
+ *                   layers, the ranking boards, the about and contact cards.
  *   responsive.css  every breakpoint, in one place, so the mobile behaviour of
  *                   the sidebar can be read without hunting through the sheets.
  *
