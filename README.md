@@ -11,12 +11,12 @@ Point any OpenAI-compatible tool at `http://localhost:8787/v1` and let COKEY rot
 keys, across accounts, across models, across providers, without ever leaking a key or inventing a
 quota.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-CDB0F0?style=flat-square&labelColor=150F3D)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-8D7AE0?style=flat-square&labelColor=150F3D)](package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-8D7AE0?style=flat-square&labelColor=150F3D)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-45%20passing-CDB0F0?style=flat-square&labelColor=150F3D)](tests)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-CDB0F0?style=flat-square&labelColor=150F3D)](https://github.com/colombefioren/COKEY/pulls)
-[![No telemetry](https://img.shields.io/badge/telemetry-none-8D7AE0?style=flat-square&labelColor=150F3D)](#-security)
+[![License: MIT](https://img.shields.io/badge/License-MIT-DD5C95?style=flat-square&labelColor=2B1A2F)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-7452F0?style=flat-square&labelColor=2B1A2F)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-7452F0?style=flat-square&labelColor=2B1A2F)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/tests-156%20passing-B98CF6?style=flat-square&labelColor=2B1A2F)](tests)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-DD5C95?style=flat-square&labelColor=2B1A2F)](https://github.com/colombefioren/COKEY/pulls)
+[![No telemetry](https://img.shields.io/badge/telemetry-none-6B4BE0?style=flat-square&labelColor=2B1A2F)](#-security)
 
 <sub><b>a tool for broke lads made by a broke princess</b></sub>
 

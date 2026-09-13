@@ -56,11 +56,7 @@ export function Dashboard({
        */}
       {nudgeBlock}
 
-      <Panel
-        hue="pink"
-        title="Live route"
-        actions={<span className="small faint">the path a request actually walks</span>}
-      >
+      <Panel hue="pink" title="Live route">
         <ChainFlow chains={chains} refreshKey={refreshKey} onChanged={() => void load()} />
       </Panel>
 
@@ -70,11 +66,7 @@ export function Dashboard({
 
       <Panel hue="sky" title="Gateway">
         <div className="grid cards">
-          <Stat
-            label="Chains"
-            value={stats?.chains ?? "-"}
-            hint="Each alias is a model id clients can call"
-          />
+          <Stat label="Chains" value={stats?.chains ?? "-"} hint="aliases clients call" />
           <Stat
             label="Credentials"
             value={stats?.credentials ?? "-"}
@@ -90,11 +82,11 @@ export function Dashboard({
             hint={stats ? `${stats.customEndpoints} custom endpoint(s)` : undefined}
           />
           <Stat
-            label="Requests recorded"
+            label="Requests"
             value={stats ? formatNumber(stats.history.total) : "-"}
             hint={
               stats
-                ? `${stats.history.fallbackCount} used fallback · avg ${formatDuration(stats.history.averageLatencyMs)}`
+                ? `${stats.history.fallbackCount} fell back · avg ${formatDuration(stats.history.averageLatencyMs)}`
                 : undefined
             }
           />
@@ -103,14 +95,14 @@ export function Dashboard({
 
       <Panel title="Chain summary">
         {chains.length === 0 ? (
-          <Empty>No chains yet. Open Chains to create your first one, then add nodes to it.</Empty>
+          <Empty>No chains yet — create one in Chains.</Empty>
         ) : (
           <table>
             <thead>
               <tr>
                 <th>Chain</th>
                 <th>Nodes</th>
-                <th>Key state</th>
+                <th>Keys</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -143,7 +135,9 @@ export function Dashboard({
 
       <Panel title="Recent requests">
         {requests.length === 0 ? (
-          <Empty>Nothing routed yet. Point a client at /v1 and the history shows up here.</Empty>
+          <Empty>
+            Nothing routed yet. Point a client at <code>/v1</code> and it shows up here.
+          </Empty>
         ) : (
           <table>
             <thead>

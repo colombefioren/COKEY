@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError, pageQuery, timeAgo } from "../api.js";
 import type {
   ModelCatalogView,
@@ -16,6 +16,15 @@ import { Rankings } from "./Rankings.js";
 type ProbeState = { status: "running" | "ok" | "fail"; message: string; latencyMs?: number };
 
 const PROVIDERS_PER_PAGE = 6;
+/**
+ * Models shown per provider before the grid pages.
+ *
+ * Some providers return hundreds of models. Rendering all of them made the
+ * page into a wall and pushed every other provider off the screen, so each
+ * provider's grid pages on its own - the provider is the unit you are browsing,
+ * not the model.
+ */
+const MODELS_PER_PROVIDER = 12;
 
 /**
  * The model catalog, with a live test and the ranking boards alongside it.
@@ -65,7 +74,7 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
       {tab === "rankings" ? (
         <Rankings refreshKey={refreshKey} />
       ) : tab === "mine" ? (
-        <MyModels refreshKey={refreshKey} />
+        <MyModels refreshKey={refreshKey} onChanged={onChanged} />
       ) : (
         <Catalog
           refreshKey={refreshKey}
@@ -80,27 +89,134 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
 /**
  * "My models": only the models this user can actually reach right now,
  * ranked by what happened the times they were asked — not by a curated tier.
- * A model no chain has ever probed still appears (it is usable, after all),
- * just at the bottom, clearly marked as untested rather than ranked zero.
+ *
+ * A model no chain has ever probed still appears (it is usable, after all), just
+ * at the bottom and marked as untested rather than ranked zero.
+ *
+ * The three things anyone wants from this list are here on the row: test it,
+ * ask the provider what it serves now, and put it in a chain. A ranking table
+ * you cannot act from is a report, and this is meant to be a tool.
  */
-function MyModels({ refreshKey }: { refreshKey: number }) {
+const MY_MODELS_PER_PAGE = 25;
+
+function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const toast = useToast();
   const [rankings, setRankings] = useState<MyModelRanking[] | null>(null);
+  const [query, setQuery] = useState("");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(MY_MODELS_PER_PAGE);
+  const [busy, setBusy] = useState<string | null>(null);
+  /** Per-model verdict from the last test, keyed by provider/model. */
+  const [probes, setProbes] = useState<Record<string, ProbeState>>({});
+
+  const load = useCallback(async () => {
+    try {
+      const response = await api.myModels();
+      setRankings(response.rankings);
+    } catch (error) {
+      toast.err(error instanceof Error ? error.message : String(error));
+    }
+  }, [toast]);
 
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const response = await api.myModels();
-        if (!cancelled) setRankings(response.rankings);
-      } catch (error) {
-        if (!cancelled) toast.err(error instanceof Error ? error.message : String(error));
+    void load();
+  }, [load, refreshKey]);
+
+  const rows = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    const all = rankings ?? [];
+    if (!needle) return all;
+    return all.filter((row) =>
+      [row.model, row.providerId, row.displayName].some((field) =>
+        field.toLowerCase().includes(needle),
+      ),
+    );
+  }, [rankings, query]);
+
+  const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
+  const current = Math.min(page, totalPages);
+  const visible = rows.slice((current - 1) * pageSize, current * pageSize);
+
+  /** One real hello through a working key; the record only moves on a 200. */
+  async function test(row: MyModelRanking) {
+    const key = `${row.providerId}/${row.model}`;
+    setBusy(key);
+    setProbes((current) => ({
+      ...current,
+      [key]: { status: "running", message: "sending hello" },
+    }));
+    try {
+      const result = await api.probeModel({ providerId: row.providerId, model: row.model });
+      setProbes((current) => ({
+        ...current,
+        [key]: result.ok
+          ? { status: "ok", message: "working", latencyMs: result.latencyMs }
+          : {
+              status: "fail",
+              message: result.classification ?? "failed",
+              latencyMs: result.latencyMs,
+            },
+      }));
+      if (result.ok) toast.ok(`${row.model} · ${result.latencyMs}ms`);
+      else toast.err(`${row.model} · ${result.classification ?? "failed"}`);
+      await load();
+      onChanged();
+    } catch (error) {
+      const message = error instanceof ApiError ? error.message : String(error);
+      setProbes((current) => ({ ...current, [key]: { status: "fail", message } }));
+      toast.err(message);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /** Ask this row's provider what it serves now and report the drift. */
+  async function research(row: MyModelRanking) {
+    const key = `${row.providerId}/${row.model}`;
+    setBusy(key);
+    try {
+      const report = await api.refreshProviderModels(row.providerId);
+      if (!report.ok) {
+        toast.err(report.message ?? `${row.displayName} could not be checked`);
+      } else {
+        const parts = [
+          report.added.length ? `${report.added.length} new` : "",
+          report.restored.length ? `${report.restored.length} restored` : "",
+          report.removed.length ? `${report.removed.length} retired` : "",
+        ].filter(Boolean);
+        toast.ok(
+          parts.length
+            ? `${row.displayName}: ${parts.join(", ")}`
+            : `${row.displayName} unchanged · ${report.discovered} models · ${report.latencyMs}ms`,
+        );
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey, toast]);
+      await load();
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  /** Every connected provider at once — the list-wide version of the row action. */
+  async function researchAll() {
+    setBusy("all");
+    try {
+      const result = await api.refreshAllProviderModels();
+      toast.ok(
+        `checked ${result.refreshed}${result.failed ? ` · ${result.failed} unreachable` : ""}` +
+          (result.added ? ` · ${result.added} new` : "") +
+          (result.removed ? ` · ${result.removed} retired` : ""),
+      );
+      await load();
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setBusy(null);
+    }
+  }
 
   const tested = rankings?.filter((row) => row.attempts > 0).length ?? 0;
 
@@ -108,19 +224,43 @@ function MyModels({ refreshKey }: { refreshKey: number }) {
     <Panel
       hue="mint"
       icon={<IconSparkle size={14} />}
-      title={`My models (${rankings?.length ?? 0} usable)`}
+      title={`My models (${rankings?.length ?? 0})`}
+      actions={
+        <div className="row" style={{ gap: 8 }}>
+          <input
+            className="search"
+            placeholder="Search model or provider"
+            value={query}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setPage(1);
+            }}
+          />
+          <button
+            type="button"
+            className="secondary small"
+            disabled={busy !== null}
+            title="Ask every connected provider what it serves right now"
+            onClick={() => void researchAll()}
+          >
+            {busy === "all" ? "checking…" : "re-check all"}
+          </button>
+        </div>
+      }
     >
       <p className="small muted" style={{ marginTop: 0 }}>
-        Every model behind a working key, ranked by what actually happened when it was asked: the
-        success rate and average latency of your own probes and requests — not a curated tier.{" "}
-        {tested} of {rankings?.length ?? 0} have been tested at least once.
+        {tested} of {rankings?.length ?? 0} tested. Ranked by your own results.
       </p>
 
       {rankings && rankings.length === 0 ? (
-        <Empty>Connect a provider to see your models ranked here.</Empty>
+        <Empty>Connect a provider to see your models here.</Empty>
       ) : null}
 
-      {rankings ? (
+      {rows.length === 0 && rankings && rankings.length > 0 ? (
+        <Empty>No model matches that search.</Empty>
+      ) : null}
+
+      {visible.length > 0 ? (
         <div className="table-scroll">
           <table>
             <thead>
@@ -128,21 +268,25 @@ function MyModels({ refreshKey }: { refreshKey: number }) {
                 <th>#</th>
                 <th>Model</th>
                 <th>Provider</th>
-                <th>Success rate</th>
-                <th>Avg latency</th>
-                <th>Last checked</th>
+                <th>Success</th>
+                <th>Latency</th>
+                <th>Checked</th>
+                <th />
               </tr>
             </thead>
             <tbody>
-              {rankings.map((row, index) => {
-                const tested = row.attempts > 0;
+              {visible.map((row, index) => {
+                const key = `${row.providerId}/${row.model}`;
+                const probeState = probes[key];
+                const rowBusy = busy === key;
+                const wasTested = row.attempts > 0;
                 return (
-                  <tr key={`${row.providerId}/${row.model}`}>
-                    <td className="small faint">{index + 1}</td>
+                  <tr key={key}>
+                    <td className="small faint">{(current - 1) * pageSize + index + 1}</td>
                     <td className="mono small">{row.model}</td>
                     <td className="small">{row.displayName}</td>
                     <td>
-                      {tested ? (
+                      {wasTested ? (
                         <span className={`badge ${row.lastOk ? "ok" : "bad"}`}>
                           {Math.round((row.successRate ?? 0) * 100)}%
                         </span>
@@ -156,6 +300,43 @@ function MyModels({ refreshKey }: { refreshKey: number }) {
                     <td className="small faint">
                       {row.lastCheckedAt ? timeAgo(row.lastCheckedAt) : "never"}
                     </td>
+                    <td>
+                      <div className="row" style={{ gap: 4 }}>
+                        <button
+                          type="button"
+                          className={`play${probeState?.status === "ok" ? " ok" : ""}${
+                            probeState?.status === "fail" ? " fail" : ""
+                          }`}
+                          disabled={rowBusy}
+                          title={
+                            probeState && probeState.status !== "running"
+                              ? probeState.message
+                              : `Test ${row.model} with a working ${row.displayName} key`
+                          }
+                          onClick={() => void test(row)}
+                        >
+                          {probeState?.status === "running" ? "…" : "test"}
+                        </button>
+                        <button
+                          type="button"
+                          className="secondary small"
+                          disabled={rowBusy}
+                          title={`Re-read what ${row.displayName} serves right now`}
+                          onClick={() => void research(row)}
+                        >
+                          re-check
+                        </button>
+                        <a
+                          className="small"
+                          href={`#/chains?model=${encodeURIComponent(row.model)}&provider=${encodeURIComponent(
+                            row.providerId,
+                          )}`}
+                          title="Add this model to a chain"
+                        >
+                          add to chain
+                        </a>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
@@ -164,9 +345,23 @@ function MyModels({ refreshKey }: { refreshKey: number }) {
         </div>
       ) : null}
 
+      <Pagination
+        page={current}
+        totalPages={totalPages}
+        total={rows.length}
+        pageSize={pageSize}
+        noun="models"
+        onChange={(params) => {
+          if (params.page) setPage(params.page);
+          if (params.pageSize) {
+            setPageSize(params.pageSize);
+            setPage(1);
+          }
+        }}
+      />
+
       <p className="small faint" style={{ marginBottom: 0 }}>
-        Ranked by success rate, then by speed among equally reliable models. Run a model from the{" "}
-        <a href="#/models">Catalog</a> tab to start building its record.
+        Ranked by success rate, then speed. A test is one real request through a working key.
       </p>
     </Panel>
   );
@@ -190,6 +385,8 @@ function Catalog({
   const [probes, setProbes] = useState<Record<string, ProbeState>>({});
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<string | null>(null);
+  /** Per-provider model page, keyed by provider id. Reset by the search box. */
+  const [modelPages, setModelPages] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -316,7 +513,7 @@ function Catalog({
     <Panel
       hue="pink"
       icon={<IconSparkle size={14} />}
-      title={`Model catalog (${data?.total ?? 0} models)`}
+      title={`Catalog (${data?.total ?? 0})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
           <label className="small muted row" style={{ gap: 6 }}>
@@ -338,15 +535,15 @@ function Catalog({
             onChange={(event) => {
               setQuery(event.target.value);
               setPage(1);
+              setModelPages({});
             }}
           />
         </div>
       }
     >
       <p className="small muted" style={{ marginTop: 0 }}>
-        {availableProviders} of {data?.providers.length ?? 0} providers have a working key. The play
-        button sends one real hello through a working key and turns green only when the provider
-        answers 200.
+        {availableProviders}/{data?.providers.length ?? 0} providers usable. <strong>▶</strong>{" "}
+        sends one real hello and turns green only on a 200.
       </p>
 
       {/*
@@ -355,147 +552,196 @@ function Catalog({
        */}
       {data && data.stale > 0 ? (
         <div className="hint-box" style={{ marginBottom: 14 }}>
-          {data.stale} catalogued model(s) were not returned by their provider on the last check, so
-          they are hidden from the picker. Use a provider's <strong>re-check</strong> button to
-          refresh, and see the Dashboard&apos;s needs-attention panel for the chains that depend on
-          one.
+          {data.stale} model(s) were gone on the last check, so they are hidden. Use{" "}
+          <strong>re-check</strong> to look again; the bell lists the chains that depend on one.
         </div>
       ) : null}
 
       {visible.length === 0 ? <Empty>No models match that search.</Empty> : null}
 
       <div className="model-providers">
-        {visible.map((provider) => (
-          <section key={provider.providerId} className="model-provider">
-            <header>
-              <span className={`dot ${provider.available ? "healthy" : "unverified"}`} />
-              <strong>{provider.displayName}</strong>
-              <span className="small faint">{provider.freeTier.summary}</span>
-              <span className="spacer" />
+        {visible.map((provider) => {
+          const modelPage = modelPages[provider.providerId] ?? 1;
+          const modelPagesTotal = Math.max(
+            1,
+            Math.ceil(provider.models.length / MODELS_PER_PROVIDER),
+          );
+          const modelPageCurrent = Math.min(modelPage, modelPagesTotal);
+          const shownModels = provider.models.slice(
+            (modelPageCurrent - 1) * MODELS_PER_PROVIDER,
+            modelPageCurrent * MODELS_PER_PROVIDER,
+          );
+          return (
+            <section key={provider.providerId} className="model-provider">
+              <header>
+                <span className={`dot ${provider.available ? "healthy" : "unverified"}`} />
+                <strong>{provider.displayName}</strong>
+                <span className="small faint">{provider.freeTier.summary}</span>
+                <span className="spacer" />
 
-              {/* What the provider actually returned, versus what the catalog claims. */}
-              <span
-                className="badge neutral"
-                title={
-                  provider.inventoryCheckedAt
-                    ? `Last checked ${timeAgo(provider.inventoryCheckedAt)}`
-                    : "Never checked — showing the curated catalog only"
-                }
-              >
-                {provider.inventoryCheckedAt
-                  ? `${provider.counts.live}/${provider.counts.curated} live`
-                  : "not checked"}
-              </span>
-              {provider.counts.discovered > 0 ? (
+                {/* What the provider actually returned, versus what the catalog claims. */}
                 <span
-                  className="badge"
-                  title="Models this provider returns that the curated catalog does not list"
+                  className="badge neutral"
+                  title={
+                    provider.inventoryCheckedAt
+                      ? `Last checked ${timeAgo(provider.inventoryCheckedAt)}`
+                      : "Never checked — showing the curated catalog only"
+                  }
                 >
-                  +{provider.counts.discovered} new
+                  {provider.inventoryCheckedAt
+                    ? `${provider.counts.live}/${provider.counts.curated} live`
+                    : "not checked"}
                 </span>
-              ) : null}
-              {provider.staleModels.length > 0 ? (
-                <span
-                  className="badge bad"
-                  title={`No longer returned: ${provider.staleModels.slice(0, 6).join(", ")}`}
+                {provider.counts.discovered > 0 ? (
+                  <span
+                    className="badge"
+                    title="Models this provider returns that the curated catalog does not list"
+                  >
+                    +{provider.counts.discovered} new
+                  </span>
+                ) : null}
+                {provider.staleModels.length > 0 ? (
+                  <span
+                    className="badge bad"
+                    title={`No longer returned: ${provider.staleModels.slice(0, 6).join(", ")}`}
+                  >
+                    {provider.staleModels.length} retired
+                  </span>
+                ) : null}
+
+                {provider.available ? (
+                  <span className="badge">
+                    {provider.healthyCount} key{provider.healthyCount === 1 ? "" : "s"}
+                  </span>
+                ) : provider.credentialCount > 0 ? (
+                  <span className="badge warn">keys unhealthy</span>
+                ) : (
+                  <a className="small" href={provider.signupUrl} target="_blank" rel="noreferrer">
+                    get a free key
+                  </a>
+                )}
+
+                <button
+                  type="button"
+                  className="secondary small"
+                  disabled={provider.credentialCount === 0 || refreshing !== null}
+                  title={
+                    provider.credentialCount === 0
+                      ? `Connect a ${provider.displayName} key to check its model list`
+                      : `Ask ${provider.displayName} what it serves right now`
+                  }
+                  onClick={() => void refreshModels(provider)}
                 >
-                  {provider.staleModels.length} retired
-                </span>
-              ) : null}
+                  {refreshing === provider.providerId ? "checking…" : "re-check"}
+                </button>
+              </header>
 
-              {provider.available ? (
-                <span className="badge">
-                  {provider.healthyCount} key{provider.healthyCount === 1 ? "" : "s"}
-                </span>
-              ) : provider.credentialCount > 0 ? (
-                <span className="badge warn">keys unhealthy</span>
-              ) : (
-                <a className="small" href={provider.signupUrl} target="_blank" rel="noreferrer">
-                  get a free key
-                </a>
-              )}
-
-              <button
-                type="button"
-                className="secondary small"
-                disabled={provider.credentialCount === 0 || refreshing !== null}
-                title={
-                  provider.credentialCount === 0
-                    ? `Connect a ${provider.displayName} key to check its model list`
-                    : `Ask ${provider.displayName} what it serves right now`
-                }
-                onClick={() => void refreshModels(provider)}
-              >
-                {refreshing === provider.providerId ? "checking…" : "re-check"}
-              </button>
-            </header>
-
-            <div className="model-grid">
-              {provider.models.map((model) => {
-                const key = `${provider.providerId}/${model.id}`;
-                const probeState = probes[key];
-                const selectable = provider.available && model.selectable;
-                return (
-                  <div key={key} className={`model-chip${selectable ? "" : " locked"}`}>
-                    <span className="model-id mono">{model.id}</span>
-                    <span className="model-meta small faint">
-                      {model.context ? <span>{model.context} ctx</span> : null}
-                      {model.bestFor ? <span>{model.bestFor}</span> : null}
-                      {model.latencySeconds !== undefined ? (
-                        <span>{model.latencySeconds}s</span>
-                      ) : null}
-                    </span>
-
-                    <span className="model-actions">
-                      <button
-                        type="button"
-                        className={`play${probeState?.status === "ok" ? " ok" : ""}${
-                          probeState?.status === "fail" ? " fail" : ""
-                        }`}
-                        disabled={!selectable || busyKey === key}
-                        title={
-                          selectable
-                            ? `Send a hello to ${model.id} with a working ${provider.displayName} key`
-                            : `Connect a working ${provider.displayName} key first`
-                        }
-                        onClick={() => void probe(provider, model)}
-                      >
-                        {probeState?.status === "running"
-                          ? "…"
-                          : probeState?.status === "ok"
-                            ? "\u2713"
-                            : probeState?.status === "fail"
-                              ? "\u2717"
-                              : "\u25B6"}
-                      </button>
-                      <a
-                        className="small"
-                        href={`#/chains?model=${encodeURIComponent(model.id)}&provider=${encodeURIComponent(
-                          provider.providerId,
-                        )}`}
-                        title="Add this model to a chain"
-                      >
-                        add to chain
-                      </a>
-                    </span>
-
-                    {probeState && probeState.status !== "running" ? (
-                      <span
-                        className={`probe-note small ${probeState.status === "ok" ? "ok" : "err"}`}
-                        title={probeState.message}
-                      >
-                        {probeState.status === "ok" ? "working" : "failed"}
-                        {probeState.latencyMs !== undefined
-                          ? ` \u00B7 ${probeState.latencyMs}ms`
-                          : ""}
+              <div className="model-grid">
+                {shownModels.map((model) => {
+                  const key = `${provider.providerId}/${model.id}`;
+                  const probeState = probes[key];
+                  const selectable = provider.available && model.selectable;
+                  return (
+                    <div key={key} className={`model-chip${selectable ? "" : " locked"}`}>
+                      <span className="model-id mono">{model.id}</span>
+                      <span className="model-meta small faint">
+                        {model.context ? <span>{model.context} ctx</span> : null}
+                        {model.bestFor ? <span>{model.bestFor}</span> : null}
+                        {model.latencySeconds !== undefined ? (
+                          <span>{model.latencySeconds}s</span>
+                        ) : null}
                       </span>
-                    ) : null}
+
+                      <span className="model-actions">
+                        <button
+                          type="button"
+                          className={`play${probeState?.status === "ok" ? " ok" : ""}${
+                            probeState?.status === "fail" ? " fail" : ""
+                          }`}
+                          disabled={!selectable || busyKey === key}
+                          title={
+                            selectable
+                              ? `Send a hello to ${model.id} with a working ${provider.displayName} key`
+                              : `Connect a working ${provider.displayName} key first`
+                          }
+                          onClick={() => void probe(provider, model)}
+                        >
+                          {probeState?.status === "running"
+                            ? "…"
+                            : probeState?.status === "ok"
+                              ? "\u2713"
+                              : probeState?.status === "fail"
+                                ? "\u2717"
+                                : "\u25B6"}
+                        </button>
+                        <a
+                          className="small"
+                          href={`#/chains?model=${encodeURIComponent(model.id)}&provider=${encodeURIComponent(
+                            provider.providerId,
+                          )}`}
+                          title="Add this model to a chain"
+                        >
+                          add to chain
+                        </a>
+                      </span>
+
+                      {probeState && probeState.status !== "running" ? (
+                        <span
+                          className={`probe-note small ${probeState.status === "ok" ? "ok" : "err"}`}
+                          title={probeState.message}
+                        >
+                          {probeState.status === "ok" ? "working" : "failed"}
+                          {probeState.latencyMs !== undefined
+                            ? ` \u00B7 ${probeState.latencyMs}ms`
+                            : ""}
+                        </span>
+                      ) : null}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {modelPagesTotal > 1 ? (
+                <div className="model-pager">
+                  <span className="pager-count">
+                    {provider.models.length} models · page {modelPageCurrent} of {modelPagesTotal}
+                  </span>
+                  <span className="spacer" />
+                  <div className="pager-nav">
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={modelPageCurrent <= 1}
+                      title="Previous models"
+                      onClick={() =>
+                        setModelPages((current) => ({
+                          ...current,
+                          [provider.providerId]: modelPageCurrent - 1,
+                        }))
+                      }
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      className="ghost"
+                      disabled={modelPageCurrent >= modelPagesTotal}
+                      title="More models"
+                      onClick={() =>
+                        setModelPages((current) => ({
+                          ...current,
+                          [provider.providerId]: modelPageCurrent + 1,
+                        }))
+                      }
+                    >
+                      ›
+                    </button>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-        ))}
+                </div>
+              ) : null}
+            </section>
+          );
+        })}
       </div>
 
       <Pagination

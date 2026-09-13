@@ -72,9 +72,18 @@ export function NotificationsBell({
         {count > 0 ? <span className="notif-count">{count > 9 ? "9+" : count}</span> : null}
       </button>
 
+      {/*
+       * Two layers on purpose. The tray holds the scroll boundary and the
+       * padding; the inner column is what actually moves. Scrolling the panel
+       * itself was what sliced the notice cards' inked outlines off against
+       * the dropdown edge — the tray gives them room to be scrolled past
+       * instead of through.
+       */}
       {open ? (
-        <div className="notif-panel">
-          <Guidance refreshKey={refreshKey} onChanged={onChanged} />
+        <div className="notif-panel" role="dialog" aria-label="Needs attention">
+          <div className="notif-scroll">
+            <Guidance refreshKey={refreshKey} onChanged={onChanged} />
+          </div>
         </div>
       ) : null}
     </div>

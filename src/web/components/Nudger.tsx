@@ -25,12 +25,9 @@ export function Nudger({
   return (
     <div className="nudger">
       <h3>
-        You have {nudge.connectedFree} of {nudge.target} free providers connected.
+        {nudge.connectedFree} of {nudge.target} free providers connected
       </h3>
-      <div className="muted">
-        Adding {missing} more {missing === 1 ? "provider" : "providers"} unlocks automatic failover,
-        so a single rate limit never blocks you.
-      </div>
+      <div className="muted">Add {missing} more and a rate limit can never block you.</div>
 
       <div className="actions">
         {suggestions.map((suggestion) => (
@@ -42,7 +39,7 @@ export function Nudger({
           Browse providers
         </button>
         <button className="ghost" onClick={onDismiss}>
-          Remind me later
+          Later
         </button>
       </div>
     </div>

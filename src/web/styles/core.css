@@ -1,83 +1,97 @@
 /*
  * COKEY dashboard theme.
  *
- * A hand-drawn, scrapbook-y workspace built around one cute bubblegum pink.
- * The page itself is white paper; the sidebar is a solid tinted panel rather
- * than another white slab, and small cards borrow a rotating set of pastel
- * tints so a row of them reads as a handful of stickers, not a spreadsheet.
- * Borders get a hand-inked wobble from a shared SVG filter (see `#rough` in
- * App.tsx) instead of a razor-straight machine line.
+ * Two voices, not one colour at five brightnesses. Everything expressive is
+ * drawn from a single family — baby pink through lilac to violet — and the
+ * page is only ever asked to hold one of them at a time as the subject, with
+ * the other as its companion. The supporting accents (jade, apricot, coral,
+ * periwinkle) are deliberately the *only* things outside that family, which is
+ * what keeps status readable instead of drowned in pink.
  *
- * Only one theme: there is no dark mode. A single considered palette beats
- * two half-considered ones, and the ink-on-paper feel this is going for does
- * not survive an inversion anyway.
+ * The page is warm paper rather than white: a bare white ground makes every
+ * pastel look like it is fading. The rail is a pink-to-lilac wash so the shell
+ * reads as one object, and small cards borrow a rotating set of tints so a row
+ * of them looks like a handful of stickers, not a spreadsheet.
  *
- * Every colour is still a token — nothing hex-coded outside this block —
- * so the palette can move again without hunting through every sheet.
+ * Only one theme: there is no dark mode. A single considered palette beats two
+ * half-considered ones, and the ink-on-paper feel does not survive an inversion.
+ *
+ * Every colour is still a token — nothing hex-coded outside this block — so the
+ * palette can move again without hunting through every sheet.
  */
 
 :root {
   color-scheme: light;
 
-  /* The page is paper: plain white, full stop. */
-  --ground: #ffffff;
+  /* Warm paper. Not white — baby pink needs something to sit on. */
+  --ground: #fffbfd;
   --surface: #ffffff;
-  --surface-2: #fff5f9;
-  --surface-3: #ffe9f2;
-  --surface-glass: rgba(255, 255, 255, 0.88);
+  --surface-2: #fdf6fa;
+  --surface-3: #f8ecf4;
+  --surface-glass: rgba(255, 251, 253, 0.82);
 
-  --border: #ffd6e8;
-  --border-strong: #ffb8d9;
+  --border: #f0dcea;
+  --border-strong: #e3c6dc;
 
-  --text: #2b1420;
-  --muted: #7a5c6b;
-  --faint: #b592a4;
+  --text: #2b1a2f;
+  --muted: #6d5871;
+  --faint: #a394a9;
 
-  /* A cute, confident bubblegum pink, with tomato/amber/moss/periwinkle in
-     support so the page reads as one hand-picked set, not a rainbow. */
-  --violet: #ff4f93;
-  --violet-strong: #e83b7d;
-  --violet-soft: #ffe3ee;
-  --violet-line: #ffc2dc;
+  /* The lead voice: a real lilac violet. Pink is the companion, never the
+     subject — that one decision is what turns a stack of pinks into a
+     palette, and it is why the buttons read as considered rather than cute. */
+  --violet: #7452f0;
+  --violet-strong: #5b39d4;
+  --violet-soft: #f1ecff;
+  --violet-line: #d6c9ff;
   --violet-ink: #ffffff;
 
-  --rose: #e5484d;
-  --rose-strong: #c9383d;
-  --rose-soft: #fde4e2;
-  --rose-line: #f7c3c1;
+  /* Baby pink: soft and warm, and always the second voice. */
+  --pink: #f482b4;
+  --pink-strong: #dd5c95;
+  --pink-soft: #ffeaf4;
+  --pink-line: #ffc8e1;
+  --pink-ink: #ffffff;
 
-  --peach: #d68a1b;
-  --peach-soft: #fbedd3;
-  --peach-line: #f0d59d;
+  --rose: #e2565a;
+  --rose-strong: #c9424a;
+  --rose-soft: #fde8e7;
+  --rose-line: #f7c6c4;
 
-  --sage: #2f9e6e;
-  --sage-soft: #e3f5ec;
-  --sage-line: #c3e9d6;
+  --peach: #d98830;
+  --peach-soft: #fceedb;
+  --peach-line: #f2d7a8;
 
-  --sky: #6c8cf5;
-  --sky-soft: #edf0fe;
-  --sky-line: #d1d9fb;
+  --sage: #2f9d74;
+  --sage-soft: #e2f5ec;
+  --sage-line: #bde6d4;
 
-  /* The sidebar is its own tinted panel, not another white card. */
-  --sidebar-bg: #ffe3ee;
-  --sidebar-border: #ffc9de;
+  --sky: #6b86e8;
+  --sky-soft: #ecf0fe;
+  --sky-line: #cfd9fc;
+
+  /* The rail is its own wash, not another white card: pink at the top,
+     lilac by the foot, so the column has a direction. */
+  --sidebar-bg: linear-gradient(168deg, #fff3f9 0%, #f7efff 56%, #f2ecff 100%);
+  --sidebar-border: #eed6e8;
+  --sidebar-wash: #fff3f9;
 
   /* The rotating sticker tints small cards and stat tiles borrow from. */
-  --tint-1: #ffe3ee;
-  --tint-1-line: #ffc2dc;
-  --tint-2: #fff3c9;
-  --tint-2-line: #f5e08f;
-  --tint-3: #dcf5e6;
-  --tint-3-line: #b7e8c9;
-  --tint-4: #e3e8ff;
-  --tint-4-line: #c6cffb;
-  --tint-5: #ffe6d1;
-  --tint-5-line: #f6cda3;
+  --tint-1: #ffeaf4;
+  --tint-1-line: #ffc8e1;
+  --tint-2: #f1ecff;
+  --tint-2-line: #d6c9ff;
+  --tint-3: #e2f5ec;
+  --tint-3-line: #bde6d4;
+  --tint-4: #fceedb;
+  --tint-4-line: #f2d7a8;
+  --tint-5: #ecf0fe;
+  --tint-5-line: #cfd9fc;
 
   --accent: var(--violet);
   --accent-hover: var(--violet-strong);
-  --accent-2: var(--peach);
-  --accent-3: var(--rose);
+  --accent-2: var(--pink);
+  --accent-3: var(--peach);
   --accent-ink: #ffffff;
 
   --ok: var(--sage);
@@ -88,23 +102,35 @@
   --bad-bg: var(--rose-soft);
   --neutral-bg: var(--surface-3);
 
-  /* Low, neutral shadows. Depth without a halo. */
-  --shadow: 0 1px 2px rgba(43, 20, 32, 0.05), 0 10px 28px -20px rgba(43, 20, 32, 0.18);
-  --shadow-lift: 0 2px 4px rgba(43, 20, 32, 0.06), 0 16px 36px -22px rgba(43, 20, 32, 0.22);
-  --shadow-pop: 0 4px 10px rgba(43, 20, 32, 0.08), 0 26px 54px -30px rgba(43, 20, 32, 0.28);
-  --hairline: rgba(255, 79, 147, 0.16);
+  /* Low, plum-tinted shadows. Grey shadows on a pink page read as dirt. */
+  --shadow: 0 1px 2px rgba(43, 26, 47, 0.05), 0 10px 26px -18px rgba(43, 26, 47, 0.2);
+  --shadow-lift: 0 2px 5px rgba(43, 26, 47, 0.07), 0 18px 38px -22px rgba(43, 26, 47, 0.24);
+  --shadow-pop: 0 6px 14px rgba(43, 26, 47, 0.08), 0 30px 60px -30px rgba(43, 26, 47, 0.3);
+  --hairline: rgba(123, 92, 245, 0.16);
 
-  --radius: 20px;
-  --radius-md: 14px;
-  --radius-sm: 10px;
+  --radius: 22px;
+  --radius-md: 15px;
+  --radius-sm: 11px;
   --font-body:
     "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   /* Headings and titles only — a script face slows body reading down. */
   --font-display: "Shantell Sans", var(--font-body);
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  --sidebar-w: 260px;
-  --sidebar-w-collapsed: 80px;
+  --sidebar-w: 264px;
+  --sidebar-w-collapsed: 84px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* The three stops every gradient in the app interpolates through, so no two
+     gradients meet at a seam of a different warmth. */
+  --bloom-1: #ffd7ea;
+  --bloom-2: #d9cbff;
+  --bloom-3: #ffe6cf;
+
+  /* The mark's own pink-to-violet ramp, shared by the logo, the favicon and
+     the hub orb so the brand is one gradient wherever it appears. */
+  --mark-1: #ffb3d4;
+  --mark-2: #b98cf6;
+  --mark-3: #6b4be0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -130,10 +156,11 @@ body,
 body {
   margin: 0;
   color: var(--text);
-  /* Two very soft pastel blooms over the flat ground. */
+  /* Three very soft blooms — pink, lilac, apricot — over the warm ground. */
   background:
-    radial-gradient(900px 620px at 4% -8%, var(--violet-soft), transparent 62%),
-    radial-gradient(760px 560px at 102% 4%, var(--rose-soft), transparent 58%), var(--ground);
+    radial-gradient(1000px 680px at -4% -10%, var(--pink-soft), transparent 62%),
+    radial-gradient(880px 620px at 104% -6%, var(--violet-soft), transparent 60%),
+    radial-gradient(820px 600px at 52% 114%, var(--bloom-3), transparent 66%), var(--ground);
   background-attachment: fixed;
   font: 14px/1.62 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -180,9 +207,10 @@ h3 {
 }
 
 /*
- * The sidebar is a solid tinted panel, not another white card — it is what
- * makes the white page underneath it read as paper rather than a blank
- * canvas that forgot to load.
+ * The sidebar is a pink-to-lilac wash, not another white card — it is what
+ * makes the warm page underneath read as paper rather than a blank canvas that
+ * forgot to load. The inner top highlight is the light source: without it a
+ * gradient panel looks like a rectangle that was filled, not a surface.
  */
 .sidebar {
   position: sticky;
@@ -193,14 +221,15 @@ h3 {
   gap: 16px;
   height: calc(100vh - 32px);
   padding: 18px 14px 16px;
-  border: 2px solid var(--sidebar-border);
-  border-radius: 24px;
+  border: 1.5px solid var(--sidebar-border);
+  border-radius: 26px;
   background: var(--sidebar-bg);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--shadow);
   transition:
     padding 0.35s var(--ease),
-    border-radius 0.35s var(--ease),
-    background 0.3s ease;
+    border-radius 0.35s var(--ease);
 }
 
 .sidebar > * {
@@ -208,32 +237,28 @@ h3 {
   z-index: 1;
 }
 
+/*
+ * The brand is the drawn lockup, so there is no text to colour: the gradient
+ * lives in the svg itself and the whole thing lifts as one object.
+ */
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 2px 6px 0;
-  color: var(--violet);
   transition: transform 0.3s var(--ease);
 }
 .sidebar-brand:hover {
-  color: var(--violet-strong);
   text-decoration: none;
 }
 .brand-logo {
   display: block;
   flex: none;
+  overflow: visible;
   transition: transform 0.4s var(--ease);
 }
 .sidebar-brand:hover .brand-logo {
-  transform: rotate(-4deg) scale(1.04);
-}
-.brand-word {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--text);
+  transform: translateY(-1px) scale(1.03);
 }
 
 /* Positioned so the gliding highlight can be measured against it. */
@@ -272,11 +297,9 @@ h3 {
 }
 
 /*
- * The moving highlight.
- *
- * One element glides between items instead of every item blinking on and off,
- * which is what makes the column read as one moving object. Position and height
- * are measured from the active anchor before paint.
+ * The moving highlight: one white pill on the wash, with a pink-to-violet rule
+ * on its leading edge so the active row is marked by the brand ramp rather than
+ * by a colour that already exists in the rail behind it.
  */
 .nav-glider {
   position: absolute;
@@ -285,9 +308,7 @@ h3 {
   top: 0;
   z-index: 0;
   pointer-events: none;
-  border-radius: 13px;
-  /* A white pill on the pink rail, not another pink tint that would vanish
-     into the panel behind it. */
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--shadow);
   transition:
@@ -305,7 +326,7 @@ h3 {
   height: 18px;
   margin-top: -9px;
   border-radius: 3px;
-  background: var(--violet);
+  background: linear-gradient(var(--mark-1), var(--mark-3));
 }
 
 .nav-item {
@@ -340,7 +361,7 @@ h3 {
 }
 
 .nav-item:hover {
-  background: var(--sidebar-border);
+  background: rgba(255, 255, 255, 0.7);
   color: var(--text);
   text-decoration: none;
 }
@@ -383,6 +404,7 @@ h3 {
   background: var(--surface);
   color: var(--violet-strong);
   font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px var(--border);
   transition:
     transform 0.24s var(--ease),
     background 0.2s ease;
@@ -487,6 +509,42 @@ h3 {
   transform: rotate(-90deg);
 }
 
+/*
+ * The float-out label for a folded row.
+ *
+ * It is a sibling of the nav column, not a child of the row, because the nav
+ * column scrolls and a scroll container clips its overflow — which is exactly
+ * how a tooltip on a folded rail ends up invisible. Anchored in the rail's own
+ * coordinate space, it can sit outside the column entirely.
+ */
+.nav-hint {
+  position: absolute;
+  left: calc(100% - 6px);
+  z-index: 95;
+  transform: translateY(-50%) translateX(-6px);
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: var(--violet-strong);
+  color: var(--violet-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  animation: hint-in 0.22s var(--ease) both;
+}
+
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-6px) scale(1);
+  }
+}
+
 /* Collapsed rail: a clean icon column. Text is removed, not squeezed, and the
    flex gap goes with it so the icons sit on the rail's true center line. */
 .sidebar.collapsed {
@@ -511,7 +569,6 @@ h3 {
 .sidebar.collapsed .nav-badge,
 .sidebar.collapsed .nav-chevron,
 .sidebar.collapsed .nav-group-title,
-.sidebar.collapsed .brand-word,
 .sidebar.collapsed .sidebar-foot {
   display: none;
 }
@@ -551,25 +608,36 @@ h3 {
   min-width: 0;
 }
 
+/*
+ * The topbar is a floating shelf, not a strip that was pasted across the page:
+ * it is inset from the column, has its own hairline and lip, and the page's
+ * content slides under it in glass rather than disappearing behind an opaque
+ * band. The radius matches the panels below it, so the whole column reads as a
+ * stack of the same object at different sizes.
+ */
 .topbar {
   position: sticky;
-  top: 0;
+  top: 10px;
   z-index: 20;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 0 -6px;
-  padding: 12px 14px;
+  margin: 0 -2px 6px;
+  padding: 10px 16px;
   font-size: 12px;
-  border-radius: 16px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
   background: var(--surface-glass);
-  backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(150%);
+  box-shadow: 0 10px 26px -24px rgba(43, 26, 47, 0.4);
 }
 
 .topbar-title {
-  font-weight: 650;
-  font-size: 14.5px;
-  letter-spacing: 0.01em;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.005em;
+  color: var(--text);
 }
 .nav-toggle {
   display: none;
@@ -629,25 +697,76 @@ h3 {
   height: 17px;
   padding: 0 3px;
   border-radius: 999px;
-  background: var(--rose);
-  color: #ffffff;
+  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+  color: var(--violet-ink);
   font-size: 10px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-/* The dropdown reuses the Guidance panel verbatim, so it only needs to be
-   positioned and given a scroll boundary — the content styles itself. */
+/* The bell itself wears the ramp when it has something to say. */
+.notif-trigger.has-alerts {
+  animation: bell-wake 3.4s ease-in-out infinite;
+}
+
+@keyframes bell-wake {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0deg);
+  }
+  91% {
+    transform: rotate(9deg);
+  }
+  94% {
+    transform: rotate(-7deg);
+  }
+  97% {
+    transform: rotate(4deg);
+  }
+}
+
+/*
+ * The dropdown reuses the Guidance panel verbatim, so it only needs a holder
+ * and a scroll boundary — the content styles itself.
+ *
+ * The tray exists because the panel it holds is a hand-inked card: its 2px
+ * outline and the offset shadow behind it need breathing room on every side. A
+ * scroll container clips at its own edge, so scrolling the panel directly cut
+ * the outline off the moment the list moved. The tray owns the edge; the inner
+ * column owns the scrolling; the card keeps its whole silhouette either way.
+ */
 .notif-panel {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
   z-index: 70;
-  width: min(440px, calc(100vw - 32px));
-  max-height: min(560px, calc(100vh - 100px));
-  overflow-y: auto;
+  width: min(452px, calc(100vw - 28px));
+  padding: 12px;
+  border-radius: 30px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-3));
+  box-shadow:
+    0 0 0 1px var(--border),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--shadow-pop);
   animation: modal-in 0.2s var(--ease) both;
+}
+
+.notif-scroll {
+  max-height: min(66vh, 520px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Just enough for the card's offset shadow, never enough to look like a gap. */
+  padding: 2px 3px 4px 2px;
+}
+
+/* Nested, so the panel reads as sitting in the tray rather than filling it. */
+.notif-panel .window {
+  border-radius: 22px;
+  box-shadow:
+    1px 1px 0 0 var(--border),
+    var(--shadow);
 }
 
 /* Docked at the bottom of the content column: counts on the left, creator
@@ -723,10 +842,10 @@ main {
 section.panel {
   position: relative;
   border-radius: var(--radius);
-  border: 2px solid var(--border-strong);
+  border: 1.5px solid var(--border-strong);
   background: var(--surface);
   box-shadow:
-    1.5px 2px 0 0 var(--border),
+    1px 1px 0 0 var(--border),
     var(--shadow);
   overflow: hidden;
   transition:
@@ -742,35 +861,45 @@ section.panel.soft {
   background: var(--surface-2);
 }
 
+/*
+ * The panel header carries the section's name in the display face at reading
+ * size, not as a letter-spaced uppercase label. Small-caps micro-labels are the
+ * house style of every generated dashboard; a title someone can actually read
+ * is friendlier and, at this size, still no louder than the data under it.
+ */
 .window-bar {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px 20px 14px;
+  padding: 15px 20px 13px;
   border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface-2), transparent);
   flex-wrap: wrap;
 }
 
 .window-title {
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--faint);
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.005em;
+  color: var(--text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+/* A pebble, not a square: four unequal radii, and an inner ring taken from the
+   icon's own colour so the five hues stay five hues. */
 .window-icon {
   display: grid;
   place-items: center;
   flex: none;
-  width: 30px;
-  height: 30px;
-  border-radius: 10px;
+  width: 32px;
+  height: 32px;
+  border-radius: 11px 13px 10px 14px;
   background: var(--window-accent-soft, var(--violet-soft));
   color: var(--window-accent, var(--violet));
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 20%, transparent);
 }
 .window-icon svg {
   width: 15px;
@@ -847,11 +976,11 @@ section.panel.soft {
 }
 .panel-head h2 {
   margin: 0;
-  font-size: 12px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--faint);
-  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 0.005em;
+  color: var(--text);
+  font-weight: 700;
 }
 .panel-head .spacer {
   flex: 1;
@@ -889,53 +1018,64 @@ section.panel.soft {
  * number that changes from card to card, not the wallpaper behind it.
  */
 /*
- * Stat tiles are the stickers of the page: each one borrows a different
- * pastel from the rotating tint set and leans a degree off true, like a
- * handful of paper cutouts pressed onto the page rather than five identical
- * spreadsheet cells.
+ * Stat tiles.
+ *
+ * Each one fades out of its own pastel rather than being filled with it — a
+ * gradient from white to a tint reads as light falling across the tile, while a
+ * flat tint reads as a coloured rectangle — and each carries a short rule of
+ * its tint along the top edge. No rotation: leaning stickers were the right
+ * gesture for a scrapbook, not for a number someone has to read.
  */
 .stat {
   position: relative;
   overflow: hidden;
-  padding: 14px 15px;
+  padding: 15px 16px;
   border-radius: var(--radius-md);
-  border: 2px solid var(--border);
-  background: var(--surface);
-  transform: rotate(var(--tilt, 0deg));
-  transition: transform 0.2s var(--ease);
+  border: 1.5px solid var(--tint-line, var(--border));
+  background: linear-gradient(155deg, var(--surface) 34%, var(--tint, var(--surface-2)));
+  transition:
+    transform 0.22s var(--ease),
+    box-shadow 0.22s ease;
+}
+.stat::before {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 0;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--tint-line, var(--border));
 }
 .stat:hover {
-  transform: translateY(-2px) rotate(0deg);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lift);
 }
 .stat:nth-child(5n + 1) {
-  background: var(--tint-1);
-  border-color: var(--tint-1-line);
-  --tilt: -1.1deg;
+  --tint: var(--tint-1);
+  --tint-line: var(--tint-1-line);
 }
 .stat:nth-child(5n + 2) {
-  background: var(--tint-2);
-  border-color: var(--tint-2-line);
-  --tilt: 0.9deg;
+  --tint: var(--tint-2);
+  --tint-line: var(--tint-2-line);
 }
 .stat:nth-child(5n + 3) {
-  background: var(--tint-3);
-  border-color: var(--tint-3-line);
-  --tilt: -0.7deg;
+  --tint: var(--tint-3);
+  --tint-line: var(--tint-3-line);
 }
 .stat:nth-child(5n + 4) {
-  background: var(--tint-4);
-  border-color: var(--tint-4-line);
-  --tilt: 1.2deg;
+  --tint: var(--tint-4);
+  --tint-line: var(--tint-4-line);
 }
 .stat:nth-child(5n + 5) {
-  background: var(--tint-5);
-  border-color: var(--tint-5-line);
-  --tilt: -0.9deg;
+  --tint: var(--tint-5);
+  --tint-line: var(--tint-5-line);
 }
 .stat .value {
   font-family: var(--font-display);
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 700;
+  line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--text);
 }
@@ -954,12 +1094,12 @@ section.panel.soft {
 }
 
 .card {
-  padding: 15px;
+  padding: 16px;
   border-radius: var(--radius-md);
-  border: 2px solid var(--border);
+  border: 1.5px solid var(--border);
   background: var(--surface);
   box-shadow:
-    1.5px 2px 0 0 var(--border),
+    1px 1px 0 0 var(--border),
     var(--shadow);
   transition:
     border-color 0.22s ease,
@@ -967,10 +1107,10 @@ section.panel.soft {
     box-shadow 0.22s ease;
 }
 .card:hover {
-  border-color: var(--border-strong);
+  border-color: var(--violet-line);
   transform: translateY(-2px);
   box-shadow:
-    1.5px 2px 0 0 var(--border-strong),
+    1px 1px 0 0 var(--violet-line),
     var(--shadow-lift);
 }
 .card .title {
@@ -988,15 +1128,21 @@ section.panel.soft {
 
 /* ---- controls ------------------------------------------------------------- */
 
+/*
+ * The primary button is the one place the brand ramp is filled in solid, which
+ * is what makes it read as the thing to press without needing to be bigger,
+ * brighter or a different hue from the rest of the page. Everything else is an
+ * outline, because there is only ever one primary action on a screen.
+ */
 button {
-  background: var(--violet);
+  background: linear-gradient(140deg, var(--violet), var(--violet-strong));
   border: 1px solid transparent;
   color: var(--violet-ink);
-  padding: 8px 14px;
-  border-radius: 11px;
+  padding: 8px 15px;
+  border-radius: 12px;
   cursor: pointer;
   font: inherit;
-  font-weight: 580;
+  font-weight: 600;
   transition:
     background 0.18s ease,
     border-color 0.18s ease,
@@ -1005,7 +1151,7 @@ button {
     transform 0.18s var(--ease);
 }
 button:hover:not(:disabled) {
-  background: var(--violet-strong);
+  background: linear-gradient(140deg, var(--violet-strong), var(--violet-strong));
   box-shadow:
     1.5px 2px 0 0 var(--violet-line),
     var(--shadow);
@@ -1029,7 +1175,7 @@ button.secondary {
 }
 button.secondary:hover:not(:disabled) {
   border-color: var(--violet-line);
-  background: var(--violet-soft);
+  background: linear-gradient(140deg, var(--surface), var(--violet-soft));
   color: var(--violet-strong);
 }
 button.danger {
@@ -1194,27 +1340,147 @@ label {
   color: var(--rose);
 }
 
+/*
+ * Status marks.
+ *
+ * Each state is given a silhouette, not just a hue: a burst for healthy, a
+ * crescent for cooling, a crack for invalid, a dotted ring for one that has
+ * never been proven, a bar for paused. Five dots in five colours is a colour
+ * question; five shapes is a reading question, and a five-colour dot row is
+ * exactly what made the old state column feel machine-made.
+ */
 .dot {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 9px;
+  height: 9px;
   flex: 0 0 auto;
+  background: currentColor;
 }
 .dot.healthy {
-  background: var(--sage);
+  color: var(--sage);
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: glyph-breathe 2.8s ease-in-out infinite;
 }
 .dot.cooldown {
-  background: var(--peach);
+  color: var(--peach);
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 3px 0 0 0 currentColor;
 }
 .dot.invalid {
-  background: var(--rose);
+  color: var(--rose);
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
 }
 .dot.disabled {
-  background: var(--faint);
+  color: var(--faint);
+  clip-path: polygon(0% 40%, 100% 40%, 100% 60%, 0% 60%);
 }
 .dot.unverified {
-  background: var(--sky);
+  color: var(--sky);
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px dashed currentColor;
+  background: none;
+}
+
+@keyframes glyph-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(0.78);
+    opacity: 0.7;
+  }
+}
+
+/*
+ * The same five silhouettes, wrapped in a word.
+ *
+ * Used wherever there is room to name the state — tables, legends, the route
+ * diagram — so the mark and the meaning always arrive together.
+ */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px 3px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--pill-line, var(--border));
+  background: var(--pill-bg, var(--surface-3));
+  color: var(--pill-ink, var(--muted));
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    transform 0.2s var(--ease),
+    box-shadow 0.2s ease;
+}
+.status-pill:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+}
+.status-pill.compact {
+  gap: 0;
+  padding: 4px 5px;
+}
+.status-glyph {
+  display: inline-block;
+  flex: none;
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+}
+.status-pill.healthy {
+  --pill-bg: var(--sage-soft);
+  --pill-line: var(--sage-line);
+  --pill-ink: var(--sage);
+}
+.status-pill.cooldown {
+  --pill-bg: var(--peach-soft);
+  --pill-line: var(--peach-line);
+  --pill-ink: var(--peach);
+}
+.status-pill.invalid {
+  --pill-bg: var(--rose-soft);
+  --pill-line: var(--rose-line);
+  --pill-ink: var(--rose);
+}
+.status-pill.disabled {
+  --pill-bg: var(--surface-3);
+  --pill-line: var(--border);
+  --pill-ink: var(--muted);
+}
+.status-pill.unverified {
+  --pill-bg: var(--sky-soft);
+  --pill-line: var(--sky-line);
+  --pill-ink: var(--sky);
+}
+.status-pill.healthy .status-glyph {
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: glyph-breathe 2.8s ease-in-out infinite;
+}
+.status-pill.cooldown .status-glyph {
+  border-radius: 50%;
+  background: none;
+  box-shadow: inset 3px 0 0 0 currentColor;
+}
+.status-pill.invalid .status-glyph {
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
+}
+.status-pill.disabled .status-glyph {
+  clip-path: polygon(0% 40%, 100% 40%, 100% 60%, 0% 60%);
+}
+.status-pill.unverified .status-glyph {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px dashed currentColor;
+  background: none;
 }
 
 /* Segmented switch, used for every tab row in the app. */
@@ -1223,10 +1489,11 @@ label {
   display: inline-flex;
   gap: 3px;
   flex-wrap: wrap;
-  padding: 3px;
+  padding: 4px;
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface-2);
+  box-shadow: inset 0 1px 2px rgba(43, 26, 47, 0.05);
 }
 .tab {
   background: transparent;
@@ -1245,13 +1512,15 @@ label {
   box-shadow: none;
 }
 .tab[aria-selected="true"] {
-  color: var(--text);
+  color: var(--violet-strong);
   background: var(--surface);
-  border-color: var(--border);
-  box-shadow: var(--shadow);
+  border-color: transparent;
+  box-shadow:
+    0 1px 2px rgba(43, 26, 47, 0.06),
+    0 8px 18px -12px rgba(43, 26, 47, 0.35);
 }
 .tabs-inline .tab[aria-selected="true"] {
-  color: var(--text);
+  color: var(--violet-strong);
 }
 
 /* ---- pager ---------------------------------------------------------------- */
@@ -1304,13 +1573,14 @@ table {
 }
 th {
   text-align: left;
-  color: var(--faint);
-  font-weight: 600;
+  color: var(--muted);
+  font-weight: 650;
   font-size: 10.5px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  padding: 8px;
+  padding: 9px 8px;
   border-bottom: 1px solid var(--border-strong);
+  background: var(--surface-2);
   white-space: nowrap;
 }
 td {
@@ -1327,24 +1597,44 @@ tbody tr {
 tbody tr:hover td {
   background: var(--surface-2);
 }
+/* The hovered row is marked on its leading edge, so a wide table tells you
+   where you are without tinting five columns at once. */
+tbody tr td:first-child {
+  box-shadow: inset 3px 0 0 0 transparent;
+  transition: box-shadow 0.15s ease;
+}
+tbody tr:hover td:first-child {
+  box-shadow: inset 3px 0 0 0 var(--violet-line);
+}
 
 .empty {
-  color: var(--faint);
-  padding: 22px;
+  color: var(--muted);
+  padding: 26px 22px;
   text-align: center;
-  border: 1px dashed var(--border-strong);
+  border: 1.5px dashed var(--border-strong);
   border-radius: var(--radius-md);
-  background: var(--surface-2);
+  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
 }
 
 .hint-box {
-  border: 1px solid var(--violet-line);
+  position: relative;
+  border: 1.5px solid var(--violet-line);
   border-radius: var(--radius-md);
-  padding: 13px 15px;
+  padding: 13px 16px 13px 18px;
   color: var(--muted);
   font-size: 12px;
-  background: var(--violet-soft);
+  background: linear-gradient(140deg, var(--violet-soft), var(--surface));
   line-height: 1.7;
+}
+.hint-box::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: var(--radius-md) 0 0 var(--radius-md);
+  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
 }
 
 code {
@@ -1359,12 +1649,32 @@ code {
 
 /* ---- chains --------------------------------------------------------------- */
 
+/*
+ * One chain, as a card with a short ramp rule across its leading edge. The rule
+ * is the only decoration on the card: it marks the top of a group without
+ * needing a coloured header block or a heavier border than everything around
+ * it, and it ties the chain list to the route diagram on the dashboard.
+ */
 .chain {
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  padding: 15px;
+  position: relative;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 17px 18px;
   margin-bottom: 14px;
-  background: var(--surface-2);
+  background: linear-gradient(170deg, var(--surface), var(--surface-2));
+  box-shadow:
+    1px 1px 0 0 var(--border),
+    var(--shadow);
+}
+.chain::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: -1.5px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 45%, transparent);
 }
 .chain-head {
   display: flex;
@@ -1373,8 +1683,10 @@ code {
   flex-wrap: wrap;
 }
 .chain-head .alias {
-  font-weight: 650;
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 .chain-head .spacer {
   flex: 1;
@@ -1383,26 +1695,30 @@ code {
 .entries {
   display: grid;
   gap: 8px;
-  margin-top: 12px;
+  margin-top: 14px;
 }
 
+/* A node in the order, cut rather than stamped: four unequal radii again, which
+   is what stops a stack of them reading as a settings list. */
 .entry-node {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 14px;
-  padding: 12px 14px;
-  border-radius: var(--radius-sm);
+  padding: 12px 15px;
+  border-radius: 14px 16px 13px 17px;
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   transition:
     border-color 0.18s ease,
     background 0.18s ease,
+    box-shadow 0.18s ease,
     transform 0.18s var(--ease);
 }
 .entry-node:hover {
   border-color: var(--violet-line);
   transform: translateY(-1px);
+  box-shadow: var(--shadow);
 }
 .entry-node.dragging {
   opacity: 0.45;
@@ -1440,11 +1756,26 @@ code {
 .entry-reorder {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 3px;
 }
 .entry-reorder button {
-  padding: 3px 7px;
-  font-size: 10px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 18px;
+  padding: 0;
+  font-size: 8px;
+  line-height: 1;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--faint);
+}
+.entry-reorder button:hover:not(:disabled) {
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  box-shadow: none;
 }
 
 .entry-model {
@@ -1455,12 +1786,22 @@ code {
   min-width: 0;
   flex-wrap: wrap;
 }
+/* The stop number, as the same hand-cut tab the route diagram uses, so the
+   order you set here and the order you see routed are visibly the same thing. */
 .entry-model .priority {
-  color: var(--faint);
-  font-variant-numeric: tabular-nums;
-  min-width: 20px;
-  text-align: right;
-  font-weight: 650;
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mark-3);
+  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
 .entry-model .model-name,
 button.model-name {
@@ -1504,12 +1845,13 @@ button.model-name:hover {
 }
 
 .drop-hint {
-  border: 1px dashed var(--border-strong);
+  border: 1.5px dashed var(--border-strong);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 18px;
   text-align: center;
-  color: var(--faint);
+  color: var(--muted);
   font-size: 12px;
+  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
 }
 
 /* ---- credentials ---------------------------------------------------------- */
@@ -1518,10 +1860,10 @@ button.model-name:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: var(--surface);
+  background: linear-gradient(140deg, var(--surface), var(--surface-2));
   border: 1px solid var(--border-strong);
   border-radius: 999px;
-  padding: 3px 10px 3px 8px;
+  padding: 3px 11px 3px 9px;
   font-size: 11px;
   color: var(--muted);
 }
@@ -1556,9 +1898,9 @@ button.model-name:hover {
 }
 .spark i {
   width: 3px;
-  background: var(--violet);
-  border-radius: 1px;
-  opacity: 0.75;
+  background: linear-gradient(180deg, var(--mark-2), var(--mark-3));
+  border-radius: 2px 2px 1px 1px;
+  opacity: 0.85;
 }
 .rate.limited .spark i {
   background: var(--peach);
@@ -1630,6 +1972,18 @@ button.model-name:hover {
   align-items: center;
   gap: 8px;
   width: 100%;
+}
+
+/* Each provider's grid pages on its own, so one provider with 200 models can
+   no longer push every other provider off the page. */
+.model-pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-strong);
+  flex-wrap: wrap;
 }
 button.play {
   min-width: 34px;

@@ -1,14 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 128" role="img" aria-label="COKEY">
   <title>COKEY</title>
   <defs>
-    <linearGradient id="cokey-mark" x1="24" y1="24" x2="200" y2="118" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#A68AF7" />
-      <stop offset="0.55" stop-color="#6D3DF0" />
-      <stop offset="1" stop-color="#3D1FA1" />
+    <linearGradient id="cokey-mark" x1="34" y1="24" x2="196" y2="118" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB3D4" />
+      <stop offset="0.52" stop-color="#B98CF6" />
+      <stop offset="1" stop-color="#6B4BE0" />
     </linearGradient>
-    <linearGradient id="cokey-word" x1="246" y1="42" x2="430" y2="112" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#D9CAF9" />
-      <stop offset="1" stop-color="#A68AF7" />
+    <linearGradient id="cokey-word" x1="248" y1="30" x2="438" y2="120" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB3D4" />
+      <stop offset="0.6" stop-color="#B98CF6" />
+      <stop offset="1" stop-color="#6B4BE0" />
     </linearGradient>
   </defs>
 
@@ -28,19 +29,19 @@
   />
 
   <!-- two leaves, the "broke princess" sprout -->
-  <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#A68AF7" />
-  <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#3D1FA1" />
+  <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#FFB3D4" />
+  <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#6B4BE0" opacity="0.85" />
 
   <!-- KEY, drawn as strokes so it stays crisp at any size -->
   <g
     fill="none"
     stroke="url(#cokey-word)"
     stroke-width="11"
-    stroke-linecap="square"
-    stroke-linejoin="miter"
+    stroke-linecap="round"
+    stroke-linejoin="round"
   >
-    <path d="M246 42 V112 M292 42 L250 76 L292 112" />
-    <path d="M346 42 H312 V112 H346 M312 76 H338" />
-    <path d="M378 42 L404 76 L430 42 M404 76 V112" />
+    <path d="M246 40 V114 M294 40 L250 74 L294 114" />
+    <path d="M348 40 H314 V114 H348 M314 74 H340" />
+    <path d="M378 40 L406 74 L434 40 M406 74 V114" />
   </g>
 </svg>

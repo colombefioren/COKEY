@@ -18,7 +18,7 @@ const DISMISS_KEY = "cokey.guidance.dismissed";
 const SEVERITY_LABEL: Record<GuidanceSeverity, string> = {
   critical: "needs a fix",
   warn: "worth a look",
-  info: "for information",
+  info: "notice",
 };
 
 const SEVERITY_TONE: Record<GuidanceSeverity, string> = {
@@ -124,11 +124,11 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
       } else {
         const result = await api.testCredential(action.credentialId);
         if (result.ok) {
-          toast.ok("Key verified — it is healthy again");
+          toast.ok("Key verified");
           // The one place a reward belongs: a remedy actually worked.
           celebrate();
         } else {
-          toast.err(result.message ?? "Still failing — consider replacing this key");
+          toast.err(result.message ?? "Still failing");
         }
       }
       onChanged();
@@ -192,7 +192,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
               disabled={busy !== null}
               onClick={() => void refreshAll()}
             >
-              {busy === "all" ? "checking…" : "Re-check all model lists"}
+              {busy === "all" ? "checking…" : "re-check models"}
             </button>
           </>
         }
@@ -200,11 +200,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
         {data === null ? (
           <Empty>Checking the gateway…</Empty>
         ) : visible.length === 0 ? (
-          <Empty>
-            {hiddenCount > 0
-              ? `${hiddenCount} notice(s) dismissed. Reset them above to see them again.`
-              : "Nothing needs your attention. Every key is usable, every chain node can be served, and every model list is current."}
-          </Empty>
+          <Empty> {hiddenCount > 0 ? `${hiddenCount} dismissed.` : "All clear."}</Empty>
         ) : (
           <div className="guidance-list">
             {visible.map((notice) => (
@@ -235,7 +231,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
                     className="ghost small"
                     type="button"
                     onClick={() => dismiss(notice.id)}
-                    title="Hide this notice until the situation changes"
+                    title="Hide until it changes"
                   >
                     dismiss
                   </button>
@@ -247,8 +243,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
 
         {data ? (
           <p className="faint small guidance-foot">
-            Derived from live gateway state at {timeAgo(data.checkedAt)}. Nothing here leaves your
-            machine.
+            checked {timeAgo(data.checkedAt)} · stays on this machine
           </p>
         ) : null}
       </Panel>

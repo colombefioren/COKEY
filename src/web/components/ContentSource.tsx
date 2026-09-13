@@ -67,7 +67,7 @@ export function ContentSource({ refreshKey = 0 }: { refreshKey?: number }) {
       actions={
         <div className="row" style={{ gap: 8 }}>
           <span className="small faint" title={status.directory}>
-            {status.watching ? "watching for edits" : "not watching"}
+            {status.watching ? "watching" : "manual"}
           </span>
           <button className="secondary" onClick={() => void reload()} disabled={reloading}>
             {reloading ? "reloading…" : "reload"}
@@ -77,9 +77,8 @@ export function ContentSource({ refreshKey = 0 }: { refreshKey?: number }) {
     >
       {!status.available ? (
         <div className="hint-box">
-          No content repository is checked out, so COKEY is serving the catalog compiled into this
-          build. Point <code>COKEY_CMS_DIR</code> at a content checkout to edit dossiers, terms and
-          rankings without a release.
+          No content checkout — serving the catalogue compiled into this build. Set{" "}
+          <code>COKEY_CMS_DIR</code> to edit dossiers, terms and rankings without a release.
           <div className="small faint mono" style={{ marginTop: 8, overflowWrap: "anywhere" }}>
             looked in {status.directory}
           </div>
@@ -101,7 +100,7 @@ export function ContentSource({ refreshKey = 0 }: { refreshKey?: number }) {
             <Stat
               label="Loaded"
               value={timeAgo(status.loadedAt)}
-              hint={status.watching ? "auto-reloads on edit" : "reload by hand"}
+              hint={status.watching ? "auto-reload" : "by hand"}
             />
           </div>
 
@@ -118,7 +117,7 @@ export function ContentSource({ refreshKey = 0 }: { refreshKey?: number }) {
             <div style={{ marginTop: 12 }}>
               <div className="row between">
                 <span className="small">
-                  {issues.length} file{issues.length === 1 ? "" : "s"} need attention
+                  {issues.length} file{issues.length === 1 ? "" : "s"} need a look
                 </span>
                 {issues.length > 4 ? (
                   <button className="ghost small" onClick={() => setExpanded(!expanded)}>

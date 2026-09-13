@@ -195,11 +195,11 @@ export function Keys({
   return (
     <>
       <Panel
-        title={`Credentials (${credentials.length})`}
+        title={`Keys (${credentials.length})`}
         actions={
           <input
             className="search"
-            placeholder="Search description, provider or state"
+            placeholder="Search keys"
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -209,10 +209,7 @@ export function Keys({
         }
       >
         {groups.length === 0 ? (
-          <Empty>
-            No credentials yet. Connect a provider from the Providers tab. COKEY verifies every key
-            before storing it.
-          </Empty>
+          <Empty>No keys yet. Connect a provider and COKEY proves the key before storing it.</Empty>
         ) : (
           visible.map((group) => (
             <div key={group.providerId} className="provider-group">
@@ -233,7 +230,7 @@ export function Keys({
                     if (provider) setAddingFor(provider);
                   }}
                 >
-                  + add key
+                  + key
                 </button>
               </div>
 
@@ -244,11 +241,11 @@ export function Keys({
                       <th>State</th>
                       <th>Description</th>
                       <th>Key</th>
-                      <th>Rate / min</th>
+                      <th>Rate</th>
                       <th>Egress</th>
                       <th>Usage</th>
                       <th>Quota</th>
-                      <th>Last used</th>
+                      <th>Used</th>
                       <th />
                     </tr>
                   </thead>
@@ -271,8 +268,8 @@ export function Keys({
                         <td className="small">
                           <button
                             className="ghost mono small"
-                            style={{ padding: "2px 4px" }}
-                            title="Choose this key's exit IP: automatic pool, a specific pool exit, or direct"
+                            style={{ padding: "2px 6px" }}
+                            title="Exit IP for this key: automatic pool, a pinned exit, or direct"
                             onClick={() => void openAssign(credential)}
                           >
                             {credential.proxy.configured
@@ -302,11 +299,11 @@ export function Keys({
                           <div className="row" style={{ gap: 4 }}>
                             <button
                               className="secondary"
-                              style={{ padding: "4px 9px" }}
+                              style={{ padding: "4px 10px" }}
                               onClick={() => void test(credential)}
                               disabled={busyId === credential.id}
                             >
-                              {busyId === credential.id ? "…" : "Test"}
+                              {busyId === credential.id ? "…" : "test"}
                             </button>
                             <button className="ghost" onClick={() => setReplacingKey(credential)}>
                               replace
@@ -337,7 +334,7 @@ export function Keys({
           totalPages={totalPages}
           total={groups.length}
           pageSize={pageSize}
-          noun="provider groups"
+          noun="providers"
           onChange={(params) => {
             if (params.page) setPage(params.page);
             if (params.pageSize) {
@@ -387,9 +384,8 @@ export function Keys({
           onClose={() => setAssignFor(null)}
         >
           <p className="small muted" style={{ marginTop: 0 }}>
-            COKEY already spreads exits automatically: add proxies to the pool once and every key of
-            a provider gets a different one. Leave this on the automatic pool, or pin this key to
-            one specific exit.
+            Add proxies to the pool once and every key of a provider gets a different exit. Leave
+            this automatic, or pin the key to one exit.
           </p>
 
           <div className="selected-list">

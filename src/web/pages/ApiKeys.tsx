@@ -107,7 +107,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
 
       <Panel title={`API keys (${keys.length})`}>
         {keys.length === 0 ? (
-          <Empty>No API keys yet. Create one above to connect OpenCode or KiloCode.</Empty>
+          <Empty>No keys yet — create one above.</Empty>
         ) : (
           <table>
             <thead>

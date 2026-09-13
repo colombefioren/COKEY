@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
 import { CokeyMark } from "./Logo.js";
-import { Empty } from "./Primitives.js";
+import { Empty, StatusPill } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 
 /**
@@ -13,6 +13,11 @@ import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
  * involved. This diagram makes the hop sequence physical. The request enters on
  * the left, passes through the COKEY hub, and walks the nodes in the order they
  * will actually be tried, with each node's keys branching off it.
+ *
+ * It is drawn rather than tabulated: one inked rail runs the length of the
+ * journey, every stop is a pebble with a hand-numbered tab, and the token that
+ * travels the rail carries the brand ramp. A routing decision is a sequence, so
+ * the picture of it should be a path, not a row of cards.
  *
  * It is driven by the same live route snapshot the topbar uses, so the node
  * that is currently serving lights up and a fallback is visible as it happens.
@@ -64,12 +69,10 @@ export function ChainFlow({
     route?.providerId && route?.model ? `${route.providerId}/${route.model}` : null;
 
   if (chains.length === 0) {
-    return (
-      <Empty>
-        No chains yet. Create one in Chains, add a node, and the live route shows up here.
-      </Empty>
-    );
+    return <Empty>No chains yet. Create one in Chains and the route draws itself here.</Empty>;
   }
+
+  const steps = selected ? [...selected.entries].sort((a, b) => a.priority - b.priority) : [];
 
   return (
     <div className={`flow${route?.active ? " flow-live" : ""}`}>
@@ -96,25 +99,30 @@ export function ChainFlow({
           })}
         </div>
 
-        <div className="flow-meta small faint">
+        <div className="flow-meta">
           {route?.active ? (
-            <span className="badge">routing now</span>
+            <span className="flow-state live">
+              <i aria-hidden="true" />
+              routing
+            </span>
           ) : route?.updatedAt ? (
-            <span>idle, last request {new Date(route.updatedAt).toLocaleTimeString()}</span>
+            <span className="flow-state">
+              idle · {new Date(route.updatedAt).toLocaleTimeString()}
+            </span>
           ) : (
-            <span>waiting for traffic</span>
+            <span className="flow-state">waiting</span>
           )}
-          {route?.fallback ? <span className="badge warn">fallback active</span> : null}
+          {route?.fallback ? <span className="flow-state warn">fallback</span> : null}
         </div>
 
         <button
           type="button"
-          className="ghost"
+          className="flow-sweep"
           onClick={() => void sweep.refresh()}
           disabled={sweep.busy}
-          title={sweep.busy ? "Testing nodes…" : "Test every node and go to the first that answers"}
+          title="Test every node and keep the first that answers"
         >
-          {sweep.busy ? "testing…" : "⟳ refresh"}
+          {sweep.busy ? "testing" : "test all"}
         </button>
       </div>
 
@@ -122,22 +130,23 @@ export function ChainFlow({
         <div className="flow-track">
           <div className="flow-node flow-endpoint">
             <span className="flow-node-kicker">client</span>
-            <span className="flow-node-title">your editor</span>
-            <span className="flow-node-sub small faint">one base URL</span>
+            <span className="flow-node-title">editor</span>
           </div>
 
           <FlowLink live={Boolean(route?.active)} />
 
           <div className="flow-node flow-hub">
-            <CokeyMark height={22} className="flow-hub-mark" />
+            <span className="flow-hub-orb">
+              <span className="flow-hub-ring" aria-hidden="true" />
+              <CokeyMark height={24} />
+            </span>
             <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
-            <span className="flow-node-sub small faint">alias clients call</span>
+            <span className="flow-node-kicker">alias</span>
           </div>
 
-          {selected && selected.entries.length > 0 ? (
-            [...selected.entries]
-              .sort((a, b) => a.priority - b.priority)
-              .map((entry, index) => (
+          {steps.length > 0 ? (
+            <>
+              {steps.map((entry, index) => (
                 <div className="flow-step" key={entry.id}>
                   <FlowLink
                     live={Boolean(route?.active)}
@@ -155,47 +164,41 @@ export function ChainFlow({
                     current={sweep.winnerId === entry.id}
                   />
                 </div>
-              ))
+              ))}
+              <FlowLink live={Boolean(route?.active)} dead={Boolean(activeEntryKey)} />
+              <div className="flow-node flow-cap">
+                <span className="flow-node-kicker">reply</span>
+              </div>
+            </>
           ) : (
             <>
               <FlowLink live={false} dead />
               <div className="flow-node flow-empty">
+                <span className="flow-node-kicker">empty</span>
                 <span className="flow-node-title">no nodes</span>
-                <span className="flow-node-sub small faint">add one in Chains</span>
               </div>
             </>
           )}
         </div>
       </div>
 
-      <div className="flow-legend small faint">
-        <span className="legend-item">
-          <i className="flow-key healthy" /> healthy
-        </span>
-        <span className="legend-item">
-          <i className="flow-key cooldown" /> cooldown
-        </span>
-        <span className="legend-item">
-          <i className="flow-key invalid" /> invalid
-        </span>
-        <span className="legend-item">
-          <i className="flow-key unverified" /> unverified
-        </span>
+      <div className="flow-legend">
+        <StatusPill status="healthy" />
+        <StatusPill status="cooldown" />
+        <StatusPill status="invalid" />
+        <StatusPill status="unverified" />
+        <span className="spacer" />
         {sweep.winnerId ? (
-          <>
-            <span className="spacer" />
-            <span className="badge ok">current: first node that answered OK</span>
-          </>
+          <span className="flow-legend-note ok">current · first node that answered</span>
         ) : (
-          <span className="spacer" />
+          <span className="flow-legend-note">tried top to bottom</span>
         )}
-        <span>nodes are tried top to bottom, keys left to right</span>
       </div>
     </div>
   );
 }
 
-/** The connector between two nodes: a rail with a pulse that travels it. */
+/** The connector between two nodes: an inked rail with a token that travels it. */
 function FlowLink({ live = false, dead = false }: { live?: boolean; dead?: boolean }) {
   return (
     <div className={`flow-link${live ? " live" : ""}${dead ? " dead" : ""}`} aria-hidden="true">
@@ -233,25 +236,18 @@ function EntryNode({
       }${current ? " sweep-current" : ""}`}
     >
       <div className="flow-node-top">
-        <span className="flow-priority">{index + 1}</span>
+        <span className="flow-stop">{index + 1}</span>
         <span className="flow-node-title" title={entry.model}>
           {entry.label ?? entry.model}
         </span>
-        {sweepState === "testing" ? <span className="badge neutral">testing…</span> : null}
-        {sweepState === "ok" ? <span className="badge ok">ok</span> : null}
-        {sweepState === "fail" ? <span className="badge bad">fail</span> : null}
-        {current ? <span className="badge ok">current</span> : null}
       </div>
-      <span className="flow-node-sub small faint">
-        {entry.providerId}
-        {entry.label ? ` / ${entry.model}` : ""}
-      </span>
+      <span className="flow-node-sub mono">{entry.providerId}</span>
       <div className="flow-keys">
         {entry.credentials.length === 0 ? (
-          <span className="small faint">no keys bound</span>
+          <span className="flow-keys-empty">no keys</span>
         ) : (
           entry.credentials.map((credential) => (
-            <KeyDot
+            <KeyChip
               key={credential.id}
               credential={credential}
               active={live && activeCredentialId === credential.id}
@@ -259,11 +255,29 @@ function EntryNode({
           ))
         )}
       </div>
+      {sweepState !== "idle" || current ? (
+        <span className="flow-node-flag">
+          {current
+            ? "current"
+            : sweepState === "testing"
+              ? "testing"
+              : sweepState === "ok"
+                ? "ok"
+                : "fail"}
+        </span>
+      ) : null}
     </div>
   );
 }
 
-function KeyDot({ credential, active }: { credential: PublicCredential; active: boolean }) {
+/**
+ * One bound key, as a capsule.
+ *
+ * The state is carried by the capsule's own fill and glyph rather than by a
+ * coloured square, so a row of twelve keys can be read at a glance without a
+ * legend lookup — and the tooltip still holds the exact description.
+ */
+function KeyChip({ credential, active }: { credential: PublicCredential; active: boolean }) {
   const title = `${credential.description} (${credential.status})${
     credential.proxy.auto ? " · auto egress" : credential.proxy.configured ? " · pinned egress" : ""
   }`;

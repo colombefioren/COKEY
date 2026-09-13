@@ -41,7 +41,7 @@ export function StatusBar({
             : "Event stream offline — falling back to a periodic refresh"
         }
       >
-        {live ? "● live" : "○ offline"}
+        {live ? "live" : "offline"}
       </span>
       <span className="status-cell" title="Connected providers">
         <strong>{providers}</strong> providers
