@@ -14,7 +14,7 @@ quota.
 [![License: MIT](https://img.shields.io/badge/License-MIT-CDB0F0?style=flat-square&labelColor=150F3D)](LICENSE)
 [![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-8D7AE0?style=flat-square&labelColor=150F3D)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-8D7AE0?style=flat-square&labelColor=150F3D)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-45%20passing-CDB0F0?style=flat-square&labelColor=150F3D)](tests)
+[![Tests](https://img.shields.io/badge/tests-156%20passing-DD5C95?style=flat-square&labelColor=150F3D)](tests)
 [![PRs welcome](https://img.shields.io/badge/PRs-welcome-CDB0F0?style=flat-square&labelColor=150F3D)](https://github.com/colombefioren/COKEY/pulls)
 [![No telemetry](https://img.shields.io/badge/telemetry-none-8D7AE0?style=flat-square&labelColor=150F3D)](#-security)
 
