@@ -30,27 +30,41 @@
   grid-template-columns: auto 1fr;
   gap: 6px 16px;
   padding: 20px 22px;
-  border: 2px solid var(--border-strong);
-  border-radius: var(--radius);
+  border: 1.5px solid var(--border-strong);
+  border-radius: 24px 22px 26px 21px;
   background: var(--surface);
   box-shadow:
-    1.5px 2px 0 0 var(--border),
+    1px 1px 0 0 var(--border),
     var(--shadow);
 }
+/* A short rule of the layer's own tint along the top edge, so the three layers
+   read as three deliberate defences rather than three identical cards. */
+.layer::before {
+  content: "";
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: -1.5px;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--tint-line, var(--border-strong)), transparent 70%);
+}
+/* Graded out of the tint rather than filled with it: light across the card
+   instead of a coloured rectangle. */
 .layer.tint-1 {
-  background: var(--tint-1);
+  --tint-line: var(--tint-1-line);
+  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-1));
   border-color: var(--tint-1-line);
-  box-shadow: 1.5px 2px 0 0 var(--tint-1-line);
 }
 .layer.tint-2 {
-  background: var(--tint-2);
+  --tint-line: var(--tint-2-line);
+  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-2));
   border-color: var(--tint-2-line);
-  box-shadow: 1.5px 2px 0 0 var(--tint-2-line);
 }
 .layer.tint-3 {
-  background: var(--tint-3);
+  --tint-line: var(--tint-3-line);
+  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-3));
   border-color: var(--tint-3-line);
-  box-shadow: 1.5px 2px 0 0 var(--tint-3-line);
 }
 
 .layer-badge {
@@ -101,8 +115,9 @@
 }
 
 .layer-title {
-  font-size: 17px;
+  font-size: 21px;
   font-weight: 700;
+  letter-spacing: -0.005em;
   color: var(--text);
   margin: 2px 0 4px;
 }
@@ -200,11 +215,12 @@
   color: var(--muted);
   white-space: nowrap;
 }
+/* The same three silhouettes the status pills use, so a state learned in the
+   keys table is recognised here without a second legend. */
 .layer-key i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--faint);
+  width: 9px;
+  height: 9px;
+  background: currentColor;
   flex: none;
 }
 .layer-key em {
@@ -218,7 +234,8 @@
   color: var(--sage);
 }
 .layer-key.is-ok i {
-  background: var(--sage);
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: glyph-breathe 2.8s ease-in-out infinite;
 }
 .layer-key.is-bad {
   border-color: var(--rose-line);
@@ -226,16 +243,18 @@
   color: var(--rose);
 }
 .layer-key.is-bad i {
-  background: var(--rose);
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
 }
 .layer-key.is-locked {
   border-color: var(--peach-line);
   background: var(--peach-soft);
   color: var(--peach);
-  opacity: 0.85;
+  opacity: 0.9;
 }
 .layer-key.is-locked i {
-  background: var(--peach);
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: none;
 }
 
 .layer-footer {
