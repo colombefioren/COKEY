@@ -133,13 +133,39 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     }
 
     // 2. Even when the catalog says "models", exercise a real chat request
-    //    using the first known model so quota exhaustion is detected.
+    //    using a known model — so quota exhaustion is detected — but only one
+    //    this provider still actually serves. The curated list is a hand-
+    //    written default that drifts as free tiers churn their model lineup,
+    //    and blindly chatting with `knownModels[0]` meant a retired model made
+    //    every key look invalid even though the key itself was fine.
     if (this.catalog.knownModels.length > 0) {
-      return this.validateViaChat(credential, this.catalog.knownModels[0], started);
+      const model = await this.pickVerificationModel(credential);
+      return this.validateViaChat(credential, model, started);
     }
 
     // 3. Last resort: just prove the key authenticates.
     return this.validateViaModels(credential, started);
+  }
+
+  /**
+   * The curated model to verify with, preferring one this key can currently
+   * see. Lists live models first and picks the earliest curated match; when
+   * none of the curated ids are still served, falls back to whatever the
+   * provider does list, so verification never chats with a name the provider
+   * has already retired. A listing failure (network, or a provider that
+   * cannot list at all) falls back to the curated guess unchanged — the chat
+   * probe right after this still reports the real failure either way.
+   */
+  protected async pickVerificationModel(credential: Credential): Promise<string> {
+    const fallback = this.catalog.knownModels[0]!;
+    try {
+      const live = await this.listModels(credential);
+      const liveIds = new Set(live.map((entry) => entry.id));
+      const stillCurated = this.catalog.knownModels.find((id) => liveIds.has(id));
+      return stillCurated ?? live[0]?.id ?? fallback;
+    } catch {
+      return fallback;
+    }
   }
 
   protected async validateViaChat(
