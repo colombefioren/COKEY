@@ -361,7 +361,7 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
       />
 
       <p className="small faint" style={{ marginBottom: 0 }}>
-        Ranked by success rate, then speed. A test sends one real request through a working key.
+        Ranked by success rate, then speed. A test is one real request through a working key.
       </p>
     </Panel>
   );
@@ -513,7 +513,7 @@ function Catalog({
     <Panel
       hue="pink"
       icon={<IconSparkle size={14} />}
-      title={`Model catalog (${data?.total ?? 0} models)`}
+      title={`Catalog (${data?.total ?? 0})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
           <label className="small muted row" style={{ gap: 6 }}>
@@ -542,9 +542,8 @@ function Catalog({
       }
     >
       <p className="small muted" style={{ marginTop: 0 }}>
-        {availableProviders} of {data?.providers.length ?? 0} providers have a working key. The play
-        button sends one real hello through a working key and turns green only when the provider
-        answers 200.
+        {availableProviders}/{data?.providers.length ?? 0} providers usable. <strong>▶</strong>{" "}
+        sends one real hello and turns green only on a 200.
       </p>
 
       {/*
@@ -553,10 +552,8 @@ function Catalog({
        */}
       {data && data.stale > 0 ? (
         <div className="hint-box" style={{ marginBottom: 14 }}>
-          {data.stale} catalogued model(s) were not returned by their provider on the last check, so
-          they are hidden from the picker. Use a provider's <strong>re-check</strong> button to
-          refresh, and see the Dashboard&apos;s needs-attention panel for the chains that depend on
-          one.
+          {data.stale} model(s) were gone on the last check, so they are hidden. Use{" "}
+          <strong>re-check</strong> to look again; the bell lists the chains that depend on one.
         </div>
       ) : null}
 
