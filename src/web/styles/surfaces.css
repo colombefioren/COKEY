@@ -170,6 +170,109 @@
   }
 }
 
+/*
+ * "Needs attention" — the bell's content, and the one panel that was never
+ * styled at all.
+ *
+ * Each notice is a card with a rule down its leading edge in the colour of its
+ * severity, so a stack of three is read in one pass: what is on fire, what is
+ * worth a look, what is merely information. The remedy buttons sit inside the
+ * card they belong to, because a notice you have to navigate away from in order
+ * to act on is a notice that gets ignored.
+ */
+.guidance-list {
+  display: grid;
+  gap: 10px;
+}
+
+.guidance-item {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 13px 15px 13px 17px;
+  border-radius: 16px 18px 15px 17px;
+  border: 1.5px solid var(--note-line);
+  background: linear-gradient(150deg, var(--surface) 42%, var(--note-bg));
+}
+.guidance-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 13px;
+  bottom: 13px;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: var(--note-ink);
+}
+.guidance-item.critical {
+  --note-line: var(--rose-line);
+  --note-bg: var(--rose-soft);
+  --note-ink: var(--rose);
+}
+.guidance-item.warn {
+  --note-line: var(--peach-line);
+  --note-bg: var(--peach-soft);
+  --note-ink: var(--peach);
+}
+.guidance-item.info {
+  --note-line: var(--sky-line);
+  --note-bg: var(--sky-soft);
+  --note-ink: var(--sky);
+}
+
+.guidance-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.guidance-title {
+  font-family: var(--font-display);
+  font-size: 13.5px;
+  font-weight: 650;
+  color: var(--text);
+}
+.guidance-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.guidance-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.guidance-actions button {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.guidance-foot {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+}
+
+/*
+ * In the dropdown the header is narrow, so the panel's controls take their own
+ * line rather than squeezing against the title. Nested like this rather than
+ * styled twice, because the panel is the same component in both places.
+ */
+.notif-panel .window-bar {
+  padding: 12px 14px 10px;
+  gap: 8px;
+}
+.notif-panel .window-actions {
+  margin-left: 0;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.notif-panel .window-body {
+  padding: 12px 14px 14px;
+}
+
 /* ---- overlay and modal ---------------------------------------------------- */
 
 /*
