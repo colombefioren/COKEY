@@ -540,6 +540,40 @@
   color: var(--violet-strong);
 }
 
+/* ---- kinetic title -------------------------------------------------------- */
+
+/*
+ * The page title types itself in, one glyph at a time.
+ *
+ * A title arriving as a single sliding slab is the animation every generated
+ * dashboard has. A staggered per-character rise keeps the same promise — the
+ * page changed — while putting the movement in the letterforms, which is the
+ * one part of the chrome that can carry motion without shifting anything the
+ * reader is trying to read. The stagger is read off the glyph's index, so the
+ * words stay ordinary text in the markup and copy out normally.
+ */
+.topbar-title {
+  /* The motion now lives in the glyphs, so the container itself no longer
+     slides in as a block. */
+  animation: none;
+}
+.kinetic-glyph {
+  display: inline-block;
+  animation: kinetic-rise 0.46s var(--ease) both;
+  animation-delay: calc(var(--glyph, 0) * 26ms);
+}
+
+@keyframes kinetic-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.42em) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* ---- status bar ----------------------------------------------------------- */
 
 /*
@@ -626,6 +660,7 @@ a:focus-visible,
   .flow-pill.live .flow-pill-dot,
   .flow-state.live i,
   .flow-key-ring,
+  .kinetic-glyph,
   .statusbar .live-flag.on::before {
     animation: none !important;
   }

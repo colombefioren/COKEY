@@ -10,6 +10,7 @@ import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { LoginForm } from "./components/LoginForm.js";
 import { NotificationsBell } from "./components/NotificationsBell.js";
+import { KineticText } from "./components/KineticText.js";
 import { Sidebar, type NavItem } from "./components/Sidebar.js";
 import { StatusBar } from "./components/StatusBar.js";
 import {
@@ -314,9 +315,11 @@ function Shell() {
           >
             <IconMenu size={17} />
           </button>
-          <span className="topbar-title" key={route.path}>
-            {TITLES[route.path] ?? "Dashboard"}
-          </span>
+          <KineticText
+            className="topbar-title"
+            key={route.path}
+            text={TITLES[route.path] ?? "Dashboard"}
+          />
           <span className="spacer" />
           <NotificationsBell refreshKey={refreshKey} onChanged={bump} />
           <LiveStatus />
