@@ -478,10 +478,19 @@ describe("undocumentedProviders", () => {
     write(dir, "providers/alpha.json", provider("alpha"));
     write(dir, "providers/groq.json", provider("groq", { operator: "Groq, Inc." }));
 
-    expect(undocumentedProviders(loadCmsSnapshot(dir))).toEqual(["alpha"]);
+    expect(undocumentedProviders(loadCmsSnapshot(dir), ["groq"])).toEqual(["alpha"]);
+  });
+
+  it("does not flag a served provider that has no compiled dossier", () => {
+    // The catalog can serve a provider that never had a dossier written for it;
+    // documenting it in the content repository is the fix, not the problem.
+    const dir = tempContent();
+    write(dir, "providers/freeai.json", provider("freeai"));
+
+    expect(undocumentedProviders(loadCmsSnapshot(dir), ["freeai"])).toEqual([]);
   });
 
   it("returns nothing without a snapshot", () => {
-    expect(undocumentedProviders()).toEqual([]);
+    expect(undocumentedProviders(undefined, ["groq"])).toEqual([]);
   });
 });

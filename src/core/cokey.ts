@@ -50,6 +50,7 @@ import {
   type ModelDiscoveryReport,
 } from "./models/discovery.js";
 import {
+  CONTENT_FRESHNESS_DAYS,
   deriveGuidance,
   guidanceSummary,
   type GuidanceInput,
@@ -374,9 +375,12 @@ export class Cokey {
     return this.cms.current.terms;
   }
 
-  /** Providers the content repository documents but the compiled catalog does not. */
+  /** Providers the content repository documents but this build cannot serve. */
   undocumentedProviders(): string[] {
-    return undocumentedProviders(this.cms.current);
+    return undocumentedProviders(
+      this.cms.current,
+      this.providers.getCatalog().map((entry) => entry.id),
+    );
   }
 
   /** Re-read the content directory on demand. Returns whether anything changed. */
@@ -1398,6 +1402,34 @@ export class Cokey {
           displayName: entry.displayName,
         })),
       },
+      content: this.guidanceContent(),
+    };
+  }
+
+  /**
+   * The content repository's own health, for the guidance rules.
+   *
+   * Read from the snapshot rather than the filesystem: the store already did the
+   * reading and already knows what Failed, so asking again would be a second
+   * answer to a question that has one.
+   */
+  private guidanceContent(): GuidanceInput["content"] {
+    const snapshot = this.cms.current;
+    const cutoff = Date.now() - CONTENT_FRESHNESS_DAYS * 24 * 60 * 60 * 1000;
+
+    const staleDossiers: string[] = [];
+    for (const provider of snapshot.providers.values()) {
+      // A dossier with no date is treated as stale: an undated claim is exactly
+      // the kind of entry that goes quietly wrong.
+      const reviewed = provider.reviewedAt ? Date.parse(`${provider.reviewedAt}T00:00:00Z`) : NaN;
+      if (!Number.isFinite(reviewed) || reviewed < cutoff) staleDossiers.push(provider.id);
+    }
+
+    return {
+      available: snapshot.providers.size > 0,
+      issues: snapshot.issues,
+      staleDossiers: staleDossiers.sort(),
+      unsupported: this.undocumentedProviders(),
     };
   }
 

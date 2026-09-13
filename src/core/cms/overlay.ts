@@ -179,20 +179,24 @@ export function newestReview(snapshot?: CmsSnapshot): string | undefined {
 }
 
 /**
- * Providers in the content repository that the compiled catalog does not know.
+ * Providers the content repository documents that COKEY cannot serve.
  *
- * Surfaced rather than hidden: it usually means a provider was added to the
- * content repo and COKEY has not been updated to talk to it, which is a
- * five-minute fix that is invisible otherwise.
+ * Surfaced rather than hidden: it usually means a dossier was written for a
+ * provider the code has no endpoint for, which is a five-minute fix and
+ * completely invisible otherwise. `knownIds` is the live catalog, not the
+ * compiled dossier table — a provider can be served without ever having had a
+ * dossier written for it, and that is precisely the case the content repository
+ * exists to fix.
  */
-export function undocumentedProviders(snapshot?: CmsSnapshot): string[] {
+export function undocumentedProviders(
+  snapshot: CmsSnapshot | undefined,
+  knownIds: Iterable<string>,
+): string[] {
   if (!snapshot) return [];
+  const known = new Set(knownIds);
   const out: string[] = [];
   for (const id of snapshot.providers.keys()) {
-    if (id.startsWith("custom:")) continue;
-    const dossier = providerDossier(id);
-    // A neutral dossier is the compiled catalog saying it has never heard of it.
-    if (dossier.operator === "Not publicly disclosed") out.push(id);
+    if (!known.has(id)) out.push(id);
   }
   return out.sort();
 }
