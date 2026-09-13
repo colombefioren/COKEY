@@ -39,7 +39,7 @@ export function Chains({
           aria-selected={tab === "nodes"}
           onClick={() => navigate("/chains")}
         >
-          Chains and nodes
+          Nodes
         </button>
         <button
           type="button"
@@ -121,7 +121,7 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
       <Panel title="New chain">
         <div className="row wrap">
           <div style={{ flex: "1 1 240px" }}>
-            <label htmlFor="chain-alias">Alias (this is the model id clients send)</label>
+            <label htmlFor="chain-alias">Alias · the model id clients send</label>
             <input
               id="chain-alias"
               value={alias}
@@ -133,7 +133,7 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
             />
           </div>
           <div style={{ flex: "2 1 320px" }}>
-            <label htmlFor="chain-description">Description (optional)</label>
+            <label htmlFor="chain-description">Description · optional</label>
             <input
               id="chain-description"
               value={description}
@@ -150,20 +150,19 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
           </button>
         </div>
         <div className="small faint" style={{ marginTop: 8 }}>
-          Routing order is yours. A node only runs after every key of the node above it has been
-          tried. Drag a row, press <code>Alt+Up</code> / <code>Alt+Down</code>, or use the arrow
-          buttons.
+          Tried top to bottom. Reorder by dragging, <code>Alt+↑</code> / <code>Alt+↓</code>, or the
+          arrows.
         </div>
       </Panel>
 
       <Panel title={`Chains (${chains.length})`}>
         <div className="row" style={{ marginBottom: 12, gap: 14 }}>
           <span className="small faint">{totals.nodes} nodes</span>
-          <span className="small faint">{totals.keys} key bindings</span>
+          <span className="small faint">{totals.keys} keys</span>
         </div>
 
         {chains.length === 0 ? (
-          <Empty>No chains yet. Create one above, then add provider nodes to it.</Empty>
+          <Empty>No chains yet.</Empty>
         ) : (
           visible.map((chain) => (
             <ChainCard
