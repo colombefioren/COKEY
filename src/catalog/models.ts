@@ -490,6 +490,15 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("deepseek-v4-flash", undefined, "General"),
     m("grok-4.6", undefined, "Reasoning"),
   ],
+  amdradeon: [m("DeepSeek-V4-Flash", "1M", "Reasoning")],
+  wusrouter: [
+    m("DeepSeek-R1-0528-Qwen3-8B", undefined, "Reasoning"),
+    m("qwen3.8-27b", undefined, "General"),
+  ],
+  pollinations: [
+    m("community/Catniti/deepseek-r1-free", undefined, "Reasoning"),
+    m("community/AkshayCoder48/poolside-laguna-s-2.1:free", undefined, "Code"),
+  ],
 };
 
 /** Total number of curated free models across every provider. */
