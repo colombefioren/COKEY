@@ -192,7 +192,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
               disabled={busy !== null}
               onClick={() => void refreshAll()}
             >
-              {busy === "all" ? "checking…" : "Re-check all model lists"}
+              {busy === "all" ? "checking…" : "re-check models"}
             </button>
           </>
         }
@@ -202,8 +202,8 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
         ) : visible.length === 0 ? (
           <Empty>
             {hiddenCount > 0
-              ? `${hiddenCount} notice(s) dismissed. Reset them above to see them again.`
-              : "Nothing needs your attention. Every key is usable, every chain node can be served, and every model list is current."}
+              ? `${hiddenCount} dismissed — reset above to see them again.`
+              : "All clear. Every key usable, every node servable, every model list current."}
           </Empty>
         ) : (
           <div className="guidance-list">
@@ -247,8 +247,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
 
         {data ? (
           <p className="faint small guidance-foot">
-            Derived from live gateway state at {timeAgo(data.checkedAt)}. Nothing here leaves your
-            machine.
+            live state · checked {timeAgo(data.checkedAt)} · nothing leaves this machine
           </p>
         ) : null}
       </Panel>
