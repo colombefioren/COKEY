@@ -6,20 +6,28 @@
  * the gateway, so the UI makes no outbound request to render text.
  */
 
-/* Bricolage Grotesque */
+/* Work Sans */
 @font-face {
-  font-family: "Bricolage Grotesque";
+  font-family: "Work Sans";
   font-style: normal;
-  font-weight: 400 800;
+  font-weight: 400 700;
   font-display: swap;
-  src: url("/fonts/bricolage-grotesque-variable.woff2") format("woff2");
+  src: url("/fonts/work-sans-variable.woff2") format("woff2");
 }
 
-/* Shantell Sans */
+/* Instrument Serif */
 @font-face {
-  font-family: "Shantell Sans";
-  font-style: normal;
-  font-weight: 500 800;
+  font-family: "Instrument Serif";
+  font-style: italic;
+  font-weight: 400;
   font-display: swap;
-  src: url("/fonts/shantell-sans-variable.woff2") format("woff2");
+  src: url("/fonts/instrument-serif-400-italic.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Instrument Serif";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/instrument-serif-400.woff2") format("woff2");
 }

@@ -111,10 +111,10 @@
   --radius: 22px;
   --radius-md: 15px;
   --radius-sm: 11px;
-  --font-body:
-    "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Headings and titles only — a script face slows body reading down. */
-  --font-display: "Shantell Sans", var(--font-body);
+  --font-body: "Work Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Headings, titles and stat numbers only, always italic — a display serif
+     slows body reading down. */
+  --font-display: "Instrument Serif", Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sidebar-w: 264px;
   --sidebar-w-collapsed: 84px;
@@ -125,12 +125,6 @@
   --bloom-1: #ffd7ea;
   --bloom-2: #d9cbff;
   --bloom-3: #ffe6cf;
-
-  /* The mark's own pink-to-violet ramp, shared by the logo, the favicon and
-     the hub orb so the brand is one gradient wherever it appears. */
-  --mark-1: #ffb3d4;
-  --mark-2: #b98cf6;
-  --mark-3: #6b4be0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -156,11 +150,20 @@ body,
 body {
   margin: 0;
   color: var(--text);
-  /* Three very soft blooms — pink, lilac, apricot — over the warm ground. */
+  /* A dotted sheet of paper under three very soft blooms — pink, lilac,
+     apricot. The dots are what keep the page from reading as a flat colour
+     fill; they need to actually be seen, not just theoretically present. */
   background:
     radial-gradient(1000px 680px at -4% -10%, var(--pink-soft), transparent 62%),
     radial-gradient(880px 620px at 104% -6%, var(--violet-soft), transparent 60%),
-    radial-gradient(820px 600px at 52% 114%, var(--bloom-3), transparent 66%), var(--ground);
+    radial-gradient(820px 600px at 52% 114%, var(--bloom-3), transparent 66%),
+    radial-gradient(rgba(221, 92, 149, 0.3) 1.4px, transparent 1.4px), var(--ground);
+  background-size:
+    auto,
+    auto,
+    auto,
+    22px 22px,
+    auto;
   background-attachment: fixed;
   font: 14px/1.62 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -182,12 +185,29 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 400;
 }
 
 h3 {
   font-size: 15px;
   margin: 0 0 8px;
+}
+
+/*
+ * A scrap of tape, for the handful of cards and nodes that get one. It sits
+ * on `position: absolute`, sized and rotated by whichever caller places it —
+ * no shadow: a piece of tape lies flat against the paper, it does not float
+ * above it.
+ */
+.tape {
+  position: absolute;
+  width: 56px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(221, 92, 149, 0.24);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ---- shell ---------------------------------------------------------------- */
@@ -327,7 +347,7 @@ h3 {
   height: 18px;
   margin-top: -9px;
   border-radius: 3px;
-  background: linear-gradient(var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 
 .nav-item {
@@ -698,7 +718,7 @@ h3 {
   height: 17px;
   padding: 0 3px;
   border-radius: 999px;
-  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
   color: var(--violet-ink);
   font-size: 10px;
   font-weight: 700;
@@ -1635,7 +1655,7 @@ tbody tr:hover td:first-child {
   bottom: 0;
   width: 3px;
   border-radius: var(--radius-md) 0 0 var(--radius-md);
-  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 
 code {
@@ -1675,7 +1695,7 @@ code {
   top: -1.5px;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 45%, transparent);
+  background: linear-gradient(90deg, var(--violet), transparent);
 }
 .chain-head {
   display: flex;
@@ -1800,7 +1820,7 @@ code {
   font-family: var(--font-display);
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--mark-3);
+  color: var(--violet-strong);
   background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
   box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
@@ -1899,7 +1919,7 @@ button.model-name:hover {
 }
 .spark i {
   width: 3px;
-  background: linear-gradient(180deg, var(--mark-2), var(--mark-3));
+  background: var(--violet);
   border-radius: 2px 2px 1px 1px;
   opacity: 0.85;
 }
@@ -2685,6 +2705,53 @@ button.play.fail {
   }
 }
 
+/* A hand-drawn circle that never quite closes on itself, redrawn forever
+   instead of rotating — used anywhere something is actively being probed. */
+@keyframes scribble-wobble {
+  0% {
+    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
+    transform: rotate(0deg);
+  }
+  25% {
+    border-radius: 58% 42% 45% 55% / 40% 60% 40% 60%;
+    transform: rotate(5deg);
+  }
+  50% {
+    border-radius: 50% 50% 38% 62% / 62% 38% 55% 45%;
+    transform: rotate(-4deg);
+  }
+  75% {
+    border-radius: 45% 55% 55% 45% / 48% 52% 45% 55%;
+    transform: rotate(3deg);
+  }
+  100% {
+    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
+    transform: rotate(0deg);
+  }
+}
+
+/* A slow, steady blink for the dot beside anything that is live right now. */
+@keyframes flow-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* A quick fade-in for anything that appears on top of the page: toasts,
+   modal scrims, popovers. */
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 .page > * {
   animation: block-in 0.52s var(--ease) both;
 }
@@ -2886,470 +2953,6 @@ tbody tr:nth-child(n + 6) {
 .shell {
   position: relative;
   z-index: 1;
-}
-
-/* ---- live chain flow ------------------------------------------------------ */
-
-.flow {
-  display: grid;
-  gap: 14px;
-}
-.flow-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.flow-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.flow-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
-}
-.flow-pill:hover {
-  border-color: var(--violet-line);
-  color: var(--text);
-  background: var(--surface);
-}
-.flow-pill.active {
-  border-color: var(--violet-line);
-  color: var(--violet-strong);
-  background: var(--violet-soft);
-  box-shadow: none;
-}
-.flow-pill-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--faint);
-  transition: background 0.2s ease;
-}
-.flow-pill.active .flow-pill-dot {
-  background: var(--violet);
-}
-.flow-pill.live .flow-pill-dot {
-  background: var(--sage);
-  animation: flow-blink 1.6s ease-in-out infinite;
-}
-.flow-pill-count {
-  font-size: 10px;
-  color: var(--faint);
-}
-.flow-meta {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.flow-scroll {
-  overflow-x: auto;
-  /* With overflow-x:auto an unspecified overflow-y computes to auto too, which
-     is what drew a stray vertical scrollbar over the diagram. Hidden + generous
-     padding lets the hub ring and the hover lift breathe without one. */
-  overflow-y: hidden;
-  padding: 18px 4px 20px;
-  scrollbar-width: thin;
-}
-.flow-track {
-  display: flex;
-  align-items: stretch;
-  min-width: min-content;
-  padding: 2px;
-}
-
-.flow-node {
-  position: relative;
-  min-width: 156px;
-  display: grid;
-  align-content: center;
-  gap: 6px;
-  padding: 15px 17px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--border);
-  background: var(--surface-2);
-  box-shadow: 1.5px 2px 0 0 var(--border);
-  /* Each node joins the walk-in animation, one after the next. */
-  animation: node-in 0.5s var(--ease) both;
-  animation-delay: calc(var(--flow-index, 0) * 90ms);
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    transform 0.25s var(--ease),
-    box-shadow 0.25s ease;
-}
-.flow-node:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-strong);
-  box-shadow:
-    1.5px 2px 0 0 var(--border-strong),
-    var(--shadow-lift);
-}
-@keyframes node-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.flow-node-kicker {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-.flow-node-title {
-  font-size: 13px;
-  font-weight: 620;
-  color: var(--text);
-  overflow-wrap: anywhere;
-}
-.flow-node-sub {
-  display: block;
-}
-.flow-endpoint {
-  min-width: 138px;
-  background: var(--surface);
-}
-/*
- * The hub is the one node drawn as a circle rather than a card — everything
- * else in the diagram is a stop along the way; this is the thing they are all
- * routed through, and it should look like the centre of something.
- */
-.flow-hub {
-  justify-items: center;
-  text-align: center;
-  color: var(--violet);
-  border: none;
-  box-shadow: none;
-  background: none;
-  padding: 4px 12px;
-}
-.flow-hub:hover {
-  transform: none;
-}
-.flow-hub .flow-node-title {
-  color: var(--violet-strong);
-  font-family: var(--font-display);
-  font-size: 14px;
-}
-/*
- * A slow hand-drawn scribble around the COKEY hub, so the centre of the
- * diagram is visibly the thing everything is routed through — breathing
- * gently rather than spinning, the way a doodled circle never quite closes
- * on itself.
- */
-.flow-hub::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  width: 68px;
-  height: 68px;
-  margin-left: -34px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--violet-line);
-  opacity: 0.8;
-  animation: scribble-wobble 9s ease-in-out infinite;
-  pointer-events: none;
-}
-.flow-hub-mark {
-  box-sizing: border-box;
-  width: 64px;
-  height: 64px;
-  padding: 15px;
-  border-radius: 50%;
-  background: var(--violet-soft);
-  box-shadow:
-    inset 0 0 0 2px var(--violet-line),
-    1.5px 2px 0 0 var(--violet-line);
-  animation: hub-pulse 3.2s ease-in-out infinite;
-}
-@keyframes hub-pulse {
-  0%,
-  100% {
-    opacity: 0.85;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
-.flow-empty {
-  border-style: dashed;
-  background: var(--surface);
-}
-
-.flow-step {
-  display: flex;
-  align-items: stretch;
-}
-.flow-entry {
-  min-width: 182px;
-  background: var(--surface);
-}
-.flow-node-top {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.flow-priority {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--violet);
-  color: var(--violet-ink);
-}
-.flow-entry.live {
-  border-color: var(--sage);
-  background: var(--sage-soft);
-}
-.flow-entry.dead {
-  opacity: 0.55;
-}
-
-/*
- * A node whose key is being probed during a chain sweep: a hand-drawn circle
- * being continuously scribbled around it, the way you'd circle an answer
- * while double-checking it — not a mechanical spinner rotating in place.
- * The wobble comes from animating `border-radius` through a set of uneven
- * blob shapes rather than rotating a ring, which is what keeps it reading as
- * drawn rather than engineered.
- */
-.flow-entry.sweep-testing {
-  border-color: var(--violet);
-  box-shadow: 0 0 0 3px var(--violet-soft);
-}
-.flow-entry.sweep-testing::after {
-  content: "";
-  position: absolute;
-  inset: -7px;
-  border: 2.5px dashed var(--violet);
-  animation: scribble-wobble 1.7s ease-in-out infinite;
-  pointer-events: none;
-}
-.flow-entry.sweep-ok {
-  border-color: var(--sage);
-  background: var(--sage-soft);
-  animation: sweep-pop 0.4s var(--ease);
-}
-.flow-entry.sweep-fail {
-  border-color: var(--rose);
-  background: var(--rose-soft);
-}
-.flow-entry.sweep-current {
-  box-shadow:
-    0 0 0 2px var(--sage),
-    0 0 0 5px var(--sage-soft);
-}
-@keyframes scribble-wobble {
-  0% {
-    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
-    transform: rotate(0deg);
-  }
-  25% {
-    border-radius: 58% 42% 45% 55% / 40% 60% 40% 60%;
-    transform: rotate(5deg);
-  }
-  50% {
-    border-radius: 50% 50% 38% 62% / 62% 38% 55% 45%;
-    transform: rotate(-4deg);
-  }
-  75% {
-    border-radius: 45% 55% 55% 45% / 48% 52% 45% 55%;
-    transform: rotate(3deg);
-  }
-  100% {
-    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
-    transform: rotate(0deg);
-  }
-}
-@keyframes sweep-pop {
-  from {
-    transform: scale(0.98);
-  }
-  to {
-    transform: none;
-  }
-}
-
-.flow-link {
-  position: relative;
-  width: 52px;
-  flex: none;
-  display: grid;
-  place-items: center;
-}
-.flow-rail {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 0;
-  border-top: 2.5px dashed var(--border-strong);
-}
-.flow-link.live .flow-rail {
-  border-top-color: var(--sage-line);
-}
-.flow-link.dead .flow-rail {
-  opacity: 0.6;
-}
-/*
- * The travelling token. It runs whether or not traffic is flowing, so the
- * diagram stays legible as a chain; when a request is genuinely in flight the
- * pulse picks up the healthy accent.
- */
-.flow-pulse {
-  position: absolute;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  margin-top: -5px;
-  border-radius: 50%;
-  background: var(--violet);
-  box-shadow: 0 0 0 4px var(--violet-soft);
-  animation: flow-travel 2.6s var(--ease) infinite;
-}
-.flow-link.live .flow-pulse {
-  background: var(--sage);
-}
-.flow-track > *:nth-child(3) .flow-pulse {
-  animation-delay: 0.3s;
-}
-.flow-track > *:nth-child(4) .flow-pulse {
-  animation-delay: 0.6s;
-}
-.flow-track > *:nth-child(5) .flow-pulse {
-  animation-delay: 0.9s;
-}
-.flow-track > *:nth-child(6) .flow-pulse {
-  animation-delay: 1.2s;
-}
-.flow-track > *:nth-child(7) .flow-pulse {
-  animation-delay: 1.5s;
-}
-.flow-track > *:nth-child(8) .flow-pulse {
-  animation-delay: 1.8s;
-}
-.flow-track > *:nth-child(9) .flow-pulse {
-  animation-delay: 2.1s;
-}
-
-@keyframes flow-travel {
-  from {
-    left: -5px;
-    opacity: 0;
-  }
-  18% {
-    opacity: 1;
-  }
-  82% {
-    opacity: 1;
-  }
-  to {
-    left: calc(100% - 5px);
-    opacity: 0;
-  }
-}
-
-@keyframes flow-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
-@keyframes scrim-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.flow-keys {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  min-height: 14px;
-}
-.flow-key {
-  position: relative;
-  width: 13px;
-  height: 13px;
-  border-radius: 4px;
-  border: 1.5px solid var(--border-strong);
-  background: var(--surface-3);
-  transition: transform 0.15s var(--ease);
-}
-.flow-key:hover {
-  transform: scale(1.3) rotate(-6deg);
-}
-.flow-key.healthy {
-  background: var(--sage-soft);
-  border-color: var(--sage);
-}
-.flow-key.cooldown {
-  background: var(--peach-soft);
-  border-color: var(--peach);
-}
-.flow-key.invalid {
-  background: var(--rose-soft);
-  border-color: var(--rose);
-}
-.flow-key.disabled {
-  background: var(--surface-3);
-}
-.flow-key.unverified {
-  background: var(--sky-soft);
-  border-color: var(--sky);
-}
-.flow-key.active {
-  transform: scale(1.25);
-}
-.flow-key-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 6px;
-  border: 2px solid var(--sage);
-  animation: flow-blink 1.3s ease-in-out infinite;
-}
-.flow-legend {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 /* @@PART-9 */

@@ -13,14 +13,13 @@
  *
  * Two families, each with a job:
  *
- *   Bricolage Grotesque  everything a person reads at length: body copy,
- *                        tables, form labels. A modern grotesque with real
- *                        character, not the Inter/Manrope default.
- *   Shantell Sans        headings, page titles and the sidebar wordmark. A
- *                        genuinely handwritten-feeling variable face that
- *                        stays legible at UI sizes, used for the hand-drawn
- *                        charm — never for body copy, where a script face
- *                        would only slow reading down.
+ *   Work Sans        everything a person reads at length: body copy, tables,
+ *                    form labels. A quiet, modern grotesque that gets out of
+ *                    the way.
+ *   Instrument Serif headings, page titles and stat numbers, always set in
+ *                    italic. A editorial display serif — the one place the
+ *                    page allows itself some personality — never for body
+ *                    copy, where a display face would only slow reading down.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
@@ -43,14 +42,14 @@ const UA =
 /** Families to vendor, with the slug used for their file names. */
 const FAMILIES = [
   {
-    query: "Bricolage+Grotesque:wght@400;500;600;700;800",
-    slug: "bricolage-grotesque",
-    display: "Bricolage Grotesque",
+    query: "Work+Sans:wght@400;500;600;700",
+    slug: "work-sans",
+    display: "Work Sans",
   },
   {
-    query: "Shantell+Sans:wght@500;600;700;800",
-    slug: "shantell-sans",
-    display: "Shantell Sans",
+    query: "Instrument+Serif:ital@0;1",
+    slug: "instrument-serif",
+    display: "Instrument Serif",
   },
 ];
 
@@ -123,7 +122,9 @@ async function main() {
       const weightSlug = isVariable
         ? "variable"
         : weightLabel.replace(/[^0-9]/g, "-").replace(/-+/g, "-");
-      const file = `${family.slug}-${weightSlug}.woff2`;
+      const style = group[0].style;
+      const styleSlug = style === "italic" ? "-italic" : "";
+      const file = `${family.slug}-${weightSlug}${styleSlug}.woff2`;
       const target = join(OUT_DIR, file);
 
       if (existsSync(target)) {

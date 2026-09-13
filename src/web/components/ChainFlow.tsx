@@ -6,24 +6,31 @@ import { Empty, StatusPill } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 
 /**
- * The live route, drawn.
+ * The live route, drawn as an actual node graph.
  *
  * A chain is the whole product, and it is invisible by default: a client sends
  * one request to one alias and never learns that four keys and two models were
- * involved. This diagram makes the hop sequence physical. The request enters on
- * the left, passes through the COKEY hub, and walks the nodes in the order they
- * will actually be tried, with each node's keys branching off it.
+ * involved. This diagram makes that physical: the client sits on the left, one
+ * curved line runs to the COKEY hub, and the hub fans out to every node in the
+ * order they will be tried, each carrying its own bound keys. It reads as a
+ * network diagram because that is what a chain actually is — a routing
+ * decision is a graph, not a table row.
  *
- * It is drawn rather than tabulated: one inked rail runs the length of the
- * journey, every stop is a pebble with a hand-numbered tab, and the token that
- * travels the rail carries the brand ramp. A routing decision is a sequence, so
- * the picture of it should be a path, not a row of cards.
+ * The fan-out geometry is computed in plain arithmetic (fixed node height and
+ * gap, centred as a group) rather than measured from the DOM, so it never
+ * needs a layout effect and never flashes un-positioned on the first paint.
  *
  * It is driven by the same live route snapshot the topbar uses, so the node
  * that is currently serving lights up and a fallback is visible as it happens.
  */
 
 const POLL_MS = 3000;
+const NODE_HEIGHT = 118;
+const NODE_GAP = 18;
+const GRAPH_MIN_HEIGHT = 420;
+const HUB_X = 300;
+const BRANCH_X = 640;
+const CLIENT_X = 30;
 
 export function ChainFlow({
   chains,
@@ -73,6 +80,12 @@ export function ChainFlow({
   }
 
   const steps = selected ? [...selected.entries].sort((a, b) => a.priority - b.priority) : [];
+  const count = Math.max(steps.length, 1);
+  const stackHeight = count * NODE_HEIGHT + (count - 1) * NODE_GAP;
+  const graphHeight = Math.max(GRAPH_MIN_HEIGHT, stackHeight + 48);
+  const hubY = graphHeight / 2;
+  const branchTop = hubY - stackHeight / 2;
+  const branchMidX = (HUB_X + BRANCH_X) / 2;
 
   return (
     <div className={`flow${route?.active ? " flow-live" : ""}`}>
@@ -126,60 +139,76 @@ export function ChainFlow({
         </button>
       </div>
 
-      <div className="flow-scroll">
-        <div className="flow-track">
-          <div className="flow-node flow-endpoint">
-            <span className="flow-node-kicker">client</span>
-            <span className="flow-node-title">editor</span>
-          </div>
-
-          <FlowLink live={Boolean(route?.active)} />
-
-          <div className="flow-node flow-hub">
-            <span className="flow-hub-orb">
-              <span className="flow-hub-ring" aria-hidden="true" />
-              <CokeyMark height={24} />
-            </span>
-            <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
-            <span className="flow-node-kicker">alias</span>
-          </div>
-
+      <div className="flow-graph" style={{ height: graphHeight }}>
+        <svg className="flow-lines" width="100%" height={graphHeight} aria-hidden="true">
+          <path
+            className={`flow-path${route?.active ? " live" : ""}`}
+            d={`M ${CLIENT_X + 190} ${hubY} C ${HUB_X - 70} ${hubY}, ${HUB_X - 70} ${hubY}, ${HUB_X} ${hubY}`}
+          />
           {steps.length > 0 ? (
-            <>
-              {steps.map((entry, index) => (
-                <div className="flow-step" key={entry.id}>
-                  <FlowLink
-                    live={Boolean(route?.active)}
-                    dead={
-                      Boolean(activeEntryKey) &&
-                      activeEntryKey !== `${entry.providerId}/${entry.model}`
-                    }
-                  />
-                  <EntryNode
-                    entry={entry}
-                    index={index}
-                    live={activeEntryKey === `${entry.providerId}/${entry.model}`}
-                    activeCredentialId={route?.credentialId}
-                    sweepState={sweep.states[entry.id] ?? "idle"}
-                    current={sweep.winnerId === entry.id}
-                  />
-                </div>
-              ))}
-              <FlowLink live={Boolean(route?.active)} dead={Boolean(activeEntryKey)} />
-              <div className="flow-node flow-cap">
-                <span className="flow-node-kicker">reply</span>
-              </div>
-            </>
+            steps.map((entry, index) => {
+              const entryY = branchTop + index * (NODE_HEIGHT + NODE_GAP) + NODE_HEIGHT / 2;
+              const isLive = activeEntryKey === `${entry.providerId}/${entry.model}`;
+              const isDead = Boolean(activeEntryKey) && !isLive;
+              return (
+                <path
+                  key={entry.id}
+                  className={`flow-path${isLive ? " live" : ""}${isDead ? " dead" : ""}`}
+                  d={`M ${HUB_X + 74} ${hubY} C ${branchMidX} ${hubY}, ${branchMidX} ${entryY}, ${BRANCH_X} ${entryY}`}
+                />
+              );
+            })
           ) : (
-            <>
-              <FlowLink live={false} dead />
-              <div className="flow-node flow-empty">
-                <span className="flow-node-kicker">empty</span>
-                <span className="flow-node-title">no nodes</span>
-              </div>
-            </>
+            <path
+              className="flow-path dead"
+              d={`M ${HUB_X + 74} ${hubY} C ${branchMidX} ${hubY}, ${branchMidX} ${hubY}, ${BRANCH_X} ${hubY}`}
+            />
           )}
+        </svg>
+
+        <div className="flow-node flow-client" style={{ top: hubY - 52 }}>
+          <span className="flow-tape" aria-hidden="true" />
+          <span className="flow-node-kicker">client</span>
+          <span className="flow-node-title">your editor</span>
+          <span className="flow-node-sub">one base URL</span>
         </div>
+
+        <div className="flow-node flow-hub" style={{ top: hubY - 75, left: HUB_X - 75 }}>
+          <span className="flow-hub-orb">
+            <span className="flow-hub-ring" aria-hidden="true" />
+            <CokeyMark height={22} />
+          </span>
+          <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
+          <span className="flow-node-kicker">alias</span>
+        </div>
+
+        {steps.length > 0 ? (
+          steps.map((entry, index) => {
+            const entryY = branchTop + index * (NODE_HEIGHT + NODE_GAP);
+            return (
+              <EntryNode
+                key={entry.id}
+                entry={entry}
+                index={index}
+                top={entryY}
+                left={BRANCH_X}
+                live={activeEntryKey === `${entry.providerId}/${entry.model}`}
+                dead={
+                  Boolean(activeEntryKey) &&
+                  activeEntryKey !== `${entry.providerId}/${entry.model}`
+                }
+                activeCredentialId={route?.credentialId}
+                sweepState={sweep.states[entry.id] ?? "idle"}
+                current={sweep.winnerId === entry.id}
+              />
+            );
+          })
+        ) : (
+          <div className="flow-node flow-empty" style={{ top: hubY - 52, left: BRANCH_X }}>
+            <span className="flow-node-kicker">empty</span>
+            <span className="flow-node-title">no nodes yet</span>
+          </div>
+        )}
       </div>
 
       <div className="flow-legend">
@@ -198,27 +227,23 @@ export function ChainFlow({
   );
 }
 
-/** The connector between two nodes: an inked rail with a token that travels it. */
-function FlowLink({ live = false, dead = false }: { live?: boolean; dead?: boolean }) {
-  return (
-    <div className={`flow-link${live ? " live" : ""}${dead ? " dead" : ""}`} aria-hidden="true">
-      <span className="flow-rail" />
-      {live ? <span className="flow-pulse" /> : null}
-    </div>
-  );
-}
-
 function EntryNode({
   entry,
   index,
+  top,
+  left,
   live,
+  dead,
   activeCredentialId,
   sweepState,
   current,
 }: {
   entry: ChainEntryView;
   index: number;
+  top: number;
+  left: number;
   live: boolean;
+  dead: boolean;
   activeCredentialId?: string;
   sweepState: RefreshState;
   current?: boolean;
@@ -231,15 +256,29 @@ function EntryNode({
 
   return (
     <div
-      className={`flow-node flow-entry${live ? " live" : ""}${failed ? " dead" : ""}${
-        sweepState !== "idle" ? ` sweep-${sweepState}` : ""
-      }${current ? " sweep-current" : ""}`}
+      className={`flow-node flow-entry${live ? " live" : ""}${dead ? " dead" : ""}${
+        failed ? " failed" : ""
+      }${sweepState !== "idle" ? ` sweep-${sweepState}` : ""}${current ? " sweep-current" : ""}`}
+      style={{ top, left }}
     >
       <div className="flow-node-top">
         <span className="flow-stop">{index + 1}</span>
         <span className="flow-node-title" title={entry.model}>
           {entry.label ?? entry.model}
         </span>
+        {sweepState !== "idle" || current ? (
+          <span className="flow-node-flag">
+            {current
+              ? "current"
+              : sweepState === "testing"
+                ? "testing"
+                : sweepState === "ok"
+                  ? "ok"
+                  : "fail"}
+          </span>
+        ) : live ? (
+          <span className="flow-node-flag live">serving</span>
+        ) : null}
       </div>
       <span className="flow-node-sub mono">{entry.providerId}</span>
       <div className="flow-keys">
@@ -255,17 +294,6 @@ function EntryNode({
           ))
         )}
       </div>
-      {sweepState !== "idle" || current ? (
-        <span className="flow-node-flag">
-          {current
-            ? "current"
-            : sweepState === "testing"
-              ? "testing"
-              : sweepState === "ok"
-                ? "ok"
-                : "fail"}
-        </span>
-      ) : null}
     </div>
   );
 }

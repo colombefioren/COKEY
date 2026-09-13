@@ -306,7 +306,7 @@
   top: -1.5px;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-2), var(--mark-3));
+  background: var(--violet);
   opacity: 0.9;
 }
 
@@ -501,7 +501,7 @@
   bottom: 18px;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 .nudger h3 {
   margin: 0;
