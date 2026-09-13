@@ -2556,7 +2556,7 @@ tbody tr:nth-child(n + 6) {
   gap: 7px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   background: var(--surface);
   color: var(--muted);
   font-size: 12px;
@@ -2620,10 +2620,11 @@ tbody tr:nth-child(n + 6) {
   display: grid;
   align-content: center;
   gap: 6px;
-  padding: 14px 16px;
+  padding: 15px 17px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--surface-2);
+  box-shadow: 1.5px 2px 0 0 var(--border);
   /* Each node joins the walk-in animation, one after the next. */
   animation: node-in 0.5s var(--ease) both;
   animation-delay: calc(var(--flow-index, 0) * 90ms);
@@ -2636,7 +2637,9 @@ tbody tr:nth-child(n + 6) {
 .flow-node:hover {
   transform: translateY(-3px);
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-lift);
+  box-shadow:
+    1.5px 2px 0 0 var(--border-strong),
+    var(--shadow-lift);
 }
 @keyframes node-in {
   from {
@@ -2667,15 +2670,27 @@ tbody tr:nth-child(n + 6) {
   min-width: 138px;
   background: var(--surface);
 }
+/*
+ * The hub is the one node drawn as a circle rather than a card — everything
+ * else in the diagram is a stop along the way; this is the thing they are all
+ * routed through, and it should look like the centre of something.
+ */
 .flow-hub {
   justify-items: center;
   text-align: center;
   color: var(--violet);
-  border-color: var(--violet-line);
-  background: var(--violet-soft);
+  border: none;
+  box-shadow: none;
+  background: none;
+  padding: 4px 12px;
+}
+.flow-hub:hover {
+  transform: none;
 }
 .flow-hub .flow-node-title {
   color: var(--violet-strong);
+  font-family: var(--font-display);
+  font-size: 14px;
 }
 /*
  * A slow hand-drawn scribble around the COKEY hub, so the centre of the
@@ -2686,13 +2701,27 @@ tbody tr:nth-child(n + 6) {
 .flow-hub::after {
   content: "";
   position: absolute;
-  inset: -5px;
+  top: 4px;
+  left: 50%;
+  width: 68px;
+  height: 68px;
+  margin-left: -34px;
+  border-radius: 50%;
   border: 1.5px dashed var(--violet-line);
   opacity: 0.8;
   animation: scribble-wobble 9s ease-in-out infinite;
   pointer-events: none;
 }
 .flow-hub-mark {
+  box-sizing: border-box;
+  width: 64px;
+  height: 64px;
+  padding: 15px;
+  border-radius: 50%;
+  background: var(--violet-soft);
+  box-shadow:
+    inset 0 0 0 2px var(--violet-line),
+    1.5px 2px 0 0 var(--violet-line);
   animation: hub-pulse 3.2s ease-in-out infinite;
 }
 @keyframes hub-pulse {
@@ -2726,15 +2755,16 @@ tbody tr:nth-child(n + 6) {
 }
 .flow-priority {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
-  border-radius: 7px;
-  font-size: 10px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 11px;
   font-weight: 700;
-  background: var(--violet-soft);
-  color: var(--violet);
+  background: var(--violet);
+  color: var(--violet-ink);
 }
 .flow-entry.live {
   border-color: var(--sage);
@@ -2821,14 +2851,14 @@ tbody tr:nth-child(n + 6) {
   left: 0;
   right: 0;
   top: 50%;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--border-strong);
+  height: 0;
+  border-top: 2.5px dashed var(--border-strong);
+}
+.flow-link.live .flow-rail {
+  border-top-color: var(--sage-line);
 }
 .flow-link.dead .flow-rail {
   opacity: 0.6;
-  background: transparent;
-  border-top: 2px dashed var(--border-strong);
 }
 /*
  * The travelling token. It runs whether or not traffic is flowing, so the
@@ -2838,11 +2868,12 @@ tbody tr:nth-child(n + 6) {
 .flow-pulse {
   position: absolute;
   top: 50%;
-  width: 9px;
-  height: 9px;
-  margin-top: -4.5px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
   border-radius: 50%;
   background: var(--violet);
+  box-shadow: 0 0 0 4px var(--violet-soft);
   animation: flow-travel 2.6s var(--ease) infinite;
 }
 .flow-link.live .flow-pulse {
@@ -2915,11 +2946,15 @@ tbody tr:nth-child(n + 6) {
 }
 .flow-key {
   position: relative;
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   border-radius: 4px;
-  border: 1px solid var(--border-strong);
+  border: 1.5px solid var(--border-strong);
   background: var(--surface-3);
+  transition: transform 0.15s var(--ease);
+}
+.flow-key:hover {
+  transform: scale(1.3) rotate(-6deg);
 }
 .flow-key.healthy {
   background: var(--sage-soft);
