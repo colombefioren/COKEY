@@ -4,6 +4,7 @@ import type { ChainView, Nudge, RequestLogEntry, Stats } from "../types.js";
 import { Nudger } from "../components/Nudger.js";
 import { ChainFlow } from "../components/ChainFlow.js";
 import { Resilience } from "../components/Resilience.js";
+import { ContentSource } from "../components/ContentSource.js";
 import { Guidance } from "../components/Guidance.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
@@ -68,6 +69,8 @@ export function Dashboard({
       </Panel>
 
       <Resilience />
+
+      <ContentSource refreshKey={refreshKey} />
 
       <Panel hue="sky" title="Gateway">
         <div className="grid cards">

@@ -344,7 +344,7 @@ function renderPage(path: string, context: PageContext) {
     case "/tutorial":
       return <Tutorial />;
     case "/terms":
-      return <Terms />;
+      return <Terms refreshKey={context.refreshKey} />;
     case "/about":
       return <About />;
     default:
