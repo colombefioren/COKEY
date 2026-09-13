@@ -5,6 +5,7 @@ import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
 import type { Cokey } from "../core/cokey.js";
 import { makeAuthHook } from "./middleware/auth.js";
 import { registerCatalogRoutes } from "./routes/catalog.js";
+import { registerContentRoutes } from "./routes/content.js";
 import { registerManagementRoutes } from "./routes/management.js";
 import { registerOpenAiRoutes } from "./routes/openai.js";
 import { registerProxyPoolRoutes } from "./routes/proxy-pool.js";
@@ -74,6 +75,7 @@ export async function createServer(
   registerOpenAiRoutes(app, cokey);
   registerManagementRoutes(app, cokey);
   registerCatalogRoutes(app, cokey);
+  registerContentRoutes(app, cokey);
   registerProxyPoolRoutes(app, cokey);
   registerStatsRoutes(app, cokey);
   registerSessionRoutes(app, cokey, sessions);

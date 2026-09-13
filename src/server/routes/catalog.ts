@@ -1,26 +1,16 @@
 import type { FastifyInstance } from "fastify";
 import type { Cokey } from "../../core/cokey.js";
 import { ProbeModelSchema } from "../../core/validation/schemas.js";
-import {
-  COMBINED_RANKING,
-  DROP_LIST,
-  RANKING_BOTTOM_LINE,
-  RANKING_DISCLAIMER,
-  RANKING_SOURCES,
-  RATE_LIMIT_RANKING,
-  REDUNDANCY_TABLE,
-  SKILL_RANKING,
-  SKILL_TIERS,
-} from "../../catalog/rankings.js";
-import { providerDossier } from "../../catalog/dossiers.js";
 import { matchesQuery, paginate, parsePageQuery } from "../pagination.js";
 import { withErrors } from "./http-errors.js";
 
 /**
- * Catalog surfaces: the curated provider dossiers and the three ranking boards.
+ * Catalog surfaces: the curated provider dossiers and the ranking boards.
  *
- * All of this is static reference data plus one live endpoint, the probe, which
- * is the only place a "does this model actually work" answer can come from.
+ * The dossiers and boards are reference data, but not static: they are read from
+ * the content repository on every request, so an edit on disk is reflected the
+ * next time the dashboard asks. The probe is the one live endpoint, and the only
+ * place a "does this model actually work" answer can come from.
  */
 export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void {
   /** Provider dossiers joined with connection state, paginated and searchable. */
@@ -33,7 +23,7 @@ export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void 
       const rows = statuses
         .map((status) => ({
           ...status,
-          dossier: providerDossier(status.id),
+          dossier: cokey.curateProvider(status.id),
         }))
         .filter((row) =>
           matchesQuery(
@@ -58,22 +48,12 @@ export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void 
   /**
    * The ranking boards.
    *
-   * The three boards are delivered in one response because the UI shows them as
-   * tabs of a single screen, and splitting them would only add a round trip.
+   * Every board is delivered in one response because the UI shows them as tabs
+   * of a single screen, and splitting them would only add a round trip.
    */
   app.get(
     "/api/catalog/rankings",
-    withErrors(() => ({
-      tiers: SKILL_TIERS,
-      skill: SKILL_RANKING,
-      rateLimit: RATE_LIMIT_RANKING,
-      combined: COMBINED_RANKING,
-      redundancy: REDUNDANCY_TABLE,
-      dropList: DROP_LIST,
-      bottomLine: RANKING_BOTTOM_LINE,
-      disclaimer: RANKING_DISCLAIMER,
-      sources: RANKING_SOURCES,
-    })),
+    withErrors(() => cokey.rankings()),
   );
 
   /**
