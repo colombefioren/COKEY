@@ -101,15 +101,18 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     return openAiUsage(body);
   }
 
-  async listModels(credential: Credential): Promise<ModelInfo[]> {
+  async listModels(credential: Credential, options?: { timeoutMs?: number }): Promise<ModelInfo[]> {
     const base = this.modelsUrl(credential);
-    const result = await performRequest({
-      url: this.withAuthQuery(base, credential),
-      method: "GET",
-      headers: this.buildHeaders(credential),
-      stream: false,
-      proxyUrl: credential.proxyUrl,
-    });
+    const result = await performRequest(
+      {
+        url: this.withAuthQuery(base, credential),
+        method: "GET",
+        headers: this.buildHeaders(credential),
+        stream: false,
+        proxyUrl: credential.proxyUrl,
+      },
+      { timeoutMs: options?.timeoutMs },
+    );
 
     if (!result.ok) throw new Error(result.error.message);
 

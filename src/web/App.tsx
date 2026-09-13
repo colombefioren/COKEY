@@ -241,10 +241,32 @@ function Shell() {
   }, []);
 
   // Close the mobile drawer on every navigation, otherwise it stays open over
-  // the page it was just used to reach.
+  // the page it was just used to reach. This alone misses a tap on the
+  // already-active item (`navigate` no-ops when the hash does not change, so
+  // `route.path` never changes either), which is why `closeNav` below also
+  // closes it directly from the click that triggered the navigation.
   useEffect(() => {
     setNavOpen(false);
   }, [route.path]);
+
+  // Escape closes the drawer from anywhere, matching every other overlay in
+  // the app (modals included).
+  useEffect(() => {
+    if (!navOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setNavOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [navOpen]);
+
+  const closeNav = useCallback(
+    (path: string) => {
+      navigate(path);
+      setNavOpen(false);
+    },
+    [navigate],
+  );
 
   if (authed === null) return null;
   if (!authed) {
@@ -272,16 +294,20 @@ function Shell() {
   });
 
   return (
-    <div className={`shell${navOpen ? " nav-open" : ""}`}>
+    <div className={`shell${navOpen ? " nav-open" : ""}${navCollapsed ? " nav-collapsed" : ""}`}>
       <Sidebar
         items={items}
         activePath={route.path}
-        navigate={navigate}
+        navigate={closeNav}
         collapsed={navCollapsed}
         onToggleCollapsed={toggleNavCollapsed}
         keyCount={counts.keys}
         chainCount={counts.chains}
+        mobileOpen={navOpen}
       />
+      {navOpen ? (
+        <div className="nav-backdrop" aria-hidden="true" onClick={() => setNavOpen(false)} />
+      ) : null}
 
       <div className="content">
         <header className="topbar">

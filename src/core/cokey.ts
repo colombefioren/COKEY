@@ -435,7 +435,7 @@ export class Cokey {
    */
   async refreshProviderModels(
     providerId: string,
-    options: { credentialId?: string; retainMissingMs?: number } = {},
+    options: { credentialId?: string; retainMissingMs?: number; timeoutMs?: number } = {},
   ): Promise<ModelDiscoveryReport> {
     const catalog = this.providers.findCatalogEntry(providerId);
     const displayName = catalog?.displayName ?? providerId;
@@ -471,7 +471,9 @@ export class Cokey {
     const started = Date.now();
     let listing: ModelInfo[];
     try {
-      listing = await this.providers.get(providerId).listModels(credential);
+      listing = await this.providers
+        .get(providerId)
+        .listModels(credential, { timeoutMs: options.timeoutMs });
     } catch (error) {
       return refuse(`Could not list models: ${(error as Error).message}`, Date.now() - started);
     }
@@ -544,19 +546,39 @@ export class Cokey {
   /**
    * Refresh every provider that has at least one connected key.
    *
-   * Sequential on purpose. These are third-party endpoints being asked an
-   * administrative question, and firing forty of them at once is the behaviour
-   * that gets a free tier rate-limited for reasons that have nothing to do with
-   * the user's traffic.
+   * Bounded concurrency, not fully sequential: a handful of these are
+   * third-party endpoints being asked an administrative question, and firing
+   * all of them at once is the behaviour that gets a free tier rate-limited
+   * for reasons that have nothing to do with the user's traffic. But strictly
+   * one-at-a-time meant a single unresponsive provider — a free tier that
+   * hangs rather than errors — held up every provider behind it for the full
+   * completion timeout (120s), which made a "re-check everything" click feel
+   * like it had frozen. A small pool bounds the fan-out, and a much shorter
+   * per-call timeout is enough for a cheap `GET /models`: a provider that
+   * cannot answer that in a few seconds is not one worth waiting two minutes
+   * on when there are others still to check.
    */
   async refreshAllProviderModels(
-    options: { retainMissingMs?: number } = {},
+    options: { retainMissingMs?: number; concurrency?: number } = {},
   ): Promise<ModelDiscoveryReport[]> {
-    const reports: ModelDiscoveryReport[] = [];
-    for (const provider of this.providerStatuses()) {
-      if (provider.credentialCount === 0) continue;
-      reports.push(await this.refreshProviderModels(provider.id, options));
-    }
+    const queue = this.providerStatuses().filter((provider) => provider.credentialCount > 0);
+    const concurrency = Math.max(1, options.concurrency ?? 4);
+    const timeoutMs = 15_000;
+    const reports: ModelDiscoveryReport[] = new Array(queue.length);
+
+    let next = 0;
+    const worker = async () => {
+      for (;;) {
+        const index = next++;
+        if (index >= queue.length) return;
+        reports[index] = await this.refreshProviderModels(queue[index]!.id, {
+          retainMissingMs: options.retainMissingMs,
+          timeoutMs,
+        });
+      }
+    };
+
+    await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker));
     return reports;
   }
 

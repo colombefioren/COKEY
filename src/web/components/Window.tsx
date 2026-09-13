@@ -1,5 +1,6 @@
 import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { burstSparkles } from "../lib/motion.js";
+import { IconChevron, IconClose } from "./Icons.js";
 
 /** The five blocked hues a window can take. */
 export type WindowHue = "pink" | "lav" | "sky" | "butter" | "mint";
@@ -62,7 +63,8 @@ export function Window({
 }: WindowProps) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const bodyId = useId();
-  const hasChrome = Boolean(title) || Boolean(icon) || Boolean(actions) || Boolean(onClose);
+  const hasChrome =
+    Boolean(title) || Boolean(icon) || Boolean(actions) || Boolean(onClose) || collapsible;
 
   return (
     <section
@@ -71,36 +73,6 @@ export function Window({
     >
       {hasChrome ? (
         <header className="window-bar">
-          <span className="window-dots" aria-hidden={!collapsible && !onClose}>
-            <button
-              type="button"
-              className="window-dot close"
-              aria-label={
-                onClose ? `Close ${typeof title === "string" ? title : "panel"}` : "close"
-              }
-              aria-hidden={!onClose}
-              disabled={!onClose}
-              onClick={onClose}
-            />
-            <button
-              type="button"
-              className="window-dot min"
-              aria-label={collapsible ? "Collapse panel" : "minimise"}
-              aria-expanded={collapsible ? !collapsed : undefined}
-              aria-controls={collapsible ? bodyId : undefined}
-              aria-hidden={!collapsible}
-              disabled={!collapsible}
-              onClick={() => setCollapsed((value) => !value)}
-            />
-            <button
-              type="button"
-              className="window-dot max"
-              aria-label="maximise"
-              aria-hidden="true"
-              disabled
-            />
-          </span>
-
           {icon ? (
             <span className="window-icon" aria-hidden="true">
               {icon}
@@ -109,7 +81,33 @@ export function Window({
 
           {title ? <span className="window-title">{title}</span> : null}
 
-          {actions ? <div className="window-actions">{actions}</div> : null}
+          {actions || collapsible || onClose ? (
+            <div className="window-actions">
+              {actions}
+              {collapsible ? (
+                <button
+                  type="button"
+                  className="window-control"
+                  aria-label={collapsed ? "Expand panel" : "Collapse panel"}
+                  aria-expanded={!collapsed}
+                  aria-controls={bodyId}
+                  onClick={() => setCollapsed((value) => !value)}
+                >
+                  <IconChevron className={collapsed ? "flip" : undefined} size={14} />
+                </button>
+              ) : null}
+              {onClose ? (
+                <button
+                  type="button"
+                  className="window-control"
+                  aria-label={`Close ${typeof title === "string" ? title : "panel"}`}
+                  onClick={onClose}
+                >
+                  <IconClose size={14} />
+                </button>
+              ) : null}
+            </div>
+          ) : null}
         </header>
       ) : null}
 

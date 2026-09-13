@@ -124,15 +124,21 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
     return streamFrom(this.translateStream(body, context));
   }
 
-  override async listModels(credential: Credential): Promise<ModelInfo[]> {
+  override async listModels(
+    credential: Credential,
+    options?: { timeoutMs?: number },
+  ): Promise<ModelInfo[]> {
     const base = this.catalog.baseUrl.replace(/\/+$/, "").replace(/\/v1$/, "");
-    const result = await performRequest({
-      url: `${base}/v1/models`,
-      method: "GET",
-      headers: this.headers(credential, "application/json"),
-      stream: false,
-      proxyUrl: credential.proxyUrl,
-    });
+    const result = await performRequest(
+      {
+        url: `${base}/v1/models`,
+        method: "GET",
+        headers: this.headers(credential, "application/json"),
+        stream: false,
+        proxyUrl: credential.proxyUrl,
+      },
+      { timeoutMs: options?.timeoutMs },
+    );
     if (!result.ok) throw new Error(result.error.message);
 
     const body = (await result.response.json()) as { data?: Array<{ id?: string }> };
