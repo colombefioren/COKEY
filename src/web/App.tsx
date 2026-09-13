@@ -9,6 +9,7 @@ import type {
 import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { LoginForm } from "./components/LoginForm.js";
+import { NotificationsBell } from "./components/NotificationsBell.js";
 import { Sidebar, type NavItem } from "./components/Sidebar.js";
 import { StatusBar } from "./components/StatusBar.js";
 import {
@@ -317,6 +318,7 @@ function Shell() {
             {TITLES[route.path] ?? "Dashboard"}
           </span>
           <span className="spacer" />
+          <NotificationsBell refreshKey={refreshKey} onChanged={bump} />
           <LiveStatus />
           <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
             /v1/models

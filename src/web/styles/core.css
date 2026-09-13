@@ -591,6 +591,65 @@ h3 {
   border-color: var(--violet-line);
 }
 
+/* ---- notifications --------------------------------------------------------
+ * "Needs attention", as a bell reachable from every screen instead of a
+ * fixture on the Dashboard.
+ */
+.notif-bell {
+  position: relative;
+}
+.notif-trigger {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+.notif-trigger:hover:not(:disabled) {
+  color: var(--violet);
+  border-color: var(--violet-line);
+}
+.notif-trigger.has-alerts {
+  color: var(--violet-strong);
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+}
+.notif-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--rose);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* The dropdown reuses the Guidance panel verbatim, so it only needs to be
+   positioned and given a scroll boundary — the content styles itself. */
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 70;
+  width: min(440px, calc(100vw - 32px));
+  max-height: min(560px, calc(100vh - 100px));
+  overflow-y: auto;
+  animation: modal-in 0.2s var(--ease) both;
+}
+
 /* Docked at the bottom of the content column: counts on the left, creator
    links on the right, out of the way of the work above it. */
 .statusbar {

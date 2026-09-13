@@ -5,7 +5,6 @@ import { Nudger } from "../components/Nudger.js";
 import { ChainFlow } from "../components/ChainFlow.js";
 import { Resilience } from "../components/Resilience.js";
 import { ContentSource } from "../components/ContentSource.js";
-import { Guidance } from "../components/Guidance.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
@@ -52,12 +51,9 @@ export function Dashboard({
   return (
     <>
       {/*
-       * Guidance sits above everything, because it is the answer to "is
-       * anything wrong?" and that is the first question anyone opens a gateway
-       * dashboard to ask.
+       * "Needs attention" moved to the notification bell in the topbar — it is
+       * reachable from every screen there, not just this one.
        */}
-      <Guidance refreshKey={refreshKey} onChanged={() => void load()} />
-
       {nudgeBlock}
 
       <Panel

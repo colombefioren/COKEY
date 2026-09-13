@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { IconKey, IconRoute, IconSparkle } from "./Icons.js";
 
 /**
  * The three failure scopes, drawn.
@@ -15,6 +16,7 @@ import type { ReactNode } from "react";
 
 function LayerRow({
   index,
+  icon,
   scope,
   title,
   blurb,
@@ -22,6 +24,7 @@ function LayerRow({
   children,
 }: {
   index: number;
+  icon: ReactNode;
   scope: string;
   title: string;
   blurb: string;
@@ -29,7 +32,11 @@ function LayerRow({
   children: ReactNode;
 }) {
   return (
-    <div className="layer">
+    <div className={`layer tint-${index}`}>
+      <div className="layer-badge" aria-hidden="true">
+        {icon}
+        <span className="layer-number">{index}</span>
+      </div>
       <div className="layer-copy">
         <span className="layer-kicker">
           Layer {index} · scope: {scope}
@@ -65,6 +72,7 @@ export function Resilience() {
 
       <LayerRow
         index={1}
+        icon={<IconRoute size={20} />}
         scope="whole chain"
         title="Chain fallback"
         blurb="A node that cannot serve is set aside and the request walks on to the next node in your order, instead of failing."
@@ -95,6 +103,7 @@ export function Resilience() {
 
       <LayerRow
         index={2}
+        icon={<IconKey size={20} />}
         scope="one key"
         title="Key cooldown"
         blurb="A rate-limited key sits out while its siblings keep serving the same node. The client sees a slower answer, never an error."
@@ -130,6 +139,7 @@ export function Resilience() {
 
       <LayerRow
         index={3}
+        icon={<IconSparkle size={20} />}
         scope="one model"
         title="Model gating"
         blurb="A model is offered only while its provider holds a key COKEY has verified, so a node can never be built against a key that does not work."
