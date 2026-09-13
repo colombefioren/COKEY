@@ -613,6 +613,27 @@ a:focus-visible,
   text-decoration: none;
 }
 
+/* Everything decorative that animates forever, switched off in one place for
+   the readers who asked the OS for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  .toast::after,
+  .toast-glyph,
+  .status-pill.healthy .status-glyph,
+  .dot.healthy,
+  .flow-hub-orb,
+  .flow-hub-ring,
+  .notif-trigger.has-alerts,
+  .flow-pill.live .flow-pill-dot,
+  .flow-state.live i,
+  .flow-key-ring,
+  .statusbar .live-flag.on::before {
+    animation: none !important;
+  }
+  .toast::after {
+    transform: scaleX(0);
+  }
+}
+
 /* ---- chrome --------------------------------------------------------------- */
 
 ::selection {
