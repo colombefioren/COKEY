@@ -80,9 +80,9 @@ export function CokeyLogo({
           y2="118"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stopColor="#f2a468" />
-          <stop offset="0.55" stopColor="#e2662c" />
-          <stop offset="1" stopColor="#a1481f" />
+          <stop offset="0" stopColor="#a68af7" />
+          <stop offset="0.55" stopColor="#6d3df0" />
+          <stop offset="1" stopColor="#3d1fa1" />
         </linearGradient>
         <linearGradient
           id={wordId}
@@ -92,8 +92,8 @@ export function CokeyLogo({
           y2="112"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stopColor="#f7cba0" />
-          <stop offset="1" stopColor="#e2662c" />
+          <stop offset="0" stopColor="#d9caf9" />
+          <stop offset="1" stopColor="#6d3df0" />
         </linearGradient>
       </defs>
 
@@ -104,8 +104,8 @@ export function CokeyLogo({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#f2a468" />
-      <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#a1481f" />
+      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#a68af7" />
+      <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#3d1fa1" />
 
       {withWordmark ? (
         <g

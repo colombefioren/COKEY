@@ -1,16 +1,18 @@
 /*
  * COKEY dashboard theme.
  *
- * A warm, modern fintech-style workspace: a soft cream ground, white cards
- * with a hairline border and a low neutral shadow, and one confident burnt-
- * orange brand colour carrying every call to action. Clay red covers errors,
- * amber covers warnings, moss covers healthy, and a cool blue is reserved for
- * links and informational badges, so the page never reads as one hue washed
- * over everything.
+ * An elevated, editorial workspace built around one confident violet — not a
+ * pastel wash, a real ink-deep purple that carries every call to action. The
+ * ground is a near-white with the faintest violet cast in light mode and a
+ * true near-black indigo in dark mode; surfaces are flat cards with a
+ * hairline border and one soft shadow. Berry covers errors, amber covers
+ * warnings, moss covers healthy, and indigo-blue is reserved for links, so
+ * the page never reads as one hue washed over everything — it reads as one
+ * confident hue used with restraint.
  *
- * Nothing glows. Depth comes from one soft shadow and a 1px border, which is
- * what lets the same stylesheet read as light and as dark without turning into
- * a different product.
+ * Nothing glows, nothing gradients. Depth comes from one soft shadow and a
+ * 1px border, which is what lets the same stylesheet read as light and as
+ * dark without turning into a different product.
  *
  * Every colour is a token, and the dark theme only re-points the tokens.
  */
@@ -18,43 +20,43 @@
 :root {
   color-scheme: light;
 
-  /* Ground and surfaces: warm cream, not a cold grey slab. */
-  --ground: #f5ede4;
+  /* Ground and surfaces: a near-white with the barest violet cast. */
+  --ground: #f8f7fc;
   --surface: #ffffff;
-  --surface-2: #faf3ea;
-  --surface-3: #f1e4d5;
+  --surface-2: #f2f0f9;
+  --surface-3: #e9e5f6;
   --surface-glass: rgba(255, 255, 255, 0.82);
 
-  --border: #ece0d2;
-  --border-strong: #ddccb8;
+  --border: #e7e3f4;
+  --border-strong: #d6cef0;
 
-  --text: #3a2a1f;
-  --muted: #83705f;
-  --faint: #ac9884;
+  --text: #171029;
+  --muted: #5d5573;
+  --faint: #948da9;
 
-  /* A burnt-orange brand, with clay, amber, moss and denim in support. */
-  --violet: #e2662c;
-  --violet-strong: #c8531f;
-  --violet-soft: #fbe6d7;
-  --violet-line: #f1cba9;
+  /* A real violet brand, with berry, amber, moss and indigo in support. */
+  --violet: #6d3df0;
+  --violet-strong: #5527d6;
+  --violet-soft: #efe8fe;
+  --violet-line: #dccffb;
   --violet-ink: #ffffff;
 
-  --rose: #c2503f;
-  --rose-strong: #a63f30;
-  --rose-soft: #fbe6e0;
-  --rose-line: #f0c6bb;
+  --rose: #cf3d70;
+  --rose-strong: #b02b5a;
+  --rose-soft: #fbe6ef;
+  --rose-line: #f2c6dc;
 
-  --peach: #b9822a;
-  --peach-soft: #f9edd7;
-  --peach-line: #ecd4a4;
+  --peach: #ad7c1f;
+  --peach-soft: #f8eed7;
+  --peach-line: #ecd8a6;
 
-  --sage: #4f8f63;
-  --sage-soft: #e7f2e9;
-  --sage-line: #cbe4d1;
+  --sage: #2f9163;
+  --sage-soft: #e3f4ea;
+  --sage-line: #c4e7d3;
 
-  --sky: #3f76a8;
-  --sky-soft: #e7f0f7;
-  --sky-line: #c8dded;
+  --sky: #4a5fdb;
+  --sky-soft: #eceffb;
+  --sky-line: #d3d8f7;
 
   --accent: var(--violet);
   --accent-hover: var(--violet-strong);
@@ -71,64 +73,65 @@
   --neutral-bg: var(--surface-3);
 
   /* Low, neutral shadows. Depth without a halo. */
-  --shadow: 0 1px 2px rgba(58, 42, 31, 0.05), 0 10px 28px -20px rgba(58, 42, 31, 0.18);
-  --shadow-lift: 0 2px 4px rgba(58, 42, 31, 0.06), 0 16px 36px -22px rgba(58, 42, 31, 0.22);
-  --shadow-pop: 0 4px 10px rgba(58, 42, 31, 0.08), 0 26px 54px -30px rgba(58, 42, 31, 0.28);
-  --hairline: rgba(226, 102, 44, 0.14);
+  --shadow: 0 1px 2px rgba(23, 16, 41, 0.05), 0 10px 28px -20px rgba(23, 16, 41, 0.18);
+  --shadow-lift: 0 2px 4px rgba(23, 16, 41, 0.06), 0 16px 36px -22px rgba(23, 16, 41, 0.22);
+  --shadow-pop: 0 4px 10px rgba(23, 16, 41, 0.08), 0 26px 54px -30px rgba(23, 16, 41, 0.28);
+  --hairline: rgba(109, 61, 240, 0.14);
 
-  --radius: 22px;
-  --radius-md: 15px;
-  --radius-sm: 11px;
-  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 20px;
+  --radius-md: 14px;
+  --radius-sm: 10px;
+  --font-body:
+    "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
-  --sidebar-w: 264px;
-  --sidebar-w-collapsed: 82px;
+  --sidebar-w: 260px;
+  --sidebar-w-collapsed: 80px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ground: #1c140f;
-  --surface: #241a13;
-  --surface-2: #2c2018;
-  --surface-3: #35271c;
-  --surface-glass: rgba(36, 26, 19, 0.8);
+  --ground: #100b1d;
+  --surface: #171025;
+  --surface-2: #1d1730;
+  --surface-3: #251d3c;
+  --surface-glass: rgba(23, 16, 37, 0.8);
 
-  --border: #43321f;
-  --border-strong: #56412a;
+  --border: #2c2444;
+  --border-strong: #392f57;
 
-  --text: #f4e9dc;
-  --muted: #c7b09b;
-  --faint: #93806d;
+  --text: #f2effb;
+  --muted: #b2a7cd;
+  --faint: #79709c;
 
-  --violet: #f0854a;
-  --violet-strong: #f6a26c;
-  --violet-soft: #3a2717;
-  --violet-line: #5b3d1f;
-  --violet-ink: #241708;
+  --violet: #a68af7;
+  --violet-strong: #c1abff;
+  --violet-soft: #251a42;
+  --violet-line: #3c2f63;
+  --violet-ink: #170c30;
 
-  --rose: #e08571;
-  --rose-strong: #eba493;
-  --rose-soft: #3a241c;
-  --rose-line: #5a392c;
+  --rose: #ef88ac;
+  --rose-strong: #f5a7c5;
+  --rose-soft: #33202d;
+  --rose-line: #54324b;
 
-  --peach: #e2b968;
-  --peach-soft: #392c1a;
-  --peach-line: #58452a;
+  --peach: #e0b768;
+  --peach-soft: #322715;
+  --peach-line: #4e3d22;
 
-  --sage: #8fcda3;
-  --sage-soft: #1f3327;
-  --sage-line: #345140;
+  --sage: #7cd6a5;
+  --sage-soft: #16301f;
+  --sage-line: #2b4c36;
 
-  --sky: #8bb8dd;
-  --sky-soft: #1f2d3a;
-  --sky-line: #33475a;
+  --sky: #94a2f7;
+  --sky-soft: #1e2242;
+  --sky-line: #333a63;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -20px rgba(0, 0, 0, 0.68);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 42px -24px rgba(0, 0, 0, 0.76);
   --shadow-pop: 0 6px 14px rgba(0, 0, 0, 0.5), 0 32px 66px -34px rgba(0, 0, 0, 0.82);
-  --hairline: rgba(240, 133, 74, 0.18);
+  --hairline: rgba(166, 138, 247, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -844,8 +847,10 @@ section.panel.soft {
 }
 
 /*
- * Stats get a rotating pastel tint, so a row of four numbers reads as four
- * different measurements instead of four identical grey boxes.
+ * One neutral card style for every stat. The number carries the emphasis, in
+ * the brand violet — a row of five identical cards reads as calmer and more
+ * confident than a row cycling through five background tints, and it is the
+ * number that changes from card to card, not the wallpaper behind it.
  */
 .stat {
   position: relative;
@@ -853,33 +858,13 @@ section.panel.soft {
   padding: 14px 15px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
-  background: var(--surface-2);
-}
-.stat:nth-child(5n + 1) {
-  background: var(--violet-soft);
-  border-color: var(--violet-line);
-}
-.stat:nth-child(5n + 2) {
-  background: var(--rose-soft);
-  border-color: var(--rose-line);
-}
-.stat:nth-child(5n + 3) {
-  background: var(--sage-soft);
-  border-color: var(--sage-line);
-}
-.stat:nth-child(5n + 4) {
-  background: var(--peach-soft);
-  border-color: var(--peach-line);
-}
-.stat:nth-child(5n + 5) {
-  background: var(--sky-soft);
-  border-color: var(--sky-line);
+  background: var(--surface);
 }
 .stat .value {
-  font-size: 22px;
-  font-weight: 680;
+  font-size: 24px;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
+  color: var(--violet);
 }
 .stat .label {
   color: var(--muted);
@@ -1493,8 +1478,16 @@ button.model-name:hover {
 
 /* ---- model catalog -------------------------------------------------------- */
 
+/*
+ * Provider cards flow into columns instead of stacking one under another.
+ * A single column meant a provider with forty models pushed everything below
+ * it off-screen; `align-items: start` keeps a short card from being stretched
+ * to match a tall neighbour in the same row.
+ */
 .model-providers {
   display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+  align-items: start;
   gap: 14px;
 }
 .model-provider {

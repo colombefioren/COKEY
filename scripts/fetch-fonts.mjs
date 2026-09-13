@@ -11,10 +11,12 @@
  * Run with `npm run fonts` when a family or weight is added. The script is
  * idempotent: unchanged files are left alone, so a re-run is a no-op.
  *
- * One family: Inter, at the weights the dashboard actually uses (regular text,
- * medium labels, semibold headings, bold emphasis). A single modern grotesque
- * keeps the UI reading as one product instead of stitching a display face to a
- * body face.
+ * One family: Bricolage Grotesque, at the weights the dashboard actually uses
+ * (regular text, medium labels, semibold headings, bold emphasis). It is a
+ * single modern grotesque with enough character in its letterforms — flat-cut
+ * terminals on the lowercase a/g, a slightly condensed rhythm — to read as a
+ * deliberate choice rather than the Inter/Manrope default every generated
+ * dashboard reaches for.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
@@ -36,7 +38,11 @@ const UA =
 
 /** Families to vendor, with the slug used for their file names. */
 const FAMILIES = [
-  { query: "Inter:wght@400;500;600;700;800", slug: "inter", display: "Inter" },
+  {
+    query: "Bricolage+Grotesque:wght@400;500;600;700;800",
+    slug: "bricolage-grotesque",
+    display: "Bricolage Grotesque",
+  },
 ];
 
 async function get(url) {
@@ -86,22 +92,41 @@ async function main() {
       continue;
     }
 
+    // A variable font answers every requested weight with the same URL: one
+    // file whose `wght` axis covers the whole range, not a distinct static
+    // instance per weight. Fetching and committing that file five times would
+    // ship identical bytes five times over; a single @font-face with a weight
+    // *range* is both smaller and the textbook-correct way to self-host it,
+    // since the browser then picks the exact instance from the one file.
+    const byUrl = new Map();
     for (const face of faces) {
-      // `300..700` is not a usable file name; punctuation collapses to dashes.
-      const weightSlug = face.weight.replace(/[^0-9]/g, "-").replace(/-+/g, "-");
+      const group = byUrl.get(face.url) ?? [];
+      group.push(face);
+      byUrl.set(face.url, group);
+    }
+
+    for (const [srcUrl, group] of byUrl) {
+      const weights = group.map((face) => Number(face.weight)).sort((a, b) => a - b);
+      const isVariable = group.length > 1;
+      const weightLabel = isVariable
+        ? `${weights[0]} ${weights[weights.length - 1]}`
+        : group[0].weight;
+      const weightSlug = isVariable
+        ? "variable"
+        : weightLabel.replace(/[^0-9]/g, "-").replace(/-+/g, "-");
       const file = `${family.slug}-${weightSlug}.woff2`;
       const target = join(OUT_DIR, file);
 
       if (existsSync(target)) {
         reused += 1;
       } else {
-        const bytes = Buffer.from(await (await get(face.url)).arrayBuffer());
+        const bytes = Buffer.from(await (await get(srcUrl)).arrayBuffer());
         await writeFile(target, bytes);
         downloaded += 1;
         console.log(`+ ${file} (${(bytes.length / 1024).toFixed(1)} KiB)`);
       }
 
-      declarations.push({ family, weight: face.weight, style: face.style, file });
+      declarations.push({ family, weight: weightLabel, style: group[0].style, file });
     }
   }
 
