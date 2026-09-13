@@ -686,7 +686,7 @@ h3 {
   height: 17px;
   padding: 0 3px;
   border-radius: 999px;
-  background: var(--rose);
+  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
   color: #ffffff;
   font-size: 10px;
   font-weight: 700;
@@ -694,17 +694,68 @@ h3 {
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-/* The dropdown reuses the Guidance panel verbatim, so it only needs to be
-   positioned and given a scroll boundary — the content styles itself. */
+/* The bell itself wears the ramp when it has something to say. */
+.notif-trigger.has-alerts {
+  animation: bell-wake 3.4s ease-in-out infinite;
+}
+
+@keyframes bell-wake {
+  0%,
+  88%,
+  100% {
+    transform: rotate(0deg);
+  }
+  91% {
+    transform: rotate(9deg);
+  }
+  94% {
+    transform: rotate(-7deg);
+  }
+  97% {
+    transform: rotate(4deg);
+  }
+}
+
+/*
+ * The dropdown reuses the Guidance panel verbatim, so it only needs a holder
+ * and a scroll boundary — the content styles itself.
+ *
+ * The tray exists because the panel it holds is a hand-inked card: its 2px
+ * outline and the offset shadow behind it need breathing room on every side. A
+ * scroll container clips at its own edge, so scrolling the panel directly cut
+ * the outline off the moment the list moved. The tray owns the edge; the inner
+ * column owns the scrolling; the card keeps its whole silhouette either way.
+ */
 .notif-panel {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
   z-index: 70;
-  width: min(440px, calc(100vw - 32px));
-  max-height: min(560px, calc(100vh - 100px));
-  overflow-y: auto;
+  width: min(452px, calc(100vw - 28px));
+  padding: 12px;
+  border-radius: 30px;
+  background: linear-gradient(180deg, var(--surface-2), var(--surface-3));
+  box-shadow:
+    0 0 0 1px var(--border),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--shadow-pop);
   animation: modal-in 0.2s var(--ease) both;
+}
+
+.notif-scroll {
+  max-height: min(66vh, 520px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Just enough for the card's offset shadow, never enough to look like a gap. */
+  padding: 2px 3px 4px 2px;
+}
+
+/* Nested, so the panel reads as sitting in the tray rather than filling it. */
+.notif-panel .window {
+  border-radius: 22px;
+  box-shadow:
+    1px 1px 0 0 var(--border),
+    var(--shadow);
 }
 
 /* Docked at the bottom of the content column: counts on the left, creator
