@@ -784,6 +784,19 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     verification: { method: "models" },
     notes: "Only these three :free models verified working. minimax-m2.7-free, gpt-oss-20b-free, kimi-for-coding-free, and mimo-v2-flash-free were no_available_channel at test time, and laguna-s-2.1-free returned an HTTP 429 — model availability on the free tier is intermittent.",
   },
+  {
+    id: "fhrouter",
+    displayName: "FH Router",
+    baseUrl: "https://fhrouter.com/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://fhrouter.com/",
+    freeTier: { advertised: true, summary: "Free 'on the house' models", quotaSource: "unknown" },
+    knownModels: ["deepseek-v4-flash", "grok-4.6"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes: "deepseek-v4-flash and grok-4.6 verified free. glm-5.3-flash is advertised free but had no serving channel (get_channel_failed) at test time.",
+  },
 
   // -------------------------------------------------------------------------
   // Further free hubs.

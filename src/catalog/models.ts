@@ -486,6 +486,10 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("coding-glm-4.7-free", undefined, "Code"),
     m("gpt-5.5-free", undefined, "General"),
   ],
+  fhrouter: [
+    m("deepseek-v4-flash", undefined, "General"),
+    m("grok-4.6", undefined, "Reasoning"),
+  ],
 };
 
 /** Total number of curated free models across every provider. */
