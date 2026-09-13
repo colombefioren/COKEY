@@ -80,6 +80,12 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
     window.localStorage.setItem(DISMISS_KEY, JSON.stringify(next));
   }
 
+  function dismissAll() {
+    const next = [...new Set([...dismissed, ...visible.map((notice) => notice.id)])];
+    setDismissed(next);
+    window.localStorage.setItem(DISMISS_KEY, JSON.stringify(next));
+  }
+
   function restore() {
     setDismissed([]);
     window.localStorage.removeItem(DISMISS_KEY);
@@ -184,6 +190,11 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
             {dismissed.length > 0 && !showDismissed ? (
               <button className="ghost small" type="button" onClick={restore}>
                 reset dismissed
+              </button>
+            ) : null}
+            {visible.length > 0 && !showDismissed ? (
+              <button className="ghost small" type="button" onClick={dismissAll}>
+                dismiss all
               </button>
             ) : null}
             <button

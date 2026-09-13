@@ -269,6 +269,17 @@ export interface ValidationResult {
 export interface ModelInfo {
   id: string;
   providerId: string;
+  /**
+   * Whether the listing itself says this model costs nothing to use.
+   *
+   * Several aggregators (OpenRouter-style ones especially) answer `/models`
+   * with an `access_tier` or `pricing` field alongside the id — real signal
+   * that a naming convention like a `:free` suffix can silently stop
+   * matching once a provider reshuffles its catalog. `undefined` means the
+   * listing carried no such field, not that the model is known to cost
+   * money.
+   */
+  free?: boolean;
 }
 
 export type LogLevel = "debug" | "info" | "warn" | "error";

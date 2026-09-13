@@ -156,6 +156,7 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                       <td className="small muted">
                         {entry.providerId ? (
                           <a
+                            className="link-quiet"
                             href={`#/providers?q=${encodeURIComponent(entry.providerId)}`}
                             title={`Open ${entry.providerId} in the provider catalog`}
                           >

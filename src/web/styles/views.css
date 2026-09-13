@@ -35,27 +35,6 @@
   background: var(--surface);
   box-shadow: var(--shadow-lift);
 }
-/* A short rule of the layer's own tint along the top edge — one accent, not
-   a coloured card: the card itself stays plain white. */
-.layer::before {
-  content: "";
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  top: 0;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--tint-line, var(--border-strong));
-}
-.layer.tint-1 {
-  --tint-line: var(--tint-1-line);
-}
-.layer.tint-2 {
-  --tint-line: var(--tint-2-line);
-}
-.layer.tint-3 {
-  --tint-line: var(--tint-3-line);
-}
 
 .layer-badge {
   position: relative;
@@ -114,11 +93,8 @@
   margin: 2px 0 4px;
 }
 .layer-title em {
-  font-style: normal;
+  font-style: italic;
   color: var(--violet-strong);
-  background: var(--violet-soft);
-  padding: 0 4px;
-  border-radius: 4px;
 }
 
 .layer-kicker {
@@ -220,33 +196,32 @@
   color: var(--faint);
   font-size: 10.5px;
 }
-.layer-key.is-ok {
-  border-color: var(--sage-line);
-  background: var(--sage-soft);
-  color: var(--sage);
-}
+/* State lives on the glyph and the word after it, not on the whole chip's
+   fill — three chips side by side used to read as three different colours
+   of card; now the card is always the same plain white. */
 .layer-key.is-ok i {
+  color: var(--sage);
   clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
   animation: glyph-breathe 2.8s ease-in-out infinite;
 }
-.layer-key.is-bad {
-  border-color: var(--rose-line);
-  background: var(--rose-soft);
-  color: var(--rose);
+.layer-key.is-ok em {
+  color: var(--sage);
 }
 .layer-key.is-bad i {
+  color: var(--rose);
   clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
 }
-.layer-key.is-locked {
-  border-color: var(--peach-line);
-  background: var(--peach-soft);
-  color: var(--peach);
-  opacity: 0.9;
+.layer-key.is-bad em {
+  color: var(--rose);
 }
 .layer-key.is-locked i {
+  color: var(--peach);
   border-radius: 50%;
   border: 1.5px solid currentColor;
   background: none;
+}
+.layer-key.is-locked em {
+  color: var(--peach);
 }
 
 .layer-footer {
@@ -710,35 +685,6 @@
 .flow-hub .flow-node-kicker {
   color: rgba(255, 255, 255, 0.75);
 }
-.flow-hub-orb {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  color: var(--violet-ink);
-  background: rgba(255, 255, 255, 0.2);
-  box-shadow: inset 0 0 0 1.5px rgba(255, 255, 255, 0.5);
-  animation: hub-pulse 3.6s ease-in-out infinite;
-}
-.flow-hub-ring {
-  position: absolute;
-  inset: -9px;
-  border-radius: 50%;
-  border: 1.5px dashed rgba(255, 255, 255, 0.55);
-  animation: scribble-wobble 12s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes hub-pulse {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
 
 /* The stop number, a plain circle on the brand wash — no hand-cut corners,
    the minimal editorial page does not want a sketchy note here. */
@@ -1006,23 +952,11 @@
 .hero {
   position: relative;
   padding: 28px;
-  border-radius: 26px 23px 27px 22px;
-  border: 1.5px solid var(--violet-line);
-  background:
-    radial-gradient(520px 280px at 100% 0%, var(--pink-soft), transparent 66%),
-    linear-gradient(120deg, var(--violet-soft), var(--surface) 58%, var(--bloom-3));
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
-}
-.hero::before {
-  content: "";
-  position: absolute;
-  left: 28px;
-  right: 28px;
-  top: 0;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--violet);
 }
 .hero h2 {
   font-size: 26px;
@@ -1123,22 +1057,11 @@
   position: relative;
   gap: 6px;
   padding: 28px;
-  border: 1.5px solid var(--violet-line);
-  border-radius: 26px 23px 27px 22px;
-  background:
-    radial-gradient(460px 240px at 0% 100%, var(--pink-soft), transparent 68%),
-    linear-gradient(135deg, var(--violet-soft), var(--surface) 62%, var(--bloom-3));
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
-}
-.closing::after {
-  content: "";
-  position: absolute;
-  left: 28px;
-  right: 28px;
-  bottom: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: var(--violet);
 }
 .closing strong {
   font-family: var(--font-display);
@@ -1171,7 +1094,7 @@
   box-shadow: inset 0 1px 2px rgba(43, 26, 47, 0.07);
 }
 .swe-fill {
-  background: var(--violet);
+  background: var(--text);
 }
 
 /* Verdict headings are names, not micro-labels: display face, sentence case,

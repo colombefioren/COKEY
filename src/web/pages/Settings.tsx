@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ProviderCatalogEntry, Settings as SettingsModel } from "../types.js";
-import { EgressPoolPanel } from "../components/EgressPoolPanel.js";
 import { ConfirmModal, Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
@@ -298,8 +297,6 @@ export function Settings({
           />
         </div>
       </Panel>
-
-      <EgressPoolPanel settings={draft} onSettingsChanged={onSaved} refreshKey={refreshKey} />
 
       <Panel title="Free-provider suggestions">
         <label className="selected-item" style={{ marginBottom: 0 }}>

@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
-import { CokeyMark } from "./Logo.js";
 import { Empty } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 
@@ -179,10 +178,6 @@ export function ChainFlow({
         </div>
 
         <div className="flow-node flow-hub" style={{ top: hubY - HUB_SIZE / 2, left: HUB_X }}>
-          <span className="flow-hub-orb">
-            <span className="flow-hub-ring" aria-hidden="true" />
-            <CokeyMark height={24} />
-          </span>
           <span className="flow-node-kicker">alias</span>
           <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
         </div>

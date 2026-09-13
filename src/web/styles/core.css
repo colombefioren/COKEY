@@ -169,6 +169,14 @@ a {
   color: var(--violet);
   text-decoration: none;
 }
+/* A secondary reference — a provider id beside the model that matters, a
+   footnote — reads as plain text until it is actually useful to follow. */
+a.link-quiet {
+  color: var(--muted);
+}
+a.link-quiet:hover {
+  color: var(--violet);
+}
 a:hover {
   text-decoration: underline;
 }
@@ -672,6 +680,8 @@ h3 {
 .nav-toggle:hover:not(:disabled) {
   color: var(--violet);
   border-color: var(--violet-line);
+  background: var(--surface-2);
+  box-shadow: none;
 }
 
 /* ---- notifications --------------------------------------------------------
@@ -696,10 +706,15 @@ h3 {
 .notif-trigger:hover:not(:disabled) {
   color: var(--violet);
   border-color: var(--violet-line);
+  background: var(--surface-2);
+  box-shadow: none;
 }
 .notif-trigger.has-alerts {
   color: var(--violet-strong);
   border-color: var(--violet-line);
+  background: var(--violet-soft);
+}
+.notif-trigger.has-alerts:hover:not(:disabled) {
   background: var(--violet-soft);
 }
 .notif-count {
@@ -857,15 +872,11 @@ main {
 section.panel {
   position: relative;
   border-radius: var(--radius);
-  border: 1.5px solid var(--border-strong);
+  border: none;
   background: var(--surface);
-  box-shadow:
-    1px 1px 0 0 var(--border),
-    var(--shadow);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+  transition: box-shadow 0.25s ease;
 }
 
 section.panel {
@@ -888,7 +899,6 @@ section.panel.soft {
   gap: 12px;
   padding: 15px 20px 13px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface-2), transparent);
   flex-wrap: wrap;
 }
 
@@ -1053,16 +1063,6 @@ section.panel.soft {
   transition:
     transform 0.22s var(--ease),
     box-shadow 0.22s ease;
-}
-.stat::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--tint-line, var(--border));
 }
 .stat:hover {
   transform: translateY(-3px);
@@ -1313,48 +1313,54 @@ label {
   font-size: 12px;
 }
 
+/*
+ * A status word, not a coloured chip: the preview's whole point is that most
+ * of the page is plain writing, with colour doing the one job of telling
+ * healthy from failing apart. A pill behind every count is what made the
+ * page read as louder and more saturated than it actually needed to be.
+ */
 .badge {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: var(--sage-soft);
+  letter-spacing: 0.02em;
   color: var(--sage);
   white-space: nowrap;
 }
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
 .badge.neutral {
-  background: var(--surface-3);
   color: var(--muted);
 }
+.badge.neutral::before {
+  background: var(--faint);
+}
 .badge.warn {
-  background: var(--peach-soft);
   color: var(--peach);
 }
 .badge.ok {
-  background: var(--sage-soft);
   color: var(--sage);
 }
 .badge.bad {
-  background: var(--rose-soft);
   color: var(--rose);
 }
 .badge.tier-s {
-  background: var(--violet-soft);
-  color: var(--violet);
+  color: var(--violet-strong);
 }
 .badge.tier-a {
-  background: var(--sage-soft);
   color: var(--sage);
 }
 .badge.tier-b {
-  background: var(--peach-soft);
   color: var(--peach);
 }
 .badge.tier-c {
-  background: var(--rose-soft);
   color: var(--rose);
 }
 
@@ -1636,23 +1642,13 @@ tbody tr:hover td:first-child {
 
 .hint-box {
   position: relative;
-  border: 1.5px solid var(--violet-line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 13px 16px 13px 18px;
+  padding: 13px 16px;
   color: var(--muted);
   font-size: 12px;
-  background: linear-gradient(140deg, var(--violet-soft), var(--surface));
+  background: var(--surface);
   line-height: 1.7;
-}
-.hint-box::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
-  background: var(--violet);
 }
 
 code {
@@ -1668,31 +1664,18 @@ code {
 /* ---- chains --------------------------------------------------------------- */
 
 /*
- * One chain, as a card with a short ramp rule across its leading edge. The rule
- * is the only decoration on the card: it marks the top of a group without
- * needing a coloured header block or a heavier border than everything around
- * it, and it ties the chain list to the route diagram on the dashboard.
+ * One chain, as a plain white card. No coloured header block, no accent rule
+ * across the top — the border and a soft shadow are what separate it from
+ * the one below.
  */
 .chain {
   position: relative;
-  border: 1.5px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 17px 18px;
   margin-bottom: 14px;
-  background: linear-gradient(170deg, var(--surface), var(--surface-2));
-  box-shadow:
-    1px 1px 0 0 var(--border),
-    var(--shadow);
-}
-.chain::before {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  top: -1.5px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--violet), transparent);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
 }
 .chain-head {
   display: flex;
@@ -2144,8 +2127,9 @@ button.play.fail {
   flex-wrap: wrap;
   padding: 26px;
   border-radius: var(--radius);
-  border: 1px solid var(--violet-line);
-  background: linear-gradient(120deg, var(--violet-soft), var(--rose-soft) 70%, var(--peach-soft));
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
 }
 .hero-copy {
   flex: 1 1 380px;
@@ -2320,9 +2304,10 @@ button.play.fail {
   align-items: center;
   gap: 5px;
   padding: 24px;
-  border: 1px solid var(--violet-line);
+  border: none;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--violet-soft), var(--rose-soft));
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   text-align: center;
 }
 .closing strong {
@@ -2917,46 +2902,6 @@ tbody tr:nth-child(n + 6) {
 }
 .creator-links a:hover {
   color: var(--violet);
-}
-
-/* ---- ambient wash --------------------------------------------------------- */
-
-/*
- * Two very low-opacity blooms that drift. Enough to keep the ground from
- * reading as flat white, not enough to compete with a table of API keys.
- */
-.starfield {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-}
-.starfield::before,
-.starfield::after {
-  content: "";
-  position: absolute;
-  inset: -25%;
-  border-radius: 50%;
-}
-.starfield::before {
-  opacity: 0.26;
-  background: radial-gradient(closest-side, var(--rose-soft), transparent 70%);
-  animation: wash 34s ease-in-out infinite alternate;
-}
-.starfield::after {
-  opacity: 0.22;
-  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
-  animation: wash 46s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes wash {
-  from {
-    transform: translate3d(4vw, -10vh, 0) scale(1);
-  }
-  to {
-    transform: translate3d(-4vw, 8vh, 0) scale(1.18);
-  }
 }
 
 .shell {

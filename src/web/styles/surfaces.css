@@ -266,27 +266,12 @@
 
 .modal {
   position: relative;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 26px;
+  border: none;
+  border-radius: 22px;
   padding: 24px 26px;
-  background:
-    radial-gradient(520px 300px at 100% 0%, var(--violet-soft), transparent 62%), var(--surface);
+  background: var(--surface);
   box-shadow: var(--shadow-pop);
   animation: modal-in 0.34s var(--ease) both;
-}
-
-/* A hairline of the brand ramp along the top edge, so a dialog is branded by
-   one drawn detail rather than by a coloured header block. */
-.modal::before {
-  content: "";
-  position: absolute;
-  left: 26px;
-  right: 26px;
-  top: -1.5px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--violet);
-  opacity: 0.9;
 }
 
 .modal h3 {
@@ -462,14 +447,13 @@
  */
 .nudger {
   position: relative;
-  border: 1.5px solid var(--violet-line);
-  border-radius: 22px 20px 24px 19px;
+  border: none;
+  border-radius: 20px;
   padding: 18px 20px 18px 22px;
   display: grid;
   gap: 10px;
-  background:
-    radial-gradient(420px 220px at 0% 0%, var(--pink-soft), transparent 68%),
-    linear-gradient(150deg, var(--surface), var(--violet-soft));
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
 }
 .nudger::before {
@@ -668,17 +652,4 @@ a:focus-visible,
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--faint);
-}
-
-/* ---- ambient wash --------------------------------------------------------- */
-
-/* The two drifting blooms behind the whole app, on the new ramp: pink on one
-   side, lilac on the other, both far too faint to compete with a table. */
-.starfield::before {
-  opacity: 0.3;
-  background: radial-gradient(closest-side, var(--pink-soft), transparent 70%);
-}
-.starfield::after {
-  opacity: 0.26;
-  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
 }

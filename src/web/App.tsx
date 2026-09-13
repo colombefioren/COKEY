@@ -23,6 +23,7 @@ import {
   IconMenu,
   IconRoute,
   IconScroll,
+  IconShield,
   IconSliders,
   IconSparkle,
 } from "./components/Icons.js";
@@ -35,6 +36,7 @@ import { Providers } from "./pages/Providers.js";
 import { ApiKeys } from "./pages/ApiKeys.js";
 import { Usage } from "./pages/Usage.js";
 import { Settings } from "./pages/Settings.js";
+import { Proxies } from "./pages/Proxies.js";
 import { Tutorial } from "./pages/Tutorial.js";
 import { Terms } from "./pages/Terms.js";
 import { About } from "./pages/About.js";
@@ -50,6 +52,7 @@ const TITLES: Record<string, string> = {
   "/api-keys": "API keys",
   "/usage": "Usage",
   "/settings": "Settings",
+  "/proxies": "Proxies",
   "/tutorial": "Tutorial",
   "/terms": "Terms of service",
   "/about": "About",
@@ -103,7 +106,13 @@ function navItems(counts: { chains: number; keys: number; providers: number }): 
       path: "/settings",
       label: "Settings",
       icon: <IconSliders size={18} />,
-      hint: "Gateway, fallback and egress settings",
+      hint: "Gateway and fallback settings",
+    },
+    {
+      path: "/proxies",
+      label: "Proxies",
+      icon: <IconShield size={18} />,
+      hint: "The egress proxy pool: health, pinning and bulk paste",
     },
     {
       path: "/tutorial",
@@ -393,6 +402,14 @@ function renderPage(path: string, context: PageContext) {
           refreshKey={context.refreshKey}
         />
       );
+    case "/proxies":
+      return (
+        <Proxies
+          settings={context.settings}
+          onSaved={context.bump}
+          refreshKey={context.refreshKey}
+        />
+      );
     case "/tutorial":
       return <Tutorial />;
     case "/terms":
@@ -416,7 +433,6 @@ function renderPage(path: string, context: PageContext) {
 export function App() {
   return (
     <ToastProvider>
-      <div className="starfield" aria-hidden="true" />
       <Shell />
     </ToastProvider>
   );
