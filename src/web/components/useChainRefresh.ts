@@ -67,7 +67,10 @@ export function useChainRefresh(chain: ChainView | null, onChanged: () => void):
     setWinnerId(firstOk);
 
     if (firstOk && ordered[0]?.id !== firstOk) {
-      const reordered = [firstOk, ...ordered.map((entry) => entry.id).filter((id) => id !== firstOk)];
+      const reordered = [
+        firstOk,
+        ...ordered.map((entry) => entry.id).filter((id) => id !== firstOk),
+      ];
       try {
         await api.reorderChain(chain.id, reordered);
       } catch (error) {

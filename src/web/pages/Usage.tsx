@@ -498,7 +498,11 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
                 setPage(1);
               }}
             />
-            <button className="secondary" onClick={() => setClearingHistory(true)} disabled={total === 0}>
+            <button
+              className="secondary"
+              onClick={() => setClearingHistory(true)}
+              disabled={total === 0}
+            >
               Clear
             </button>
           </div>

@@ -89,14 +89,11 @@ export class ChainsRepo {
 
   getChainByAlias(alias: string): ChainRow | undefined {
     return this.db.db.prepare(`SELECT * FROM chains WHERE alias = ?`).get(alias) as
-      | ChainRow
-      | undefined;
+      ChainRow | undefined;
   }
 
   listChains(): ChainRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM chains ORDER BY created_at ASC`)
-      .all() as ChainRow[];
+    return this.db.db.prepare(`SELECT * FROM chains ORDER BY created_at ASC`).all() as ChainRow[];
   }
 
   updateChain(id: string, patch: ChainPatch): void {
@@ -135,8 +132,7 @@ export class ChainsRepo {
 
   getEntry(id: string): ChainEntryRow | undefined {
     return this.db.db.prepare(`SELECT * FROM chain_entries WHERE id = ?`).get(id) as
-      | ChainEntryRow
-      | undefined;
+      ChainEntryRow | undefined;
   }
 
   listEntries(chainId: string): ChainEntryRow[] {

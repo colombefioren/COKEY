@@ -218,7 +218,10 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         .send(withCokeyIdentity(withChainStateNotice(parsedBody, notice), result.chainAlias));
     }
 
-    return reply.code(upstream.status).type(contentType).send(notice ? `${notice}\n${text}` : text);
+    return reply
+      .code(upstream.status)
+      .type(contentType)
+      .send(notice ? `${notice}\n${text}` : text);
   });
 }
 
@@ -273,18 +276,21 @@ function sendRouteError(cokey: Cokey, reply: FastifyReply, error: unknown, reque
     const origin = info.attempts.length > 0 ? "provider" : "gateway";
     const last = info.attempts[info.attempts.length - 1];
     const providers = [...new Set(info.attempts.map((a) => a.providerId))].join(", ");
-    return reply.code(502).headers(errorIdentityHeaders(info)).send({
-      error: {
-        message: info.attempts.length
-          ? `All chains exhausted: ${providers} did not answer OK`
-          : "All chains exhausted",
-        type: "all_chains_exhausted",
-        origin,
-        ...(last?.providerId ? { provider: last.providerId } : {}),
-        attempts: info.attempts,
-        ...(info.fallbackReason ? { fallbackReason: info.fallbackReason } : {}),
-      },
-    });
+    return reply
+      .code(502)
+      .headers(errorIdentityHeaders(info))
+      .send({
+        error: {
+          message: info.attempts.length
+            ? `All chains exhausted: ${providers} did not answer OK`
+            : "All chains exhausted",
+          type: "all_chains_exhausted",
+          origin,
+          ...(last?.providerId ? { provider: last.providerId } : {}),
+          attempts: info.attempts,
+          ...(info.fallbackReason ? { fallbackReason: info.fallbackReason } : {}),
+        },
+      });
   }
 
   if (error instanceof ChainNotFoundError || error instanceof ChainDisabledError) {
@@ -300,11 +306,14 @@ function sendRouteError(cokey: Cokey, reply: FastifyReply, error: unknown, reque
       });
   }
 
-  return reply.code(500).headers(errorIdentityHeaders({ attempts: [], chainAlias: requestedModel })).send({
-    error: {
-      message: (error as Error).message,
-      type: "internal_error",
-      origin: "gateway",
-    },
-  });
+  return reply
+    .code(500)
+    .headers(errorIdentityHeaders({ attempts: [], chainAlias: requestedModel }))
+    .send({
+      error: {
+        message: (error as Error).message,
+        type: "internal_error",
+        origin: "gateway",
+      },
+    });
 }

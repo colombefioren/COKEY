@@ -6,8 +6,7 @@ export class SettingsRepo {
 
   get(key: string): string | undefined {
     const row = this.db.db.prepare(`SELECT value FROM settings WHERE key = ?`).get(key) as
-      | { value: string }
-      | undefined;
+      { value: string } | undefined;
     return row?.value;
   }
 
@@ -39,7 +38,9 @@ export class SettingsRepo {
   }
 
   all(): Record<string, string> {
-    const rows = this.db.db.prepare(`SELECT key, value FROM settings ORDER BY key ASC`).all() as Array<{
+    const rows = this.db.db
+      .prepare(`SELECT key, value FROM settings ORDER BY key ASC`)
+      .all() as Array<{
       key: string;
       value: string;
     }>;

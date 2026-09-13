@@ -109,7 +109,9 @@ export function LiveStatus() {
         const from = event.previous?.credentialDescription
           ? `${event.previous.providerId ?? "?"}/${event.previous.model ?? "?"} · ${event.previous.credentialDescription}`
           : undefined;
-        toast.info(`${label} → ${event.message.replace(/^Switched:\s*/, "")}${from ? ` (was ${from})` : ""}`);
+        toast.info(
+          `${label} → ${event.message.replace(/^Switched:\s*/, "")}${from ? ` (was ${from})` : ""}`,
+        );
       }
 
       if (event.type === "credential.cooldown") toast.info(event.message);
@@ -148,7 +150,9 @@ export function LiveStatus() {
         {route?.maskedSecret ? <span className="live-mask mono">{route.maskedSecret}</span> : null}
         {route?.proxyLabel ? <span className="live-proxy mono">via {route.proxyLabel}</span> : null}
         {route?.fallback ? <span className="badge warn">fallback</span> : null}
-        {route?.lastOutcome === "error" && !route.active ? <span className="badge bad">last error</span> : null}
+        {route?.lastOutcome === "error" && !route.active ? (
+          <span className="badge bad">last error</span>
+        ) : null}
         <span className="live-count">{events.length}</span>
       </button>
 

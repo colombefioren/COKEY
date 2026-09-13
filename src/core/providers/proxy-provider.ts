@@ -4,9 +4,7 @@ import { parseProxyUrl } from "./proxy.js";
 
 export interface ProviderProxyConfig {
   source:
-    | { kind: "off" }
-    | { kind: "credential"; seedUrl: string }
-    | { kind: "shared"; pool: ProxyPool };
+    { kind: "off" } | { kind: "credential"; seedUrl: string } | { kind: "shared"; pool: ProxyPool };
 }
 
 export interface ProviderProxyState {
@@ -78,8 +76,7 @@ export class ProviderProxy {
       return address;
     }
 
-    const pool =
-      state.config.source.kind === "shared" ? state.config.source.pool : undefined;
+    const pool = state.config.source.kind === "shared" ? state.config.source.pool : undefined;
     if (!pool) return undefined;
     const address = pool.next();
     state.lastAddress = address;
@@ -119,9 +116,10 @@ export class ProviderProxy {
     const state = this.byProvider.get(providerId) ?? EMPTY;
     return {
       ...state,
-      nextLabel: state.nextLabel ?? state.config.source.kind !== "off"
-        ? this.poolFor(providerId).snapshot().addresses[0]?.label
-        : undefined,
+      nextLabel:
+        (state.nextLabel ?? state.config.source.kind !== "off")
+          ? this.poolFor(providerId).snapshot().addresses[0]?.label
+          : undefined,
     };
   }
 
@@ -144,10 +142,9 @@ function makeState(config: ProviderProxyConfig, pool?: ProxyPool): ProviderProxy
   return {
     config,
     nextLabel,
-    lastAddress:
-      nextLabel
-        ? { url: pool!.snapshot().addresses[0]!.url, label: nextLabel }
-        : undefined,
+    lastAddress: nextLabel
+      ? { url: pool!.snapshot().addresses[0]!.url, label: nextLabel }
+      : undefined,
   };
 }
 

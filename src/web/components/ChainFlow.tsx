@@ -141,7 +141,10 @@ export function ChainFlow({
                 <div className="flow-step" key={entry.id}>
                   <FlowLink
                     live={Boolean(route?.active)}
-                    dead={Boolean(activeEntryKey) && activeEntryKey !== `${entry.providerId}/${entry.model}`}
+                    dead={
+                      Boolean(activeEntryKey) &&
+                      activeEntryKey !== `${entry.providerId}/${entry.model}`
+                    }
                   />
                   <EntryNode
                     entry={entry}
@@ -219,7 +222,9 @@ function EntryNode({
 }) {
   const failed =
     entry.credentials.length > 0 &&
-    entry.credentials.every((credential) => credential.status === "invalid" || credential.status === "disabled");
+    entry.credentials.every(
+      (credential) => credential.status === "invalid" || credential.status === "disabled",
+    );
 
   return (
     <div

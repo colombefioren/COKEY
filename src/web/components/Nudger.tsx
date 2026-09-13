@@ -28,8 +28,8 @@ export function Nudger({
         You have {nudge.connectedFree} of {nudge.target} free providers connected.
       </h3>
       <div className="muted">
-        Adding {missing} more {missing === 1 ? "provider" : "providers"} unlocks automatic failover, so
-        a single rate limit never blocks you.
+        Adding {missing} more {missing === 1 ? "provider" : "providers"} unlocks automatic failover,
+        so a single rate limit never blocks you.
       </div>
 
       <div className="actions">

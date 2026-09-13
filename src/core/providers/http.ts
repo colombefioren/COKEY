@@ -159,7 +159,10 @@ export function headersToObject(headers: Headers): Record<string, string> {
 }
 
 /** Case-insensitive header lookup for a plain record. */
-export function getHeader(headers: Record<string, string> | undefined, name: string): string | undefined {
+export function getHeader(
+  headers: Record<string, string> | undefined,
+  name: string,
+): string | undefined {
   if (!headers) return undefined;
   const lower = name.toLowerCase();
   for (const [key, value] of Object.entries(headers)) {

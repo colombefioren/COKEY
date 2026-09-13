@@ -238,9 +238,7 @@ function toProvider(
     origin: str(raw.origin),
     kind: PROVIDER_KINDS.has(kind as ProviderKind) ? (kind as ProviderKind) : undefined,
     summary: str(raw.summary),
-    verdict: VERDICTS.has(verdict as ProviderVerdict)
-      ? (verdict as ProviderVerdict)
-      : undefined,
+    verdict: VERDICTS.has(verdict as ProviderVerdict) ? (verdict as ProviderVerdict) : undefined,
     verdictReason: str(raw.verdictReason),
     sourceUrl: str(raw.sourceUrl),
     reviewedAt: str(raw.reviewedAt),
@@ -255,11 +253,7 @@ function toProvider(
   };
 }
 
-function toFreeTier(
-  raw: unknown,
-  file: string,
-  issues: CmsIssue[],
-): CmsFreeTier | undefined {
+function toFreeTier(raw: unknown, file: string, issues: CmsIssue[]): CmsFreeTier | undefined {
   if (raw === undefined) return undefined;
   if (!isRecord(raw)) {
     issues.push({ file, message: "freeTier must be an object" });
@@ -462,7 +456,9 @@ function readRankings(directory: string, issues: CmsIssue[]): CmsRankings | unde
         family,
         keep,
         fallback,
-        alsoOn: toArray(entry.alsoOn).map((name) => str(name) ?? "").filter(Boolean),
+        alsoOn: toArray(entry.alsoOn)
+          .map((name) => str(name) ?? "")
+          .filter(Boolean),
       };
     }),
     dropList: readBoard<{ provider: string; reason: string }>(
@@ -510,7 +506,10 @@ function readBoard<T>(
     if (!isRecord(entry)) return;
     const mapped = map(entry);
     if (mapped === undefined) {
-      issues.push({ file: `rankings/${name}`, message: `entry ${index} is incomplete and was skipped` });
+      issues.push({
+        file: `rankings/${name}`,
+        message: `entry ${index} is incomplete and was skipped`,
+      });
       return;
     }
     out.push(mapped);
@@ -599,5 +598,11 @@ export function parseFrontMatter(text: string): {
     attributes[key] = value;
   }
 
-  return { attributes, body: normalised.slice(end + 4).replace(/^\n+/, "").trimEnd() };
+  return {
+    attributes,
+    body: normalised
+      .slice(end + 4)
+      .replace(/^\n+/, "")
+      .trimEnd(),
+  };
 }

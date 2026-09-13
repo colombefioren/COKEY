@@ -85,7 +85,9 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
       model: context.model,
       created: context.created,
       content: readCohereText(message),
-      finishReason: mapFinishReason(typeof record.finish_reason === "string" ? record.finish_reason : undefined),
+      finishReason: mapFinishReason(
+        typeof record.finish_reason === "string" ? record.finish_reason : undefined,
+      ),
       toolCalls: readCohereToolCalls(message),
       usage: this.extractUsage(record),
     });

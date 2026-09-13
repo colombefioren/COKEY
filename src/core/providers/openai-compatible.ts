@@ -64,7 +64,11 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   ): ProviderRequest {
     const base = this.resolveBaseUrl(entry, credential);
     const headers = this.chatHeaders(credential);
-    const body = JSON.stringify({ ...request, model: entry.model, stream: request.stream === true });
+    const body = JSON.stringify({
+      ...request,
+      model: entry.model,
+      stream: request.stream === true,
+    });
 
     return {
       url: this.chatUrl(base, credential),
@@ -171,7 +175,10 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     };
   }
 
-  protected async validateViaModels(credential: Credential, started: number): Promise<ValidationResult> {
+  protected async validateViaModels(
+    credential: Credential,
+    started: number,
+  ): Promise<ValidationResult> {
     const result = await performRequest({
       url: this.withAuthQuery(this.modelsUrl(credential), credential),
       method: "GET",
@@ -216,7 +223,9 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   protected modelsUrl(credential: Credential): string {
-    const base = this.catalog.baseUrl.replace(/\{account_id\}/, credential.accountId ?? "").replace(/\/+$/, "");
+    const base = this.catalog.baseUrl
+      .replace(/\{account_id\}/, credential.accountId ?? "")
+      .replace(/\/+$/, "");
     return `${base}/models`;
   }
 

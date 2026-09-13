@@ -164,8 +164,8 @@ export function Resilience() {
       </LayerRow>
 
       <p className="layer-footer mono">
-        key 429 -&gt; cooldown · invalid key -&gt; rotate · node 5xx -&gt; fallback · context too large
-        -&gt; stop · a lower node is never tried while a key above it can serve
+        key 429 -&gt; cooldown · invalid key -&gt; rotate · node 5xx -&gt; fallback · context too
+        large -&gt; stop · a lower node is never tried while a key above it can serve
       </p>
     </section>
   );

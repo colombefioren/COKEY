@@ -149,10 +149,16 @@ export interface ImportOptions {
  * Chains are matched by alias, entries by provider+model. Existing entries are
  * left alone and reported as skipped rather than being overwritten.
  */
-export function importConfig(cokey: Cokey, data: unknown, options: ImportOptions = {}): ImportSummary {
+export function importConfig(
+  cokey: Cokey,
+  data: unknown,
+  options: ImportOptions = {},
+): ImportSummary {
   const parsed = CokeyExportSchema.safeParse(data);
   if (!parsed.success) {
-    throw new Error(`Invalid COKEY export: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+    throw new Error(
+      `Invalid COKEY export: ${parsed.error.issues.map((i) => i.message).join("; ")}`,
+    );
   }
 
   const summary: ImportSummary = {

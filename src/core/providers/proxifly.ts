@@ -71,9 +71,7 @@ export function parseProxiflyList(text: string, maxEntries?: number): ProxiflyLi
  * Fetched from jsDelivr (not Proxifly's API), so there is no key and no quota
  * to spend. A size ceiling stops a corrupted file from being buffered whole.
  */
-export async function fetchProxiflyFreeList(
-  options: ProxiflyFetchOptions = {},
-): Promise<string> {
+export async function fetchProxiflyFreeList(options: ProxiflyFetchOptions = {}): Promise<string> {
   const timeoutMs = options.timeoutMs ?? 15_000;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

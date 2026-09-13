@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 /** Enum narrowing used by the application layer. */
-export const ApiStyleSchema = z.enum(["openai", "anthropic", "google", "cohere", "cloudflare", "ollama"]);
+export const ApiStyleSchema = z.enum([
+  "openai",
+  "anthropic",
+  "google",
+  "cohere",
+  "cloudflare",
+  "ollama",
+]);
 export const AuthSchemeSchema = z.enum(["bearer", "x-api-key", "query-param", "custom-header"]);
 export const RoutingStrategySchema = z.enum(["sequential", "round-robin"]);
 export const LogLevelSchema = z.enum(["debug", "info", "warn", "error"]);
@@ -194,17 +201,19 @@ export const CustomEndpointSchema = z.object({
   models: z.array(z.string().min(1)).default([]),
 });
 
-export const ChatCompletionSchema = z.object({
-  model: z.string().min(1),
-  messages: z
-    .array(
-      z
-        .object({
-          role: z.string().min(1),
-          content: z.unknown().optional(),
-        })
-        .passthrough(),
-    )
-    .min(1, "messages must contain at least one message"),
-  stream: z.boolean().optional(),
-}).passthrough();
+export const ChatCompletionSchema = z
+  .object({
+    model: z.string().min(1),
+    messages: z
+      .array(
+        z
+          .object({
+            role: z.string().min(1),
+            content: z.unknown().optional(),
+          })
+          .passthrough(),
+      )
+      .min(1, "messages must contain at least one message"),
+    stream: z.boolean().optional(),
+  })
+  .passthrough();

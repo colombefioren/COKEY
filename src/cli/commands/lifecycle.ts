@@ -17,7 +17,17 @@ import {
   writePidFile,
   type CommandContext,
 } from "../context.js";
-import { bold, bullet, cyan, dim, formatClock, green, humanizeDuration, red, yellow } from "../format.js";
+import {
+  bold,
+  bullet,
+  cyan,
+  dim,
+  formatClock,
+  green,
+  humanizeDuration,
+  red,
+  yellow,
+} from "../format.js";
 import { printBanner } from "../banner.js";
 
 /** Register lifecycle commands: start, stop, status, config, doctor. */
@@ -72,59 +82,66 @@ export function registerLifecycleCommands(cli: CAC): void {
     console.log(green(`Stopped COKEY (pid ${pid}).`));
   });
 
-  defineCommand(cli, "status", "Show gateway, chain and credential status", async (_args, context) => {
-    await withCokey(context, async (cokey) => {
-      const dataDir = resolveDataDir(context);
-      const pid = readPidFile(dataDir);
-      const running = pid !== undefined && isProcessAlive(pid);
-      const stats = cokey.stats();
+  defineCommand(
+    cli,
+    "status",
+    "Show gateway, chain and credential status",
+    async (_args, context) => {
+      await withCokey(context, async (cokey) => {
+        const dataDir = resolveDataDir(context);
+        const pid = readPidFile(dataDir);
+        const running = pid !== undefined && isProcessAlive(pid);
+        const stats = cokey.stats();
 
-      emit(context, { running, pid, ...stats, settings: cokey.settings }, () => {
-        console.log(bold("COKEY status"));
-        console.log(`  gateway:      ${running ? green(`running (pid ${pid})`) : dim("stopped")}`);
-        console.log(`  listen:       http://${cokey.settings.host}:${cokey.settings.port}`);
-        console.log(`  data dir:     ${stats.dataDir}`);
-        console.log(`  master key:   ${stats.keySource}`);
-        console.log(
-          `  password:     ${cokey.passwordLocked() ? green("set") : yellow("default (coco-the-best)")}`,
-        );
-        console.log(
-          `  credentials:  ${stats.credentials} (${stats.healthyCredentials} healthy, ${stats.cooldownCredentials} cooldown, ${stats.invalidCredentials} invalid)`,
-        );
-        console.log(`  chains:       ${stats.chains}`);
-        console.log("");
-
-        for (const chain of cokey.chains.listChains()) {
-          const entries = cokey.chains.listEntries(chain.id);
-          const label = chain.enabled ? chain.alias : `${chain.alias} ${dim("(disabled)")}`;
-          console.log(`  ${bold(label)} - ${entries.length} entries`);
-          for (const entry of entries) {
-            const credentials = cokey.credentials.listByIds(entry.credentialIds);
-            const healthy = credentials.filter((c) => c.status === "healthy").length;
-            const cooldown = credentials.filter((c) => c.status === "cooldown").length;
-            const flag = entry.enabled ? "" : dim(" [disabled]");
-            console.log(
-              `    ${dim(`#${entry.priority}`)} ${entry.providerId} / ${entry.model} - ` +
-                `${credentials.length} keys (${green(`${healthy} healthy`)}, ${yellow(`${cooldown} cooldown`)})${flag}`,
-            );
-          }
-        }
-
-        const recent = cokey.history.list(5);
-        if (recent.length > 0) {
+        emit(context, { running, pid, ...stats, settings: cokey.settings }, () => {
+          console.log(bold("COKEY status"));
+          console.log(
+            `  gateway:      ${running ? green(`running (pid ${pid})`) : dim("stopped")}`,
+          );
+          console.log(`  listen:       http://${cokey.settings.host}:${cokey.settings.port}`);
+          console.log(`  data dir:     ${stats.dataDir}`);
+          console.log(`  master key:   ${stats.keySource}`);
+          console.log(
+            `  password:     ${cokey.passwordLocked() ? green("set") : yellow("default (coco-the-best)")}`,
+          );
+          console.log(
+            `  credentials:  ${stats.credentials} (${stats.healthyCredentials} healthy, ${stats.cooldownCredentials} cooldown, ${stats.invalidCredentials} invalid)`,
+          );
+          console.log(`  chains:       ${stats.chains}`);
           console.log("");
-          console.log(`  ${bold("recent requests")}`);
-          for (const entry of recent) {
-            const outcome = entry.outcome === "success" ? green("ok") : red("fail");
-            console.log(
-              `    ${dim(formatClock(entry.at))} ${entry.chainAlias} ${entry.model} ` +
-                `${entry.credentialDescription} ${outcome} ${humanizeDuration(entry.latencyMs)}`,
-            );
+
+          for (const chain of cokey.chains.listChains()) {
+            const entries = cokey.chains.listEntries(chain.id);
+            const label = chain.enabled ? chain.alias : `${chain.alias} ${dim("(disabled)")}`;
+            console.log(`  ${bold(label)} - ${entries.length} entries`);
+            for (const entry of entries) {
+              const credentials = cokey.credentials.listByIds(entry.credentialIds);
+              const healthy = credentials.filter((c) => c.status === "healthy").length;
+              const cooldown = credentials.filter((c) => c.status === "cooldown").length;
+              const flag = entry.enabled ? "" : dim(" [disabled]");
+              console.log(
+                `    ${dim(`#${entry.priority}`)} ${entry.providerId} / ${entry.model} - ` +
+                  `${credentials.length} keys (${green(`${healthy} healthy`)}, ${yellow(`${cooldown} cooldown`)})${flag}`,
+              );
+            }
           }
-        }
+
+          const recent = cokey.history.list(5);
+          if (recent.length > 0) {
+            console.log("");
+            console.log(`  ${bold("recent requests")}`);
+            for (const entry of recent) {
+              const outcome = entry.outcome === "success" ? green("ok") : red("fail");
+              console.log(
+                `    ${dim(formatClock(entry.at))} ${entry.chainAlias} ${entry.model} ` +
+                  `${entry.credentialDescription} ${outcome} ${humanizeDuration(entry.latencyMs)}`,
+              );
+            }
+          }
+        });
       });
-    });
-  });
+    },
+  );
 
   defineCommand(cli, "config", "Open the COKEY web UI", async (_args, context) => {
     await withCokey(context, async (cokey) => {
@@ -243,7 +260,9 @@ async function startGateway(options: CommandContext): Promise<void> {
     const entry = process.argv[1];
     if (!entry || !entry.endsWith(".js")) {
       console.log(
-        yellow("Daemon mode requires the built CLI (`npm run build`, then `node dist/cli/index.js start --daemon`)."),
+        yellow(
+          "Daemon mode requires the built CLI (`npm run build`, then `node dist/cli/index.js start --daemon`).",
+        ),
       );
       return;
     }
@@ -264,7 +283,11 @@ async function startGateway(options: CommandContext): Promise<void> {
     if (running && isProcessAlive(running)) {
       console.log(green(`COKEY started in the background (pid ${running}).`));
     } else {
-      console.log(yellow("Started, but no pid file appeared. Check the logs or run `cokey start` in the foreground."));
+      console.log(
+        yellow(
+          "Started, but no pid file appeared. Check the logs or run `cokey start` in the foreground.",
+        ),
+      );
     }
     return;
   }

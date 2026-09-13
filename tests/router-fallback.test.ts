@@ -195,7 +195,9 @@ describe("router fallback order", () => {
 describe("live routing feedback", () => {
   it("narrates each key change and leaves a success snapshot", async () => {
     const key1 = addCredential(h, "groq", "key-1");
-    const key2 = addCredential(h, "groq", "key-2", { proxyUrl: "socks5://user:pass@127.0.0.1:1080" });
+    const key2 = addCredential(h, "groq", "key-2", {
+      proxyUrl: "socks5://user:pass@127.0.0.1:1080",
+    });
 
     const adapter = new StubAdapter((credential) =>
       credential.id === key2.id

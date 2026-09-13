@@ -4,10 +4,7 @@ import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { DatabaseClient } from "../src/core/db/database.js";
 import { ProxyPoolRepo } from "../src/core/db/proxy-pool.repo.js";
-import {
-  collectHealthy,
-  mapWithConcurrency,
-} from "../src/core/providers/proxy-health.js";
+import { collectHealthy, mapWithConcurrency } from "../src/core/providers/proxy-health.js";
 import { ProxyPoolService } from "../src/core/providers/proxy-pool.js";
 
 function poolService(): {
@@ -103,7 +100,9 @@ describe("ProxyPoolService.verify", () => {
         ["socks5://c.test:3", { ok: true }],
       ]);
 
-      const result = await pool.verify((url) => Promise.resolve(verdicts.get(url) ?? { ok: false }));
+      const result = await pool.verify((url) =>
+        Promise.resolve(verdicts.get(url) ?? { ok: false }),
+      );
       expect(result.checked).toBe(3);
       expect(result.healthy).toBe(2);
       expect(result.removed).toBe(1);
@@ -120,10 +119,9 @@ describe("ProxyPoolService.verify", () => {
       pool.add("socks5://a.test:1");
       pool.add("socks5://b.test:2");
 
-      const result = await pool.verify(
-        (url) => Promise.resolve({ ok: url.endsWith(".test:1") }),
-        { prune: false },
-      );
+      const result = await pool.verify((url) => Promise.resolve({ ok: url.endsWith(".test:1") }), {
+        prune: false,
+      });
       expect(result.healthy).toBe(1);
       expect(result.removed).toBe(0);
       expect(db.db.prepare(`SELECT COUNT(*) AS n FROM proxy_pool`).get()).toEqual({ n: 2 });

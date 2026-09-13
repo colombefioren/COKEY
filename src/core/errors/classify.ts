@@ -16,7 +16,9 @@ export function classifyError(error: ProviderError): ErrorClassification {
   // request-shaped error: rotating the credential would fail identically.
   if (
     status === 400 &&
-    /context|too (long|large|many tokens)|maximum context|token limit|input is too long/i.test(lower)
+    /context|too (long|large|many tokens)|maximum context|token limit|input is too long/i.test(
+      lower,
+    )
   ) {
     return "context_too_large";
   }
@@ -75,7 +77,11 @@ export function extractMessage(body: unknown): string | undefined {
   if (Array.isArray(b.errors) && b.errors.length > 0) {
     const first = b.errors[0];
     if (typeof first === "string") return first;
-    if (first && typeof first === "object" && typeof (first as Record<string, unknown>).message === "string") {
+    if (
+      first &&
+      typeof first === "object" &&
+      typeof (first as Record<string, unknown>).message === "string"
+    ) {
       return (first as Record<string, string>).message;
     }
   }

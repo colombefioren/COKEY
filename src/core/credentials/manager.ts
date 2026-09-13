@@ -261,8 +261,7 @@ export class CredentialManager {
         usage.rateLimitErrors + (classification === "credential_rate_limited" ? 1 : 0),
       quotaErrors: usage.quotaErrors + (classification === "quota_exhausted" ? 1 : 0),
       authErrors: usage.authErrors + (classification === "credential_invalid" ? 1 : 0),
-      serverErrors:
-        usage.serverErrors + (classification === "temporary_provider_error" ? 1 : 0),
+      serverErrors: usage.serverErrors + (classification === "temporary_provider_error" ? 1 : 0),
       lastUsedAt: Date.now(),
     };
     this.repo.update(id, {
@@ -367,10 +366,7 @@ export class CredentialManager {
 }
 
 /** Proxy state safe to display: never the proxy's own username or password. */
-export function describeProxy(
-  proxyUrl: string | undefined,
-  auto = false,
-): CredentialProxyInfo {
+export function describeProxy(proxyUrl: string | undefined, auto = false): CredentialProxyInfo {
   if (!proxyUrl) return { configured: false, auto: false };
   const label = proxyLabel(proxyUrl);
   return label ? { configured: true, auto, label } : { configured: true, auto };

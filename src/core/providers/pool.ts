@@ -29,12 +29,8 @@ export class ProxyPool {
   private readonly explicit: boolean;
 
   constructor(config: ProxyPoolConfig) {
-    this.explicit =
-      config.source.kind === "static" || config.source.kind === "provider";
-    this._addresses =
-      config.source.kind === "static"
-        ? [parseAddress(config.source.url)]
-        : [];
+    this.explicit = config.source.kind === "static" || config.source.kind === "provider";
+    this._addresses = config.source.kind === "static" ? [parseAddress(config.source.url)] : [];
     this.idleTtlMs = config.idleTtlMs;
   }
 
@@ -68,10 +64,7 @@ export class ProxyPool {
   prune(now = Date.now()): number {
     const removed = 0;
     this._addresses = this._addresses.filter((address) => {
-      if (
-        address.lastUsedAt !== undefined &&
-        now - address.lastUsedAt <= this.idleTtlMs
-      )
+      if (address.lastUsedAt !== undefined && now - address.lastUsedAt <= this.idleTtlMs)
         return true;
       if (address.firstSeenAt === undefined) return true;
       return now - address.firstSeenAt <= this.idleTtlMs;

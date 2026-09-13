@@ -1,10 +1,6 @@
 import { createHash } from "node:crypto";
 import { existsSync, watch, type FSWatcher } from "node:fs";
-import {
-  loadCmsSnapshot,
-  resolveCmsDirectory,
-  type CmsSnapshot,
-} from "./load.js";
+import { loadCmsSnapshot, resolveCmsDirectory, type CmsSnapshot } from "./load.js";
 
 /**
  * The live content store.

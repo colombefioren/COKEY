@@ -133,7 +133,9 @@ export function EgressPoolPanel({
       } else if (result.healthy === result.checked) {
         toast.ok(`All ${result.healthy} exit(s) alive`);
       } else {
-        toast.ok(`${result.healthy}/${result.checked} alive - ${result.removed} dead exit(s) removed`);
+        toast.ok(
+          `${result.healthy}/${result.checked} alive - ${result.removed} dead exit(s) removed`,
+        );
       }
       onSettingsChanged();
     } catch (error) {
@@ -229,12 +231,12 @@ export function EgressPoolPanel({
 
       <div className="hint-box" style={{ marginBottom: 14 }}>
         <strong>Fetch free proxies (Proxifly):</strong> pulls Proxifly's public free list into the
-        pool. It's free because it's public — open exit IPs shared by strangers, so expect them to be
-        slower, flaky, sometimes already dead, and some providers block them on sight. With
+        pool. It's free because it's public — open exit IPs shared by strangers, so expect them to
+        be slower, flaky, sometimes already dead, and some providers block them on sight. With
         <em> verify</em> on (default) every candidate is probed first and only exits that answer are
         imported. The <strong>check exits</strong> button sweeps the pool and drops the ones that
-        died since. Paste your own paid or residential proxies above for exits you can trust.
-        (We're all poor here — but careful does it.)
+        died since. Paste your own paid or residential proxies above for exits you can trust. (We're
+        all poor here — but careful does it.)
       </div>
 
       {status ? (

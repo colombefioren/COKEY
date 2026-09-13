@@ -592,9 +592,7 @@ export class RouterEngine {
       const changedModel = previousRoute.model !== entry.model;
       const changedProvider = previousRoute.providerId !== entry.providerId;
       const parts = [
-        changedProvider || changedModel
-          ? `model → ${entry.providerId}/${entry.model}`
-          : undefined,
+        changedProvider || changedModel ? `model → ${entry.providerId}/${entry.model}` : undefined,
         changedCredential ? `key → ${credential.description}` : undefined,
       ].filter(Boolean);
 

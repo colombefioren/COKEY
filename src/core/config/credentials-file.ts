@@ -52,7 +52,9 @@ export function loadCredentialFile(path: string): CredentialFileEntry[] {
 
   const result = CredentialFileSchema.safeParse(parsed);
   if (!result.success) {
-    throw new Error(`Invalid credential file: ${result.error.issues.map((i) => i.message).join("; ")}`);
+    throw new Error(
+      `Invalid credential file: ${result.error.issues.map((i) => i.message).join("; ")}`,
+    );
   }
   return result.data.credentials;
 }
@@ -107,11 +109,7 @@ export function applyCredentialFile(
   return result;
 }
 
-function attachToChains(
-  cokey: Cokey,
-  entry: CredentialFileEntry,
-  credentialId: string,
-): number {
+function attachToChains(cokey: Cokey, entry: CredentialFileEntry, credentialId: string): number {
   let attached = 0;
 
   for (const chain of cokey.chains.listChains()) {

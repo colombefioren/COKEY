@@ -17,12 +17,7 @@ export interface IconProps {
   label?: string;
 }
 
-function Svg({
-  size = 18,
-  className,
-  label,
-  children,
-}: IconProps & { children: ReactNode }) {
+function Svg({ size = 18, className, label, children }: IconProps & { children: ReactNode }) {
   return (
     <svg
       className={className}

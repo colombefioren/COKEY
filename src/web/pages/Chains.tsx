@@ -141,13 +141,18 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
               onChange={(event) => setDescription(event.target.value)}
             />
           </div>
-          <button onClick={() => void createChain()} disabled={busy} style={{ alignSelf: "flex-end" }}>
+          <button
+            onClick={() => void createChain()}
+            disabled={busy}
+            style={{ alignSelf: "flex-end" }}
+          >
             {busy ? "Creating…" : "Create chain"}
           </button>
         </div>
         <div className="small faint" style={{ marginTop: 8 }}>
-          Routing order is yours. A node only runs after every key of the node above it has been tried.
-          Drag a row, press <code>Alt+Up</code> / <code>Alt+Down</code>, or use the arrow buttons.
+          Routing order is yours. A node only runs after every key of the node above it has been
+          tried. Drag a row, press <code>Alt+Up</code> / <code>Alt+Down</code>, or use the arrow
+          buttons.
         </div>
       </Panel>
 

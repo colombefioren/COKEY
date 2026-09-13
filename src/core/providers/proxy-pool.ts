@@ -198,7 +198,10 @@ export class ProxyPoolService {
    * distinct entry until the pool runs out; across providers reuse is
    * expected and harmless.
    */
-  plan(credentials: CredentialRef[], strategy: "per-provider" | "round-robin" = "per-provider"): ProxyPlanEntry[] {
+  plan(
+    credentials: CredentialRef[],
+    strategy: "per-provider" | "round-robin" = "per-provider",
+  ): ProxyPlanEntry[] {
     const pool = this.repo.listEnabled();
     if (pool.length === 0) return [];
 
@@ -238,7 +241,11 @@ export class ProxyPoolService {
     return plan;
   }
 
-  status(credentials: CredentialRef[], enabled: boolean, strategy: "per-provider" | "round-robin"): ProxyPoolStatus {
+  status(
+    credentials: CredentialRef[],
+    enabled: boolean,
+    strategy: "per-provider" | "round-robin",
+  ): ProxyPoolStatus {
     const rows = this.repo.list();
     const enabledRows = rows.filter((row) => row.enabled === 1);
     const plan = this.plan(credentials, strategy);
@@ -264,7 +271,10 @@ export class ProxyPoolService {
   }
 
   /** Pool entries annotated with how many credentials currently use them. */
-  view(credentials: CredentialRef[], strategy: "per-provider" | "round-robin" = "per-provider"): ProxyPoolView[] {
+  view(
+    credentials: CredentialRef[],
+    strategy: "per-provider" | "round-robin" = "per-provider",
+  ): ProxyPoolView[] {
     const counts = new Map<string, number>();
     for (const entry of this.plan(credentials, strategy)) {
       counts.set(entry.proxyUrl, (counts.get(entry.proxyUrl) ?? 0) + 1);
@@ -278,4 +288,3 @@ export class ProxyPoolService {
     }));
   }
 }
-

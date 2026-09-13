@@ -41,7 +41,10 @@ function bar(x1: number, y1: number, x2: number, y2: number, half: number): Shap
   const dy = y2 - y1;
   const lengthSquared = dx * dx + dy * dy;
   return (x, y) => {
-    const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lengthSquared));
+    const t =
+      lengthSquared === 0
+        ? 0
+        : Math.max(0, Math.min(1, ((x - x1) * dx + (y - y1) * dy) / lengthSquared));
     return Math.hypot(x - (x1 + t * dx), y - (y1 + t * dy)) <= half;
   };
 }

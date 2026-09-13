@@ -86,7 +86,10 @@ export function paginate<T>(items: T[], query: PageQuery): Paginated<T> {
 }
 
 /** Case-insensitive substring match over any of the supplied fields. */
-export function matchesQuery(query: string | undefined, ...fields: Array<string | undefined>): boolean {
+export function matchesQuery(
+  query: string | undefined,
+  ...fields: Array<string | undefined>
+): boolean {
   if (!query) return true;
   const needle = query.toLowerCase();
   return fields.some((field) => (field ?? "").toLowerCase().includes(needle));

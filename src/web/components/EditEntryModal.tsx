@@ -49,7 +49,9 @@ export function EditEntryModal({
 
   const trimmedLabel = label.trim();
   const hasChanges =
-    model.trim() !== entry.model || trimmedLabel !== (entry.label ?? "") || strategy !== entry.routingStrategy;
+    model.trim() !== entry.model ||
+    trimmedLabel !== (entry.label ?? "") ||
+    strategy !== entry.routingStrategy;
 
   async function save() {
     const nextModel = model.trim();
@@ -98,7 +100,8 @@ export function EditEntryModal({
           autoFocus
         />
         <span className="small faint">
-          Shown in the dashboard and in <code>/v1/models</code>. Leave it empty to show the raw model id.
+          Shown in the dashboard and in <code>/v1/models</code>. Leave it empty to show the raw
+          model id.
         </span>
       </div>
 
@@ -116,7 +119,8 @@ export function EditEntryModal({
           ))}
         </datalist>
         <span className="small faint">
-          {knownModels.length} curated model(s) for {entry.providerId}. Any id the provider accepts works.
+          {knownModels.length} curated model(s) for {entry.providerId}. Any id the provider accepts
+          works.
         </span>
       </div>
 

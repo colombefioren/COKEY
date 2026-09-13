@@ -125,7 +125,10 @@ export async function collectHealthy(
   } = {},
 ): Promise<{ healthy: string[]; checked: number }> {
   const limit = options.limit ?? urls.length;
-  const concurrency = Math.min(Math.max(1, Math.floor(options.concurrency ?? 10)), Math.max(1, urls.length));
+  const concurrency = Math.min(
+    Math.max(1, Math.floor(options.concurrency ?? 10)),
+    Math.max(1, urls.length),
+  );
   const probe = options.probe ?? checkProxyUrl;
 
   const healthy: string[] = [];

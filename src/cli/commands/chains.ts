@@ -55,9 +55,9 @@ export function registerChainCommands(cli: CAC): void {
 
   defineCommand(cli, "entries", "List every entry across all chains", async (_args, context) => {
     await withCokey(context, (cokey) => {
-      const rows = cokey.listChains().flatMap((chain) =>
-        chain.entries.map((entry) => ({ chain: chain.alias, ...entry })),
-      );
+      const rows = cokey
+        .listChains()
+        .flatMap((chain) => chain.entries.map((entry) => ({ chain: chain.alias, ...entry })));
       emit(context, rows, () => {
         if (rows.length === 0) {
           console.log(dim("No entries yet."));
@@ -84,7 +84,9 @@ function listChains(cokey: Cokey, context: CommandContext): void {
       return;
     }
     for (const chain of chains) {
-      const header = chain.enabled ? bold(chain.alias) : `${bold(chain.alias)} ${dim("(disabled)")}`;
+      const header = chain.enabled
+        ? bold(chain.alias)
+        : `${bold(chain.alias)} ${dim("(disabled)")}`;
       console.log(header + (chain.description ? ` ${dim(`- ${chain.description}`)}` : ""));
       if (chain.entries.length === 0) {
         console.log(dim("  (no entries)"));
@@ -108,7 +110,13 @@ function createChain(cokey: Cokey, context: CommandContext, alias?: string): voi
     alias: name,
     description: typeof context.description === "string" ? context.description : undefined,
   });
-  emit(context, chain, () => console.log(green(`Created chain ${bold(chain.alias)} (${chain.id}) - use ${chain.alias} as the model id.`)));
+  emit(context, chain, () =>
+    console.log(
+      green(
+        `Created chain ${bold(chain.alias)} (${chain.id}) - use ${chain.alias} as the model id.`,
+      ),
+    ),
+  );
 }
 
 function deleteChain(cokey: Cokey, context: CommandContext, alias?: string): void {
@@ -118,13 +126,20 @@ function deleteChain(cokey: Cokey, context: CommandContext, alias?: string): voi
 }
 
 function addEntry(cokey: Cokey, context: CommandContext, alias?: string, reference?: string): void {
-  const chain = resolveChain(cokey, requireArg(alias, "Usage: cokey chains add <alias> <provider:model>"));
-  const ref = parseEntryRef(requireArg(reference, "Usage: cokey chains add <alias> <provider:model>"));
+  const chain = resolveChain(
+    cokey,
+    requireArg(alias, "Usage: cokey chains add <alias> <provider:model>"),
+  );
+  const ref = parseEntryRef(
+    requireArg(reference, "Usage: cokey chains add <alias> <provider:model>"),
+  );
 
   const catalogEntry = cokey.providers.findCatalogEntry(ref.providerId);
   if (!catalogEntry) throw new Error(`Unknown provider: ${ref.providerId}`);
   if (!ref.model) {
-    throw new Error(`Specify a model, e.g. ${ref.providerId}:${catalogEntry.knownModels[0] ?? "<model>"}`);
+    throw new Error(
+      `Specify a model, e.g. ${ref.providerId}:${catalogEntry.knownModels[0] ?? "<model>"}`,
+    );
   }
 
   // Bind every credential already stored for this provider so the entry is
@@ -149,8 +164,16 @@ function addEntry(cokey: Cokey, context: CommandContext, alias?: string, referen
   );
 }
 
-function removeEntry(cokey: Cokey, context: CommandContext, alias?: string, reference?: string): void {
-  const chain = resolveChain(cokey, requireArg(alias, "Usage: cokey chains remove <alias> <provider:model>"));
+function removeEntry(
+  cokey: Cokey,
+  context: CommandContext,
+  alias?: string,
+  reference?: string,
+): void {
+  const chain = resolveChain(
+    cokey,
+    requireArg(alias, "Usage: cokey chains remove <alias> <provider:model>"),
+  );
   const entry = resolveEntry(cokey, chain.id, requireArg(reference, "Missing entry reference"));
   cokey.chains.deleteEntry(entry.id);
   emit(context, { ok: true }, () =>
@@ -158,7 +181,12 @@ function removeEntry(cokey: Cokey, context: CommandContext, alias?: string, refe
   );
 }
 
-function reorderEntries(cokey: Cokey, context: CommandContext, alias?: string, refs: string[] = []): void {
+function reorderEntries(
+  cokey: Cokey,
+  context: CommandContext,
+  alias?: string,
+  refs: string[] = [],
+): void {
   const chain = resolveChain(
     cokey,
     requireArg(alias, "Usage: cokey chains reorder <alias> <provider:model> [more...]"),
@@ -172,12 +200,19 @@ function reorderEntries(cokey: Cokey, context: CommandContext, alias?: string, r
   emit(context, entries, () => {
     console.log(green(`Reordered ${chain.alias}:`));
     for (const entry of entries) {
-      console.log(`  ${dim(String(entry.priority).padStart(2))}. ${entry.providerId}/${entry.model}`);
+      console.log(
+        `  ${dim(String(entry.priority).padStart(2))}. ${entry.providerId}/${entry.model}`,
+      );
     }
   });
 }
 
-function moveEntry(cokey: Cokey, context: CommandContext, alias?: string, reference?: string): void {
+function moveEntry(
+  cokey: Cokey,
+  context: CommandContext,
+  alias?: string,
+  reference?: string,
+): void {
   const chain = resolveChain(
     cokey,
     requireArg(alias, "Usage: cokey chains move <alias> <provider:model> --to <index>"),
@@ -204,13 +239,18 @@ function setEntryEnabled(
 ): void {
   const chain = resolveChain(
     cokey,
-    requireArg(alias, `Usage: cokey chains ${enabled ? "enable" : "disable"} <alias> <provider:model>`),
+    requireArg(
+      alias,
+      `Usage: cokey chains ${enabled ? "enable" : "disable"} <alias> <provider:model>`,
+    ),
   );
   const entry = resolveEntry(cokey, chain.id, requireArg(reference, "Missing entry reference"));
   cokey.chains.setEntryEnabled(entry.id, enabled);
   emit(context, { ok: true }, () =>
     console.log(
-      green(`${enabled ? "Enabled" : "Disabled"} ${entry.providerId}/${entry.model} in ${chain.alias}.`),
+      green(
+        `${enabled ? "Enabled" : "Disabled"} ${entry.providerId}/${entry.model} in ${chain.alias}.`,
+      ),
     ),
   );
 }
@@ -224,7 +264,10 @@ function setStrategy(
 ): void {
   const chain = resolveChain(
     cokey,
-    requireArg(alias, "Usage: cokey chains strategy <alias> <provider:model> <sequential|round-robin>"),
+    requireArg(
+      alias,
+      "Usage: cokey chains strategy <alias> <provider:model> <sequential|round-robin>",
+    ),
   );
   const entry = resolveEntry(cokey, chain.id, requireArg(reference, "Missing entry reference"));
   const value = String(strategy ?? "");
@@ -269,6 +312,7 @@ export function resolveEntry(cokey: Cokey, chainId: string, reference: string): 
     .filter((entry) => entry.providerId === providerId && (!model || entry.model === model));
 
   if (matches.length === 0) throw new Error(`No entry matches ${reference}`);
-  if (matches.length > 1) throw new Error(`${reference} matches ${matches.length} entries; include the model`);
+  if (matches.length > 1)
+    throw new Error(`${reference} matches ${matches.length} entries; include the model`);
   return matches[0]!;
 }

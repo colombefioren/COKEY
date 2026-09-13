@@ -76,8 +76,7 @@ export class CredentialsRepo {
 
   get(id: string): CredentialRow | undefined {
     return this.db.db.prepare(`SELECT * FROM credentials WHERE id = ?`).get(id) as
-      | CredentialRow
-      | undefined;
+      CredentialRow | undefined;
   }
 
   list(providerId?: string): CredentialRow[] {
@@ -121,7 +120,8 @@ export class CredentialsRepo {
   }
 
   deleteByProvider(providerId: string): number {
-    return this.db.db.prepare(`DELETE FROM credentials WHERE provider_id = ?`).run(providerId).changes;
+    return this.db.db.prepare(`DELETE FROM credentials WHERE provider_id = ?`).run(providerId)
+      .changes;
   }
 
   countsByProvider(): Array<{ provider_id: string; total: number; healthy: number }> {

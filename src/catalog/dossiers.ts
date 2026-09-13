@@ -50,7 +50,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "Custom LPU silicon built for token throughput rather than general-purpose GPUs. Serves open-weight models with the lowest first-token latency on this list.",
     verdict: "recommended",
-    verdictReason: "Highest usable daily volume with sub-300ms responses makes it the natural first entry.",
+    verdictReason:
+      "Highest usable daily volume with sub-300ms responses makes it the natural first entry.",
     sourceUrl: "https://groq.com/",
   },
   cloudflare: {
@@ -60,7 +61,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "Workers AI runs open models on Cloudflare's edge network, so requests terminate close to you. The free allowance is the largest per-day ceiling here.",
     verdict: "recommended",
-    verdictReason: "Enormous request ceiling and near-zero network latency; the AI Gateway adds observability.",
+    verdictReason:
+      "Enormous request ceiling and near-zero network latency; the AI Gateway adds observability.",
     sourceUrl: "https://developers.cloudflare.com/workers-ai/",
   },
   cerebras: {
@@ -90,7 +92,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "European frontier lab. Its dedicated code family (Codestral, Devstral) is trained for completion and agentic editing rather than general chat.",
     verdict: "recommended",
-    verdictReason: "Straight from the source, and the code models are purpose-built rather than re-tuned.",
+    verdictReason:
+      "Straight from the source, and the code models are purpose-built rather than re-tuned.",
     sourceUrl: "https://mistral.ai/",
   },
   cohere: {
@@ -100,7 +103,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "Enterprise-focused lab with a strong retrieval and tool-calling line. The free trial keys are metered and expire.",
     verdict: "usable",
-    verdictReason: "Solid tool calling, but trial keys are time-boxed rather than self-replenishing.",
+    verdictReason:
+      "Solid tool calling, but trial keys are time-boxed rather than self-replenishing.",
     sourceUrl: "https://cohere.com/",
   },
   gemini: {
@@ -110,7 +114,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "Google's frontier line. The flash tier is fast and cheap and carries a very large context window.",
     verdict: "usable",
-    verdictReason: "Huge context helps on large repositories, though the free tier is not code-specialised.",
+    verdictReason:
+      "Huge context helps on large repositories, though the free tier is not code-specialised.",
     sourceUrl: "https://ai.google.dev/",
   },
   zai: {
@@ -220,7 +225,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "A coding-agent extension that also exposes an OpenAI-compatible gateway. Much of its free catalogue mirrors OpenRouter's.",
     verdict: "usable",
-    verdictReason: "Convenient if you already use the extension, otherwise redundant with OpenRouter.",
+    verdictReason:
+      "Convenient if you already use the extension, otherwise redundant with OpenRouter.",
   },
   requesty: {
     operator: "Requesty",
@@ -235,8 +241,7 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     operator: "Void AI",
     origin: "undisclosed",
     kind: "aggregator",
-    summary:
-      "A free hub advertising flagship coding models with a credit-based daily allowance.",
+    summary: "A free hub advertising flagship coding models with a credit-based daily allowance.",
     verdict: "usable",
     verdictReason: "Good model coverage, but the operator is not publicly identified.",
   },
@@ -247,7 +252,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "A free hub advertising a large daily token allowance across third-party model families.",
     verdict: "usable",
-    verdictReason: "Useful batch capacity; treat the advertised volume as unverified until your dashboard agrees.",
+    verdictReason:
+      "Useful batch capacity; treat the advertised volume as unverified until your dashboard agrees.",
   },
   llm7: {
     operator: "LLM7.IO",
@@ -434,7 +440,8 @@ const DOSSIERS: Record<string, ProviderDossier> = {
     summary:
       "A small router advertising free access to vendor models that the vendor does not wholesale to resellers.",
     verdict: "avoid",
-    verdictReason: "If a reseller sells frontier weights for free, the name is almost certainly not the model.",
+    verdictReason:
+      "If a reseller sells frontier weights for free, the name is almost certainly not the model.",
   },
   orcarouter: {
     operator: "Orcarouter",

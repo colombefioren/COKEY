@@ -11,13 +11,7 @@
  * `openai` covers every OpenAI-compatible service (the vast majority).
  * The others exist only where the request/response shape genuinely differs.
  */
-export type ApiStyle =
-  | "openai"
-  | "anthropic"
-  | "google"
-  | "cohere"
-  | "cloudflare"
-  | "ollama";
+export type ApiStyle = "openai" | "anthropic" | "google" | "cohere" | "cloudflare" | "ollama";
 
 export type AuthScheme = "bearer" | "x-api-key" | "query-param" | "custom-header";
 

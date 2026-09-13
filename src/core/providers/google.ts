@@ -57,7 +57,8 @@ export class GoogleAdapter extends OpenAICompatibleAdapter {
   }
 
   override extractUsage(body: unknown): TokenUsage {
-    const metadata = (body as { usageMetadata?: Record<string, unknown> } | undefined)?.usageMetadata;
+    const metadata = (body as { usageMetadata?: Record<string, unknown> } | undefined)
+      ?.usageMetadata;
     return {
       inputTokens: num(metadata?.promptTokenCount),
       outputTokens: num(metadata?.candidatesTokenCount),
@@ -231,9 +232,11 @@ function toGeminiRequest(request: ChatCompletionRequest): Record<string, unknown
   const generationConfig: Record<string, unknown> = {};
   const maxTokens = num(request.max_tokens) ?? num(request.max_completion_tokens);
   if (maxTokens !== undefined) generationConfig.maxOutputTokens = maxTokens;
-  if (num(request.temperature) !== undefined) generationConfig.temperature = num(request.temperature);
+  if (num(request.temperature) !== undefined)
+    generationConfig.temperature = num(request.temperature);
   if (num(request.top_p) !== undefined) generationConfig.topP = num(request.top_p);
-  if (Array.isArray(request.stop) && request.stop.length > 0) generationConfig.stopSequences = request.stop;
+  if (Array.isArray(request.stop) && request.stop.length > 0)
+    generationConfig.stopSequences = request.stop;
   if (Object.keys(generationConfig).length > 0) body.generationConfig = generationConfig;
 
   const tools = toGeminiTools(request.tools);

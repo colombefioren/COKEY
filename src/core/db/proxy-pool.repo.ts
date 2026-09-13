@@ -30,14 +30,12 @@ export class ProxyPoolRepo {
 
   get(id: string): ProxyPoolRow | undefined {
     return this.db.db.prepare(`SELECT * FROM proxy_pool WHERE id = ?`).get(id) as
-      | ProxyPoolRow
-      | undefined;
+      ProxyPoolRow | undefined;
   }
 
   findByUrl(url: string): ProxyPoolRow | undefined {
     return this.db.db.prepare(`SELECT * FROM proxy_pool WHERE url = ?`).get(url) as
-      | ProxyPoolRow
-      | undefined;
+      ProxyPoolRow | undefined;
   }
 
   list(): ProxyPoolRow[] {
@@ -53,9 +51,7 @@ export class ProxyPoolRepo {
   }
 
   setEnabled(id: string, enabled: boolean): void {
-    this.db.db
-      .prepare(`UPDATE proxy_pool SET enabled = ? WHERE id = ?`)
-      .run(enabled ? 1 : 0, id);
+    this.db.db.prepare(`UPDATE proxy_pool SET enabled = ? WHERE id = ?`).run(enabled ? 1 : 0, id);
   }
 
   delete(id: string): void {

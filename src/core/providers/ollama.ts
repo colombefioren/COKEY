@@ -87,7 +87,9 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
       model: context.model,
       created: context.created,
       content: typeof message.content === "string" ? message.content : "",
-      finishReason: mapFinishReason(typeof record.done_reason === "string" ? record.done_reason : "stop"),
+      finishReason: mapFinishReason(
+        typeof record.done_reason === "string" ? record.done_reason : "stop",
+      ),
       usage: this.extractUsage(record),
     });
   }
@@ -113,7 +115,9 @@ export class OllamaAdapter extends OpenAICompatibleAdapter {
     });
     if (!result.ok) throw new Error(result.error.message);
 
-    const body = (await result.response.json()) as { models?: Array<{ name?: string; model?: string }> };
+    const body = (await result.response.json()) as {
+      models?: Array<{ name?: string; model?: string }>;
+    };
     return (body.models ?? [])
       .map((m) => m.name ?? m.model)
       .filter((name): name is string => typeof name === "string")

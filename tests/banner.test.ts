@@ -27,9 +27,7 @@ describe("bannerLines", () => {
   });
 
   it("keeps the wordmark in a single column", () => {
-    const columns = art
-      .map((line) => line.indexOf("#", 41))
-      .filter((column) => column >= 0);
+    const columns = art.map((line) => line.indexOf("#", 41)).filter((column) => column >= 0);
 
     expect(columns.length).toBeGreaterThanOrEqual(6);
     expect(new Set(columns).size).toBe(1);

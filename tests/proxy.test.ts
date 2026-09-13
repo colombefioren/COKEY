@@ -1,10 +1,7 @@
 import { afterAll, describe, expect, it } from "vitest";
 import { findProvider } from "../src/catalog/providers.js";
 import { OpenAICompatibleAdapter } from "../src/core/providers/openai-compatible.js";
-import {
-  PROXIFLY_FREE_LIST_URL,
-  parseProxiflyList,
-} from "../src/core/providers/proxifly.js";
+import { PROXIFLY_FREE_LIST_URL, parseProxiflyList } from "../src/core/providers/proxifly.js";
 import {
   closeProxyDispatchers,
   dispatcherFor,
@@ -144,7 +141,11 @@ describe("adapter proxy wiring", () => {
 
   it("carries the credential's proxy onto the upstream request", () => {
     const adapter = new OpenAICompatibleAdapter(catalog);
-    const spec = adapter.createRequest(entry, credential("socks5://user:pass@127.0.0.1:1080"), request);
+    const spec = adapter.createRequest(
+      entry,
+      credential("socks5://user:pass@127.0.0.1:1080"),
+      request,
+    );
     expect(spec.proxyUrl).toBe("socks5://user:pass@127.0.0.1:1080");
   });
 

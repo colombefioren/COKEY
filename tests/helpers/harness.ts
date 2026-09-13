@@ -13,7 +13,11 @@ import { SecretVault } from "../../src/core/crypto/secrets.js";
 import { EventBus } from "../../src/core/events.js";
 import { classifyError } from "../../src/core/errors/classify.js";
 import { silentLogger } from "../../src/core/logger.js";
-import type { ProviderAdapter, ProviderRequest, SendResult } from "../../src/core/providers/adapter.js";
+import type {
+  ProviderAdapter,
+  ProviderRequest,
+  SendResult,
+} from "../../src/core/providers/adapter.js";
 import type { ProviderRegistry } from "../../src/core/providers/registry.js";
 import { RouterEngine } from "../../src/core/router/engine.js";
 import { DEFAULT_FALLBACK_POLICY, type Credential } from "../../src/core/types.js";
@@ -66,10 +70,7 @@ export class StubAdapter implements ProviderAdapter {
     };
   }
 
-  async send(
-    entry: { model: string },
-    credential: Credential,
-  ): Promise<SendResult> {
+  async send(entry: { model: string }, credential: Credential): Promise<SendResult> {
     this.calls.push({
       credentialId: credential.id,
       description: credential.description,
@@ -151,12 +152,7 @@ export function createHarness(): Harness {
   const vault = new SecretVault({ dataDir: dir, disableKeychain: true });
   const cooldown = new CooldownManager();
   const rates = new RateTracker();
-  const credentials = new CredentialManager(
-    new CredentialsRepo(db),
-    vault,
-    cooldown,
-    rates,
-  );
+  const credentials = new CredentialManager(new CredentialsRepo(db), vault, cooldown, rates);
   const chains = new ChainManager(new ChainsRepo(db));
   const selector = new CredentialSelector(credentials, cooldown);
   const events = new EventBus();

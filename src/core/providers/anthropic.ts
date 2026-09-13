@@ -48,7 +48,10 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
     return {
       url: `${base}/v1/messages`,
       method: "POST",
-      headers: this.headers(credential, request.stream === true ? "text/event-stream" : "application/json"),
+      headers: this.headers(
+        credential,
+        request.stream === true ? "text/event-stream" : "application/json",
+      ),
       body: JSON.stringify(body),
       stream: request.stream === true,
       proxyUrl: credential.proxyUrl,
@@ -80,7 +83,11 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
     const blocks = Array.isArray(record.content) ? record.content : [];
 
     let text = "";
-    const toolCalls: Array<{ type: "function"; id: string; function: { name?: string; arguments: string } }> = [];
+    const toolCalls: Array<{
+      type: "function";
+      id: string;
+      function: { name?: string; arguments: string };
+    }> = [];
 
     for (const block of blocks) {
       const b = block as Record<string, unknown>;
@@ -102,7 +109,9 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
       model: context.model,
       created: context.created,
       content: text,
-      finishReason: mapFinishReason(typeof record.stop_reason === "string" ? record.stop_reason : undefined),
+      finishReason: mapFinishReason(
+        typeof record.stop_reason === "string" ? record.stop_reason : undefined,
+      ),
       toolCalls,
       usage: this.extractUsage(record),
     });
@@ -175,7 +184,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
         continue;
       }
 
-      const type = typeof parsed.type === "string" ? parsed.type : event.event ?? "";
+      const type = typeof parsed.type === "string" ? parsed.type : (event.event ?? "");
 
       if (!roleSent && type !== "message_stop") {
         yield sseFrame(
@@ -290,7 +299,8 @@ export function toAnthropicMessages(request: ChatCompletionRequest): {
         content: [
           {
             type: "tool_result",
-            tool_use_id: typeof message.tool_call_id === "string" ? message.tool_call_id : "unknown",
+            tool_use_id:
+              typeof message.tool_call_id === "string" ? message.tool_call_id : "unknown",
             content: flattenContent(message.content),
           },
         ],
@@ -303,7 +313,8 @@ export function toAnthropicMessages(request: ChatCompletionRequest): {
       const text = flattenContent(message.content);
       if (text) blocks.push({ type: "text", text });
       for (const call of message.tool_calls) {
-        const fn = (call as { id?: string; function?: { name?: string; arguments?: string } }).function;
+        const fn = (call as { id?: string; function?: { name?: string; arguments?: string } })
+          .function;
         blocks.push({
           type: "tool_use",
           id: (call as { id?: string }).id ?? `call_${blocks.length}`,
@@ -315,7 +326,10 @@ export function toAnthropicMessages(request: ChatCompletionRequest): {
       continue;
     }
 
-    messages.push({ role: message.role === "assistant" ? "assistant" : "user", content: flattenContent(message.content) });
+    messages.push({
+      role: message.role === "assistant" ? "assistant" : "user",
+      content: flattenContent(message.content),
+    });
   }
 
   return { system: systemParts.length > 0 ? systemParts.join("\n\n") : undefined, messages };
@@ -327,7 +341,11 @@ function toAnthropicTools(tools: unknown): unknown[] | undefined {
   for (const tool of tools) {
     const fn = (tool as { function?: Record<string, unknown> }).function;
     if (!fn) continue;
-    out.push({ name: fn.name, description: fn.description, input_schema: fn.parameters ?? { type: "object" } });
+    out.push({
+      name: fn.name,
+      description: fn.description,
+      input_schema: fn.parameters ?? { type: "object" },
+    });
   }
   return out.length > 0 ? out : undefined;
 }

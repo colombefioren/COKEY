@@ -101,7 +101,9 @@ export class SettingsService {
    */
   setPassword(password: string): void {
     if (this.passwordLocked()) {
-      throw new InvalidSettingError("The admin password has already been set and cannot be changed");
+      throw new InvalidSettingError(
+        "The admin password has already been set and cannot be changed",
+      );
     }
     if (!password || password.length < 4) {
       throw new InvalidSettingError("Password must be at least 4 characters");
@@ -140,7 +142,10 @@ export function validateSettings(settings: Settings): Settings {
     throw new InvalidSettingError("Invalid data directory");
   }
 
-  if (settings.autoProxyStrategy !== "per-provider" && settings.autoProxyStrategy !== "round-robin") {
+  if (
+    settings.autoProxyStrategy !== "per-provider" &&
+    settings.autoProxyStrategy !== "round-robin"
+  ) {
     throw new InvalidSettingError(`Invalid auto proxy strategy: ${settings.autoProxyStrategy}`);
   }
 
@@ -151,8 +156,14 @@ export function validateSettings(settings: Settings): Settings {
 
   const policy = settings.fallback ?? DEFAULT_FALLBACK_POLICY;
   const maxRetriesPerCredential = Number(policy.maxRetriesPerCredential);
-  if (!Number.isInteger(maxRetriesPerCredential) || maxRetriesPerCredential < 0 || maxRetriesPerCredential > 10) {
-    throw new InvalidSettingError(`Invalid max retries per credential: ${policy.maxRetriesPerCredential}`);
+  if (
+    !Number.isInteger(maxRetriesPerCredential) ||
+    maxRetriesPerCredential < 0 ||
+    maxRetriesPerCredential > 10
+  ) {
+    throw new InvalidSettingError(
+      `Invalid max retries per credential: ${policy.maxRetriesPerCredential}`,
+    );
   }
 
   return {
@@ -189,7 +200,10 @@ export function applyEnvOverrides(settings: Settings, env: NodeJS.ProcessEnv): S
   if (env.COKEY_AUTO_PROXY === "1" || env.COKEY_AUTO_PROXY === "true") {
     next.autoProxy = true;
   }
-  if (env.COKEY_AUTO_PROXY_STRATEGY === "round-robin" || env.COKEY_AUTO_PROXY_STRATEGY === "per-provider") {
+  if (
+    env.COKEY_AUTO_PROXY_STRATEGY === "round-robin" ||
+    env.COKEY_AUTO_PROXY_STRATEGY === "per-provider"
+  ) {
     next.autoProxyStrategy = env.COKEY_AUTO_PROXY_STRATEGY;
   }
   if (env.COKEY_MAX_RETRIES_PER_CREDENTIAL) {

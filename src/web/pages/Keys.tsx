@@ -67,9 +67,12 @@ export function Keys({
     for (const credential of credentials) {
       if (
         needle &&
-        ![credential.description, credential.providerId, credential.maskedSecret, credential.status].some(
-          (field) => field.toLowerCase().includes(needle),
-        )
+        ![
+          credential.description,
+          credential.providerId,
+          credential.maskedSecret,
+          credential.status,
+        ].some((field) => field.toLowerCase().includes(needle))
       ) {
         continue;
       }
@@ -285,10 +288,15 @@ export function Keys({
                             : ""}
                         </td>
                         <td className="small">
-                          <QuotaLabel quota={credential.quota} quotaErrors={credential.usage.quotaErrors} />
+                          <QuotaLabel
+                            quota={credential.quota}
+                            quotaErrors={credential.usage.quotaErrors}
+                          />
                         </td>
                         <td className="small muted">
-                          {credential.usage.lastUsedAt ? timeAgo(credential.usage.lastUsedAt) : "never"}
+                          {credential.usage.lastUsedAt
+                            ? timeAgo(credential.usage.lastUsedAt)
+                            : "never"}
                         </td>
                         <td>
                           <div className="row" style={{ gap: 4 }}>
@@ -379,8 +387,8 @@ export function Keys({
           onClose={() => setAssignFor(null)}
         >
           <p className="small muted" style={{ marginTop: 0 }}>
-            COKEY already spreads exits automatically: add proxies to the pool once and every key
-            of a provider gets a different one. Leave this on the automatic pool, or pin this key to
+            COKEY already spreads exits automatically: add proxies to the pool once and every key of
+            a provider gets a different one. Leave this on the automatic pool, or pin this key to
             one specific exit.
           </p>
 

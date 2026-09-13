@@ -277,7 +277,10 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("muse-glimmer-30b:free", "131K", "General", 4.05),
     m("gpt-oss-120b:free", "131K", "General", 11.04),
   ],
-  bazaarlink: [m("auto:free", undefined, "General", 2.56), m("qwen/qwen3.7-flash:free", "1M", "General", 3.23)],
+  bazaarlink: [
+    m("auto:free", undefined, "General", 2.56),
+    m("qwen/qwen3.7-flash:free", "1M", "General", 3.23),
+  ],
   fastrouter: [
     m("openai/gpt-oss-120b:free", "131K", "General", 2.8),
     m("openai/gpt-oss-20b:free", "131K", "Code", 2.8),
@@ -337,7 +340,10 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("openai/gpt-oss-20b", "131K", "General", 2.0),
     m("poolside/laguna-xs-2.1", "128K", "Code", 1.5),
   ],
-  poolside: [m("poolside/laguna-s-2.1", "256K", "Code", 1.3), m("poolside/laguna-xs-2.1", "128K", "Code", 0.9)],
+  poolside: [
+    m("poolside/laguna-s-2.1", "256K", "Code", 1.3),
+    m("poolside/laguna-xs-2.1", "128K", "Code", 0.9),
+  ],
   zai: [m("glm-4.7-flash", "128K", "General", 2.4), m("glm-4.5-flash", "128K", "Fallback", 0.7)],
   "intern-ai": [
     m("intern-latest", "256K", "General", 1.0),
@@ -486,10 +492,7 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("coding-glm-4.7-free", undefined, "Code"),
     m("gpt-5.5-free", undefined, "General"),
   ],
-  fhrouter: [
-    m("deepseek-v4-flash", undefined, "General"),
-    m("grok-4.6", undefined, "Reasoning"),
-  ],
+  fhrouter: [m("deepseek-v4-flash", undefined, "General"), m("grok-4.6", undefined, "Reasoning")],
   amdradeon: [m("DeepSeek-V4-Flash", "1M", "Reasoning")],
   wusrouter: [
     m("DeepSeek-R1-0528-Qwen3-8B", undefined, "Reasoning"),

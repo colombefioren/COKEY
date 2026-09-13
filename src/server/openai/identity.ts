@@ -67,8 +67,7 @@ export function withChainStateNotice(body: unknown, notice: string | null): unkn
   if (!Array.isArray(choices)) return body;
   const changed = choices.map((choice) => {
     const content = (choice as Record<string, unknown> | undefined)?.message as
-      | Record<string, unknown>
-      | undefined;
+      Record<string, unknown> | undefined;
     if (!content || typeof content.content !== "string") return choice;
     return {
       ...(choice as Record<string, unknown>),

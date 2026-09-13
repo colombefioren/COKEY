@@ -82,7 +82,11 @@ function mergeEntry(a: ProviderCatalogEntry, b: ProviderCatalogEntry): ProviderC
 }
 
 /** Return `value` unless it is empty, in which case try the fallback. */
-function prefer(value: string | undefined, fallback: string | undefined, otherwise: string): string {
+function prefer(
+  value: string | undefined,
+  fallback: string | undefined,
+  otherwise: string,
+): string {
   if (value && value.trim()) return value;
   if (fallback && fallback.trim()) return fallback;
   return otherwise;
