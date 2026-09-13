@@ -11,12 +11,16 @@
  * Run with `npm run fonts` when a family or weight is added. The script is
  * idempotent: unchanged files are left alone, so a re-run is a no-op.
  *
- * One family: Bricolage Grotesque, at the weights the dashboard actually uses
- * (regular text, medium labels, semibold headings, bold emphasis). It is a
- * single modern grotesque with enough character in its letterforms — flat-cut
- * terminals on the lowercase a/g, a slightly condensed rhythm — to read as a
- * deliberate choice rather than the Inter/Manrope default every generated
- * dashboard reaches for.
+ * Two families, each with a job:
+ *
+ *   Bricolage Grotesque  everything a person reads at length: body copy,
+ *                        tables, form labels. A modern grotesque with real
+ *                        character, not the Inter/Manrope default.
+ *   Shantell Sans        headings, page titles and the sidebar wordmark. A
+ *                        genuinely handwritten-feeling variable face that
+ *                        stays legible at UI sizes, used for the hand-drawn
+ *                        charm — never for body copy, where a script face
+ *                        would only slow reading down.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
@@ -42,6 +46,11 @@ const FAMILIES = [
     query: "Bricolage+Grotesque:wght@400;500;600;700;800",
     slug: "bricolage-grotesque",
     display: "Bricolage Grotesque",
+  },
+  {
+    query: "Shantell+Sans:wght@500;600;700;800",
+    slug: "shantell-sans",
+    display: "Shantell Sans",
   },
 ];
 

@@ -77,9 +77,7 @@ export class ProviderRegistry {
    */
   getCatalog(): ProviderCatalogEntry[] {
     const aliases = new Set(PROVIDER_ALIASES.keys());
-    return [...this.entries.entries()]
-      .filter(([id]) => !aliases.has(id))
-      .map(([, entry]) => entry);
+    return [...this.entries.entries()].filter(([id]) => !aliases.has(id)).map(([, entry]) => entry);
   }
 
   /**

@@ -14,3 +14,12 @@
   font-display: swap;
   src: url("/fonts/bricolage-grotesque-variable.woff2") format("woff2");
 }
+
+/* Shantell Sans */
+@font-face {
+  font-family: "Shantell Sans";
+  font-style: normal;
+  font-weight: 500 800;
+  font-display: swap;
+  src: url("/fonts/shantell-sans-variable.woff2") format("woff2");
+}

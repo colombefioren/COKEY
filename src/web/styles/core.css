@@ -1,62 +1,78 @@
 /*
  * COKEY dashboard theme.
  *
- * An elevated, editorial workspace built around one confident violet — not a
- * pastel wash, a real ink-deep purple that carries every call to action. The
- * ground is a near-white with the faintest violet cast in light mode and a
- * true near-black indigo in dark mode; surfaces are flat cards with a
- * hairline border and one soft shadow. Berry covers errors, amber covers
- * warnings, moss covers healthy, and indigo-blue is reserved for links, so
- * the page never reads as one hue washed over everything — it reads as one
- * confident hue used with restraint.
+ * A hand-drawn, scrapbook-y workspace built around one cute bubblegum pink.
+ * The page itself is white paper; the sidebar is a solid tinted panel rather
+ * than another white slab, and small cards borrow a rotating set of pastel
+ * tints so a row of them reads as a handful of stickers, not a spreadsheet.
+ * Borders get a hand-inked wobble from a shared SVG filter (see `#rough` in
+ * App.tsx) instead of a razor-straight machine line.
  *
- * Nothing glows, nothing gradients. Depth comes from one soft shadow and a
- * 1px border, which is what lets the same stylesheet read as light and as
- * dark without turning into a different product.
+ * Only one theme: there is no dark mode. A single considered palette beats
+ * two half-considered ones, and the ink-on-paper feel this is going for does
+ * not survive an inversion anyway.
  *
- * Every colour is a token, and the dark theme only re-points the tokens.
+ * Every colour is still a token — nothing hex-coded outside this block —
+ * so the palette can move again without hunting through every sheet.
  */
 
 :root {
   color-scheme: light;
 
-  /* Ground and surfaces: a near-white with the barest violet cast. */
-  --ground: #f8f7fc;
+  /* The page is paper: plain white, full stop. */
+  --ground: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f2f0f9;
-  --surface-3: #e9e5f6;
-  --surface-glass: rgba(255, 255, 255, 0.82);
+  --surface-2: #fff5f9;
+  --surface-3: #ffe9f2;
+  --surface-glass: rgba(255, 255, 255, 0.88);
 
-  --border: #e7e3f4;
-  --border-strong: #d6cef0;
+  --border: #ffd6e8;
+  --border-strong: #ffb8d9;
 
-  --text: #171029;
-  --muted: #5d5573;
-  --faint: #948da9;
+  --text: #2b1420;
+  --muted: #7a5c6b;
+  --faint: #b592a4;
 
-  /* A real violet brand, with berry, amber, moss and indigo in support. */
-  --violet: #6d3df0;
-  --violet-strong: #5527d6;
-  --violet-soft: #efe8fe;
-  --violet-line: #dccffb;
+  /* A cute, confident bubblegum pink, with tomato/amber/moss/periwinkle in
+     support so the page reads as one hand-picked set, not a rainbow. */
+  --violet: #ff4f93;
+  --violet-strong: #e83b7d;
+  --violet-soft: #ffe3ee;
+  --violet-line: #ffc2dc;
   --violet-ink: #ffffff;
 
-  --rose: #cf3d70;
-  --rose-strong: #b02b5a;
-  --rose-soft: #fbe6ef;
-  --rose-line: #f2c6dc;
+  --rose: #e5484d;
+  --rose-strong: #c9383d;
+  --rose-soft: #fde4e2;
+  --rose-line: #f7c3c1;
 
-  --peach: #ad7c1f;
-  --peach-soft: #f8eed7;
-  --peach-line: #ecd8a6;
+  --peach: #d68a1b;
+  --peach-soft: #fbedd3;
+  --peach-line: #f0d59d;
 
-  --sage: #2f9163;
-  --sage-soft: #e3f4ea;
-  --sage-line: #c4e7d3;
+  --sage: #2f9e6e;
+  --sage-soft: #e3f5ec;
+  --sage-line: #c3e9d6;
 
-  --sky: #4a5fdb;
-  --sky-soft: #eceffb;
-  --sky-line: #d3d8f7;
+  --sky: #6c8cf5;
+  --sky-soft: #edf0fe;
+  --sky-line: #d1d9fb;
+
+  /* The sidebar is its own tinted panel, not another white card. */
+  --sidebar-bg: #ffe3ee;
+  --sidebar-border: #ffc9de;
+
+  /* The rotating sticker tints small cards and stat tiles borrow from. */
+  --tint-1: #ffe3ee;
+  --tint-1-line: #ffc2dc;
+  --tint-2: #fff3c9;
+  --tint-2-line: #f5e08f;
+  --tint-3: #dcf5e6;
+  --tint-3-line: #b7e8c9;
+  --tint-4: #e3e8ff;
+  --tint-4-line: #c6cffb;
+  --tint-5: #ffe6d1;
+  --tint-5-line: #f6cda3;
 
   --accent: var(--violet);
   --accent-hover: var(--violet-strong);
@@ -73,65 +89,22 @@
   --neutral-bg: var(--surface-3);
 
   /* Low, neutral shadows. Depth without a halo. */
-  --shadow: 0 1px 2px rgba(23, 16, 41, 0.05), 0 10px 28px -20px rgba(23, 16, 41, 0.18);
-  --shadow-lift: 0 2px 4px rgba(23, 16, 41, 0.06), 0 16px 36px -22px rgba(23, 16, 41, 0.22);
-  --shadow-pop: 0 4px 10px rgba(23, 16, 41, 0.08), 0 26px 54px -30px rgba(23, 16, 41, 0.28);
-  --hairline: rgba(109, 61, 240, 0.14);
+  --shadow: 0 1px 2px rgba(43, 20, 32, 0.05), 0 10px 28px -20px rgba(43, 20, 32, 0.18);
+  --shadow-lift: 0 2px 4px rgba(43, 20, 32, 0.06), 0 16px 36px -22px rgba(43, 20, 32, 0.22);
+  --shadow-pop: 0 4px 10px rgba(43, 20, 32, 0.08), 0 26px 54px -30px rgba(43, 20, 32, 0.28);
+  --hairline: rgba(255, 79, 147, 0.16);
 
   --radius: 20px;
   --radius-md: 14px;
   --radius-sm: 10px;
   --font-body:
     "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Headings and titles only — a script face slows body reading down. */
+  --font-display: "Shantell Sans", var(--font-body);
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sidebar-w: 260px;
   --sidebar-w-collapsed: 80px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
-}
-
-[data-theme="dark"] {
-  color-scheme: dark;
-
-  --ground: #100b1d;
-  --surface: #171025;
-  --surface-2: #1d1730;
-  --surface-3: #251d3c;
-  --surface-glass: rgba(23, 16, 37, 0.8);
-
-  --border: #2c2444;
-  --border-strong: #392f57;
-
-  --text: #f2effb;
-  --muted: #b2a7cd;
-  --faint: #79709c;
-
-  --violet: #a68af7;
-  --violet-strong: #c1abff;
-  --violet-soft: #251a42;
-  --violet-line: #3c2f63;
-  --violet-ink: #170c30;
-
-  --rose: #ef88ac;
-  --rose-strong: #f5a7c5;
-  --rose-soft: #33202d;
-  --rose-line: #54324b;
-
-  --peach: #e0b768;
-  --peach-soft: #322715;
-  --peach-line: #4e3d22;
-
-  --sage: #7cd6a5;
-  --sage-soft: #16301f;
-  --sage-line: #2b4c36;
-
-  --sky: #94a2f7;
-  --sky-soft: #1e2242;
-  --sky-line: #333a63;
-
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -20px rgba(0, 0, 0, 0.68);
-  --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 42px -24px rgba(0, 0, 0, 0.76);
-  --shadow-pop: 0 6px 14px rgba(0, 0, 0, 0.5), 0 32px 66px -34px rgba(0, 0, 0, 0.82);
-  --hairline: rgba(166, 138, 247, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -177,6 +150,14 @@ a:hover {
   text-decoration: underline;
 }
 
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+}
+
 h3 {
   font-size: 15px;
   margin: 0 0 8px;
@@ -198,6 +179,11 @@ h3 {
   grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr);
 }
 
+/*
+ * The sidebar is a solid tinted panel, not another white card — it is what
+ * makes the white page underneath it read as paper rather than a blank
+ * canvas that forgot to load.
+ */
 .sidebar {
   position: sticky;
   top: 16px;
@@ -207,26 +193,14 @@ h3 {
   gap: 16px;
   height: calc(100vh - 32px);
   padding: 18px 14px 16px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--sidebar-border);
   border-radius: 24px;
-  background: var(--surface);
+  background: var(--sidebar-bg);
   box-shadow: var(--shadow);
   transition:
     padding 0.35s var(--ease),
     border-radius 0.35s var(--ease),
     background 0.3s ease;
-}
-
-/* A barely-there tint so the rail is not a flat white slab. */
-.sidebar::before {
-  content: "";
-  position: absolute;
-  inset: 0 0 auto;
-  height: 220px;
-  pointer-events: none;
-  border-radius: 24px 24px 60% 60%;
-  background: linear-gradient(180deg, var(--violet-soft), transparent);
-  opacity: 0.75;
 }
 
 .sidebar > * {
@@ -255,9 +229,10 @@ h3 {
   transform: rotate(-4deg) scale(1.04);
 }
 .brand-word {
-  font-size: 15px;
+  font-family: var(--font-display);
+  font-size: 19px;
   font-weight: 700;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.02em;
   color: var(--text);
 }
 
@@ -311,8 +286,10 @@ h3 {
   z-index: 0;
   pointer-events: none;
   border-radius: 13px;
-  background: var(--violet-soft);
-  box-shadow: inset 0 0 0 1px var(--violet-line);
+  /* A white pill on the pink rail, not another pink tint that would vanish
+     into the panel behind it. */
+  background: var(--surface);
+  box-shadow: var(--shadow);
   transition:
     transform 0.42s var(--ease),
     height 0.42s var(--ease),
@@ -363,7 +340,7 @@ h3 {
 }
 
 .nav-item:hover {
-  background: var(--surface-2);
+  background: var(--sidebar-border);
   color: var(--text);
   text-decoration: none;
 }
@@ -403,15 +380,12 @@ h3 {
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 999px;
-  background: var(--rose-soft);
-  color: var(--rose);
+  background: var(--surface);
+  color: var(--violet-strong);
   font-variant-numeric: tabular-nums;
   transition:
     transform 0.24s var(--ease),
     background 0.2s ease;
-}
-.nav-item.active .nav-badge {
-  background: var(--surface);
 }
 .nav-item:hover .nav-badge {
   transform: scale(1.06);
@@ -552,7 +526,7 @@ h3 {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  border-top: 1px solid var(--border);
+  border-top: 1px solid var(--sidebar-border);
   padding-top: 12px;
 }
 .sidebar-stats {
@@ -601,30 +575,6 @@ h3 {
   display: none;
 }
 
-.theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 12px 5px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 11.5px;
-  font-weight: 550;
-}
-.theme-toggle:hover:not(:disabled) {
-  color: var(--violet);
-  border-color: var(--violet-line);
-  background: var(--surface);
-}
-.theme-toggle svg {
-  transition: transform 0.45s var(--ease);
-}
-.theme-toggle:hover:not(:disabled) svg {
-  transform: rotate(28deg);
-}
-
 .nav-toggle {
   align-items: center;
   justify-content: center;
@@ -639,6 +589,65 @@ h3 {
 .nav-toggle:hover:not(:disabled) {
   color: var(--violet);
   border-color: var(--violet-line);
+}
+
+/* ---- notifications --------------------------------------------------------
+ * "Needs attention", as a bell reachable from every screen instead of a
+ * fixture on the Dashboard.
+ */
+.notif-bell {
+  position: relative;
+}
+.notif-trigger {
+  display: grid;
+  place-items: center;
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+.notif-trigger:hover:not(:disabled) {
+  color: var(--violet);
+  border-color: var(--violet-line);
+}
+.notif-trigger.has-alerts {
+  color: var(--violet-strong);
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+}
+.notif-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  display: grid;
+  place-items: center;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 3px;
+  border-radius: 999px;
+  background: var(--rose);
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+/* The dropdown reuses the Guidance panel verbatim, so it only needs to be
+   positioned and given a scroll boundary — the content styles itself. */
+.notif-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 70;
+  width: min(440px, calc(100vw - 32px));
+  max-height: min(560px, calc(100vh - 100px));
+  overflow-y: auto;
+  animation: modal-in 0.2s var(--ease) both;
 }
 
 /* Docked at the bottom of the content column: counts on the left, creator
@@ -703,13 +712,22 @@ main {
  * couple of hand-rolled sections can still select it directly. Padding lives
  * on `.window-body`, never here, so the two names never double it up.
  */
+/*
+ * The sketchy outline: a second, slightly offset line in the shadow layer
+ * behind the real 2px border. Two lines that do not quite trace each other is
+ * what reads as inked by hand rather than drawn by a rasteriser — cheaper and
+ * safer than an SVG displacement filter, which would also smear the text
+ * inside the very box it is meant to outline.
+ */
 .window,
 section.panel {
   position: relative;
   border-radius: var(--radius);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border-strong);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow:
+    1.5px 2px 0 0 var(--border),
+    var(--shadow);
   overflow: hidden;
   transition:
     border-color 0.25s ease,
@@ -870,19 +888,56 @@ section.panel.soft {
  * confident than a row cycling through five background tints, and it is the
  * number that changes from card to card, not the wallpaper behind it.
  */
+/*
+ * Stat tiles are the stickers of the page: each one borrows a different
+ * pastel from the rotating tint set and leans a degree off true, like a
+ * handful of paper cutouts pressed onto the page rather than five identical
+ * spreadsheet cells.
+ */
 .stat {
   position: relative;
   overflow: hidden;
   padding: 14px 15px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--surface);
+  transform: rotate(var(--tilt, 0deg));
+  transition: transform 0.2s var(--ease);
+}
+.stat:hover {
+  transform: translateY(-2px) rotate(0deg);
+}
+.stat:nth-child(5n + 1) {
+  background: var(--tint-1);
+  border-color: var(--tint-1-line);
+  --tilt: -1.1deg;
+}
+.stat:nth-child(5n + 2) {
+  background: var(--tint-2);
+  border-color: var(--tint-2-line);
+  --tilt: 0.9deg;
+}
+.stat:nth-child(5n + 3) {
+  background: var(--tint-3);
+  border-color: var(--tint-3-line);
+  --tilt: -0.7deg;
+}
+.stat:nth-child(5n + 4) {
+  background: var(--tint-4);
+  border-color: var(--tint-4-line);
+  --tilt: 1.2deg;
+}
+.stat:nth-child(5n + 5) {
+  background: var(--tint-5);
+  border-color: var(--tint-5-line);
+  --tilt: -0.9deg;
 }
 .stat .value {
-  font-size: 24px;
+  font-family: var(--font-display);
+  font-size: 25px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: var(--violet);
+  color: var(--text);
 }
 .stat .label {
   color: var(--muted);
@@ -901,9 +956,11 @@ section.panel.soft {
 .card {
   padding: 15px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--surface);
-  box-shadow: var(--shadow);
+  box-shadow:
+    1.5px 2px 0 0 var(--border),
+    var(--shadow);
   transition:
     border-color 0.22s ease,
     transform 0.22s var(--ease),
@@ -912,7 +969,9 @@ section.panel.soft {
 .card:hover {
   border-color: var(--border-strong);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
+  box-shadow:
+    1.5px 2px 0 0 var(--border-strong),
+    var(--shadow-lift);
 }
 .card .title {
   font-weight: 620;
@@ -947,7 +1006,9 @@ button {
 }
 button:hover:not(:disabled) {
   background: var(--violet-strong);
-  box-shadow: var(--shadow);
+  box-shadow:
+    1.5px 2px 0 0 var(--violet-line),
+    var(--shadow);
 }
 button:active:not(:disabled) {
   transform: translateY(1px);
@@ -1350,8 +1411,17 @@ code {
   opacity: 0.55;
 }
 .entry-node.sweep-testing {
+  position: relative;
   border-color: var(--violet);
   box-shadow: 0 0 0 2px var(--violet-soft);
+}
+.entry-node.sweep-testing::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border: 2px dashed var(--violet);
+  animation: scribble-wobble 1.7s ease-in-out infinite;
+  pointer-events: none;
 }
 .entry-node.sweep-ok {
   border-color: var(--sage);
@@ -1496,16 +1566,8 @@ button.model-name:hover {
 
 /* ---- model catalog -------------------------------------------------------- */
 
-/*
- * Provider cards flow into columns instead of stacking one under another.
- * A single column meant a provider with forty models pushed everything below
- * it off-screen; `align-items: start` keeps a short card from being stretched
- * to match a tall neighbour in the same row.
- */
 .model-providers {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  align-items: start;
   gap: 14px;
 }
 .model-provider {
@@ -2017,9 +2079,6 @@ button.play.fail {
   z-index: 50;
   animation: scrim-in 0.22s ease both;
 }
-[data-theme="dark"] .overlay {
-  background: rgba(6, 5, 12, 0.66);
-}
 .modal {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -2217,12 +2276,6 @@ button.play.fail {
   font-family: var(--mono);
   border-radius: 12px;
 }
-.login-theme {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-}
-
 /* ---- chrome --------------------------------------------------------------- */
 
 ::selection {
@@ -2503,7 +2556,7 @@ tbody tr:nth-child(n + 6) {
   gap: 7px;
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   background: var(--surface);
   color: var(--muted);
   font-size: 12px;
@@ -2567,10 +2620,11 @@ tbody tr:nth-child(n + 6) {
   display: grid;
   align-content: center;
   gap: 6px;
-  padding: 14px 16px;
+  padding: 15px 17px;
   border-radius: var(--radius-md);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--surface-2);
+  box-shadow: 1.5px 2px 0 0 var(--border);
   /* Each node joins the walk-in animation, one after the next. */
   animation: node-in 0.5s var(--ease) both;
   animation-delay: calc(var(--flow-index, 0) * 90ms);
@@ -2583,7 +2637,9 @@ tbody tr:nth-child(n + 6) {
 .flow-node:hover {
   transform: translateY(-3px);
   border-color: var(--border-strong);
-  box-shadow: var(--shadow-lift);
+  box-shadow:
+    1.5px 2px 0 0 var(--border-strong),
+    var(--shadow-lift);
 }
 @keyframes node-in {
   from {
@@ -2614,42 +2670,58 @@ tbody tr:nth-child(n + 6) {
   min-width: 138px;
   background: var(--surface);
 }
+/*
+ * The hub is the one node drawn as a circle rather than a card — everything
+ * else in the diagram is a stop along the way; this is the thing they are all
+ * routed through, and it should look like the centre of something.
+ */
 .flow-hub {
   justify-items: center;
   text-align: center;
   color: var(--violet);
-  border-color: var(--violet-line);
-  background: var(--violet-soft);
+  border: none;
+  box-shadow: none;
+  background: none;
+  padding: 4px 12px;
+}
+.flow-hub:hover {
+  transform: none;
 }
 .flow-hub .flow-node-title {
   color: var(--violet-strong);
+  font-family: var(--font-display);
+  font-size: 14px;
 }
 /*
- * A slow ring that orbits the COKEY hub, so the centre of the diagram is
- * visibly the thing everything is routed through.
+ * A slow hand-drawn scribble around the COKEY hub, so the centre of the
+ * diagram is visibly the thing everything is routed through — breathing
+ * gently rather than spinning, the way a doodled circle never quite closes
+ * on itself.
  */
 .flow-hub::after {
   content: "";
   position: absolute;
-  inset: -5px;
-  border-radius: calc(var(--radius-md) + 5px);
-  border: 1px dashed var(--violet-line);
-  opacity: 0.7;
-  animation: hub-orbit 11s linear infinite;
+  top: 4px;
+  left: 50%;
+  width: 68px;
+  height: 68px;
+  margin-left: -34px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--violet-line);
+  opacity: 0.8;
+  animation: scribble-wobble 9s ease-in-out infinite;
   pointer-events: none;
 }
-@keyframes hub-orbit {
-  from {
-    transform: rotate(0deg) scale(1);
-  }
-  50% {
-    transform: rotate(180deg) scale(1.03);
-  }
-  to {
-    transform: rotate(360deg) scale(1);
-  }
-}
 .flow-hub-mark {
+  box-sizing: border-box;
+  width: 64px;
+  height: 64px;
+  padding: 15px;
+  border-radius: 50%;
+  background: var(--violet-soft);
+  box-shadow:
+    inset 0 0 0 2px var(--violet-line),
+    1.5px 2px 0 0 var(--violet-line);
   animation: hub-pulse 3.2s ease-in-out infinite;
 }
 @keyframes hub-pulse {
@@ -2683,15 +2755,16 @@ tbody tr:nth-child(n + 6) {
 }
 .flow-priority {
   flex: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
-  border-radius: 7px;
-  font-size: 10px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-size: 11px;
   font-weight: 700;
-  background: var(--violet-soft);
-  color: var(--violet);
+  background: var(--violet);
+  color: var(--violet-ink);
 }
 .flow-entry.live {
   border-color: var(--sage);
@@ -2701,7 +2774,14 @@ tbody tr:nth-child(n + 6) {
   opacity: 0.55;
 }
 
-/* A node whose key is being probed during a chain sweep. */
+/*
+ * A node whose key is being probed during a chain sweep: a hand-drawn circle
+ * being continuously scribbled around it, the way you'd circle an answer
+ * while double-checking it — not a mechanical spinner rotating in place.
+ * The wobble comes from animating `border-radius` through a set of uneven
+ * blob shapes rather than rotating a ring, which is what keeps it reading as
+ * drawn rather than engineered.
+ */
 .flow-entry.sweep-testing {
   border-color: var(--violet);
   box-shadow: 0 0 0 3px var(--violet-soft);
@@ -2709,11 +2789,9 @@ tbody tr:nth-child(n + 6) {
 .flow-entry.sweep-testing::after {
   content: "";
   position: absolute;
-  inset: -4px;
-  border-radius: calc(var(--radius-md) + 4px);
-  border: 1px solid transparent;
-  border-top-color: var(--violet);
-  animation: sweep-rotate 0.9s linear infinite;
+  inset: -7px;
+  border: 2.5px dashed var(--violet);
+  animation: scribble-wobble 1.7s ease-in-out infinite;
   pointer-events: none;
 }
 .flow-entry.sweep-ok {
@@ -2730,9 +2808,26 @@ tbody tr:nth-child(n + 6) {
     0 0 0 2px var(--sage),
     0 0 0 5px var(--sage-soft);
 }
-@keyframes sweep-rotate {
-  to {
-    transform: rotate(360deg);
+@keyframes scribble-wobble {
+  0% {
+    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
+    transform: rotate(0deg);
+  }
+  25% {
+    border-radius: 58% 42% 45% 55% / 40% 60% 40% 60%;
+    transform: rotate(5deg);
+  }
+  50% {
+    border-radius: 50% 50% 38% 62% / 62% 38% 55% 45%;
+    transform: rotate(-4deg);
+  }
+  75% {
+    border-radius: 45% 55% 55% 45% / 48% 52% 45% 55%;
+    transform: rotate(3deg);
+  }
+  100% {
+    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
+    transform: rotate(0deg);
   }
 }
 @keyframes sweep-pop {
@@ -2756,14 +2851,14 @@ tbody tr:nth-child(n + 6) {
   left: 0;
   right: 0;
   top: 50%;
-  height: 2px;
-  border-radius: 2px;
-  background: var(--border-strong);
+  height: 0;
+  border-top: 2.5px dashed var(--border-strong);
+}
+.flow-link.live .flow-rail {
+  border-top-color: var(--sage-line);
 }
 .flow-link.dead .flow-rail {
   opacity: 0.6;
-  background: transparent;
-  border-top: 2px dashed var(--border-strong);
 }
 /*
  * The travelling token. It runs whether or not traffic is flowing, so the
@@ -2773,11 +2868,12 @@ tbody tr:nth-child(n + 6) {
 .flow-pulse {
   position: absolute;
   top: 50%;
-  width: 9px;
-  height: 9px;
-  margin-top: -4.5px;
+  width: 10px;
+  height: 10px;
+  margin-top: -5px;
   border-radius: 50%;
   background: var(--violet);
+  box-shadow: 0 0 0 4px var(--violet-soft);
   animation: flow-travel 2.6s var(--ease) infinite;
 }
 .flow-link.live .flow-pulse {
@@ -2850,11 +2946,15 @@ tbody tr:nth-child(n + 6) {
 }
 .flow-key {
   position: relative;
-  width: 12px;
-  height: 12px;
+  width: 13px;
+  height: 13px;
   border-radius: 4px;
-  border: 1px solid var(--border-strong);
+  border: 1.5px solid var(--border-strong);
   background: var(--surface-3);
+  transition: transform 0.15s var(--ease);
+}
+.flow-key:hover {
+  transform: scale(1.3) rotate(-6deg);
 }
 .flow-key.healthy {
   background: var(--sage-soft);

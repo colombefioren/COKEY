@@ -236,6 +236,15 @@ export function IconMenu(props: IconProps) {
   );
 }
 
+export function IconBell(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M6 10.5a6 6 0 1 1 12 0c0 3.6 1 5.2 1.8 6.2a.9.9 0 0 1-.7 1.5H4.9a.9.9 0 0 1-.7-1.5C5 15.7 6 14.1 6 10.5Z" />
+      <path d="M9.5 20a2.6 2.6 0 0 0 5 0" />
+    </Svg>
+  );
+}
+
 export function IconShield(props: IconProps) {
   return (
     <Svg {...props}>
