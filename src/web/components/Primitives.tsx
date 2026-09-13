@@ -8,16 +8,46 @@ export function StatusDot({ status, title }: { status: CredentialStatus; title?:
   return <span className={`dot ${status}`} title={title ?? status} />;
 }
 
+/**
+ * One word for each state, in the reader's language rather than the database's.
+ * "Cooling" is something a person can be; "cooldown" is a field name.
+ */
+const STATUS_WORD: Record<CredentialStatus, string> = {
+  healthy: "healthy",
+  cooldown: "cooling",
+  invalid: "invalid",
+  disabled: "paused",
+  unverified: "new",
+};
+
+/**
+ * A credential's state, as a pill with its own silhouette.
+ *
+ * Every state is drawn differently, not merely tinted differently: a burst for
+ * healthy, a crescent for cooling, a crack for invalid, a dotted ring for one
+ * that has never been proven, a bar for paused. Shape survives a colourblind
+ * reader and a greyscale screenshot — which a row of identical dots does not,
+ * and a row of identical dots was the whole problem.
+ *
+ * `compact` drops the word and keeps the mark, for places already labelled by
+ * their column or legend.
+ */
+export function StatusPill({ status, compact }: { status: CredentialStatus; compact?: boolean }) {
+  const word = STATUS_WORD[status];
+  return (
+    <span
+      className={`status-pill ${status}${compact ? " compact" : ""}`}
+      title={compact ? word : undefined}
+    >
+      <span className="status-glyph" aria-hidden="true" />
+      {compact ? <span className="sr-only">{word}</span> : <span className="status-word">{word}</span>}
+    </span>
+  );
+}
+
+/** Kept as the table-facing name for the same pill, so call sites read naturally. */
 export function StatusBadge({ status }: { status: CredentialStatus }) {
-  const tone =
-    status === "healthy"
-      ? ""
-      : status === "cooldown"
-        ? "warn"
-        : status === "invalid"
-          ? "bad"
-          : "neutral";
-  return <span className={`badge ${tone}`}>{status}</span>;
+  return <StatusPill status={status} />;
 }
 
 /**
