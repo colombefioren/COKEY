@@ -23,6 +23,15 @@ cokey-export.json
 *.log
 npm-debug.log*
 
+# The curated content repository.
+#
+# It is its own Git repository (dossiers, terms, ranking boards) and is cloned
+# beside COKEY rather than vendored into it, so content can be reviewed and
+# reverted on its own history. COKEY reads it at runtime and falls back to the
+# catalog compiled into this build when it is absent. Anchored to the root on
+# purpose: `src/core/cms` is this project's own code for reading it.
+/cms/
+
 # Test / coverage
 coverage/
 

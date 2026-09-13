@@ -617,6 +617,11 @@ POST   /api/providers/:id/connect     # { secret, description, accountId?, proxy
 GET    /api/catalog/rankings          # skill, rate, combined and redundancy boards
 GET    /api/catalog/providers         # provider dossiers
 
+GET    /api/content/status            # where the curated content came from, and what failed
+GET    /api/content/terms             # the terms document, in reading order
+POST   /api/content/reload            # re-read the content directory on demand
+GET    /api/content/providers/:id     # one provider's dossier, with its source
+
 GET    /api/chains
 POST   /api/chains
 PATCH  /api/chains/:id
@@ -737,6 +742,45 @@ await cokey.addChain({
 
 <div align="center">
 
+## 📚 The content repository
+
+</div>
+
+Who runs a provider, whether their free tier is infrastructure or a demo, which models are worth
+your time, and what the terms actually say — that is content, not code. It lives in its own Git
+repository (`cokey-cms`) so it can be corrected, reviewed and reverted without shipping a build.
+
+```
+cokey-cms/
+├── content/
+│   ├── providers/    one dossier per provider: verdict, argument, operator, free models
+│   ├── terms/        the terms document, one Markdown section per file
+│   └── rankings/     skill, rate-limit, combined, redundancy and drop-list boards
+├── src/              schema, validator, builder, preview server and CLI
+└── tests/
+```
+
+COKEY looks for that checkout in three places, in order: `COKEY_CMS_DIR`, then `./cms/content`, then
+`../cokey-cms/content`. It watches whichever it finds, so **editing a dossier updates the dashboard
+while it is open** — no restart, no rebuild. With no checkout present, COKEY serves the catalog
+compiled into this build, which is why a fresh clone is useful with zero setup.
+
+The overlay is field-by-field: content wins where it speaks and the compiled catalog fills every
+gap, so a dossier that only states a verdict still gets its operator, summary and source URL. The
+loader never throws — a malformed file costs exactly that file, and the Dashboard's *Curated
+content* window names it along with the directory being watched.
+
+```bash
+# in the content repository
+npm run validate   # schema + cross-references + staleness, with warnings
+npm run build      # emit the consumable content bundle
+npm run serve      # preview the content locally
+```
+
+---
+
+<div align="center">
+
 ## 🧪 Testing
 
 </div>
@@ -748,7 +792,8 @@ npm run typecheck # server, tests and web UI
 
 The suite covers the routing invariant (key rotation before node fallback, cross-node fallback
 order, request-scoped early exit, user reordering, cooldown skipping), live event emission, proxy
-parsing and wiring, per-credential rate tracking, and model-availability gating.
+parsing and wiring, per-credential rate tracking, model-availability gating, model discovery and
+reconciliation, the guidance rules, and the content loader's tolerance of a half-written checkout.
 
 ---
 
@@ -764,6 +809,7 @@ src/
 ├── cli/              command-line interface and the ASCII logo
 ├── core/
 │   ├── chains/       chain and node ordering
+│   ├── cms/          the content repository: load, watch and overlay
 │   ├── credentials/  lifecycle, cooldowns, selection, rate tracking
 │   ├── crypto/       AES-256-GCM vault and master-key resolution
 │   ├── db/           SQLite schema, migrations, repositories
