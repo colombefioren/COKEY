@@ -66,22 +66,33 @@ export class ProviderRegistry {
     return entry;
   }
 
-  /** The canonical catalog, one entry per service, aliases excluded. */
+  /**
+   * The canonical catalog, one entry per service, aliases excluded.
+   *
+   * An alias key is registered pointing at the *same entry object* as its
+   * canonical id (see the constructor), so `entry.id` is always the canonical
+   * id no matter which key retrieved it — filtering on `entry.id` can never
+   * see the alias key and lets the object through twice. Filtering on the map
+   * key itself is what actually excludes the alias.
+   */
   getCatalog(): ProviderCatalogEntry[] {
     const aliases = new Set(PROVIDER_ALIASES.keys());
-    return [...this.entries.values()].filter((entry) => !aliases.has(entry.id));
+    return [...this.entries.entries()]
+      .filter(([id]) => !aliases.has(id))
+      .map(([, entry]) => entry);
   }
 
   /**
    * Only providers shipped with COKEY, excluding user custom endpoints.
    *
-   * Aliases are filtered out so a merged service yields exactly one card.
+   * Aliases are filtered out by map key (see `getCatalog`) so a merged
+   * service yields exactly one card instead of one per alias.
    */
   getBuiltInCatalog(): ProviderCatalogEntry[] {
     const aliases = new Set(PROVIDER_ALIASES.keys());
-    return [...this.entries.values()].filter(
-      (entry) => !entry.id.startsWith(CUSTOM_PREFIX) && !aliases.has(entry.id),
-    );
+    return [...this.entries.entries()]
+      .filter(([id]) => !id.startsWith(CUSTOM_PREFIX) && !aliases.has(id))
+      .map(([, entry]) => entry);
   }
 
   findCatalogEntry(id: string): ProviderCatalogEntry | undefined {
