@@ -27,10 +27,7 @@ import {
   type ProxyPoolStatus,
   type ProxyPoolView,
 } from "./providers/proxy-pool.js";
-import {
-  fetchProxiflyFreeList,
-  parseProxiflyList,
-} from "./providers/proxifly.js";
+import { fetchProxiflyFreeList, parseProxiflyList } from "./providers/proxifly.js";
 import {
   modelAvailability,
   staleCuratedModels,
@@ -409,10 +406,7 @@ export class Cokey {
       // everything. Storing it would detach every model of this provider from
       // every chain that uses one, so it is refused and the previous inventory
       // is left exactly as it was.
-      return refuse(
-        `${displayName} returned no models — inventory left untouched`,
-        latencyMs,
-      );
+      return refuse(`${displayName} returned no models — inventory left untouched`, latencyMs);
     }
 
     const { records, changes } = reconcileModels({
@@ -829,10 +823,7 @@ export class Cokey {
    * nothing - meaning the request goes direct. The probe stays direct when the
    * caller opted out with `useProxy: false`.
    */
-  private resolveProbeProxy(
-    credential: Credential,
-    useProxy: boolean,
-  ): string | undefined {
+  private resolveProbeProxy(credential: Credential, useProxy: boolean): string | undefined {
     if (credential.proxyUrl) return credential.proxyUrl;
     if (!useProxy || !this.settings.autoProxy) return undefined;
     if (this.proxyPool.size() === 0) return undefined;
@@ -914,7 +905,12 @@ export class Cokey {
 
     const { urls } = parseProxiflyList(raw, limit);
     if (urls.length === 0) {
-      return { added: 0, skipped: 0, entries: this.listProxyPool(), status: this.proxyPoolStatus() };
+      return {
+        added: 0,
+        skipped: 0,
+        entries: this.listProxyPool(),
+        status: this.proxyPoolStatus(),
+      };
     }
 
     const result = this.proxyPool.addMany(urls.join("\n"));
@@ -935,11 +931,13 @@ export class Cokey {
    * into timeouts. `prune: false` reports without deleting, so a caller can
    * preview a sweep before committing to it.
    */
-  async verifyProxyPool(options: {
-    concurrency?: number;
-    timeoutMs?: number;
-    prune?: boolean;
-  } = {}): Promise<{
+  async verifyProxyPool(
+    options: {
+      concurrency?: number;
+      timeoutMs?: number;
+      prune?: boolean;
+    } = {},
+  ): Promise<{
     checked: number;
     healthy: number;
     dead: string[];
@@ -1161,7 +1159,10 @@ export class Cokey {
   private recordProbeFailure(credentialId: string, classification: ErrorClassification): void {
     if (classification === "credential_invalid") {
       this.credentials.markInvalid(credentialId);
-    } else if (classification === "credential_rate_limited" || classification === "quota_exhausted") {
+    } else if (
+      classification === "credential_rate_limited" ||
+      classification === "quota_exhausted"
+    ) {
       this.credentials.putInCooldown(credentialId);
     }
   }
@@ -1264,7 +1265,10 @@ export class Cokey {
         healthyCount: status.healthyCount,
         inventoryCheckedAt: this.providerModelsRepo.lastCheckedAt(status.id),
         staleModels: stale,
-        modelCount: curated.length - stale.length + observed.filter((r) => r.available && !curated.includes(r.model)).length,
+        modelCount:
+          curated.length -
+          stale.length +
+          observed.filter((r) => r.available && !curated.includes(r.model)).length,
       };
     });
 
@@ -1310,9 +1314,7 @@ export class Cokey {
       egress: {
         enabled: pool.enabled,
         poolSize: pool.size,
-        saturatedProviders: pool.saturatedProviders.map(
-          (id) => displayName.get(id) ?? id,
-        ),
+        saturatedProviders: pool.saturatedProviders.map((id) => displayName.get(id) ?? id),
       },
       coverage: {
         connectedFree: coverage.connectedFree,

@@ -272,7 +272,11 @@ export function QuotaLabel({
   quotaErrors?: number;
 }) {
   if (quotaErrors && quotaErrors > 0) {
-    return <span className="badge bad" title={`${quotaErrors} quota exhaustion(s) observed`}>exhausted</span>;
+    return (
+      <span className="badge bad" title={`${quotaErrors} quota exhaustion(s) observed`}>
+        exhausted
+      </span>
+    );
   }
   if (!quota || !quota.available) return <span className="faint">Quota: Unknown</span>;
 

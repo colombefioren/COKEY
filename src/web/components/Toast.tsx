@@ -34,8 +34,7 @@ const ToastContext = createContext<ToastApi | undefined>(undefined);
  * in the motion helper rather than here.
  */
 export function ToastProvider({ children }: { children: ReactNode }) {
-  const [toasts, setToasts] = useState<Toast[]>(
-    []);
+  const [toasts, setToasts] = useState<Toast[]>([]);
   const nodes = useRef(new Map<number, HTMLDivElement>());
 
   const push = useCallback((message: string, kind: ToastKind) => {

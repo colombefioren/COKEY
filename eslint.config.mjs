@@ -76,6 +76,9 @@ export default tseslint.config(
         process: "readonly",
         console: "readonly",
         Buffer: "readonly",
+        // Node 18+ global. Declared rather than imported so the script needs no
+        // dependency to fetch a font file.
+        fetch: "readonly",
       },
     },
   },

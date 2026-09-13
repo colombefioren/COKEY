@@ -185,7 +185,8 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
 
     if (credential.status === "cooldown") {
       const remaining = (credential.cooldownUntil ?? 0) - input.now;
-      const long = remaining > COOLDOWN_NOTICE_MS || credential.consecutiveFailures >= FAILURE_STREAK_NOTICE;
+      const long =
+        remaining > COOLDOWN_NOTICE_MS || credential.consecutiveFailures >= FAILURE_STREAK_NOTICE;
       if (!long) continue;
       push({
         id: `credential.struggling:${credential.id}`,
@@ -256,7 +257,8 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
 
     if (provider.staleModels.length > 0) {
       const sample = provider.staleModels.slice(0, 3).join(", ");
-      const more = provider.staleModels.length > 3 ? ` and ${provider.staleModels.length - 3} more` : "";
+      const more =
+        provider.staleModels.length > 3 ? ` and ${provider.staleModels.length - 3} more` : "";
       push({
         id: `provider.models-stale:${provider.id}`,
         kind: "provider.models-stale",
@@ -397,7 +399,10 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
 
   // ---- coverage -----------------------------------------------------------
 
-  if (input.coverage.connectedFree < input.coverage.target && input.coverage.suggestions.length > 0) {
+  if (
+    input.coverage.connectedFree < input.coverage.target &&
+    input.coverage.suggestions.length > 0
+  ) {
     const names = input.coverage.suggestions.slice(0, 4).map((item) => item.displayName);
     push({
       id: "coverage.free-providers",

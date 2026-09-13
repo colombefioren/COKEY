@@ -84,9 +84,7 @@ export function staleCuratedModels(
   observed: readonly ProviderModelRecord[],
 ): string[] {
   if (observed.length === 0) return [];
-  const live = new Set(
-    observed.filter((record) => record.available).map((record) => record.model),
-  );
+  const live = new Set(observed.filter((record) => record.available).map((record) => record.model));
   return curated.filter((model) => !live.has(model));
 }
 
@@ -115,7 +113,12 @@ export function modelAvailability(
     const checked = observed.length > 0;
 
     const curatedSpecs = modelsForProvider(entry.id);
-    const staleModels = new Set(staleCuratedModels(curatedSpecs.map((spec) => spec.id), observed));
+    const staleModels = new Set(
+      staleCuratedModels(
+        curatedSpecs.map((spec) => spec.id),
+        observed,
+      ),
+    );
     const models: SelectableModel[] = [];
 
     // Curated models first, in catalog order, minus anything the provider has

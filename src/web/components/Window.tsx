@@ -1,10 +1,4 @@
-import {
-  useCallback,
-  useId,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { burstSparkles } from "../lib/motion.js";
 
 /** The five blocked hues a window can take. */
@@ -81,7 +75,9 @@ export function Window({
             <button
               type="button"
               className="window-dot close"
-              aria-label={onClose ? `Close ${typeof title === "string" ? title : "panel"}` : "close"}
+              aria-label={
+                onClose ? `Close ${typeof title === "string" ? title : "panel"}` : "close"
+              }
               aria-hidden={!onClose}
               disabled={!onClose}
               onClick={onClose}
