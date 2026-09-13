@@ -133,7 +133,7 @@ export function Providers({
       <Panel
         hue="sky"
         icon={<IconGrid size={14} />}
-        title={`Provider catalog (${total})`}
+        title={`Providers (${total})`}
         actions={
           <div className="row" style={{ gap: 8 }}>
             <label className="small muted row" style={{ gap: 6 }}>
@@ -148,7 +148,7 @@ export function Providers({
             <input
               className="search"
               value={query}
-              placeholder="Search name, operator or country"
+              placeholder="Search providers"
               onChange={(event) => {
                 setQuery(event.target.value);
                 setPage(1);
@@ -158,13 +158,12 @@ export function Providers({
         }
       >
         <div className="hint-box" style={{ marginBottom: 16 }}>
-          A large part of this list is one underlying free pool re-exported under several names. The
-          verdict reflects that: start with the recommended tier, and treat anything marked avoid as
-          a provider you should not build on. The full reasoning is in the Models, Rankings tab.
+          Much of this list is one free pool re-exported under several names, so the verdicts are
+          the point: start at the top and never build on an <strong>avoid</strong>.
         </div>
 
         {visible.length === 0 ? (
-          <Empty>No providers match that search.</Empty>
+          <Empty>Nothing matches.</Empty>
         ) : (
           VERDICT_ORDER.map((verdict) => {
             const group = visible.filter((row) => row.dossier.verdict === verdict);
@@ -211,8 +210,7 @@ export function Providers({
       <Panel title={`Custom endpoints (${custom.length})`}>
         {custom.length === 0 ? (
           <Empty>
-            None configured. Add one from Settings, custom endpoints are validated against the SSRF
-            guard before they are stored.
+            None yet — add one in Settings. URLs are SSRF-checked before they are stored.
           </Empty>
         ) : (
           <div className="grid cards">
@@ -313,7 +311,7 @@ function ProviderDossierCard({
           ? `model list checked ${timeAgo(checkedAt)}`
           : row.connected
             ? "model list never checked"
-            : "connect a key to check the model list"}
+            : "connect a key to check"}
       </div>
 
       <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
@@ -332,11 +330,13 @@ function ProviderDossierCard({
           }
           onClick={() => onRefreshModels(row.id, row.displayName)}
         >
-          {refreshing ? "checking…" : "Re-check models"}
+          {refreshing ? "checking…" : "re-check"}
         </button>
         <span className="spacer" />
         <span className="small faint">
-          {row.connected ? `${row.credentialCount} connected` : "not connected"}
+          {row.connected
+            ? `${row.credentialCount} key${row.credentialCount === 1 ? "" : "s"}`
+            : "none"}
         </span>
       </div>
 
@@ -408,7 +408,7 @@ function ProviderDossierCard({
           ) : (
             <div className="model-list">
               {row.knownModels.length === 0 ? (
-                <div className="sub faint">No curated models for this provider.</div>
+                <div className="sub faint">No curated models.</div>
               ) : (
                 row.knownModels.map((model) => (
                   <div className="model-list-item" key={model}>
@@ -436,7 +436,7 @@ function ProviderDossierCard({
           {stale.length > 0 ? (
             <div className="model-list">
               <div className="small faint">
-                Retired — not returned on the last check ({timeAgo(checkedAt ?? Date.now())}):
+                Retired · gone since {timeAgo(checkedAt ?? Date.now())}
               </div>
               {stale.map((model) => (
                 <div className="model-list-item" key={model}>
