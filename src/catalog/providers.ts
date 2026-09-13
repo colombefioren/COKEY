@@ -931,6 +931,26 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     notes:
       '"community/" models are open endpoints hosted by other users, free but availability depends on the host. These two verified: deepseek-r1-free (routed to tb/deepseek-r1) and poolside-laguna-s-2.1:free (routed to kc/poolside/laguna-s-2.1:free).',
   },
+  {
+    id: "modelscope",
+    displayName: "ModelScope",
+    baseUrl: "https://api-inference.modelscope.ai/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://modelscope.ai/",
+    docsUrl: "https://www.modelscope.cn/docs",
+    freeTier: { advertised: false, summary: "Paid models · works with a funded key", quotaSource: "unknown" },
+    knownModels: [
+      "deepseek-ai/DeepSeek-V3.1",
+      "deepseek-ai/DeepSeek-V3.2-Exp",
+      "deepseek-ai/DeepSeek-V4-Pro",
+      "deepseek-ai/DeepSeek-V4-Pro-0813",
+    ],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Alibaba's official inference API with canonical DeepSeek model names. All four DeepSeek models verified. Requires an Alibaba Cloud account bound to the ModelScope token before requests work. Paid per-token.",
+  },
 
   // -------------------------------------------------------------------------
   // Further free hubs.

@@ -502,6 +502,12 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("community/Catniti/deepseek-r1-free", undefined, "Reasoning"),
     m("community/AkshayCoder48/poolside-laguna-s-2.1:free", undefined, "Code"),
   ],
+  modelscope: [
+    m("deepseek-ai/DeepSeek-V3.1", undefined, "Reasoning"),
+    m("deepseek-ai/DeepSeek-V3.2-Exp", undefined, "Reasoning"),
+    m("deepseek-ai/DeepSeek-V4-Pro", undefined, "Reasoning"),
+    m("deepseek-ai/DeepSeek-V4-Pro-0813", undefined, "Reasoning"),
+  ],
 };
 
 /** Total number of curated free models across every provider. */
