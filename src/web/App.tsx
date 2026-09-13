@@ -9,7 +9,6 @@ import type {
 import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { LoginForm } from "./components/LoginForm.js";
-import { ThemeToggle } from "./components/ThemeToggle.js";
 import { Sidebar, type NavItem } from "./components/Sidebar.js";
 import { StatusBar } from "./components/StatusBar.js";
 import {
@@ -270,12 +269,7 @@ function Shell() {
 
   if (authed === null) return null;
   if (!authed) {
-    return (
-      <>
-        <ThemeToggle className="login-theme" />
-        <LoginForm onLogin={() => setAuthed(true)} />
-      </>
-    );
+    return <LoginForm onLogin={() => setAuthed(true)} />;
   }
 
   function dismissNudge() {
@@ -327,7 +321,6 @@ function Shell() {
           <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
             /v1/models
           </a>
-          <ThemeToggle />
         </header>
 
         {/*
@@ -409,9 +402,31 @@ function renderPage(path: string, context: PageContext) {
   }
 }
 
+/**
+ * The hand-inked wobble every bordered surface picks up via `filter:
+ * url(#rough)`.
+ *
+ * `feTurbulence` generates the same noise field every render (a fixed seed),
+ * and `feDisplacementMap` pushes each edge pixel along it by a few pixels —
+ * enough that a straight CSS border reads as drawn rather than machined,
+ * without ever being redrawn or reflowed. Defined once, referenced by every
+ * surface that wants it, and invisible itself (0×0, `aria-hidden`).
+ */
+function RoughFilter() {
+  return (
+    <svg width="0" height="0" style={{ position: "absolute" }} aria-hidden="true">
+      <filter id="rough">
+        <feTurbulence type="fractalNoise" baseFrequency="0.012 0.045" numOctaves="2" seed="7" />
+        <feDisplacementMap in="SourceGraphic" scale="2.6" />
+      </filter>
+    </svg>
+  );
+}
+
 export function App() {
   return (
     <ToastProvider>
+      <RoughFilter />
       <div className="starfield" aria-hidden="true" />
       <Shell />
     </ToastProvider>
