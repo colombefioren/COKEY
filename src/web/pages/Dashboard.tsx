@@ -4,6 +4,7 @@ import type { ChainView, Nudge, RequestLogEntry, Stats } from "../types.js";
 import { Nudger } from "../components/Nudger.js";
 import { ChainFlow } from "../components/ChainFlow.js";
 import { Resilience } from "../components/Resilience.js";
+import { Guidance } from "../components/Guidance.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
@@ -49,9 +50,17 @@ export function Dashboard({
 
   return (
     <>
+      {/*
+       * Guidance sits above everything, because it is the answer to "is
+       * anything wrong?" and that is the first question anyone opens a gateway
+       * dashboard to ask.
+       */}
+      <Guidance refreshKey={refreshKey} onChanged={() => void load()} />
+
       {nudgeBlock}
 
       <Panel
+        hue="pink"
         title="Live route"
         actions={<span className="small faint">the path a request actually walks</span>}
       >
@@ -60,7 +69,7 @@ export function Dashboard({
 
       <Resilience />
 
-      <Panel title="Gateway">
+      <Panel hue="sky" title="Gateway">
         <div className="grid cards">
           <Stat
             label="Chains"
@@ -95,9 +104,7 @@ export function Dashboard({
 
       <Panel title="Chain summary">
         {chains.length === 0 ? (
-          <Empty>
-            No chains yet. Open Chains to create your first one, then add nodes to it.
-          </Empty>
+          <Empty>No chains yet. Open Chains to create your first one, then add nodes to it.</Empty>
         ) : (
           <table>
             <thead>
@@ -121,7 +128,9 @@ export function Dashboard({
                     <td>{chain.entries.length}</td>
                     <td className="small">
                       <span className="badge">{healthy} healthy</span>{" "}
-                      {cooldown > 0 ? <span className="badge warn">{cooldown} cooldown</span> : null}{" "}
+                      {cooldown > 0 ? (
+                        <span className="badge warn">{cooldown} cooldown</span>
+                      ) : null}{" "}
                       {invalid > 0 ? <span className="badge bad">{invalid} invalid</span> : null}
                     </td>
                     <td className="small muted">{chain.enabled ? "enabled" : "disabled"}</td>

@@ -158,8 +158,7 @@
    */
   --font-display: "Press Start 2P", "Silkscreen", ui-monospace, monospace;
   --font-label: "Silkscreen", "Press Start 2P", ui-monospace, monospace;
-  --font-body:
-    "Quicksand", ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-body: "Quicksand", ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --mono: var(--font-mono);
 
@@ -240,8 +239,7 @@
 body {
   /* No blooms, no blur: one pastel sky, painted by the starfield layer. */
   background: var(--sky-c);
-  font:
-    14px/1.62 var(--font-body);
+  font: 14px/1.62 var(--font-body);
   letter-spacing: 0.005em;
 }
 
@@ -370,7 +368,11 @@ code,
   background:
     radial-gradient(circle at 62% 38%, transparent 0 30%, transparent 30%),
     radial-gradient(circle at 42% 50%, var(--moon) 0 48%, transparent 49%),
-    radial-gradient(circle at 40% 50%, color-mix(in srgb, var(--moon) 32%, transparent) 0 78%, transparent 79%);
+    radial-gradient(
+      circle at 40% 50%,
+      color-mix(in srgb, var(--moon) 32%, transparent) 0 78%,
+      transparent 79%
+    );
   opacity: 0.9;
 }
 
@@ -451,9 +453,24 @@ code,
   width: 50px;
   height: 14px;
   background-image:
-    radial-gradient(circle at 7px 7px, var(--hue-coral) 5.5px, var(--line) 5.5px 6.5px, transparent 6.5px),
-    radial-gradient(circle at 25px 7px, var(--hue-butter) 5.5px, var(--line) 5.5px 6.5px, transparent 6.5px),
-    radial-gradient(circle at 43px 7px, var(--hue-mint) 5.5px, var(--line) 5.5px 6.5px, transparent 6.5px);
+    radial-gradient(
+      circle at 7px 7px,
+      var(--hue-coral) 5.5px,
+      var(--line) 5.5px 6.5px,
+      transparent 6.5px
+    ),
+    radial-gradient(
+      circle at 25px 7px,
+      var(--hue-butter) 5.5px,
+      var(--line) 5.5px 6.5px,
+      transparent 6.5px
+    ),
+    radial-gradient(
+      circle at 43px 7px,
+      var(--hue-mint) 5.5px,
+      var(--line) 5.5px 6.5px,
+      transparent 6.5px
+    );
 }
 
 .topbar .spacer {
@@ -606,6 +623,15 @@ code,
 .statusbar .status-cell strong {
   color: var(--ink);
   font-weight: 700;
+}
+
+/* The connection indicator. Mint when the stream is open, dim otherwise — no
+   animation, because a steady light means a steady connection. */
+.statusbar .live-flag {
+  color: var(--ink-faint);
+}
+.statusbar .live-flag.on {
+  color: var(--hue-mint);
 }
 .statusbar .spacer {
   flex: 1;
@@ -1402,7 +1428,9 @@ button.play.fail {
 }
 .entry-node.sweep-testing {
   border-color: var(--line);
-  box-shadow: 0 0 0 3px var(--hue-sky-soft), var(--sticker-sm);
+  box-shadow:
+    0 0 0 3px var(--hue-sky-soft),
+    var(--sticker-sm);
 }
 .entry-node.sweep-ok {
   border-color: var(--line);
@@ -1413,7 +1441,9 @@ button.play.fail {
   background: var(--hue-coral-soft);
 }
 .entry-node.sweep-current {
-  box-shadow: 0 0 0 3px var(--hue-lav-soft), var(--sticker);
+  box-shadow:
+    0 0 0 3px var(--hue-lav-soft),
+    var(--sticker);
 }
 
 .entry-model .priority {
@@ -1682,7 +1712,12 @@ button.model-name:hover {
 .hero {
   border: var(--edge) solid var(--line);
   border-radius: var(--radius);
-  background: linear-gradient(120deg, var(--hue-pink-soft), var(--hue-lav-soft) 55%, var(--hue-sky-soft));
+  background: linear-gradient(
+    120deg,
+    var(--hue-pink-soft),
+    var(--hue-lav-soft) 55%,
+    var(--hue-sky-soft)
+  );
   box-shadow: var(--sticker-lg);
 }
 .hero h2 {
@@ -1857,7 +1892,9 @@ button.model-name:hover {
 }
 .flow-entry.sweep-testing {
   border-color: var(--line);
-  box-shadow: 0 0 0 3px var(--hue-sky-soft), var(--sticker-sm);
+  box-shadow:
+    0 0 0 3px var(--hue-sky-soft),
+    var(--sticker-sm);
 }
 .flow-entry.sweep-testing::after {
   border-top-color: var(--hue-sky);
@@ -1872,7 +1909,9 @@ button.model-name:hover {
   background: var(--hue-coral-soft);
 }
 .flow-entry.sweep-current {
-  box-shadow: 0 0 0 3px var(--hue-lav-soft), var(--sticker);
+  box-shadow:
+    0 0 0 3px var(--hue-lav-soft),
+    var(--sticker);
 }
 
 @keyframes pop {
@@ -1932,6 +1971,67 @@ button.model-name:hover {
   border: 1px solid var(--line);
   border-radius: 2px;
   box-shadow: none;
+}
+
+/* ---- guidance ------------------------------------------------------------
+ * A notice is a note stuck to the window: colour-coded down the left edge by
+ * severity, and carrying its own buttons. The left rule is the only colour, so
+ * a stack of notices reads at a glance without turning the page into a traffic
+ * light.
+ */
+
+.guidance-list {
+  display: grid;
+  gap: 10px;
+}
+
+.guidance-item {
+  border: var(--edge) solid var(--line);
+  border-left-width: 7px;
+  border-radius: var(--radius-sm);
+  background: var(--panel-2);
+  padding: 11px 13px;
+  box-shadow: var(--sticker-sm);
+}
+.guidance-item.critical {
+  border-left-color: var(--hue-coral);
+  background: var(--hue-coral-soft);
+}
+.guidance-item.warn {
+  border-left-color: var(--hue-butter);
+  background: var(--hue-butter-soft);
+}
+.guidance-item.info {
+  border-left-color: var(--hue-sky);
+  background: var(--hue-sky-soft);
+}
+
+.guidance-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.guidance-title {
+  font-family: var(--font-label);
+  font-size: 10.5px;
+  letter-spacing: 0.01em;
+}
+.guidance-detail {
+  margin: 7px 0 0;
+  font-size: 12.5px;
+  line-height: 1.68;
+  color: var(--ink-soft);
+}
+.guidance-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 11px;
+  flex-wrap: wrap;
+}
+.guidance-foot {
+  margin: 13px 0 0;
 }
 
 /* ---- ambient effects the old theme animated away ------------------------ */
@@ -2011,7 +2111,9 @@ tbody tr,
     box-shadow: var(--sticker);
   }
   50% {
-    box-shadow: 0 0 0 4px var(--hue-mint), var(--sticker);
+    box-shadow:
+      0 0 0 4px var(--hue-mint),
+      var(--sticker);
   }
 }
 
