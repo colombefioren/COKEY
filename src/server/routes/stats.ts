@@ -4,7 +4,7 @@ import type { Cokey } from "../../core/cokey.js";
 import { UpdateSettingsSchema } from "../../core/validation/schemas.js";
 import { InvalidSettingError } from "../../core/settings.js";
 import { exportConfig } from "../../core/config/export-import.js";
-import { streamEvents } from "../streaming/events.js";
+import { parseTopics, streamEvents } from "../streaming/events.js";
 import { matchesQuery, paginate, parsePageQuery } from "../pagination.js";
 import { withErrors } from "./http-errors.js";
 
@@ -41,9 +41,18 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  /** Server-sent events for live routing feedback. */
+  /**
+   * Server-sent events for live routing feedback.
+   *
+   * `?topics=credentials,models,chains` narrows the stream to the events that
+   * mean stored data changed, which is what a page uses to know it should
+   * refetch. With no `topics` the full routing narration is streamed, which is
+   * what the live-route chip wants. Both are one endpoint because they are one
+   * bus and one connection per client either way.
+   */
   app.get("/api/events", async (request, reply) => {
-    await streamEvents(reply, cokey.events);
+    const topics = parseTopics((request.query as { topics?: unknown } | undefined)?.topics);
+    await streamEvents(reply, cokey.events, topics);
     return reply;
   });
 

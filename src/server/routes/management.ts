@@ -67,6 +67,12 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         providers,
         total: providers.reduce((sum, view) => sum + view.models.length, 0),
         available: providers.filter((view) => view.available).length,
+        /**
+         * Catalogued models the providers no longer return, across every
+         * provider. A single number the dashboard can surface without walking
+         * the whole response, and the signal that something needs a re-check.
+         */
+        stale: providers.reduce((sum, view) => sum + view.staleModels.length, 0),
       };
     }),
   );
@@ -106,6 +112,73 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       const validation = await cokey.testProviderSecret(id, body);
       return { validated: validation.ok, validation };
     }),
+  );
+
+  // ---- model inventory ----------------------------------------------------
+
+  /**
+   * Ask one provider what it serves right now, and reconcile that with what
+   * COKEY believed.
+   *
+   * This is the per-provider refresh: it retires models the provider stopped
+   * returning, restores models that came back, and brings in models the curated
+   * catalog never knew about. The response is the change set, so the UI can say
+   * what happened instead of just redrawing.
+   */
+  app.post(
+    "/api/providers/:id/refresh-models",
+    withErrors(async (request) => {
+      const { id } = request.params as { id: string };
+      return cokey.refreshProviderModels(id);
+    }),
+  );
+
+  /**
+   * Refresh every connected provider.
+   *
+   * A distinct path rather than a magic id, so the "refresh everything" action
+   * reads as what it is at the call site. Sequentially and politely, because
+   * these are third-party endpoints answering an administrative question.
+   */
+  app.post(
+    "/api/providers/refresh-models",
+    withErrors(async () => {
+      const reports = await cokey.refreshAllProviderModels();
+      return {
+        reports,
+        refreshed: reports.filter((report) => report.ok).length,
+        failed: reports.filter((report) => !report.ok).length,
+        added: reports.reduce((sum, report) => sum + report.added.length, 0),
+        removed: reports.reduce((sum, report) => sum + report.removed.length, 0),
+        stale: reports.reduce((sum, report) => sum + report.stale.length, 0),
+      };
+    }),
+  );
+
+  /**
+   * The stored model inventory for one provider: when it was checked, and one
+   * row per model with whether the provider still returns it.
+   */
+  app.get(
+    "/api/providers/:id/models",
+    withErrors((request) => {
+      const { id } = request.params as { id: string };
+      return cokey.providerModelInventory(id);
+    }),
+  );
+
+  // ---- guidance -----------------------------------------------------------
+
+  /**
+   * Actionable notices derived from live state.
+   *
+   * A rejected key, a chain node whose model a provider retired, a model list
+   * that is three weeks old — each notice names the problem, explains the
+   * consequence and carries the actions that fix it.
+   */
+  app.get(
+    "/api/guidance",
+    withErrors(() => cokey.guidance()),
   );
 
   // ---- chains -------------------------------------------------------------

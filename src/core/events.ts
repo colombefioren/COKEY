@@ -26,6 +26,40 @@ export type CokeyEventType =
 
 export type CokeyEventLevel = "info" | "success" | "warn" | "error";
 
+/**
+ * The coarse subject an event is about.
+ *
+ * `route.*` fires several times per request, while `credential.*` and
+ * `models.*` are rare. A subscriber that only needs to invalidate cached reads
+ * cares about the rare ones and would be woken constantly by the frequent ones,
+ * so the stream can be filtered by topic.
+ */
+export type CokeyEventTopic = "route" | "chains" | "credentials" | "models";
+
+export const COKEY_EVENT_TOPICS: readonly CokeyEventTopic[] = [
+  "route",
+  "chains",
+  "credentials",
+  "models",
+];
+
+/**
+ * Which topic an event belongs to.
+ *
+ * Derived from the type rather than stored on the event, so a new event type
+ * cannot be added without landing in a topic. `chain.state` is the one
+ * deliberate exception: it is phrased for a human as a chain notification, but
+ * it is emitted from the routing hot path to narrate a request, so it belongs
+ * with the route.
+ */
+export function topicFor(type: CokeyEventType): CokeyEventTopic {
+  if (type === "chain.state") return "route";
+  if (type.startsWith("models.")) return "models";
+  if (type.startsWith("chain.")) return "chains";
+  if (type.startsWith("credential.")) return "credentials";
+  return "route";
+}
+
 /** The routing target a switch moved away from. */
 export interface RouteTarget {
   providerId?: string;
