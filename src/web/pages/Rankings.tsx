@@ -65,6 +65,17 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
         <p className="small muted" style={{ margin: 0 }}>
           {data.disclaimer}
         </p>
+        {/*
+         * Provenance for the boards themselves. A ranking read from the content
+         * repository is a live document that someone reviews; one from this
+         * build is frozen at the version you installed, and the difference
+         * matters when a free tier changes underneath it.
+         */}
+        <p className="small faint" style={{ margin: "8px 0 0" }}>
+          {data.source === "cms"
+            ? `Curated boards from the content repository${data.reviewedAt ? `, last reviewed ${data.reviewedAt}` : ""}.`
+            : "Compiled-in boards: this build's snapshot, with no content repository checked out."}
+        </p>
       </Panel>
 
       {board === "skill" ? <SkillBoard data={data} /> : null}

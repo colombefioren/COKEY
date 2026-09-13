@@ -814,6 +814,19 @@ section.panel {
   --window-bar: var(--hue-mint-soft);
 }
 
+/*
+ * Two flex helpers the retro layout leans on. `.between` pushes the last child
+ * to the right edge — used by a section footer that pairs a caption with an
+ * action — and `.center` is a named alias for the vertical centring `.row`
+ * already does, kept explicit where a row mixes text with controls.
+ */
+.row.between {
+  justify-content: space-between;
+}
+.row.center {
+  align-items: center;
+}
+
 /* Cards become stickers: hard edge, hard shadow, a lift on hover. */
 .card {
   padding: 13px 14px;

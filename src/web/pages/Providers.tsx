@@ -274,6 +274,23 @@ function ProviderDossierCard({
       <div className="title">
         {row.displayName}
         <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{dossier.verdict}</span>
+        {/*
+         * Where this opinion came from matters. A dossier read from the content
+         * repository can be corrected without a release, so a reader who
+         * disagrees with the verdict knows exactly which file to open.
+         */}
+        {dossier.source === "cms" ? (
+          <span
+            className="badge neutral"
+            title={
+              dossier.reviewedAt
+                ? `Curated content, last reviewed ${dossier.reviewedAt}`
+                : "Curated content"
+            }
+          >
+            curated
+          </span>
+        ) : null}
         {stale.length > 0 ? (
           <span className="badge bad" title={`No longer returned: ${stale.slice(0, 6).join(", ")}`}>
             {stale.length} retired
@@ -337,7 +354,8 @@ function ProviderDossierCard({
             </div>
             <div>
               <dt>Free tier</dt>
-              <dd>{row.freeTier.summary}</dd>
+              {/* The content repository's own one-liner wins when it has one. */}
+              <dd>{dossier.freeTierSummary ?? row.freeTier.summary}</dd>
             </div>
             <div>
               <dt>Credential</dt>
@@ -345,33 +363,70 @@ function ProviderDossierCard({
                 {credentialLabel} · {row.knownModels.length} curated model(s)
               </dd>
             </div>
+            {dossier.reviewedAt ? (
+              <div>
+                <dt>Reviewed</dt>
+                <dd>{dossier.reviewedAt}</dd>
+              </div>
+            ) : null}
           </dl>
 
           <p className="small faint" style={{ marginTop: 0 }}>
             {dossier.verdictReason}
           </p>
+          {dossier.notes ? <p className="small faint">{dossier.notes}</p> : null}
           {row.notes ? <p className="small faint">{row.notes}</p> : null}
 
-          <div className="model-list">
-            {row.knownModels.length === 0 ? (
-              <div className="sub faint">No curated models for this provider.</div>
-            ) : (
-              row.knownModels.map((model) => (
-                <div className="model-list-item" key={model}>
-                  <span className="model-list-id">{model}</span>
+          {/*
+           * The content repository's model list carries what a name alone cannot:
+           * context window, what the model is good at, and measured latency. When
+           * it exists it is the better list, and the catalog's is the fallback.
+           */}
+          {dossier.models && dossier.models.length > 0 ? (
+            <div className="model-list">
+              {dossier.models.map((model) => (
+                <div className="model-list-item" key={model.id}>
+                  <span className="model-list-id">{model.id}</span>
+                  <span className="small faint">
+                    {[model.context, model.bestFor].filter(Boolean).join(" · ")}
+                  </span>
                   <span className="spacer" />
+                  {model.latencySeconds ? (
+                    <span className="small faint">{model.latencySeconds}s</span>
+                  ) : null}
                   <a
                     className="small"
-                    href={`#/chains?model=${encodeURIComponent(model)}&provider=${encodeURIComponent(
+                    href={`#/chains?model=${encodeURIComponent(model.id)}&provider=${encodeURIComponent(
                       row.id,
                     )}`}
                   >
                     add to chain
                   </a>
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="model-list">
+              {row.knownModels.length === 0 ? (
+                <div className="sub faint">No curated models for this provider.</div>
+              ) : (
+                row.knownModels.map((model) => (
+                  <div className="model-list-item" key={model}>
+                    <span className="model-list-id">{model}</span>
+                    <span className="spacer" />
+                    <a
+                      className="small"
+                      href={`#/chains?model=${encodeURIComponent(model)}&provider=${encodeURIComponent(
+                        row.id,
+                      )}`}
+                    >
+                      add to chain
+                    </a>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
 
           {/*
            * Models the provider stopped returning. Shown rather than hidden,
