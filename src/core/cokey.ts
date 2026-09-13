@@ -10,6 +10,7 @@ import { ChainsRepo } from "./db/chains.repo.js";
 import { CredentialsRepo } from "./db/credentials.repo.js";
 import { CustomEndpointsRepo } from "./db/custom-endpoints.repo.js";
 import { DatabaseClient } from "./db/database.js";
+import { ProviderModelsRepo, type ProviderModelRecord } from "./db/provider-models.repo.js";
 import { ProxyPoolRepo } from "./db/proxy-pool.repo.js";
 import { RequestsRepo } from "./db/requests.repo.js";
 import { SettingsRepo } from "./db/settings.repo.js";
@@ -30,7 +31,24 @@ import {
   fetchProxiflyFreeList,
   parseProxiflyList,
 } from "./providers/proxifly.js";
-import { modelAvailability, type ModelCatalogView } from "./models/availability.js";
+import {
+  modelAvailability,
+  staleCuratedModels,
+  type ModelCatalogView,
+} from "./models/availability.js";
+import {
+  isTrustworthyListing,
+  normaliseModelIds,
+  reconcileModels,
+  type ModelDiscoveryReport,
+} from "./models/discovery.js";
+import {
+  deriveGuidance,
+  guidanceSummary,
+  type GuidanceInput,
+  type GuidanceNotice,
+  type GuidanceSeverity,
+} from "./guidance.js";
 import { emptyUsage } from "./types.js";
 import { SecretVault } from "./crypto/secrets.js";
 import { RequestHistory, type HistoryStats } from "./history.js";
@@ -46,6 +64,7 @@ import type {
   Credential,
   ErrorClassification,
   LogLevel,
+  ModelInfo,
   PublicCredential,
   RoutingStrategy,
   Settings,
@@ -106,6 +125,15 @@ export interface ConnectProviderInput {
 export interface ConnectProviderResult {
   credential: PublicCredential;
   validation: ValidationResult;
+  /**
+   * What the provider reported serving, once the key was accepted.
+   *
+   * A freshly connected key is the first moment COKEY can ask the provider what
+   * it actually serves, so the answer travels back with the connect response
+   * instead of being something the user has to go and request. Absent when the
+   * key did not verify or the provider could not be asked.
+   */
+  models?: ModelDiscoveryReport;
 }
 
 export interface ChainEntryView extends ChainEntry {
@@ -161,6 +189,7 @@ export class Cokey {
   readonly chainsRepo: ChainsRepo;
   readonly requestsRepo: RequestsRepo;
   readonly customEndpointsRepo: CustomEndpointsRepo;
+  readonly providerModelsRepo: ProviderModelsRepo;
   readonly proxyPoolRepo: ProxyPoolRepo;
   readonly apiKeysRepo: ApiKeysRepo;
   readonly apiKeys: ApiKeyService;
@@ -199,6 +228,7 @@ export class Cokey {
     this.chainsRepo = new ChainsRepo(this.db);
     this.requestsRepo = new RequestsRepo(this.db);
     this.customEndpointsRepo = new CustomEndpointsRepo(this.db);
+    this.providerModelsRepo = new ProviderModelsRepo(this.db);
     this.proxyPoolRepo = new ProxyPoolRepo(this.db);
     this.proxyPool = new ProxyPoolService(this.proxyPoolRepo);
     this.apiKeysRepo = new ApiKeysRepo(this.db);
@@ -317,6 +347,175 @@ export class Cokey {
   }
 
   /**
+   * Ask a provider what it currently serves, and reconcile that with what COKEY
+   * believed it served.
+   *
+   * This is the only place the curated catalog meets reality. The catalog is a
+   * hand-written default and is right most of the time; a model listing is right
+   * now. When they disagree the listing wins, because a model the provider has
+   * retired cannot serve a request no matter what a document says.
+   *
+   * Failure is always reported rather than thrown, and never destroys the
+   * inventory already held — see the empty-listing guard below for why.
+   */
+  async refreshProviderModels(
+    providerId: string,
+    options: { credentialId?: string; retainMissingMs?: number } = {},
+  ): Promise<ModelDiscoveryReport> {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    const displayName = catalog?.displayName ?? providerId;
+    const previous = this.providerModelsRepo.listByProvider(providerId);
+    const checkedAt = Date.now();
+
+    const refuse = (message: string, latencyMs = 0): ModelDiscoveryReport => ({
+      providerId,
+      displayName,
+      ok: false,
+      message,
+      latencyMs,
+      checkedAt,
+      discovered: 0,
+      tracked: previous.length,
+      added: [],
+      restored: [],
+      removed: [],
+      pruned: 0,
+      stale: [],
+      uncurated: [],
+      unchanged: 0,
+    });
+
+    if (!catalog) return refuse(`Unknown provider: ${providerId}`);
+
+    const bound = this.credentials.listByProvider(providerId);
+    if (bound.length === 0) return refuse(`${displayName} has no connected key`);
+
+    const credential = selectProbeCredential(bound, options.credentialId);
+    if (!credential) return refuse(`No usable key for ${displayName}`);
+
+    const started = Date.now();
+    let listing: ModelInfo[];
+    try {
+      listing = await this.providers.get(providerId).listModels(credential);
+    } catch (error) {
+      return refuse(`Could not list models: ${(error as Error).message}`, Date.now() - started);
+    }
+    const latencyMs = Date.now() - started;
+
+    const discovered = normaliseModelIds(listing.map((model) => model.id));
+
+    if (!isTrustworthyListing(discovered)) {
+      // A 200 with an empty list is not evidence that a provider stopped serving
+      // everything. Storing it would detach every model of this provider from
+      // every chain that uses one, so it is refused and the previous inventory
+      // is left exactly as it was.
+      return refuse(
+        `${displayName} returned no models — inventory left untouched`,
+        latencyMs,
+      );
+    }
+
+    const { records, changes } = reconcileModels({
+      providerId,
+      curated: catalog.knownModels,
+      discovered,
+      previous,
+      now: checkedAt,
+      retainMissingMs: options.retainMissingMs,
+    });
+
+    this.providerModelsRepo.replace(providerId, records);
+
+    const report: ModelDiscoveryReport = {
+      providerId,
+      displayName,
+      ok: true,
+      latencyMs,
+      checkedAt,
+      discovered: discovered.length,
+      tracked: records.length,
+      ...changes,
+    };
+
+    // Only a real change is worth interrupting the UI for. A periodic sweep that
+    // found what it expected should be silent.
+    const touched = changes.added.length + changes.restored.length + changes.removed.length;
+    if (touched > 0) {
+      this.events.emit({
+        type: "models.updated",
+        level: changes.removed.length > 0 ? "warn" : "success",
+        message: describeModelChange(displayName, changes),
+        providerId,
+        data: {
+          added: changes.added,
+          restored: changes.restored,
+          removed: changes.removed,
+          stale: changes.stale,
+          uncurated: changes.uncurated,
+          discovered: discovered.length,
+        },
+      });
+    }
+
+    this.logger.debug("model inventory refreshed", {
+      provider: providerId,
+      discovered: discovered.length,
+      added: changes.added.length,
+      removed: changes.removed.length,
+      stale: changes.stale.length,
+      latencyMs,
+    });
+
+    return report;
+  }
+
+  /**
+   * Refresh every provider that has at least one connected key.
+   *
+   * Sequential on purpose. These are third-party endpoints being asked an
+   * administrative question, and firing forty of them at once is the behaviour
+   * that gets a free tier rate-limited for reasons that have nothing to do with
+   * the user's traffic.
+   */
+  async refreshAllProviderModels(
+    options: { retainMissingMs?: number } = {},
+  ): Promise<ModelDiscoveryReport[]> {
+    const reports: ModelDiscoveryReport[] = [];
+    for (const provider of this.providerStatuses()) {
+      if (provider.credentialCount === 0) continue;
+      reports.push(await this.refreshProviderModels(provider.id, options));
+    }
+    return reports;
+  }
+
+  /**
+   * Refresh a provider's inventory in the background.
+   *
+   * Used where the refresh is a bonus rather than the point of the action —
+   * re-verifying an existing key, for instance — so the response is not held up
+   * by a second round trip to the provider.
+   */
+  private scheduleModelDiscovery(providerId: string, credentialId?: string): void {
+    void this.refreshProviderModels(providerId, { credentialId }).catch((error) => {
+      this.logger.warn("model discovery failed", {
+        provider: providerId,
+        message: (error as Error).message,
+      });
+    });
+  }
+
+  /** Observed model inventory, grouped by provider. */
+  private inventoryByProvider(): Map<string, ProviderModelRecord[]> {
+    const map = new Map<string, ProviderModelRecord[]>();
+    for (const record of this.providerModelsRepo.listAll()) {
+      const list = map.get(record.providerId);
+      if (list) list.push(record);
+      else map.set(record.providerId, [record]);
+    }
+    return map;
+  }
+
+  /**
    * Connect a credential, verifying it first.
    *
    * The credential is only persisted as healthy when the provider accepts it.
@@ -389,9 +588,26 @@ export class Cokey {
       latencyMs: validation.latencyMs,
     });
 
+    // A key that just verified is the first moment this provider can be asked
+    // what it really serves. Awaited so the answer can travel back with the
+    // response, but never fatal: a provider that cannot list its models still
+    // has a working key, and the catalog remains the fallback truth.
+    let models: ModelDiscoveryReport | undefined;
+    if (validation.ok) {
+      try {
+        models = await this.refreshProviderModels(providerId, { credentialId: credential.id });
+      } catch (error) {
+        this.logger.warn("model discovery failed", {
+          provider: providerId,
+          message: (error as Error).message,
+        });
+      }
+    }
+
     return {
       credential: this.credentials.toPublic(this.credentials.getOrThrow(credential.id)),
       validation,
+      models,
     };
   }
 
@@ -451,6 +667,9 @@ export class Cokey {
         credentialId: credential.id,
         credentialDescription: credential.description,
       });
+      // A key that just came back to life may have a provider behind it that
+      // changed its model list while the key was down.
+      this.scheduleModelDiscovery(credential.providerId, credential.id);
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
       this.events.emit({
@@ -971,6 +1190,7 @@ export class Cokey {
   modelCatalog(): ModelCatalogView[] {
     const counts = new Map<string, { total: number; healthy: number }>();
     const working = new Map<string, string[]>();
+    const inventory = this.inventoryByProvider();
     for (const credential of this.credentials.listAll()) {
       // Fold a collapsed id onto the entry that survived deduplication, so a
       // key connected as `aion-labs` still makes `aion` usable.
@@ -984,7 +1204,125 @@ export class Cokey {
       if (credential.status === "healthy") count.healthy += 1;
       counts.set(providerId, count);
     }
-    return modelAvailability(this.providers.getBuiltInCatalog(), counts, working);
+    return modelAvailability(this.providers.getBuiltInCatalog(), counts, working, inventory);
+  }
+
+  /**
+   * The observed model inventory for one provider, curated models annotated.
+   *
+   * Powers the provider detail view: what COKEY believed, what the provider last
+   * said, and which of the two disagrees.
+   */
+  providerModelInventory(providerId: string): {
+    providerId: string;
+    displayName: string;
+    checkedAt?: number;
+    models: ProviderModelRecord[];
+  } {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    return {
+      providerId,
+      displayName: catalog?.displayName ?? providerId,
+      checkedAt: this.providerModelsRepo.lastCheckedAt(providerId),
+      models: this.providerModelsRepo.listByProvider(providerId),
+    };
+  }
+
+  /**
+   * What the user should do next, ordered by how much it matters.
+   *
+   * This method only assembles a snapshot of live state; the judgement about
+   * which conditions are worth interrupting someone for lives in the pure rules
+   * in `guidance.ts`. Keeping the query and the policy apart is what makes the
+   * thresholds testable — and there are a lot of thresholds.
+   */
+  guidance(): {
+    notices: GuidanceNotice[];
+    summary: Record<GuidanceSeverity, number>;
+    checkedAt: number;
+  } {
+    const notices = deriveGuidance(this.guidanceInput());
+    return { notices, summary: guidanceSummary(notices), checkedAt: Date.now() };
+  }
+
+  /** Flatten the gateway's state into the plain shape the guidance rules read. */
+  private guidanceInput(): GuidanceInput {
+    const now = Date.now();
+    const statuses = this.providerStatuses();
+    const displayName = new Map(statuses.map((status) => [status.id, status.displayName]));
+    const inventory = this.inventoryByProvider();
+
+    const providers = statuses.map((status) => {
+      const observed = inventory.get(status.id) ?? [];
+      const curated = this.providers.findCatalogEntry(status.id)?.knownModels ?? [];
+      const stale = staleCuratedModels(curated, observed);
+      return {
+        id: status.id,
+        displayName: status.displayName,
+        connected: status.connected,
+        credentialCount: status.credentialCount,
+        healthyCount: status.healthyCount,
+        inventoryCheckedAt: this.providerModelsRepo.lastCheckedAt(status.id),
+        staleModels: stale,
+        modelCount: curated.length - stale.length + observed.filter((r) => r.available && !curated.includes(r.model)).length,
+      };
+    });
+
+    const credentials = this.credentials.listAll().map((credential) => ({
+      id: credential.id,
+      providerId: credential.providerId,
+      providerName: displayName.get(credential.providerId) ?? credential.providerId,
+      description: credential.description,
+      status: credential.status,
+      cooldownUntil: credential.cooldownUntil,
+      consecutiveFailures: credential.consecutiveFailures,
+      lastVerifiedAt: credential.lastVerifiedAt,
+      proxyAuto: credential.proxyAuto ?? false,
+    }));
+
+    const chains = this.chains.listChains().map((chain) => ({
+      id: chain.id,
+      alias: chain.alias,
+      enabled: chain.enabled,
+      entries: this.chains.listEntries(chain.id).map((entry) => {
+        const bound = this.credentials.listByIds(entry.credentialIds);
+        return {
+          id: entry.id,
+          providerId: entry.providerId,
+          providerName: displayName.get(entry.providerId) ?? entry.providerId,
+          model: entry.model,
+          label: entry.label,
+          enabled: entry.enabled,
+          credentialCount: bound.length,
+          healthyCount: bound.filter((credential) => credential.status === "healthy").length,
+        };
+      }),
+    }));
+
+    const pool = this.proxyPoolStatus();
+    const coverage = this.freeProviderNudge();
+
+    return {
+      now,
+      chains,
+      credentials,
+      providers,
+      egress: {
+        enabled: pool.enabled,
+        poolSize: pool.size,
+        saturatedProviders: pool.saturatedProviders.map(
+          (id) => displayName.get(id) ?? id,
+        ),
+      },
+      coverage: {
+        connectedFree: coverage.connectedFree,
+        target: coverage.target,
+        suggestions: coverage.suggestions.map((entry) => ({
+          id: entry.id,
+          displayName: entry.displayName,
+        })),
+      },
+    };
   }
 
   // ---- chains -------------------------------------------------------------
@@ -1471,4 +1809,22 @@ function readEnvSecret(name: string | undefined): string | undefined {
   if (!name) return undefined;
   const value = process.env[name];
   return value && value.trim() ? value.trim() : undefined;
+}
+
+/**
+ * One line describing a model inventory change.
+ *
+ * Written to name the provider first, because the notification appears in a bar
+ * that may be showing a dozen other providers' news, and "3 models added" is
+ * useless without knowing whose.
+ */
+function describeModelChange(
+  displayName: string,
+  changes: { added: string[]; restored: string[]; removed: string[] },
+): string {
+  const parts: string[] = [];
+  if (changes.added.length > 0) parts.push(`${changes.added.length} new`);
+  if (changes.restored.length > 0) parts.push(`${changes.restored.length} back`);
+  if (changes.removed.length > 0) parts.push(`${changes.removed.length} retired`);
+  return `${displayName}: ${parts.join(", ")} model(s)`;
 }

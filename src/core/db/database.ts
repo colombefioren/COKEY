@@ -180,6 +180,36 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_credentials_proxy ON credentials(proxy_url);
     `,
   },
+  {
+    version: 8,
+    name: "provider_model_inventory",
+    sql: `
+      -- What each provider actually returned the last time we asked.
+      --
+      -- The shipped catalog is curated by hand and is the right default, but it
+      -- cannot know that a provider quietly retired a model this morning. This
+      -- table is the observed truth: one row per (provider, model).
+      --
+      -- A model that stops being returned is marked unavailable rather than
+      -- deleted, so it keeps its history, and a model that comes back can be
+      -- reported as restored instead of appearing from nowhere. Rows are only
+      -- dropped once they have been missing long enough to be considered gone
+      -- for good (see ModelDiscovery.retainMissingMs).
+      CREATE TABLE IF NOT EXISTS provider_models (
+        provider_id  TEXT NOT NULL,
+        model        TEXT NOT NULL,
+        curated      INTEGER NOT NULL DEFAULT 0,
+        available    INTEGER NOT NULL DEFAULT 1,
+        first_seen   INTEGER NOT NULL,
+        last_seen    INTEGER NOT NULL,
+        last_checked INTEGER NOT NULL,
+        PRIMARY KEY (provider_id, model)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_provider_models_available
+        ON provider_models(provider_id, available);
+    `,
+  },
 ];
 
 /**
@@ -343,4 +373,16 @@ export interface ApiKeyRow {
   created_at: number;
   last_used_at: number | null;
   enabled: number;
+}
+
+export interface ProviderModelRow {
+  provider_id: string;
+  model: string;
+  /** 1 when the shipped catalog also lists this model. */
+  curated: number;
+  /** 1 when the provider returned it on the most recent check. */
+  available: number;
+  first_seen: number;
+  last_seen: number;
+  last_checked: number;
 }
