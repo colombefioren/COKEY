@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { href, type Navigate } from "../router.js";
-import { CokeyLogo } from "./Logo.js";
+import { CokeyLogo, CokeyMark } from "./Logo.js";
 import { IconChevron } from "./Icons.js";
 
 /** Must match the sidebar-becomes-a-drawer breakpoint in responsive.css. */
@@ -24,6 +24,10 @@ export interface NavItem {
  * does what a user expects. The highlight behind the active item is one
  * element that glides between anchors rather than each item toggling its own
  * background, which is what makes the column read as one moving object.
+ *
+ * The brand is the drawn lockup, not the word "COKEY" set in a font: the mark
+ * and the lettering share one pink-to-violet stroke, and typesetting half of it
+ * would break that. Folded, only the mark fits, so only the mark is shown.
  *
  * On a narrow screen the rail becomes a slide-in drawer, toggled by the
  * hamburger button in the topbar (`.shell.nav-open`, handled in App.tsx).
@@ -49,11 +53,22 @@ export function Sidebar({
   mobileOpen: boolean;
 }) {
   const navRef = useRef<HTMLElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
   const activeRef = useRef<HTMLAnchorElement | null>(null);
   const [glider, setGlider] = useState<{ top: number; height: number } | null>(null);
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches,
   );
+  /**
+   * The label that floats out of a folded row on hover.
+   *
+   * Folded, every row is an icon, and an icon set alone is a memory test. The
+   * label cannot simply be positioned inside the row because the nav column
+   * scrolls, and a scroll container clips its overflow — so the name is drawn
+   * once, in the rail's own coordinate space, at the height of whatever row is
+   * under the cursor.
+   */
+  const [hint, setHint] = useState<{ top: number; label: string } | null>(null);
 
   useEffect(() => {
     const mql = window.matchMedia(MOBILE_QUERY);
@@ -78,6 +93,21 @@ export function Sidebar({
     return () => window.removeEventListener("resize", measure);
   }, [activePath, collapsed, items.length]);
 
+  // A folded rail is the only place the float-out label exists, so leaving the
+  // rail or unfolding it has to take the label with it.
+  useEffect(() => {
+    if (!collapsed) setHint(null);
+  }, [collapsed]);
+
+  const showHint = (label: string) => (event: { currentTarget: HTMLAnchorElement }) => {
+    if (!collapsed || isMobile) return;
+    const sidebar = sidebarRef.current;
+    if (!sidebar) return;
+    const row = event.currentTarget.getBoundingClientRect();
+    const base = sidebar.getBoundingClientRect();
+    setHint({ top: row.top - base.top + row.height / 2, label });
+  };
+
   // Below the breakpoint the drawer is only ever a transform away, so its
   // links stay in the tab order and screen-reader tree unless explicitly
   // retired while closed.
@@ -87,10 +117,23 @@ export function Sidebar({
   const inertProps = { inert: hidden || undefined } as React.HTMLAttributes<HTMLElement>;
 
   return (
-    <aside className={`sidebar${collapsed ? " collapsed" : ""}`} {...inertProps}>
-      <a className="sidebar-brand" href={href("/dashboard")} onClick={() => navigate("/dashboard")}>
-        <CokeyLogo height={26} withWordmark={false} uid="sidebar-mark" className="brand-logo" />
-        <span className="brand-word">COKEY</span>
+    <aside
+      ref={sidebarRef}
+      className={`sidebar${collapsed ? " collapsed" : ""}`}
+      onMouseLeave={() => setHint(null)}
+      {...inertProps}
+    >
+      <a
+        className="sidebar-brand"
+        href={href("/dashboard")}
+        onClick={() => navigate("/dashboard")}
+        aria-label="COKEY dashboard"
+      >
+        {collapsed ? (
+          <CokeyMark height={30} className="brand-logo" />
+        ) : (
+          <CokeyLogo height={30} withWordmark uid="sidebar-brand" className="brand-logo" />
+        )}
       </a>
 
       <nav className="sidebar-nav" ref={navRef} aria-label="Sections">
@@ -111,8 +154,12 @@ export function Sidebar({
               className={`nav-item${isActive ? " active" : ""}`}
               href={href(item.path)}
               title={item.hint}
+              aria-label={collapsed ? item.label : undefined}
               aria-current={isActive ? "page" : undefined}
               style={{ "--nav-index": index } as React.CSSProperties}
+              onMouseEnter={showHint(item.label)}
+              onFocus={showHint(item.label)}
+              onBlur={() => setHint(null)}
               onClick={() => navigate(item.path)}
             >
               <span className="nav-icon" aria-hidden="true">
@@ -124,6 +171,12 @@ export function Sidebar({
           );
         })}
       </nav>
+
+      {collapsed && hint ? (
+        <span className="nav-hint" style={{ top: hint.top }} aria-hidden="true">
+          {hint.label}
+        </span>
+      ) : null}
 
       <button
         type="button"

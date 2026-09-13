@@ -207,9 +207,10 @@ h3 {
 }
 
 /*
- * The sidebar is a solid tinted panel, not another white card — it is what
- * makes the white page underneath it read as paper rather than a blank
- * canvas that forgot to load.
+ * The sidebar is a pink-to-lilac wash, not another white card — it is what
+ * makes the warm page underneath read as paper rather than a blank canvas that
+ * forgot to load. The inner top highlight is the light source: without it a
+ * gradient panel looks like a rectangle that was filled, not a surface.
  */
 .sidebar {
   position: sticky;
@@ -220,14 +221,15 @@ h3 {
   gap: 16px;
   height: calc(100vh - 32px);
   padding: 18px 14px 16px;
-  border: 2px solid var(--sidebar-border);
-  border-radius: 24px;
+  border: 1.5px solid var(--sidebar-border);
+  border-radius: 26px;
   background: var(--sidebar-bg);
-  box-shadow: var(--shadow);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    var(--shadow);
   transition:
     padding 0.35s var(--ease),
-    border-radius 0.35s var(--ease),
-    background 0.3s ease;
+    border-radius 0.35s var(--ease);
 }
 
 .sidebar > * {
@@ -235,32 +237,28 @@ h3 {
   z-index: 1;
 }
 
+/*
+ * The brand is the drawn lockup, so there is no text to colour: the gradient
+ * lives in the svg itself and the whole thing lifts as one object.
+ */
 .sidebar-brand {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 2px 6px 0;
-  color: var(--violet);
   transition: transform 0.3s var(--ease);
 }
 .sidebar-brand:hover {
-  color: var(--violet-strong);
   text-decoration: none;
 }
 .brand-logo {
   display: block;
   flex: none;
+  overflow: visible;
   transition: transform 0.4s var(--ease);
 }
 .sidebar-brand:hover .brand-logo {
-  transform: rotate(-4deg) scale(1.04);
-}
-.brand-word {
-  font-family: var(--font-display);
-  font-size: 19px;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  color: var(--text);
+  transform: translateY(-1px) scale(1.03);
 }
 
 /* Positioned so the gliding highlight can be measured against it. */
@@ -299,11 +297,9 @@ h3 {
 }
 
 /*
- * The moving highlight.
- *
- * One element glides between items instead of every item blinking on and off,
- * which is what makes the column read as one moving object. Position and height
- * are measured from the active anchor before paint.
+ * The moving highlight: one white pill on the wash, with a pink-to-violet rule
+ * on its leading edge so the active row is marked by the brand ramp rather than
+ * by a colour that already exists in the rail behind it.
  */
 .nav-glider {
   position: absolute;
@@ -312,9 +308,7 @@ h3 {
   top: 0;
   z-index: 0;
   pointer-events: none;
-  border-radius: 13px;
-  /* A white pill on the pink rail, not another pink tint that would vanish
-     into the panel behind it. */
+  border-radius: 14px;
   background: var(--surface);
   box-shadow: var(--shadow);
   transition:
@@ -332,7 +326,7 @@ h3 {
   height: 18px;
   margin-top: -9px;
   border-radius: 3px;
-  background: var(--violet);
+  background: linear-gradient(var(--mark-1), var(--mark-3));
 }
 
 .nav-item {
@@ -367,7 +361,7 @@ h3 {
 }
 
 .nav-item:hover {
-  background: var(--sidebar-border);
+  background: rgba(255, 255, 255, 0.7);
   color: var(--text);
   text-decoration: none;
 }
@@ -410,6 +404,7 @@ h3 {
   background: var(--surface);
   color: var(--violet-strong);
   font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 0 0 1px var(--border);
   transition:
     transform 0.24s var(--ease),
     background 0.2s ease;
@@ -514,6 +509,42 @@ h3 {
   transform: rotate(-90deg);
 }
 
+/*
+ * The float-out label for a folded row.
+ *
+ * It is a sibling of the nav column, not a child of the row, because the nav
+ * column scrolls and a scroll container clips its overflow — which is exactly
+ * how a tooltip on a folded rail ends up invisible. Anchored in the rail's own
+ * coordinate space, it can sit outside the column entirely.
+ */
+.nav-hint {
+  position: absolute;
+  left: calc(100% - 6px);
+  z-index: 95;
+  transform: translateY(-50%) translateX(-6px);
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: var(--violet-strong);
+  color: var(--violet-ink);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: var(--shadow-pop);
+  pointer-events: none;
+  animation: hint-in 0.22s var(--ease) both;
+}
+
+@keyframes hint-in {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-14px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(-6px) scale(1);
+  }
+}
+
 /* Collapsed rail: a clean icon column. Text is removed, not squeezed, and the
    flex gap goes with it so the icons sit on the rail's true center line. */
 .sidebar.collapsed {
@@ -538,7 +569,6 @@ h3 {
 .sidebar.collapsed .nav-badge,
 .sidebar.collapsed .nav-chevron,
 .sidebar.collapsed .nav-group-title,
-.sidebar.collapsed .brand-word,
 .sidebar.collapsed .sidebar-foot {
   display: none;
 }

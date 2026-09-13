@@ -1,17 +1,32 @@
 /**
  * The COKEY mark.
  *
- * This is the same artwork as `docs/assets/cokey-logo.svg` in the readme: one
- * continuous line crossing itself into a C and an O, with two leaves off the
- * second loop, then KEY stroked beside it. It is inlined rather than loaded as
- * an image so it stays crisp at any size, inherits nothing from the network,
+ * One continuous line crossing itself into a C and an O, with two leaves off
+ * the second loop, then KEY stroked beside it. It is inlined rather than loaded
+ * as an image so it stays crisp at any size, inherits nothing from the network,
  * and can re-colour for the active theme through the gradient stops.
+ *
+ * The ramp is the brand: baby pink at the start of the stroke, lilac through
+ * the middle, violet where it lands. Every appearance of the mark — the rail,
+ * the login card, the hub of the live route, the favicon — uses this same
+ * three-stop ramp, so the identity is one gradient rather than three
+ * approximations of one.
  */
 
+/** The mark alone: the CO ligature and the leaves. */
 const MARK_PATH =
   "M84 50 C75 44 63 43 52 50 C32 62 32 90 52 102 C72 114 96 102 96 76 C96 50 120 38 140 50 C160 62 160 90 140 102 C120 114 96 102 96 76";
 
-/** The mark alone: the CO ligature and the leaves. */
+/** Letterforms for KEY, as single strokes: stem-and-diagonals, three bars, a fork. */
+const WORD_PATHS = ["M246 40 V114 M294 40 L250 74 L294 114", "M348 40 H314 V114 H348 M314 74 H340", "M378 40 L406 74 L434 40 M406 74 V114"];
+
+/** The gradient stops, in one place so the svg and the css can never drift. */
+const RAMP = [
+  { offset: "0", color: "var(--mark-1, #ffb3d4)" },
+  { offset: "0.52", color: "var(--mark-2, #b98cf6)" },
+  { offset: "1", color: "var(--mark-3, #6b4be0)" },
+];
+
 export function CokeyMark({ height = 30, className }: { height?: number; className?: string }) {
   return (
     <svg
@@ -23,18 +38,26 @@ export function CokeyMark({ height = 30, className }: { height?: number; classNa
       aria-label="COKEY"
       fill="none"
     >
+      <defs>
+        <linearGradient id="cokey-mark-ramp" x1="34" y1="24" x2="196" y2="118" gradientUnits="userSpaceOnUse">
+          {RAMP.map((stop) => (
+            <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+          ))}
+        </linearGradient>
+      </defs>
+
       <path
         d={MARK_PATH}
-        stroke="currentColor"
+        stroke="url(#cokey-mark-ramp)"
         strokeWidth="13"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="currentColor" />
+      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="var(--mark-1, #ffb3d4)" />
       <path
         d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z"
-        fill="currentColor"
-        opacity="0.6"
+        fill="var(--mark-3, #6b4be0)"
+        opacity="0.85"
       />
     </svg>
   );
@@ -74,27 +97,23 @@ export function CokeyLogo({
       <defs>
         <linearGradient
           id={markId}
-          x1="24"
+          x1="34"
           y1="24"
-          x2="200"
+          x2="196"
           y2="118"
           gradientUnits="userSpaceOnUse"
         >
-          <stop offset="0" stopColor="#a68af7" />
-          <stop offset="0.55" stopColor="#6d3df0" />
-          <stop offset="1" stopColor="#3d1fa1" />
+          {RAMP.map((stop) => (
+            <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+          ))}
         </linearGradient>
-        <linearGradient
-          id={wordId}
-          x1="246"
-          y1="42"
-          x2="430"
-          y2="112"
-          gradientUnits="userSpaceOnUse"
-        >
-          <stop offset="0" stopColor="#d9caf9" />
-          <stop offset="1" stopColor="#6d3df0" />
-        </linearGradient>
+        {withWordmark ? (
+          <linearGradient id={wordId} x1="248" y1="30" x2="438" y2="120" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stopColor="var(--mark-1, #ffb3d4)" />
+            <stop offset="0.6" stopColor="var(--mark-2, #b98cf6)" />
+            <stop offset="1" stopColor="var(--mark-3, #6b4be0)" />
+          </linearGradient>
+        ) : null}
       </defs>
 
       <path
@@ -104,19 +123,23 @@ export function CokeyLogo({
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#a68af7" />
-      <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#3d1fa1" />
+      <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="var(--mark-1, #ffb3d4)" />
+      <path
+        d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z"
+        fill="var(--mark-3, #6b4be0)"
+        opacity="0.85"
+      />
 
       {withWordmark ? (
         <g
           stroke={`url(#${wordId})`}
           strokeWidth="11"
-          strokeLinecap="square"
-          strokeLinejoin="miter"
+          strokeLinecap="round"
+          strokeLinejoin="round"
         >
-          <path d="M246 42 V112 M292 42 L250 76 L292 112" />
-          <path d="M346 42 H312 V112 H346 M312 76 H338" />
-          <path d="M378 42 L404 76 L430 42 M404 76 V112" />
+          {WORD_PATHS.map((d) => (
+            <path key={d} d={d} />
+          ))}
         </g>
       ) : null}
     </svg>
