@@ -588,6 +588,31 @@
   animation: flow-blink 2.2s ease-in-out infinite;
 }
 
+/* ---- focus ---------------------------------------------------------------- */
+
+/*
+ * One focus ring, never removed.
+ *
+ * This app is full of custom controls — rail rows, chain nodes, route pills —
+ * and a control you cannot see the focus on is a control nobody can use without
+ * a mouse. `:focus-visible` keeps that promise without drawing a ring on every
+ * click.
+ */
+a:focus-visible,
+.nav-item:focus-visible,
+.nav-child:focus-visible,
+.flow-pill:focus-visible,
+.tab:focus-visible,
+.entry-node:focus-visible,
+.flow-node:focus-visible,
+.window-control:focus-visible,
+.topbar-link:focus-visible,
+.toast:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
 /* ---- chrome --------------------------------------------------------------- */
 
 ::selection {
