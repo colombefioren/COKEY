@@ -1859,6 +1859,18 @@ button.model-name:hover {
   gap: 8px;
   width: 100%;
 }
+
+/* Each provider's grid pages on its own, so one provider with 200 models can
+   no longer push every other provider off the page. */
+.model-pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-strong);
+  flex-wrap: wrap;
+}
 button.play {
   min-width: 34px;
   padding: 3px 10px;
