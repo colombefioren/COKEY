@@ -463,6 +463,29 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("free-qwen3.5-plus", "256K", "Reasoning", 2.07),
   ],
   "yolo-auto": [m("qwen3.8-27b", "128K", "General", 4.69)],
+
+  // -------------------------------------------------------------------------
+  // Tested free gateways
+  // -------------------------------------------------------------------------
+  qzz: [
+    m("deepseek-v4-flash", "1M", "Reasoning"),
+    m("deepseek-v4-flash-0731", "1M", "Reasoning"),
+    m("deepseek-v4-pro", "1M", "Reasoning"),
+    m("deepseek-v4-pro-0813", "1M", "Reasoning"),
+  ],
+  ai121628: [m("deepseek-v4-flash-free", "1M", "Reasoning")],
+  tokenrouter: [m("z-ai/glm-5.3-free", "128K", "General")],
+  tokenharbor: [
+    m("deepseek-v4.1-flash:free", "1M", "Reasoning"),
+    m("deepseek-v4-flash:free", "1M", "Reasoning"),
+    m("mimo-v2.5:free", "1M", "General"),
+  ],
+  nararouter: [m("laguna-s-2.1", "262K", "Code")],
+  aihubmix: [
+    m("coding-minimax-m3-free", undefined, "Code"),
+    m("coding-glm-4.7-free", undefined, "Code"),
+    m("gpt-5.5-free", undefined, "General"),
+  ],
 };
 
 /** Total number of curated free models across every provider. */
