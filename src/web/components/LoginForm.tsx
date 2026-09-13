@@ -46,8 +46,7 @@ export function LoginForm({ onLogin }: { onLogin: () => void }) {
             autoFocus
           />
           <div className="small faint" style={{ marginTop: 8, marginBottom: 12 }}>
-            Default password is <code>coco-the-best</code>. Change it once in Settings — after that
-            it is permanent.
+            Default <code>coco-the-best</code> — change it in Settings and it is permanent.
           </div>
           {error ? <div className="verify err">{error}</div> : null}
           <button type="submit" disabled={busy || !password}>

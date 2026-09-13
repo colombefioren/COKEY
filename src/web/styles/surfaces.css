@@ -374,6 +374,145 @@
   border-radius: 14px;
 }
 
+/* ---- dialog interiors ----------------------------------------------------- */
+
+/*
+ * Pick-a-thing rows inside a modal. The whole row is the target, so it is a
+ * full-width button with its own outline rather than a bank of small controls
+ * with a label floating beside them.
+ */
+.selected-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.selected-list button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 14px 16px 13px 17px;
+  text-align: left;
+  font-size: 12.5px;
+}
+.selected-list .spacer {
+  flex: 1;
+}
+
+.selected-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px 16px 13px 17px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+/* The inline verdict under a field, as a chip: it is a sentence about the field
+   above it, not a paragraph of its own. */
+.verify {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--verify-line, var(--border));
+  background: var(--verify-bg, var(--surface-2));
+  color: var(--verify-ink, var(--muted));
+  font-size: 11.5px;
+  font-weight: 550;
+}
+.verify.ok {
+  --verify-line: var(--sage-line);
+  --verify-bg: var(--sage-soft);
+  --verify-ink: var(--sage);
+}
+.verify.err {
+  --verify-line: var(--rose-line);
+  --verify-bg: var(--rose-soft);
+  --verify-ink: var(--rose);
+}
+.verify.pending {
+  --verify-line: var(--peach-line);
+  --verify-bg: var(--peach-soft);
+  --verify-ink: var(--peach);
+}
+
+.detail-grid {
+  display: grid;
+  gap: 2px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.detail-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+}
+.detail-row:nth-child(odd) {
+  background: var(--surface-2);
+}
+.detail-row + .detail-row {
+  border-top: 1px solid var(--border);
+}
+.detail-label {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/*
+ * The free-provider nudge.
+ *
+ * A callout, so it is drawn like one: the ramp down the leading edge, the tint
+ * spreading out of it, and a headline in the display face at a size that
+ * actually asks to be read.
+ */
+.nudger {
+  position: relative;
+  border: 1.5px solid var(--violet-line);
+  border-radius: 22px 20px 24px 19px;
+  padding: 18px 20px 18px 22px;
+  display: grid;
+  gap: 10px;
+  background:
+    radial-gradient(420px 220px at 0% 0%, var(--pink-soft), transparent 68%),
+    linear-gradient(150deg, var(--surface), var(--violet-soft));
+  overflow: hidden;
+}
+.nudger::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
+}
+.nudger h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.nudger .actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 /* ---- topbar affordances --------------------------------------------------- */
 
 /* The public endpoint, as a chip rather than a bare link: it is a thing you

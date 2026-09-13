@@ -925,3 +925,156 @@
 .live-time {
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- tutorial and terms --------------------------------------------------- */
+/*
+ * The two reading screens.
+ *
+ * Both are mostly text, so the work is in the few things that are not: one
+ * poster at the top of the tutorial and one at the bottom of the terms, with
+ * everything between them kept quiet enough that the words carry it.
+ */
+
+.hero {
+  position: relative;
+  padding: 28px;
+  border-radius: 26px 23px 27px 22px;
+  border: 1.5px solid var(--violet-line);
+  background:
+    radial-gradient(520px 280px at 100% 0%, var(--pink-soft), transparent 66%),
+    linear-gradient(120deg, var(--violet-soft), var(--surface) 58%, var(--bloom-3));
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  top: 0;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 55%, var(--mark-3));
+}
+.hero h2 {
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.hero p {
+  font-size: 13.5px;
+}
+
+/* The same hand-cut tab the route diagram and the chain nodes use. */
+.steps-list > li::before {
+  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  font-family: var(--font-display);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--mark-3);
+  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  border: 0;
+  box-shadow: inset 0 0 0 1.5px var(--violet-line);
+}
+
+.recipe {
+  border: 1.5px solid var(--border);
+  border-radius: 18px 20px 16px 19px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.recipe.open {
+  border-color: var(--violet-line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.recipe-head {
+  gap: 10px;
+  padding: 14px 16px;
+}
+.recipe-head:hover:not(:disabled) {
+  background: var(--violet-soft);
+}
+.recipe-name {
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 650;
+}
+/* The open/closed mark as a chip, so it reads as a control rather than as a
+   stray character at the end of the row. */
+.recipe-toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  font-size: 14px;
+}
+.recipe-body {
+  padding: 0 16px 18px;
+}
+
+.code-block {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-3);
+}
+.code-head {
+  padding: 7px 12px;
+}
+.code-block pre {
+  padding: 14px;
+}
+.code-block code {
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.terms {
+  gap: 18px;
+}
+.terms section h3 {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--violet-strong);
+}
+.terms section div {
+  font-size: 13px;
+  line-height: 1.78;
+}
+
+/* The sign-off, as the mirror of the tutorial's hero: the other end of the same
+   ramp, so the two documents feel like a pair. */
+.closing {
+  position: relative;
+  gap: 6px;
+  padding: 28px;
+  border: 1.5px solid var(--violet-line);
+  border-radius: 26px 23px 27px 22px;
+  background:
+    radial-gradient(460px 240px at 0% 100%, var(--pink-soft), transparent 68%),
+    linear-gradient(135deg, var(--violet-soft), var(--surface) 62%, var(--bloom-3));
+  overflow: hidden;
+}
+.closing::after {
+  content: "";
+  position: absolute;
+  left: 28px;
+  right: 28px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: linear-gradient(90deg, var(--mark-3), var(--mark-2) 55%, var(--mark-1));
+}
+.closing strong {
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  font-size: 18px;
+  color: var(--violet-strong);
+}
+.closing span {
+  font-size: 12.5px;
+}
