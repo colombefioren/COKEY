@@ -40,7 +40,11 @@ export function StatusPill({ status, compact }: { status: CredentialStatus; comp
       title={compact ? word : undefined}
     >
       <span className="status-glyph" aria-hidden="true" />
-      {compact ? <span className="sr-only">{word}</span> : <span className="status-word">{word}</span>}
+      {compact ? (
+        <span className="sr-only">{word}</span>
+      ) : (
+        <span className="status-word">{word}</span>
+      )}
     </span>
   );
 }

@@ -18,7 +18,11 @@ const MARK_PATH =
   "M84 50 C75 44 63 43 52 50 C32 62 32 90 52 102 C72 114 96 102 96 76 C96 50 120 38 140 50 C160 62 160 90 140 102 C120 114 96 102 96 76";
 
 /** Letterforms for KEY, as single strokes: stem-and-diagonals, three bars, a fork. */
-const WORD_PATHS = ["M246 40 V114 M294 40 L250 74 L294 114", "M348 40 H314 V114 H348 M314 74 H340", "M378 40 L406 74 L434 40 M406 74 V114"];
+const WORD_PATHS = [
+  "M246 40 V114 M294 40 L250 74 L294 114",
+  "M348 40 H314 V114 H348 M314 74 H340",
+  "M378 40 L406 74 L434 40 M406 74 V114",
+];
 
 /** The gradient stops, in one place so the svg and the css can never drift. */
 const RAMP = [
@@ -39,7 +43,14 @@ export function CokeyMark({ height = 30, className }: { height?: number; classNa
       fill="none"
     >
       <defs>
-        <linearGradient id="cokey-mark-ramp" x1="34" y1="24" x2="196" y2="118" gradientUnits="userSpaceOnUse">
+        <linearGradient
+          id="cokey-mark-ramp"
+          x1="34"
+          y1="24"
+          x2="196"
+          y2="118"
+          gradientUnits="userSpaceOnUse"
+        >
           {RAMP.map((stop) => (
             <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
           ))}
@@ -108,7 +119,14 @@ export function CokeyLogo({
           ))}
         </linearGradient>
         {withWordmark ? (
-          <linearGradient id={wordId} x1="248" y1="30" x2="438" y2="120" gradientUnits="userSpaceOnUse">
+          <linearGradient
+            id={wordId}
+            x1="248"
+            y1="30"
+            x2="438"
+            y2="120"
+            gradientUnits="userSpaceOnUse"
+          >
             <stop offset="0" stopColor="var(--mark-1, #ffb3d4)" />
             <stop offset="0.6" stopColor="var(--mark-2, #b98cf6)" />
             <stop offset="1" stopColor="var(--mark-3, #6b4be0)" />
@@ -131,12 +149,7 @@ export function CokeyLogo({
       />
 
       {withWordmark ? (
-        <g
-          stroke={`url(#${wordId})`}
-          strokeWidth="11"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
+        <g stroke={`url(#${wordId})`} strokeWidth="11" strokeLinecap="round" strokeLinejoin="round">
           {WORD_PATHS.map((d) => (
             <path key={d} d={d} />
           ))}
