@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError, timeAgo } from "../api.js";
 import type {
   CatalogProviderRow,
@@ -265,6 +265,15 @@ function ProviderDossierCard({
     : "API key";
 
   const stale = inventory?.staleModels ?? [];
+  const staleSet = useMemo(() => new Set(stale), [stale]);
+  const listedIds = useMemo(
+    () => new Set(dossier.models?.length ? dossier.models.map((m) => m.id) : row.knownModels),
+    [dossier.models, row.knownModels],
+  );
+  const unlistedStale = useMemo(
+    () => stale.filter((model) => !listedIds.has(model)),
+    [stale, listedIds],
+  );
   const checkedAt = inventory?.inventoryCheckedAt;
 
   return (
@@ -381,65 +390,88 @@ function ProviderDossierCard({
            * The content repository's model list carries what a name alone cannot:
            * context window, what the model is good at, and measured latency. When
            * it exists it is the better list, and the catalog's is the fallback.
+           *
+           * Neither list is trustworthy on its own about which of its entries
+           * the provider still actually serves — that only comes from the last
+           * live check (`stale`). A retired model stays visible, so a reader
+           * can still see what it was, but greyed out with no way to add it to
+           * a chain: the whole point of checking model lists is to stop a
+           * chain being built against a model that is already gone.
            */}
           {dossier.models && dossier.models.length > 0 ? (
             <div className="model-list">
-              {dossier.models.map((model) => (
-                <div className="model-list-item" key={model.id}>
-                  <span className="model-list-id">{model.id}</span>
-                  <span className="small faint">
-                    {[model.context, model.bestFor].filter(Boolean).join(" · ")}
-                  </span>
-                  <span className="spacer" />
-                  {model.latencySeconds ? (
-                    <span className="small faint">{model.latencySeconds}s</span>
-                  ) : null}
-                  <a
-                    className="small"
-                    href={`#/chains?model=${encodeURIComponent(model.id)}&provider=${encodeURIComponent(
-                      row.id,
-                    )}`}
-                  >
-                    add to chain
-                  </a>
-                </div>
-              ))}
+              {dossier.models.map((model) => {
+                const retired = staleSet.has(model.id);
+                return (
+                  <div className={`model-list-item${retired ? " retired" : ""}`} key={model.id}>
+                    <span className="model-list-id">{model.id}</span>
+                    <span className="small faint">
+                      {[model.context, model.bestFor].filter(Boolean).join(" · ")}
+                    </span>
+                    <span className="spacer" />
+                    {retired ? (
+                      <span className="badge bad">retired</span>
+                    ) : (
+                      <>
+                        {model.latencySeconds ? (
+                          <span className="small faint">{model.latencySeconds}s</span>
+                        ) : null}
+                        <a
+                          className="small"
+                          href={`#/chains?model=${encodeURIComponent(
+                            model.id,
+                          )}&provider=${encodeURIComponent(row.id)}`}
+                        >
+                          add to chain
+                        </a>
+                      </>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           ) : (
             <div className="model-list">
               {row.knownModels.length === 0 ? (
                 <div className="sub faint">No curated models.</div>
               ) : (
-                row.knownModels.map((model) => (
-                  <div className="model-list-item" key={model}>
-                    <span className="model-list-id">{model}</span>
-                    <span className="spacer" />
-                    <a
-                      className="small"
-                      href={`#/chains?model=${encodeURIComponent(model)}&provider=${encodeURIComponent(
-                        row.id,
-                      )}`}
-                    >
-                      add to chain
-                    </a>
-                  </div>
-                ))
+                row.knownModels.map((model) => {
+                  const retired = staleSet.has(model);
+                  return (
+                    <div className={`model-list-item${retired ? " retired" : ""}`} key={model}>
+                      <span className="model-list-id">{model}</span>
+                      <span className="spacer" />
+                      {retired ? (
+                        <span className="badge bad">retired</span>
+                      ) : (
+                        <a
+                          className="small"
+                          href={`#/chains?model=${encodeURIComponent(
+                            model,
+                          )}&provider=${encodeURIComponent(row.id)}`}
+                        >
+                          add to chain
+                        </a>
+                      )}
+                    </div>
+                  );
+                })
               )}
             </div>
           )}
 
           {/*
-           * Models the provider stopped returning. Shown rather than hidden,
-           * because "the model you were using is gone" is the single most
-           * confusing thing a free tier does.
+           * Retired models the content repository never described in the
+           * first place — the ones above already carry their own "retired"
+           * badge inline, so this only needs to cover the gap.
            */}
-          {stale.length > 0 ? (
+          {unlistedStale.length > 0 ? (
             <div className="model-list">
               <div className="small faint">
                 Retired · gone since {timeAgo(checkedAt ?? Date.now())}
               </div>
-              {stale.map((model) => (
-                <div className="model-list-item" key={model}>
+              {unlistedStale.map((model) => (
+                <div className="model-list-item retired" key={model}>
                   <span className="model-list-id">{model}</span>
                   <span className="spacer" />
                   <span className="badge bad">retired</span>

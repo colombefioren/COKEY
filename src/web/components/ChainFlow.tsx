@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
 import { CokeyMark } from "./Logo.js";
-import { Empty, StatusPill } from "./Primitives.js";
+import { Empty } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 
 /**
@@ -25,12 +25,14 @@ import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
  */
 
 const POLL_MS = 3000;
-const NODE_HEIGHT = 118;
-const NODE_GAP = 18;
-const GRAPH_MIN_HEIGHT = 420;
-const HUB_X = 300;
-const BRANCH_X = 640;
-const CLIENT_X = 30;
+const NODE_HEIGHT = 150;
+const NODE_GAP = 24;
+const GRAPH_MIN_HEIGHT = 460;
+const CLIENT_X = 0;
+const CLIENT_W = 220;
+const HUB_X = 290;
+const HUB_SIZE = 170;
+const BRANCH_X = 600;
 
 export function ChainFlow({
   chains,
@@ -85,7 +87,8 @@ export function ChainFlow({
   const graphHeight = Math.max(GRAPH_MIN_HEIGHT, stackHeight + 48);
   const hubY = graphHeight / 2;
   const branchTop = hubY - stackHeight / 2;
-  const branchMidX = (HUB_X + BRANCH_X) / 2;
+  const hubRight = HUB_X + HUB_SIZE;
+  const branchMidX = (hubRight + BRANCH_X) / 2;
 
   return (
     <div className={`flow${route?.active ? " flow-live" : ""}`}>
@@ -143,7 +146,9 @@ export function ChainFlow({
         <svg className="flow-lines" width="100%" height={graphHeight} aria-hidden="true">
           <path
             className={`flow-path${route?.active ? " live" : ""}`}
-            d={`M ${CLIENT_X + 190} ${hubY} C ${HUB_X - 70} ${hubY}, ${HUB_X - 70} ${hubY}, ${HUB_X} ${hubY}`}
+            d={`M ${CLIENT_X + CLIENT_W} ${hubY} C ${(CLIENT_X + CLIENT_W + HUB_X) / 2} ${hubY}, ${
+              (CLIENT_X + CLIENT_W + HUB_X) / 2
+            } ${hubY}, ${HUB_X + HUB_SIZE / 2} ${hubY}`}
           />
           {steps.length > 0 ? (
             steps.map((entry, index) => {
@@ -154,32 +159,32 @@ export function ChainFlow({
                 <path
                   key={entry.id}
                   className={`flow-path${isLive ? " live" : ""}${isDead ? " dead" : ""}`}
-                  d={`M ${HUB_X + 74} ${hubY} C ${branchMidX} ${hubY}, ${branchMidX} ${entryY}, ${BRANCH_X} ${entryY}`}
+                  d={`M ${hubRight} ${hubY} C ${branchMidX} ${hubY}, ${branchMidX} ${entryY}, ${BRANCH_X} ${entryY}`}
                 />
               );
             })
           ) : (
             <path
               className="flow-path dead"
-              d={`M ${HUB_X + 74} ${hubY} C ${branchMidX} ${hubY}, ${branchMidX} ${hubY}, ${BRANCH_X} ${hubY}`}
+              d={`M ${hubRight} ${hubY} C ${branchMidX} ${hubY}, ${branchMidX} ${hubY}, ${BRANCH_X} ${hubY}`}
             />
           )}
         </svg>
 
-        <div className="flow-node flow-client" style={{ top: hubY - 52 }}>
+        <div className="flow-node flow-client" style={{ top: hubY - 65 }}>
           <span className="flow-tape" aria-hidden="true" />
           <span className="flow-node-kicker">client</span>
           <span className="flow-node-title">your editor</span>
           <span className="flow-node-sub">one base URL</span>
         </div>
 
-        <div className="flow-node flow-hub" style={{ top: hubY - 75, left: HUB_X - 75 }}>
+        <div className="flow-node flow-hub" style={{ top: hubY - HUB_SIZE / 2, left: HUB_X }}>
           <span className="flow-hub-orb">
             <span className="flow-hub-ring" aria-hidden="true" />
-            <CokeyMark height={22} />
+            <CokeyMark height={24} />
           </span>
-          <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
           <span className="flow-node-kicker">alias</span>
+          <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
         </div>
 
         {steps.length > 0 ? (
@@ -194,8 +199,7 @@ export function ChainFlow({
                 left={BRANCH_X}
                 live={activeEntryKey === `${entry.providerId}/${entry.model}`}
                 dead={
-                  Boolean(activeEntryKey) &&
-                  activeEntryKey !== `${entry.providerId}/${entry.model}`
+                  Boolean(activeEntryKey) && activeEntryKey !== `${entry.providerId}/${entry.model}`
                 }
                 activeCredentialId={route?.credentialId}
                 sweepState={sweep.states[entry.id] ?? "idle"}
@@ -204,7 +208,7 @@ export function ChainFlow({
             );
           })
         ) : (
-          <div className="flow-node flow-empty" style={{ top: hubY - 52, left: BRANCH_X }}>
+          <div className="flow-node flow-empty" style={{ top: hubY - 65, left: BRANCH_X }}>
             <span className="flow-node-kicker">empty</span>
             <span className="flow-node-title">no nodes yet</span>
           </div>
@@ -212,10 +216,12 @@ export function ChainFlow({
       </div>
 
       <div className="flow-legend">
-        <StatusPill status="healthy" />
-        <StatusPill status="cooldown" />
-        <StatusPill status="invalid" />
-        <StatusPill status="unverified" />
+        <span className="flow-legend-dot healthy" aria-hidden="true" />
+        healthy
+        <span className="flow-legend-dot cooldown" aria-hidden="true" />
+        cooldown
+        <span className="flow-legend-dot invalid" aria-hidden="true" />
+        invalid
         <span className="spacer" />
         {sweep.winnerId ? (
           <span className="flow-legend-note ok">current · first node that answered</span>
@@ -266,20 +272,24 @@ function EntryNode({
         <span className="flow-node-title" title={entry.model}>
           {entry.label ?? entry.model}
         </span>
-        {sweepState !== "idle" || current ? (
-          <span className="flow-node-flag">
-            {current
-              ? "current"
-              : sweepState === "testing"
-                ? "testing"
-                : sweepState === "ok"
-                  ? "ok"
-                  : "fail"}
-          </span>
-        ) : live ? (
-          <span className="flow-node-flag live">serving</span>
-        ) : null}
       </div>
+      {sweepState !== "idle" || current ? (
+        <span className="flow-node-flag">
+          {current
+            ? "current"
+            : sweepState === "testing"
+              ? "testing"
+              : sweepState === "ok"
+                ? "ok"
+                : "fail"}
+        </span>
+      ) : live ? (
+        <span className="flow-node-flag live">currently serving</span>
+      ) : dead ? (
+        <span className="flow-node-flag skip">not reached</span>
+      ) : index === 0 ? (
+        <span className="flow-node-flag first">tried first</span>
+      ) : null}
       <span className="flow-node-sub mono">{entry.providerId}</span>
       <div className="flow-keys">
         {entry.credentials.length === 0 ? (
@@ -298,13 +308,8 @@ function EntryNode({
   );
 }
 
-/**
- * One bound key, as a capsule.
- *
- * The state is carried by the capsule's own fill and glyph rather than by a
- * coloured square, so a row of twelve keys can be read at a glance without a
- * legend lookup — and the tooltip still holds the exact description.
- */
+/** One bound key, as a plain coloured dot — the tooltip carries the exact
+    description, the legend underneath carries the colour key. */
 function KeyChip({ credential, active }: { credential: PublicCredential; active: boolean }) {
   const title = `${credential.description} (${credential.status})${
     credential.proxy.auto ? " · auto egress" : credential.proxy.configured ? " · pinned egress" : ""

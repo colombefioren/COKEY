@@ -185,39 +185,17 @@
   gap: 10px;
 }
 
+/* One colour signal per notice — the severity badge — not three: the card
+   itself stays a plain white rectangle so a stack of them reads as calm
+   text with one accent, not a row of differently-tinted panels. */
 .guidance-item {
   position: relative;
   display: grid;
   gap: 8px;
-  padding: 13px 15px 13px 17px;
-  border-radius: 16px 18px 15px 17px;
-  border: 1.5px solid var(--note-line);
-  background: linear-gradient(150deg, var(--surface) 42%, var(--note-bg));
-}
-.guidance-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 13px;
-  bottom: 13px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--note-ink);
-}
-.guidance-item.critical {
-  --note-line: var(--rose-line);
-  --note-bg: var(--rose-soft);
-  --note-ink: var(--rose);
-}
-.guidance-item.warn {
-  --note-line: var(--peach-line);
-  --note-bg: var(--peach-soft);
-  --note-ink: var(--peach);
-}
-.guidance-item.info {
-  --note-line: var(--sky-line);
-  --note-bg: var(--sky-soft);
-  --note-ink: var(--sky);
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
 }
 
 .guidance-head {
@@ -228,8 +206,9 @@
 }
 .guidance-title {
   font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 650;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
   color: var(--text);
 }
 .guidance-detail {
@@ -312,8 +291,8 @@
 
 .modal h3 {
   font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 
@@ -365,8 +344,8 @@
 
 .login-card h1 {
   font-family: var(--font-display);
-  font-size: 23px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 
@@ -596,8 +575,9 @@
 }
 .statusbar .status-cell strong {
   font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 400;
 }
 .statusbar .live-flag {
   display: inline-flex;

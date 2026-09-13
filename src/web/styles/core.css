@@ -24,7 +24,7 @@
   color-scheme: light;
 
   /* Warm paper. Not white — baby pink needs something to sit on. */
-  --ground: #fffbfd;
+  --ground: #fffaf7;
   --surface: #ffffff;
   --surface-2: #fdf6fa;
   --surface-3: #f8ecf4;
@@ -150,18 +150,11 @@ body,
 body {
   margin: 0;
   color: var(--text);
-  /* A dotted sheet of paper under three very soft blooms — pink, lilac,
-     apricot. The dots are what keep the page from reading as a flat colour
-     fill; they need to actually be seen, not just theoretically present. */
-  background:
-    radial-gradient(1000px 680px at -4% -10%, var(--pink-soft), transparent 62%),
-    radial-gradient(880px 620px at 104% -6%, var(--violet-soft), transparent 60%),
-    radial-gradient(820px 600px at 52% 114%, var(--bloom-3), transparent 66%),
-    radial-gradient(rgba(221, 92, 149, 0.3) 1.4px, transparent 1.4px), var(--ground);
+  /* A flat beige sheet of paper with one dot-grid texture — no rainbow of
+     soft blooms behind it. The cards are what get to be white; the page
+     underneath stays quiet so they read as sitting on something. */
+  background: radial-gradient(rgba(221, 92, 149, 0.3) 1.4px, transparent 1.4px), var(--ground);
   background-size:
-    auto,
-    auto,
-    auto,
     22px 22px,
     auto;
   background-attachment: fixed;
@@ -190,7 +183,7 @@ h4 {
 }
 
 h3 {
-  font-size: 15px;
+  font-size: 18px;
   margin: 0 0 8px;
 }
 
@@ -655,8 +648,9 @@ h3 {
 
 .topbar-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 16px;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 19px;
   letter-spacing: 0.005em;
   color: var(--text);
 }
@@ -900,8 +894,9 @@ section.panel.soft {
 
 .window-title {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
   letter-spacing: 0.005em;
   color: var(--text);
   overflow: hidden;
@@ -998,10 +993,11 @@ section.panel.soft {
 .panel-head h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-style: italic;
+  font-size: 17px;
   letter-spacing: 0.005em;
   color: var(--text);
-  font-weight: 700;
+  font-weight: 400;
 }
 .panel-head .spacer {
   flex: 1;
@@ -1052,8 +1048,8 @@ section.panel.soft {
   overflow: hidden;
   padding: 15px 16px;
   border-radius: var(--radius-md);
-  border: 1.5px solid var(--tint-line, var(--border));
-  background: linear-gradient(155deg, var(--surface) 34%, var(--tint, var(--surface-2)));
+  border: 1.5px solid var(--border);
+  background: var(--surface);
   transition:
     transform 0.22s var(--ease),
     box-shadow 0.22s ease;
@@ -1094,8 +1090,9 @@ section.panel.soft {
 }
 .stat .value {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 34px;
+  font-weight: 400;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -1705,8 +1702,9 @@ code {
 }
 .chain-head .alias {
   font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 20px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 .chain-head .spacer {
@@ -1818,10 +1816,11 @@ code {
   min-width: 24px;
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
   font-family: var(--font-display);
-  font-size: 11.5px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--violet-strong);
-  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  background: var(--violet-soft);
   box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
 .entry-model .model-name,
@@ -2124,6 +2123,16 @@ button.play.fail {
 }
 .model-list-item .spacer {
   flex: 1;
+}
+/* The provider stopped serving it: still named, so a reader knows what it
+   was, but visibly inert — no "add to chain" link exists for this row. */
+.model-list-item.retired {
+  opacity: 0.55;
+  background: var(--surface-3);
+}
+.model-list-item.retired .model-list-id {
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
 }
 
 /* ---- tutorial ------------------------------------------------------------- */

@@ -30,41 +30,31 @@
   grid-template-columns: auto 1fr;
   gap: 6px 16px;
   padding: 20px 22px;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 24px 22px 26px 21px;
+  border: none;
+  border-radius: 20px;
   background: var(--surface);
-  box-shadow:
-    1px 1px 0 0 var(--border),
-    var(--shadow);
+  box-shadow: var(--shadow-lift);
 }
-/* A short rule of the layer's own tint along the top edge, so the three layers
-   read as three deliberate defences rather than three identical cards. */
+/* A short rule of the layer's own tint along the top edge — one accent, not
+   a coloured card: the card itself stays plain white. */
 .layer::before {
   content: "";
   position: absolute;
   left: 22px;
   right: 22px;
-  top: -1.5px;
+  top: 0;
   height: 3px;
   border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--tint-line, var(--border-strong)), transparent 70%);
+  background: var(--tint-line, var(--border-strong));
 }
-/* Graded out of the tint rather than filled with it: light across the card
-   instead of a coloured rectangle. */
 .layer.tint-1 {
   --tint-line: var(--tint-1-line);
-  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-1));
-  border-color: var(--tint-1-line);
 }
 .layer.tint-2 {
   --tint-line: var(--tint-2-line);
-  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-2));
-  border-color: var(--tint-2-line);
 }
 .layer.tint-3 {
   --tint-line: var(--tint-3-line);
-  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-3));
-  border-color: var(--tint-3-line);
 }
 
 .layer-badge {
@@ -91,8 +81,9 @@
   background: var(--violet);
   color: var(--violet-ink);
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
   box-shadow: 0 0 0 2px var(--surface);
 }
 
@@ -105,7 +96,8 @@
 
 .layer-head-kicker {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-style: italic;
+  font-size: 15px;
   color: var(--violet-strong);
 }
 
@@ -575,7 +567,7 @@
  */
 .flow-graph {
   position: relative;
-  min-width: 760px;
+  min-width: 840px;
   overflow-x: auto;
   overflow-y: visible;
 }
@@ -623,10 +615,10 @@
   position: absolute;
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 15px 18px;
-  border-radius: 20px 23px 19px 24px;
-  border: 2px solid var(--border-strong);
+  gap: 6px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  border: none;
   background: var(--surface);
   box-shadow: var(--shadow-lift);
   z-index: 1;
@@ -635,44 +627,55 @@
 .flow-node-top {
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 8px;
+  min-width: 0;
+}
+/* Long model ids stay on one line, ellipsised, rather than growing the card
+   past its slot in the graph — the full id is still in the title attribute. */
+.flow-entry .flow-node-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .flow-node-kicker {
-  font-size: 9.5px;
-  font-weight: 650;
-  letter-spacing: 0.2em;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
 }
 .flow-node-title {
   font-family: var(--font-display);
   font-style: italic;
-  font-size: 16px;
-  line-height: 1.3;
+  font-size: 22px;
+  line-height: 1.25;
   color: var(--text);
   overflow-wrap: anywhere;
 }
 .flow-node-sub {
   display: block;
-  font-size: 11px;
-  color: var(--faint);
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
 }
 
 /* The entrance: the request arrives from outside, so it carries the one tape
    accent in this whole diagram — everything downstream of it is a routing
    decision COKEY made, this is the only node the user's own client owns. */
 .flow-client {
-  left: 30px;
-  width: 200px;
+  left: 0;
+  width: 220px;
 }
 .flow-tape {
   position: absolute;
-  top: -9px;
-  left: 28px;
+  top: -8px;
+  left: 26px;
   width: 52px;
-  height: 17px;
+  height: 18px;
   border-radius: 2px;
-  background: rgba(221, 92, 149, 0.24);
+  background: rgba(244, 130, 180, 0.24);
   transform: rotate(-3deg);
   pointer-events: none;
   z-index: 2;
@@ -685,35 +688,34 @@
  * gradient: the brand colour standing for itself rather than fading into it.
  */
 .flow-hub {
-  width: 150px;
-  height: 150px;
+  width: 170px;
+  height: 170px;
   border-radius: 50%;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 0 16px;
+  padding: 0 18px;
   text-align: center;
   border: none;
   background: var(--violet);
-  box-shadow: var(--shadow-pop);
+  box-shadow: 0 20px 44px -18px rgba(217, 87, 142, 0.55);
   z-index: 2;
 }
 .flow-hub .flow-node-title {
-  font-size: 20px;
+  font-size: 21px;
   color: var(--violet-ink);
 }
 .flow-hub .flow-node-kicker {
-  color: var(--violet-ink);
-  opacity: 0.75;
+  color: rgba(255, 255, 255, 0.75);
 }
 .flow-hub-orb {
   position: relative;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
   color: var(--violet-ink);
   background: rgba(255, 255, 255, 0.2);
@@ -738,35 +740,33 @@
   }
 }
 
-/*
- * The stop number, as a hand-cut tab: a circle whose radius is four different
- * numbers, sitting on the brand wash. It marks order without shouting a digit
- * out of a solid badge.
- */
+/* The stop number, a plain circle on the brand wash — no hand-cut corners,
+   the minimal editorial page does not want a sketchy note here. */
 .flow-stop {
   flex: none;
   display: grid;
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  border-radius: 50%;
   font-family: var(--font-display);
   font-style: italic;
   font-size: 13px;
   color: var(--violet-strong);
   background: var(--violet-soft);
-  box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
 .flow-entry {
-  width: 210px;
+  width: 220px;
+  border: 1px solid transparent;
 }
 .flow-entry.live {
-  border-color: var(--sage);
-  background: var(--sage-soft);
-  box-shadow: var(--shadow-lift);
+  border-color: var(--sage-line);
+  box-shadow:
+    0 1px 2px rgba(58, 44, 51, 0.04),
+    0 26px 50px -22px rgba(127, 174, 149, 0.4);
 }
 .flow-entry.dead {
-  filter: saturate(0.55);
+  opacity: 0.55;
 }
 
 /*
@@ -775,7 +775,7 @@
  * while double-checking it — not a mechanical spinner rotating in place.
  */
 .flow-entry.sweep-testing {
-  border-color: var(--violet);
+  border-color: var(--violet-line);
   box-shadow: 0 0 0 3px var(--violet-soft);
 }
 .flow-entry.sweep-testing::after {
@@ -788,12 +788,10 @@
   pointer-events: none;
 }
 .flow-entry.sweep-ok {
-  border-color: var(--sage);
-  background: var(--sage-soft);
+  border-color: var(--sage-line);
 }
 .flow-entry.sweep-fail {
-  border-color: var(--rose);
-  background: var(--rose-soft);
+  border-color: var(--rose-line);
 }
 .flow-entry.sweep-current {
   box-shadow:
@@ -804,121 +802,117 @@
 /* The placeholder shown when a chain has no fallback nodes yet. Dashed,
    because nothing has been decided here. */
 .flow-empty {
-  width: 210px;
-  border: 2px dashed var(--border-strong);
+  width: 220px;
+  border: 1.5px dashed var(--border-strong);
   background: var(--surface-2);
   box-shadow: none;
 }
 
-/* The sweep verdict, pinned to the node's shoulder so the card never resizes. */
+/* The verdict — sweep result, or just the node's role in the order — pinned
+   to the card's shoulder so the card itself never resizes to fit it. */
 .flow-node-flag {
   position: absolute;
   top: -11px;
-  right: 14px;
-  padding: 2px 10px;
+  right: 16px;
+  padding: 4px 11px;
   border-radius: 999px;
   background: var(--violet);
   color: var(--violet-ink);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 600;
   box-shadow: var(--shadow);
 }
+.flow-node-flag.live {
+  background: var(--sage);
+}
+.flow-node-flag.skip {
+  background: var(--surface-3);
+  color: var(--muted);
+  box-shadow: none;
+}
+.flow-node-flag.first {
+  background: var(--text);
+}
 
-/*
- * A bound key as a capsule carrying the same five silhouettes the status pills
- * use. Twelve keys in a row then answer the question the row is actually being
- * asked — twelve states — instead of showing twelve identical squares that all
- * look the same size from a chair.
- */
+/* A bound key as a plain coloured dot. Colour alone is enough here because
+   the tooltip carries the exact status and the legend underneath carries
+   the colour key — a row of them should read as calm dots, not icons. */
 .flow-keys {
-  gap: 5px;
-  margin-top: 2px;
-  min-height: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+  min-height: 20px;
 }
 .flow-keys-empty {
   font-size: 11px;
   color: var(--rose);
 }
 .flow-key {
-  width: 15px;
-  height: 15px;
-  border-radius: 5px;
-}
-.flow-key::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px 0 0 -4.5px;
-  background: currentColor;
-}
-.flow-key.healthy {
-  color: var(--sage);
-  background: var(--sage-soft);
-  border-color: var(--sage-line);
-}
-.flow-key.healthy::before {
-  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
-}
-.flow-key.cooldown {
-  color: var(--peach);
-  background: var(--peach-soft);
-  border-color: var(--peach-line);
-}
-.flow-key.cooldown::before {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: none;
-  box-shadow: inset 3px 0 0 0 currentColor;
-}
-.flow-key.invalid {
-  color: var(--rose);
-  background: var(--rose-soft);
-  border-color: var(--rose-line);
-}
-.flow-key.invalid::before {
-  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
-}
-.flow-key.disabled {
-  color: var(--faint);
+  border: none;
   background: var(--surface-3);
 }
-.flow-key.disabled::before {
-  clip-path: polygon(0% 40%, 100% 40%, 100% 60%, 0% 60%);
+.flow-key.healthy {
+  background: var(--sage);
+}
+.flow-key.cooldown {
+  background: var(--peach);
+}
+.flow-key.invalid {
+  background: var(--rose);
+}
+.flow-key.disabled {
+  background: var(--faint);
 }
 .flow-key.unverified {
-  color: var(--sky);
-  background: var(--sky-soft);
-  border-color: var(--sky-line);
-}
-.flow-key.unverified::before {
-  border-radius: 50%;
-  border: 1.5px dashed currentColor;
-  background: none;
+  background: var(--sky);
 }
 .flow-key.active {
-  transform: scale(1.25);
+  transform: scale(1.15);
 }
 .flow-key-ring {
   position: absolute;
   inset: -4px;
-  border-radius: 6px;
+  border-radius: 50%;
   border: 2px solid var(--sage);
   animation: flow-blink 1.3s ease-in-out infinite;
 }
 
 .flow-legend {
   display: flex;
-  gap: 7px;
+  gap: 18px;
   align-items: center;
   flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.flow-legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.flow-legend-dot.healthy {
+  background: var(--sage);
+}
+.flow-legend-dot.cooldown {
+  background: var(--peach);
+}
+.flow-legend-dot.invalid {
+  background: var(--rose);
 }
 .flow-legend-note {
-  font-size: 11px;
-  color: var(--faint);
+  font-size: 12px;
+  color: var(--muted);
 }
 .flow-legend-note.ok {
   color: var(--sage);
@@ -951,8 +945,9 @@
 }
 .live-model {
   font-family: var(--font-display);
-  font-size: 12.5px;
-  font-weight: 650;
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 400;
 }
 .live-dot {
   font-size: 8px;
@@ -1042,10 +1037,11 @@
 .steps-list > li::before {
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
   font-family: var(--font-display);
-  font-size: 11.5px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
   color: var(--violet-strong);
-  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  background: var(--violet-soft);
   border: 0;
   box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
@@ -1070,8 +1066,9 @@
 }
 .recipe-name {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 650;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
 }
 /* The open/closed mark as a chip, so it reads as a control rather than as a
    stray character at the end of the row. */
@@ -1110,8 +1107,9 @@
 }
 .terms section h3 {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
   color: var(--violet-strong);
 }
 .terms section div {
@@ -1144,8 +1142,9 @@
 }
 .closing strong {
   font-family: var(--font-display);
-  letter-spacing: 0.06em;
-  font-size: 18px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  font-size: 21px;
   color: var(--violet-strong);
 }
 .closing span {
@@ -1180,8 +1179,9 @@
 .provider-section-title {
   gap: 9px;
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 400;
   letter-spacing: 0.005em;
   text-transform: none;
   color: var(--text);
@@ -1226,9 +1226,9 @@
 }
 
 .model-list-item {
-  border: 1.5px solid var(--border);
-  border-radius: 12px 14px 11px 15px;
-  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
 }
 
 .stack-chip {
@@ -1251,6 +1251,7 @@
 }
 .layers-panel .layer-head-kicker {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 400;
 }
