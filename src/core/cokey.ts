@@ -20,6 +20,7 @@ import { RateTracker } from "./credentials/rate.js";
 import { CredentialSelector } from "./credentials/selector.js";
 import { EventBus, type CokeyEvent } from "./events.js";
 import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
+import { checkProxyUrl, collectHealthy } from "./providers/proxy-health.js";
 import {
   ProxyPoolService,
   type ProxyPoolStatus,
@@ -645,11 +646,53 @@ export class Cokey {
    * nothing to be charged. `limit` caps how many entries a single click can
    * add (the file is ~60 KB today). The pool is re-planned afterwards so any
    * pool-owned credentials land on their new exits immediately.
+   *
+   * By default every candidate is probed first and only working exits are
+   * imported: free lists die fast, and importing 2,400 addresses where only a
+   * handful answer just fills the pool with timeouts. Pass `verify: false` to
+   * go back to importing the whole file untouched.
    */
   async addProxiflyFreeList(
     limit?: number,
-  ): Promise<{ added: number; skipped: number; entries: ProxyPoolView[]; status: ProxyPoolStatus }> {
+    options: { verify?: boolean; concurrency?: number; timeoutMs?: number } = {},
+  ): Promise<{
+    added: number;
+    skipped: number;
+    checked?: number;
+    alive?: number;
+    dead?: number;
+    entries: ProxyPoolView[];
+    status: ProxyPoolStatus;
+  }> {
     const raw = await fetchProxiflyFreeList();
+
+    if (options.verify !== false) {
+      // Probe candidates first; only working exits land in the pool. Parse a
+      // wider net than the target so enough live ones can be found, then stop
+      // probing once the cap is reached instead of timing out on every corpse.
+      const target = limit ?? 100;
+      const candidateCap = Math.min(2_000, Math.max(target * 10, 200));
+      const { urls } = parseProxiflyList(raw, candidateCap);
+      const { healthy, checked } = await collectHealthy(urls, {
+        limit: target,
+        concurrency: options.concurrency,
+        timeoutMs: options.timeoutMs,
+      });
+
+      const result = this.proxyPool.addMany(healthy.join("\n"));
+      this.syncProxyAssignments();
+
+      return {
+        added: result.added,
+        skipped: result.skipped,
+        checked,
+        alive: healthy.length,
+        dead: checked - healthy.length,
+        entries: this.listProxyPool(),
+        status: this.proxyPoolStatus(),
+      };
+    }
+
     const { urls } = parseProxiflyList(raw, limit);
     if (urls.length === 0) {
       return { added: 0, skipped: 0, entries: this.listProxyPool(), status: this.proxyPoolStatus() };
@@ -660,6 +703,38 @@ export class Cokey {
 
     return {
       ...result,
+      entries: this.listProxyPool(),
+      status: this.proxyPoolStatus(),
+    };
+  }
+
+  /**
+   * Probe every enabled pool exit and drop the ones that no longer answer.
+   *
+   * Sweeping the pool periodically is the cheapest way to keep it honest: free
+   * proxies open and die on a schedule, and a stale exit just turns valid keys
+   * into timeouts. `prune: false` reports without deleting, so a caller can
+   * preview a sweep before committing to it.
+   */
+  async verifyProxyPool(options: {
+    concurrency?: number;
+    timeoutMs?: number;
+    prune?: boolean;
+  } = {}): Promise<{
+    checked: number;
+    healthy: number;
+    dead: string[];
+    removed: number;
+    entries: ProxyPoolView[];
+    status: ProxyPoolStatus;
+  }> {
+    const summary = await this.proxyPool.verify(
+      (url) => checkProxyUrl(url, { timeoutMs: options.timeoutMs }),
+      { concurrency: options.concurrency, prune: options.prune ?? true },
+    );
+    this.syncProxyAssignments();
+    return {
+      ...summary,
       entries: this.listProxyPool(),
       status: this.proxyPoolStatus(),
     };

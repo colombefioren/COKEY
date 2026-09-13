@@ -11,6 +11,7 @@ import type {
   ProviderCatalogEntry,
   ProviderStatus,
   ProxyPoolBulkResponse,
+  ProxyPoolCheckResponse,
   ProxyPoolResponse,
   PublicCredential,
   RankingsResponse,
@@ -112,12 +113,15 @@ export const api = {
   removeProxy: (id: string) => request<ProxyPoolResponse>("DELETE", `/api/proxy-pool/${id}`),
   syncProxyPool: () =>
     request<ProxyPoolResponse & { changed: number }>("POST", "/api/proxy-pool/sync"),
-  fetchProxifly: (limit?: number) =>
+  fetchProxifly: (limit?: number, verify?: boolean) =>
     request<ProxyPoolBulkResponse & { source: "proxifly-free" }>(
       "POST",
       "/api/proxy-pool/fetch-proxifly",
-      { limit },
+      { limit, verify },
     ),
+  /** Probe every enabled exit and drop the ones that no longer answer. */
+  checkProxyPool: (body?: { concurrency?: number; timeoutMs?: number; prune?: boolean }) =>
+    request<ProxyPoolCheckResponse>("POST", "/api/proxy-pool/check", body ?? {}),
 
   connectProvider: (
     providerId: string,

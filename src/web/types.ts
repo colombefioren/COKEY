@@ -252,6 +252,18 @@ export interface ProxyPoolResponse {
 export interface ProxyPoolBulkResponse extends ProxyPoolResponse {
   added: number;
   skipped: number;
+  /** Present when the fetch verified candidates before importing. */
+  checked?: number;
+  alive?: number;
+  dead?: number;
+}
+
+/** Result of a pool sweep: how many exits are still alive, how many dropped. */
+export interface ProxyPoolCheckResponse extends ProxyPoolResponse {
+  checked: number;
+  healthy: number;
+  dead: string[];
+  removed: number;
 }
 
 /** Result of the model play button: a real request, not a cached status. */

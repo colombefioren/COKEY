@@ -104,7 +104,25 @@ export const BulkProxyPoolSchema = z.object({
 export const FetchProxiflySchema = z.object({
   /** Cap how many proxies one click may import. Omit for the whole list. */
   limit: z.number().int().min(1).max(2_000).optional(),
+  /** Probe candidates first and keep only working exits. Default true. */
+  verify: z.boolean().optional(),
+  /** Probes in flight at once while verifying. */
+  concurrency: z.number().int().min(1).max(100).optional(),
+  /** Per-probe timeout in ms. */
+  timeoutMs: z.number().int().min(250).max(30_000).optional(),
 });
+
+/** Probe every enabled pool entry and optionally drop the dead ones. */
+export const VerifyProxyPoolSchema = z
+  .object({
+    /** Probes in flight at once. */
+    concurrency: z.number().int().min(1).max(100).optional(),
+    /** Per-probe timeout in ms. */
+    timeoutMs: z.number().int().min(250).max(30_000).optional(),
+    /** Delete entries that fail. Default true. */
+    prune: z.boolean().optional(),
+  })
+  .strict();
 
 export const UpdateProxyPoolSchema = z
   .object({

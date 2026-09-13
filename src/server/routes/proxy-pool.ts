@@ -5,6 +5,7 @@ import {
   FetchProxiflySchema,
   ProxyPoolEntrySchema,
   UpdateProxyPoolSchema,
+  VerifyProxyPoolSchema,
 } from "../../core/validation/schemas.js";
 import { withErrors } from "./http-errors.js";
 
@@ -91,18 +92,52 @@ export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): voi
    *
    * Free proxies are public and shared: the pool grows fast, expectations stay
    * low. Users who need reliability should paste in their own (often paid)
-   * entries via `/api/proxy-pool/bulk` instead.
+   * entries via `/api/proxy-pool/bulk` instead. By default candidates are
+   * probed first so only working exits actually land in the pool.
    */
   app.post(
     "/api/proxy-pool/fetch-proxifly",
     withErrors(async (request, reply) => {
       const body = FetchProxiflySchema.parse(request.body ?? {});
-      const result = await cokey.addProxiflyFreeList(body.limit);
+      const result = await cokey.addProxiflyFreeList(body.limit, {
+        verify: body.verify,
+        concurrency: body.concurrency,
+        timeoutMs: body.timeoutMs,
+      });
       reply.code(201);
       return {
         source: "proxifly-free",
         added: result.added,
         skipped: result.skipped,
+        checked: result.checked,
+        alive: result.alive,
+        dead: result.dead,
+        entries: result.entries,
+        status: result.status,
+      };
+    }),
+  );
+
+  /**
+   * Probe every enabled exit and drop the ones that no longer answer.
+   *
+   * The ugly truth of free proxies is that they die on a schedule, so a pool
+   * filled once rots into timeouts. This is the janitor call.
+   */
+  app.post(
+    "/api/proxy-pool/check",
+    withErrors(async (request) => {
+      const body = VerifyProxyPoolSchema.parse(request.body ?? {});
+      const result = await cokey.verifyProxyPool({
+        concurrency: body.concurrency,
+        timeoutMs: body.timeoutMs,
+        prune: body.prune,
+      });
+      return {
+        checked: result.checked,
+        healthy: result.healthy,
+        dead: result.dead,
+        removed: result.removed,
         entries: result.entries,
         status: result.status,
       };

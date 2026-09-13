@@ -38,6 +38,7 @@ export function EgressPoolPanel({
   const [busy, setBusy] = useState(false);
   const [bulkOpen, setBulkOpen] = useState(false);
   const [page, setPage] = useState(1);
+  const [verifyFirst, setVerifyFirst] = useState(true);
 
   const load = useCallback(async () => {
     try {
@@ -107,9 +108,33 @@ export function EgressPoolPanel({
   async function fetchProxifly() {
     setBusy(true);
     try {
-      const result = await api.fetchProxifly();
+      const result = await api.fetchProxifly(undefined, verifyFirst);
       setData(result);
-      toast.ok(`${result.added} free exit(s) added from Proxifly`);
+      toast.ok(
+        verifyFirst
+          ? `${result.added} working free exit(s) added (${result.checked ?? 0} probed, ${result.dead ?? 0} dead skipped)`
+          : `${result.added} free exit(s) added from Proxifly`,
+      );
+      onSettingsChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function checkExits() {
+    setBusy(true);
+    try {
+      const result = await api.checkProxyPool();
+      setData(result);
+      if (result.checked === 0) {
+        toast.ok("Pool is empty - nothing to check");
+      } else if (result.healthy === result.checked) {
+        toast.ok(`All ${result.healthy} exit(s) alive`);
+      } else {
+        toast.ok(`${result.healthy}/${result.checked} alive - ${result.removed} dead exit(s) removed`);
+      }
       onSettingsChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -148,8 +173,24 @@ export function EgressPoolPanel({
       title={`Egress pool (${entries.length})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
+          <label
+            className="selected-item"
+            style={{ marginBottom: 0, gap: 6, whiteSpace: "nowrap" }}
+            title="Probe candidates and only import exits that answer"
+          >
+            <input
+              type="checkbox"
+              style={{ width: "auto" }}
+              checked={verifyFirst}
+              onChange={(event) => setVerifyFirst(event.target.checked)}
+            />
+            verify
+          </label>
           <button className="secondary" onClick={() => void fetchProxifly()} disabled={busy}>
             fetch free proxies (Proxifly)
+          </button>
+          <button className="secondary" onClick={() => void checkExits()} disabled={busy}>
+            check exits
           </button>
           <button className="secondary" onClick={() => setBulkOpen(true)} disabled={busy}>
             bulk paste
@@ -189,10 +230,11 @@ export function EgressPoolPanel({
       <div className="hint-box" style={{ marginBottom: 14 }}>
         <strong>Fetch free proxies (Proxifly):</strong> pulls Proxifly's public free list into the
         pool. It's free because it's public — open exit IPs shared by strangers, so expect them to be
-        slower, flaky, sometimes already dead, and some providers block them on sight. One click and
-        the pool fills up, but don't build anything serious on these. Paste your own paid or
-        residential proxies in bulk above for exits you can trust. (We're all poor here — but
-        careful does it.)
+        slower, flaky, sometimes already dead, and some providers block them on sight. With
+        <em> verify</em> on (default) every candidate is probed first and only exits that answer are
+        imported. The <strong>check exits</strong> button sweeps the pool and drops the ones that
+        died since. Paste your own paid or residential proxies above for exits you can trust.
+        (We're all poor here — but careful does it.)
       </div>
 
       {status ? (

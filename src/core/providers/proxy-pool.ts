@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { ProxyPoolRepo, ProxyPoolRow } from "../db/proxy-pool.repo.js";
+import { mapWithConcurrency } from "./proxy-health.js";
 import { parseProxyUrl } from "./proxy.js";
 
 /**
@@ -149,6 +150,42 @@ export class ProxyPoolService {
 
   remove(id: string): void {
     this.repo.delete(id);
+  }
+
+  // ---- health -------------------------------------------------------------
+
+  /**
+   * Probe every enabled entry and remove the ones that fail.
+   *
+   * The probe is injected so tests can make a verdict without touching the
+   * network. When `prune` is false the summary is returned but nothing is
+   * deleted, which lets a caller preview a sweep before committing to it.
+   */
+  async verify(
+    probe: (url: string) => Promise<{ ok: boolean }>,
+    options: { concurrency?: number; prune?: boolean } = {},
+  ): Promise<{ checked: number; healthy: number; dead: string[]; removed: number }> {
+    const rows = this.repo.listEnabled();
+    const concurrency = options.concurrency ?? 10;
+    const prune = options.prune ?? true;
+
+    const results = await mapWithConcurrency(rows, concurrency, async (row) => {
+      const verdict = await probe(row.url);
+      return { row, ok: verdict.ok };
+    });
+
+    const dead: string[] = [];
+    let removed = 0;
+    for (const { row, ok } of results) {
+      if (ok) continue;
+      dead.push(row.id);
+      if (prune) {
+        this.repo.delete(row.id);
+        removed += 1;
+      }
+    }
+
+    return { checked: rows.length, healthy: rows.length - dead.length, dead, removed };
   }
 
   // ---- assignment ---------------------------------------------------------
