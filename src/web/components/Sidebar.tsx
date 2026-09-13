@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { href, type Navigate } from "../router.js";
 import { CokeyLogo, CokeyMark } from "./Logo.js";
 import { IconChevron } from "./Icons.js";
+import { SIDEBAR_TEXT, type Lang } from "../i18n.js";
 
 /** Must match the sidebar-becomes-a-drawer breakpoint in responsive.css. */
 const MOBILE_QUERY = "(max-width: 860px)";
@@ -41,6 +42,7 @@ export function Sidebar({
   keyCount,
   chainCount,
   mobileOpen,
+  lang = "en",
 }: {
   items: NavItem[];
   activePath: string;
@@ -51,7 +53,9 @@ export function Sidebar({
   chainCount: number;
   /** Whether the mobile drawer is currently open. Ignored above the breakpoint. */
   mobileOpen: boolean;
+  lang?: Lang;
 }) {
+  const text = SIDEBAR_TEXT[lang];
   const navRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const activeRef = useRef<HTMLAnchorElement | null>(null);
@@ -182,18 +186,22 @@ export function Sidebar({
         type="button"
         className="sidebar-fold"
         onClick={onToggleCollapsed}
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        aria-label={collapsed ? text.expand : text.collapse}
+        title={collapsed ? text.expand : text.collapse}
       >
         <IconChevron size={14} />
       </button>
 
       <div className="sidebar-foot">
         <div className="sidebar-stats">
-          <span>{chainCount} chains</span>
-          <span>{keyCount} keys</span>
+          <span>
+            {chainCount} {text.chains}
+          </span>
+          <span>
+            {keyCount} {text.keys}
+          </span>
         </div>
-        <p className="sidebar-tagline">a tool for broke lads made by a broke princess</p>
+        <p className="sidebar-tagline">{text.tagline}</p>
       </div>
     </aside>
   );

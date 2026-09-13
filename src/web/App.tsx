@@ -28,6 +28,7 @@ import {
   IconSparkle,
 } from "./components/Icons.js";
 import { useRoute } from "./router.js";
+import { getStoredLang, setStoredLang, NAV_HINTS, PAGE_TITLES, type Lang } from "./i18n.js";
 import { useLive, useLiveInvalidation } from "./live.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -43,96 +44,32 @@ import { About } from "./pages/About.js";
 
 const NUDGER_KEY = "cokey.nudger.dismissed";
 
-/** Page titles, in one place so the title bar and the router agree. */
-const TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/chains": "Chains",
-  "/models": "Models",
-  "/providers": "Providers",
-  "/api-keys": "API keys",
-  "/usage": "Usage",
-  "/settings": "Settings",
-  "/proxies": "Proxies",
-  "/tutorial": "Tutorial",
-  "/terms": "Terms of service",
-  "/about": "About",
-};
-
 const NAV_COLLAPSED_KEY = "cokey.nav.collapsed";
 
-/** The whole navigation, in one place. */
-function navItems(counts: { chains: number; keys: number; providers: number }): NavItem[] {
+/** The whole navigation, in one place. Labels and hints follow the toggle. */
+function navItems(
+  counts: { chains: number; keys: number; providers: number },
+  lang: Lang,
+): NavItem[] {
+  const titles = PAGE_TITLES[lang];
+  const hints = NAV_HINTS[lang];
   return [
-    {
-      path: "/dashboard",
-      label: "Dashboard",
-      icon: <IconGauge size={18} />,
-      hint: "Gateway summary, the live route and the resilience layers",
-    },
-    {
-      path: "/chains",
-      label: "Chains",
-      icon: <IconRoute size={18} />,
-      hint: "Your failover chains, their nodes and their keys",
-      count: counts.chains || undefined,
-    },
-    {
-      path: "/models",
-      label: "Models",
-      icon: <IconSparkle size={18} />,
-      hint: "Model catalog, live probes and rankings",
-    },
-    {
-      path: "/providers",
-      label: "Providers",
-      icon: <IconGrid size={18} />,
-      hint: "Who runs each provider and whether to depend on it",
-      count: counts.providers || undefined,
-    },
-    {
-      path: "/api-keys",
-      label: "API keys",
-      icon: <IconKey size={18} />,
-      hint: "Keys for talking to the gateway itself",
-    },
-    {
-      path: "/usage",
-      label: "Usage",
-      icon: <IconActivity size={18} />,
-      hint: "Request history and token usage together",
-      count: counts.keys || undefined,
-    },
-    {
-      path: "/settings",
-      label: "Settings",
-      icon: <IconSliders size={18} />,
-      hint: "Gateway and fallback settings",
-    },
-    {
-      path: "/proxies",
-      label: "Proxies",
-      icon: <IconShield size={18} />,
-      hint: "The egress proxy pool: health, pinning and bulk paste",
-    },
-    {
-      path: "/tutorial",
-      label: "Tutorial",
-      icon: <IconBook size={18} />,
-      hint: "Wire COKEY into your editor or CLI",
-    },
-    {
-      path: "/terms",
-      label: "Terms",
-      icon: <IconScroll size={18} />,
-      hint: "What you agree to by using COKEY",
-    },
-    {
-      path: "/about",
-      label: "About",
-      icon: <IconLayers size={18} />,
-      hint: "The stack, the credits and how to reach the creator",
-    },
-  ];
+    { path: "/dashboard", icon: <IconGauge size={18} /> },
+    { path: "/chains", icon: <IconRoute size={18} />, count: counts.chains || undefined },
+    { path: "/models", icon: <IconSparkle size={18} /> },
+    { path: "/providers", icon: <IconGrid size={18} />, count: counts.providers || undefined },
+    { path: "/api-keys", icon: <IconKey size={18} /> },
+    { path: "/usage", icon: <IconActivity size={18} />, count: counts.keys || undefined },
+    { path: "/settings", icon: <IconSliders size={18} /> },
+    { path: "/proxies", icon: <IconShield size={18} /> },
+    { path: "/tutorial", icon: <IconBook size={18} /> },
+    { path: "/terms", icon: <IconScroll size={18} /> },
+    { path: "/about", icon: <IconLayers size={18} /> },
+  ].map((item) => ({
+    ...item,
+    label: item.path === "/terms" ? (lang === "fr" ? "Conditions" : "Terms") : titles[item.path]!,
+    hint: hints[item.path]!,
+  }));
 }
 
 function Shell() {
@@ -150,6 +87,15 @@ function Shell() {
     () => window.localStorage.getItem(NAV_COLLAPSED_KEY) === "1",
   );
   const [navOpen, setNavOpen] = useState(false);
+  const [lang, setLang] = useState<Lang>(() => getStoredLang());
+
+  const toggleLang = useCallback(() => {
+    setLang((current) => {
+      const next = current === "en" ? "fr" : "en";
+      setStoredLang(next);
+      return next;
+    });
+  }, []);
 
   // The gateway always requires a session cookie, so the first authenticated
   // call decides whether to render the login form.
@@ -240,7 +186,7 @@ function Shell() {
     [chainCount, credentials.length, providers],
   );
 
-  const items = useMemo(() => navItems(counts), [counts]);
+  const items = useMemo(() => navItems(counts, lang), [counts, lang]);
 
   const toggleNavCollapsed = useCallback(() => {
     setNavCollapsed((value) => {
@@ -309,6 +255,7 @@ function Shell() {
         keyCount={counts.keys}
         chainCount={counts.chains}
         mobileOpen={navOpen}
+        lang={lang}
       />
       {navOpen ? (
         <div className="nav-backdrop" aria-hidden="true" onClick={() => setNavOpen(false)} />
@@ -327,9 +274,19 @@ function Shell() {
           <KineticText
             className="topbar-title"
             key={route.path}
-            text={TITLES[route.path] ?? "Dashboard"}
+            text={PAGE_TITLES[lang][route.path] ?? PAGE_TITLES[lang]["/dashboard"]}
           />
           <span className="spacer" />
+          <button
+            type="button"
+            className="lang-toggle"
+            onClick={toggleLang}
+            aria-label={lang === "en" ? "Switch to French" : "Passer en anglais"}
+            title={lang === "en" ? "Switch to French" : "Passer en anglais"}
+          >
+            <span className={lang === "en" ? "active" : undefined}>EN</span>
+            <span className={lang === "fr" ? "active" : undefined}>FR</span>
+          </button>
           <NotificationsBell refreshKey={refreshKey} onChanged={bump} />
           <LiveStatus />
           <a

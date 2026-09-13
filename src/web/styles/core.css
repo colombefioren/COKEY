@@ -684,6 +684,34 @@ h3 {
   box-shadow: none;
 }
 
+/* A two-letter segmented switch, the same shape as the tab row, so it reads
+   as a setting rather than another button competing with the bell. */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 600;
+}
+.lang-toggle:hover:not(:disabled) {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+.lang-toggle span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--faint);
+}
+.lang-toggle span.active {
+  background: var(--surface);
+  color: var(--violet-strong);
+  box-shadow: var(--shadow);
+}
+
 /* ---- notifications --------------------------------------------------------
  * "Needs attention", as a bell reachable from every screen instead of a
  * fixture on the Dashboard.
