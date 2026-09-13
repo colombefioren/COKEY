@@ -7,7 +7,7 @@ import type {
   GuidanceSeverity,
 } from "../types.js";
 import { Empty, Panel } from "./Primitives.js";
-import { PixelInfo } from "./PixelIcons.js";
+import { IconInfo } from "./Icons.js";
 import { useToast } from "./Toast.js";
 import { useSparkle } from "./Window.js";
 import { useRoute } from "../router.js";
@@ -167,7 +167,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
     <div ref={panelRef}>
       <Panel
         hue="butter"
-        icon={<PixelInfo size={14} />}
+        icon={<IconInfo size={14} />}
         title={`Needs attention${visible.length ? ` (${visible.length})` : ""}`}
         actions={
           <>

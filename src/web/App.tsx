@@ -10,21 +10,22 @@ import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { LoginForm } from "./components/LoginForm.js";
 import { ThemeToggle } from "./components/ThemeToggle.js";
-import { BookmarkTabs, type BookmarkItem } from "./components/BookmarkTabs.js";
+import { Sidebar, type NavItem } from "./components/Sidebar.js";
 import { StatusBar } from "./components/StatusBar.js";
 import {
-  PixelChart,
-  PixelFolder,
-  PixelHeart,
-  PixelInfo,
-  PixelLock,
-  PixelPlug,
-  PixelScroll,
-  PixelServer,
-  PixelStar,
-  PixelWrench,
-} from "./components/PixelIcons.js";
-import { href, useRoute } from "./router.js";
+  IconActivity,
+  IconBook,
+  IconGauge,
+  IconGrid,
+  IconKey,
+  IconLayers,
+  IconMenu,
+  IconRoute,
+  IconScroll,
+  IconSliders,
+  IconSparkle,
+} from "./components/Icons.js";
+import { useRoute } from "./router.js";
 import { useLive, useLiveInvalidation } from "./live.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -53,76 +54,72 @@ const TITLES: Record<string, string> = {
   "/about": "About",
 };
 
-/**
- * The whole navigation, in one place.
- *
- * Ten sections is the most a bookmark row can carry before it becomes a menu,
- * and it is the reason the row collapses to a native picker on a phone rather
- * than scrolling horizontally out of reach.
- */
-function bookmarks(counts: { chains: number; keys: number; providers: number }): BookmarkItem[] {
+const NAV_COLLAPSED_KEY = "cokey.nav.collapsed";
+
+/** The whole navigation, in one place. */
+function navItems(counts: { chains: number; keys: number; providers: number }): NavItem[] {
   return [
     {
       path: "/dashboard",
       label: "Dashboard",
-      icon: <PixelFolder />,
+      icon: <IconGauge size={18} />,
       hint: "Gateway summary, the live route and the resilience layers",
     },
     {
       path: "/chains",
       label: "Chains",
-      icon: <PixelServer />,
+      icon: <IconRoute size={18} />,
       hint: "Your failover chains, their nodes and their keys",
       count: counts.chains || undefined,
     },
     {
       path: "/models",
       label: "Models",
-      icon: <PixelStar />,
+      icon: <IconSparkle size={18} />,
       hint: "Model catalog, live probes and rankings",
     },
     {
       path: "/providers",
       label: "Providers",
-      icon: <PixelPlug />,
+      icon: <IconGrid size={18} />,
       hint: "Who runs each provider and whether to depend on it",
       count: counts.providers || undefined,
     },
     {
       path: "/api-keys",
       label: "API keys",
-      icon: <PixelLock />,
+      icon: <IconKey size={18} />,
       hint: "Keys for talking to the gateway itself",
     },
     {
       path: "/usage",
       label: "Usage",
-      icon: <PixelChart />,
+      icon: <IconActivity size={18} />,
       hint: "Request history and token usage together",
       count: counts.keys || undefined,
     },
     {
       path: "/settings",
       label: "Settings",
-      icon: <PixelWrench />,
+      icon: <IconSliders size={18} />,
       hint: "Gateway, fallback and egress settings",
     },
     {
       path: "/tutorial",
       label: "Tutorial",
-      icon: <PixelScroll />,
+      icon: <IconBook size={18} />,
       hint: "Wire COKEY into your editor or CLI",
     },
     {
       path: "/terms",
       label: "Terms",
-      icon: <PixelInfo />,
+      icon: <IconScroll size={18} />,
       hint: "What you agree to by using COKEY",
     },
     {
       path: "/about",
       label: "About",
-      icon: <PixelHeart />,
+      icon: <IconLayers size={18} />,
       hint: "The stack, the credits and how to reach the creator",
     },
   ];
@@ -139,6 +136,10 @@ function Shell() {
   const [chainCount, setChainCount] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [dismissed, setDismissed] = useState(() => window.localStorage.getItem(NUDGER_KEY) === "1");
+  const [navCollapsed, setNavCollapsed] = useState(
+    () => window.localStorage.getItem(NAV_COLLAPSED_KEY) === "1",
+  );
+  const [navOpen, setNavOpen] = useState(false);
 
   // The gateway always requires a session cookie, so the first authenticated
   // call decides whether to render the login form.
@@ -229,7 +230,21 @@ function Shell() {
     [chainCount, credentials.length, providers],
   );
 
-  const items = useMemo(() => bookmarks(counts), [counts]);
+  const items = useMemo(() => navItems(counts), [counts]);
+
+  const toggleNavCollapsed = useCallback(() => {
+    setNavCollapsed((value) => {
+      const next = !value;
+      window.localStorage.setItem(NAV_COLLAPSED_KEY, next ? "1" : "0");
+      return next;
+    });
+  }, []);
+
+  // Close the mobile drawer on every navigation, otherwise it stays open over
+  // the page it was just used to reach.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [route.path]);
 
   if (authed === null) return null;
   if (!authed) {
@@ -257,30 +272,37 @@ function Shell() {
   });
 
   return (
-    <div className="shell">
-      <div className="content">
-        <div className="chrome-stack">
-          <header className="topbar">
-            <a
-              className="topbar-brand"
-              href={href("/dashboard")}
-              onClick={() => navigate("/dashboard")}
-            >
-              COKEY
-            </a>
-            <span className="faint small topbar-title" key={route.path}>
-              {TITLES[route.path] ?? "Dashboard"}
-            </span>
-            <span className="spacer" />
-            <LiveStatus />
-            <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
-              /v1/models
-            </a>
-            <ThemeToggle />
-          </header>
+    <div className={`shell${navOpen ? " nav-open" : ""}`}>
+      <Sidebar
+        items={items}
+        activePath={route.path}
+        navigate={navigate}
+        collapsed={navCollapsed}
+        onToggleCollapsed={toggleNavCollapsed}
+        keyCount={counts.keys}
+        chainCount={counts.chains}
+      />
 
-          <BookmarkTabs items={items} activePath={route.path} navigate={navigate} />
-        </div>
+      <div className="content">
+        <header className="topbar">
+          <button
+            type="button"
+            className="nav-toggle"
+            aria-label={navOpen ? "Close navigation" : "Open navigation"}
+            onClick={() => setNavOpen((value) => !value)}
+          >
+            <IconMenu size={17} />
+          </button>
+          <span className="topbar-title" key={route.path}>
+            {TITLES[route.path] ?? "Dashboard"}
+          </span>
+          <span className="spacer" />
+          <LiveStatus />
+          <a href="/v1/models" target="_blank" rel="noreferrer" className="small">
+            /v1/models
+          </a>
+          <ThemeToggle />
+        </header>
 
         {/*
          * Keyed on the route so each page remounts: the windows pop in on a real

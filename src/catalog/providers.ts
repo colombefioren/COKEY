@@ -939,7 +939,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://modelscope.ai/",
     docsUrl: "https://www.modelscope.cn/docs",
-    freeTier: { advertised: false, summary: "Paid models · works with a funded key", quotaSource: "unknown" },
+    freeTier: {
+      advertised: false,
+      summary: "Paid models · works with a funded key",
+      quotaSource: "unknown",
+    },
     knownModels: [
       "deepseek-ai/DeepSeek-V3.1",
       "deepseek-ai/DeepSeek-V3.2-Exp",

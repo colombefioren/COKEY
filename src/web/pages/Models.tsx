@@ -3,7 +3,7 @@ import { api, ApiError, pageQuery, timeAgo } from "../api.js";
 import type { ModelCatalogView, ModelsResponse, SelectableModel } from "../types.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { Pagination } from "../components/Pagination.js";
-import { PixelStar } from "../components/PixelIcons.js";
+import { IconSparkle } from "../components/Icons.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
 import { Rankings } from "./Rankings.js";
@@ -204,7 +204,7 @@ function Catalog({
   return (
     <Panel
       hue="pink"
-      icon={<PixelStar size={14} />}
+      icon={<IconSparkle size={14} />}
       title={`Model catalog (${data?.total ?? 0} models)`}
       actions={
         <div className="row" style={{ gap: 8 }}>

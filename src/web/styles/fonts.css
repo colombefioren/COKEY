@@ -6,37 +6,43 @@
  * the gateway, so the UI makes no outbound request to render text.
  */
 
-/* Press Start 2P */
+/* Inter */
 @font-face {
-  font-family: "Press Start 2P";
+  font-family: "Inter";
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url("/fonts/press-start-2p-400.woff2") format("woff2");
+  src: url("/fonts/inter-400.woff2") format("woff2");
 }
 
-/* Silkscreen */
 @font-face {
-  font-family: "Silkscreen";
+  font-family: "Inter";
   font-style: normal;
-  font-weight: 400;
+  font-weight: 500;
   font-display: swap;
-  src: url("/fonts/silkscreen-400.woff2") format("woff2");
+  src: url("/fonts/inter-500.woff2") format("woff2");
 }
 
 @font-face {
-  font-family: "Silkscreen";
+  font-family: "Inter";
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url("/fonts/inter-600.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Inter";
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url("/fonts/silkscreen-700.woff2") format("woff2");
+  src: url("/fonts/inter-700.woff2") format("woff2");
 }
 
-/* Quicksand */
 @font-face {
-  font-family: "Quicksand";
+  font-family: "Inter";
   font-style: normal;
-  font-weight: 300 700;
+  font-weight: 800;
   font-display: swap;
-  src: url("/fonts/quicksand-300-700.woff2") format("woff2");
+  src: url("/fonts/inter-800.woff2") format("woff2");
 }

@@ -218,6 +218,24 @@ export function IconRoute(props: IconProps) {
   );
 }
 
+export function IconInfo(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5.5" />
+      <path d="M12 7.8h.01" strokeWidth="2.6" />
+    </Svg>
+  );
+}
+
+export function IconMenu(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M4 6.5h16M4 12h16M4 17.5h16" />
+    </Svg>
+  );
+}
+
 export function IconShield(props: IconProps) {
   return (
     <Svg {...props}>

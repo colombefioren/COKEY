@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, timeAgo } from "../api.js";
 import type { ContentStatusResponse } from "../types.js";
 import { Panel, Stat } from "./Primitives.js";
-import { PixelInfo } from "./PixelIcons.js";
+import { IconInfo } from "./Icons.js";
 import { useToast } from "./Toast.js";
 
 /**
@@ -62,7 +62,7 @@ export function ContentSource({ refreshKey = 0 }: { refreshKey?: number }) {
   return (
     <Panel
       hue="lav"
-      icon={<PixelInfo size={14} />}
+      icon={<IconInfo size={14} />}
       title="Curated content"
       actions={
         <div className="row" style={{ gap: 8 }}>

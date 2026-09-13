@@ -1,10 +1,12 @@
 /*
  * COKEY dashboard theme.
  *
- * A calm pastel workspace rather than a neon control room. The ground is a soft
- * cool grey, surfaces are white cards with a hairline border and a low neutral
- * shadow, and colour is used in small, deliberate amounts: a lilac brand, a rose
- * for errors, a sage for healthy, a peach for warnings, a sky blue for links.
+ * A warm, modern fintech-style workspace: a soft cream ground, white cards
+ * with a hairline border and a low neutral shadow, and one confident burnt-
+ * orange brand colour carrying every call to action. Clay red covers errors,
+ * amber covers warnings, moss covers healthy, and a cool blue is reserved for
+ * links and informational badges, so the page never reads as one hue washed
+ * over everything.
  *
  * Nothing glows. Depth comes from one soft shadow and a 1px border, which is
  * what lets the same stylesheet read as light and as dark without turning into
@@ -16,48 +18,48 @@
 :root {
   color-scheme: light;
 
-  /* Ground and surfaces: warm porcelain, not a cold grey slab. */
-  --ground: #fbf6f6;
+  /* Ground and surfaces: warm cream, not a cold grey slab. */
+  --ground: #f5ede4;
   --surface: #ffffff;
-  --surface-2: #fdf8f9;
-  --surface-3: #f7eef1;
-  --surface-glass: rgba(255, 255, 255, 0.8);
+  --surface-2: #faf3ea;
+  --surface-3: #f1e4d5;
+  --surface-glass: rgba(255, 255, 255, 0.82);
 
-  --border: #f0e4e8;
-  --border-strong: #e3d2d9;
+  --border: #ece0d2;
+  --border-strong: #ddccb8;
 
-  --text: #33262c;
-  --muted: #6d5c64;
-  --faint: #9d8b93;
+  --text: #3a2a1f;
+  --muted: #83705f;
+  --faint: #ac9884;
 
-  /* A pink-led pastel set. Rose is the brand, the rest support it. */
-  --violet: #8f7bc4;
-  --violet-strong: #745fb0;
-  --violet-soft: #f2eefb;
-  --violet-line: #ded4f3;
+  /* A burnt-orange brand, with clay, amber, moss and denim in support. */
+  --violet: #e2662c;
+  --violet-strong: #c8531f;
+  --violet-soft: #fbe6d7;
+  --violet-line: #f1cba9;
   --violet-ink: #ffffff;
 
-  --rose: #cf6d92;
-  --rose-strong: #b85478;
-  --rose-soft: #fceaf1;
-  --rose-line: #f6d5e2;
+  --rose: #c2503f;
+  --rose-strong: #a63f30;
+  --rose-soft: #fbe6e0;
+  --rose-line: #f0c6bb;
 
-  --peach: #cd8b58;
-  --peach-soft: #fdf0e5;
-  --peach-line: #f7ddc7;
+  --peach: #b9822a;
+  --peach-soft: #f9edd7;
+  --peach-line: #ecd4a4;
 
-  --sage: #5a9377;
-  --sage-soft: #ebf5ef;
-  --sage-line: #d3e9dd;
+  --sage: #4f8f63;
+  --sage-soft: #e7f2e9;
+  --sage-line: #cbe4d1;
 
-  --sky: #6d8fc0;
-  --sky-soft: #eef3fa;
-  --sky-line: #d9e5f4;
+  --sky: #3f76a8;
+  --sky-soft: #e7f0f7;
+  --sky-line: #c8dded;
 
-  --accent: var(--rose);
-  --accent-hover: var(--rose-strong);
-  --accent-2: var(--violet);
-  --accent-3: var(--peach);
+  --accent: var(--violet);
+  --accent-hover: var(--violet-strong);
+  --accent-2: var(--peach);
+  --accent-3: var(--rose);
   --accent-ink: #ffffff;
 
   --ok: var(--sage);
@@ -69,14 +71,15 @@
   --neutral-bg: var(--surface-3);
 
   /* Low, neutral shadows. Depth without a halo. */
-  --shadow: 0 1px 2px rgba(76, 52, 62, 0.05), 0 10px 28px -20px rgba(76, 52, 62, 0.18);
-  --shadow-lift: 0 2px 4px rgba(76, 52, 62, 0.06), 0 16px 36px -22px rgba(76, 52, 62, 0.22);
-  --shadow-pop: 0 4px 10px rgba(76, 52, 62, 0.08), 0 26px 54px -30px rgba(76, 52, 62, 0.28);
-  --hairline: rgba(207, 109, 146, 0.12);
+  --shadow: 0 1px 2px rgba(58, 42, 31, 0.05), 0 10px 28px -20px rgba(58, 42, 31, 0.18);
+  --shadow-lift: 0 2px 4px rgba(58, 42, 31, 0.06), 0 16px 36px -22px rgba(58, 42, 31, 0.22);
+  --shadow-pop: 0 4px 10px rgba(58, 42, 31, 0.08), 0 26px 54px -30px rgba(58, 42, 31, 0.28);
+  --hairline: rgba(226, 102, 44, 0.14);
 
   --radius: 22px;
   --radius-md: 15px;
   --radius-sm: 11px;
+  --font-body: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sidebar-w: 264px;
   --sidebar-w-collapsed: 82px;
@@ -86,46 +89,46 @@
 [data-theme="dark"] {
   color-scheme: dark;
 
-  --ground: #17131a;
-  --surface: #201a24;
-  --surface-2: #29212d;
-  --surface-3: #322836;
-  --surface-glass: rgba(32, 26, 36, 0.78);
+  --ground: #1c140f;
+  --surface: #241a13;
+  --surface-2: #2c2018;
+  --surface-3: #35271c;
+  --surface-glass: rgba(36, 26, 19, 0.8);
 
-  --border: #362c3a;
-  --border-strong: #493c4f;
+  --border: #43321f;
+  --border-strong: #56412a;
 
-  --text: #f3ecf1;
-  --muted: #b6a6b0;
-  --faint: #8a7883;
+  --text: #f4e9dc;
+  --muted: #c7b09b;
+  --faint: #93806d;
 
-  --violet: #bda9ee;
-  --violet-strong: #cfbefc;
-  --violet-soft: #2e2640;
-  --violet-line: #453a60;
-  --violet-ink: #1a1622;
+  --violet: #f0854a;
+  --violet-strong: #f6a26c;
+  --violet-soft: #3a2717;
+  --violet-line: #5b3d1f;
+  --violet-ink: #241708;
 
-  --rose: #f0a3c0;
-  --rose-strong: #f6bcd2;
-  --rose-soft: #3a2430;
-  --rose-line: #573547;
+  --rose: #e08571;
+  --rose-strong: #eba493;
+  --rose-soft: #3a241c;
+  --rose-line: #5a392c;
 
-  --peach: #eec199;
-  --peach-soft: #3a2c20;
-  --peach-line: #573f2d;
+  --peach: #e2b968;
+  --peach-soft: #392c1a;
+  --peach-line: #58452a;
 
-  --sage: #95d6b2;
-  --sage-soft: #203429;
-  --sage-line: #33543f;
+  --sage: #8fcda3;
+  --sage-soft: #1f3327;
+  --sage-line: #345140;
 
-  --sky: #a6c6ea;
-  --sky-soft: #212f40;
-  --sky-line: #33475c;
+  --sky: #8bb8dd;
+  --sky-soft: #1f2d3a;
+  --sky-line: #33475a;
 
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 14px 32px -20px rgba(0, 0, 0, 0.68);
   --shadow-lift: 0 2px 6px rgba(0, 0, 0, 0.45), 0 20px 42px -24px rgba(0, 0, 0, 0.76);
   --shadow-pop: 0 6px 14px rgba(0, 0, 0, 0.5), 0 32px 66px -34px rgba(0, 0, 0, 0.82);
-  --hairline: rgba(240, 163, 192, 0.16);
+  --hairline: rgba(240, 133, 74, 0.18);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -156,12 +159,7 @@ body {
     radial-gradient(900px 620px at 4% -8%, var(--violet-soft), transparent 62%),
     radial-gradient(760px 560px at 102% 4%, var(--rose-soft), transparent 58%), var(--ground);
   background-attachment: fixed;
-  font:
-    14px/1.62 ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    sans-serif;
+  font: 14px/1.62 var(--font-body);
   -webkit-font-smoothing: antialiased;
   transition:
     background-color 0.3s ease,
@@ -505,10 +503,11 @@ h3 {
   background: var(--surface);
 }
 .sidebar-fold svg {
+  transform: rotate(90deg);
   transition: transform 0.4s var(--ease);
 }
 .sidebar.collapsed .sidebar-fold svg {
-  transform: rotate(180deg);
+  transform: rotate(-90deg);
 }
 
 /* Collapsed rail: a clean icon column. Text is removed, not squeezed, and the
@@ -623,6 +622,65 @@ h3 {
   transform: rotate(28deg);
 }
 
+.nav-toggle {
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+}
+.nav-toggle:hover:not(:disabled) {
+  color: var(--violet);
+  border-color: var(--violet-line);
+}
+
+/* Docked at the bottom of the content column: counts on the left, creator
+   links on the right, out of the way of the work above it. */
+.statusbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  font-size: 11.5px;
+  color: var(--muted);
+  flex-wrap: wrap;
+}
+.statusbar .status-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+.statusbar .status-cell strong {
+  color: var(--text);
+  font-weight: 650;
+}
+.statusbar .live-flag {
+  color: var(--faint);
+}
+.statusbar .live-flag.on {
+  color: var(--sage);
+  font-weight: 600;
+}
+.statusbar .spacer {
+  flex: 1;
+}
+.statusbar a {
+  color: var(--muted);
+}
+.statusbar a:hover {
+  color: var(--violet);
+}
+
 main {
   max-width: 1200px;
   width: 100%;
@@ -635,20 +693,110 @@ main {
 
 /* ---- surfaces ------------------------------------------------------------- */
 
+/*
+ * `.window` and `section.panel` are the same surface: `.window` is the
+ * component that renders an optional header (icon, title, actions) above a
+ * body, and `Panel` renders one with the `panel` class alongside it so a
+ * couple of hand-rolled sections can still select it directly. Padding lives
+ * on `.window-body`, never here, so the two names never double it up.
+ */
+.window,
 section.panel {
   position: relative;
-  padding: 18px 20px;
   border-radius: var(--radius);
   border: 1px solid var(--border);
   background: var(--surface);
   box-shadow: var(--shadow);
+  overflow: hidden;
   transition:
     border-color 0.25s ease,
     box-shadow 0.25s ease;
 }
 
+section.panel {
+  padding: 18px 20px;
+}
+
 section.panel.soft {
   background: var(--surface-2);
+}
+
+.window-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.window-title {
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--faint);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* The three mock-OS lights are retired: a modern card names itself with the
+   icon and title alone. */
+.window-dots {
+  display: none;
+}
+
+.window-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: var(--window-accent-soft, var(--violet-soft));
+  color: var(--window-accent, var(--violet));
+}
+.window-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.window-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.window-body {
+  padding: 18px 20px 20px;
+}
+
+/*
+ * Hue blocking: a window declares its hue and the icon chip follows. Five
+ * options, assigned deliberately per section, which is what stops the page
+ * reading as one brand colour end to end.
+ */
+.window.hue-pink {
+  --window-accent: var(--rose);
+  --window-accent-soft: var(--rose-soft);
+}
+.window.hue-lav {
+  --window-accent: var(--violet);
+  --window-accent-soft: var(--violet-soft);
+}
+.window.hue-sky {
+  --window-accent: var(--sky);
+  --window-accent-soft: var(--sky-soft);
+}
+.window.hue-butter {
+  --window-accent: var(--peach);
+  --window-accent-soft: var(--peach-soft);
+}
+.window.hue-mint {
+  --window-accent: var(--sage);
+  --window-accent-soft: var(--sage-soft);
 }
 
 .panel-head {

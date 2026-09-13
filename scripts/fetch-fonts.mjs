@@ -11,15 +11,10 @@
  * Run with `npm run fonts` when a family or weight is added. The script is
  * idempotent: unchanged files are left alone, so a re-run is a no-op.
  *
- * Three families, each with a job:
- *
- *   Press Start 2P  title bars and the wordmark. Genuinely pixel-grid, and
- *                   therefore legible only for a few words at a time.
- *   Silkscreen      labels, tab captions, badges and buttons. A bitmap face
- *                   that stays readable one step up from Press Start 2P.
- *   Quicksand       everything a person has to read at length. Rounded,
- *                   geometric, and the reason the UI is usable rather than a
- *                   costume.
+ * One family: Inter, at the weights the dashboard actually uses (regular text,
+ * medium labels, semibold headings, bold emphasis). A single modern grotesque
+ * keeps the UI reading as one product instead of stitching a display face to a
+ * body face.
  */
 
 import { mkdir, writeFile } from "node:fs/promises";
@@ -41,9 +36,7 @@ const UA =
 
 /** Families to vendor, with the slug used for their file names. */
 const FAMILIES = [
-  { query: "Press+Start+2P", slug: "press-start-2p", display: "Press Start 2P" },
-  { query: "Silkscreen:wght@400;700", slug: "silkscreen", display: "Silkscreen" },
-  { query: "Quicksand:wght@300..700", slug: "quicksand", display: "Quicksand" },
+  { query: "Inter:wght@400;500;600;700;800", slug: "inter", display: "Inter" },
 ];
 
 async function get(url) {
