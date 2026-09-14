@@ -12,6 +12,7 @@ import {
   formatNumber,
 } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { useLang } from "../lang.js";
 
 const HISTORY_PAGE_SIZE = 25;
 const DAILY_PAGE_SIZE = 10;
@@ -29,6 +30,7 @@ type UsageTab = "overview" | "providers" | "requests";
 
 export function Usage({ refreshKey }: { refreshKey: number }) {
   const toast = useToast();
+  const { t } = useLang();
   const [tab, setTab] = useState<UsageTab>("overview");
 
   return (
@@ -40,7 +42,7 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
           aria-selected={tab === "overview"}
           onClick={() => setTab("overview")}
         >
-          Overview
+          {t("Overview")}
         </button>
         <button
           type="button"
@@ -48,7 +50,7 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
           aria-selected={tab === "providers"}
           onClick={() => setTab("providers")}
         >
-          Providers
+          {t("Providers")}
         </button>
         <button
           type="button"
@@ -56,7 +58,7 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
           aria-selected={tab === "requests"}
           onClick={() => setTab("requests")}
         >
-          Requests
+          {t("Requests")}
         </button>
       </div>
 
@@ -81,6 +83,7 @@ function ServingNow({
   refreshKey: number;
   onError: (message: string) => void;
 }) {
+  const { t } = useLang();
   const [view, setView] = useState<UsageView | null>(null);
 
   useEffect(() => {
@@ -96,9 +99,9 @@ function ServingNow({
   const now = view?.now;
 
   return (
-    <Panel title="Serving now">
+    <Panel title={t("Serving now")}>
       {!now ? (
-        <Empty>Loading…</Empty>
+        <Empty>{t("Loading…")}</Empty>
       ) : now.active ? (
         <div className="row" style={{ gap: 14, flexWrap: "wrap" }}>
           <span className="badge">{now.chainAlias}</span>
@@ -112,18 +115,24 @@ function ServingNow({
             ) : null}
           </span>
           {now.proxyLabel ? (
-            <span className="chip-proxy mono small">exit {now.proxyLabel}</span>
+            <span className="chip-proxy mono small">
+              {t("exit")} {now.proxyLabel}
+            </span>
           ) : null}
-          {now.fallback ? <span className="badge warn">fallback</span> : null}
-          <span className="small faint">{now.attempts} tries</span>
+          {now.fallback ? <span className="badge warn">{t("fallback")}</span> : null}
+          <span className="small faint">
+            {now.attempts} {t("tries")}
+          </span>
           {now.startedAt ? (
-            <span className="small faint">started {timeAgo(now.startedAt)}</span>
+            <span className="small faint">
+              {t("started")} {timeAgo(now.startedAt)}
+            </span>
           ) : null}
         </div>
       ) : (
         <Empty>
-          Idle — the next request lands here.
-          {now.lastOutcome ? ` Last route: ${now.lastOutcome}.` : ""}
+          {t("Idle — the next request lands here.")}
+          {now.lastOutcome ? ` ${t("Last route:")} ${now.lastOutcome}.` : ""}
         </Empty>
       )}
     </Panel>
@@ -138,6 +147,7 @@ function UsageRollup({
   refreshKey: number;
   onError: (message: string) => void;
 }) {
+  const { t } = useLang();
   const [view, setView] = useState<UsageView | null>(null);
   const [providerId, setProviderId] = useState<string | null>(null);
   const [model, setModel] = useState<string | null>(null);
@@ -190,25 +200,27 @@ function UsageRollup({
 
   if (!view)
     return (
-      <Panel title="Usage by provider">
-        <Empty>Loading usage…</Empty>
+      <Panel title={t("Usage by provider")}>
+        <Empty>{t("Loading usage…")}</Empty>
       </Panel>
     );
 
   return (
     <>
-      <Panel title="Chain state">
+      <Panel title={t("Chain state")}>
         {view.chains.length === 0 ? (
-          <Empty>No chains configured.</Empty>
+          <Empty>{t("No chains configured.")}</Empty>
         ) : (
           <div className="stack">
             {view.chains.map((chain) => (
               <div key={chain.id} className="model-provider">
                 <header>
                   <strong className="mono">{chain.alias}</strong>
-                  {chain.enabled ? null : <span className="badge warn">disabled</span>}
+                  {chain.enabled ? null : <span className="badge warn">{t("disabled")}</span>}
                   <span className="spacer" />
-                  <span className="small faint">{chain.entries.length} nodes</span>
+                  <span className="small faint">
+                    {chain.entries.length} {t("nodes")}
+                  </span>
                 </header>
                 <div className="stack">
                   {chain.entries.map((entry, index) => (
@@ -221,22 +233,22 @@ function UsageRollup({
                       <span className="mono">
                         {entry.providerId} / {entry.model}
                       </span>
-                      {entry.enabled ? null : <span className="badge warn">off</span>}
+                      {entry.enabled ? null : <span className="badge warn">{t("off")}</span>}
                       <span className="badge">{entry.routingStrategy}</span>
-                      <span className="small faint">keys:</span>
+                      <span className="small faint">{t("keys:")}</span>
                       {entry.credentials.length === 0 ? (
-                        <span className="badge bad">none</span>
+                        <span className="badge bad">{t("none")}</span>
                       ) : (
                         entry.credentials.map((credential) => (
                           <span
                             key={credential.id}
                             className="cred-chip"
-                            title={`${credential.status}${credential.active ? " · serving now" : ""}`}
+                            title={`${credential.status}${credential.active ? ` · ${t("serving now")}` : ""}`}
                             style={credential.active ? { borderColor: "var(--ok)" } : undefined}
                           >
                             <StatusDot status={credential.status as never} />
                             {credential.description}
-                            {credential.active ? <span className="badge">now</span> : null}
+                            {credential.active ? <span className="badge">{t("now")}</span> : null}
                           </span>
                         ))
                       )}
@@ -249,10 +261,10 @@ function UsageRollup({
         )}
       </Panel>
 
-      <Panel title="Usage by provider">
+      <Panel title={t("Usage by provider")}>
         {view.providers.length === 0 ? (
           <Empty>
-            Nothing recorded yet. Send a request to <code>/v1/chat/completions</code>.
+            {t("Nothing recorded yet. Send a request to")} <code>/v1/chat/completions</code>.
           </Empty>
         ) : (
           <>
@@ -277,21 +289,21 @@ function UsageRollup({
             {provider ? (
               <>
                 <div className="grid cards">
-                  <Stat label="Models used" value={provider.models.length} />
-                  <Stat label="Keys" value={provider.credentials.length} />
-                  <Stat label="30-day requests" value={formatNumber(monthTotals.requests)} />
+                  <Stat label={t("Models used")} value={provider.models.length} />
+                  <Stat label={t("Keys")} value={provider.credentials.length} />
+                  <Stat label={t("30-day requests")} value={formatNumber(monthTotals.requests)} />
                   <Stat
-                    label="30-day tokens"
+                    label={t("30-day tokens")}
                     value={formatNumber(monthTotals.inputTokens + monthTotals.outputTokens)}
-                    hint={`${formatNumber(monthTotals.inputTokens)} in · ${formatNumber(
+                    hint={`${formatNumber(monthTotals.inputTokens)} ${t("in")} · ${formatNumber(
                       monthTotals.outputTokens,
-                    )} out`}
+                    )} ${t("out")}`}
                   />
                 </div>
 
                 <div className="row wrap" style={{ gap: 6, margin: "14px 0" }}>
                   {provider.models.length === 0 ? (
-                    <span className="small faint">No model usage yet.</span>
+                    <span className="small faint">{t("No model usage yet.")}</span>
                   ) : (
                     provider.models.map((entry) => (
                       <button
@@ -299,7 +311,7 @@ function UsageRollup({
                         className={entry.model === model ? "secondary" : "ghost"}
                         onClick={() => setModel(entry.model)}
                         type="button"
-                        title={`${entry.requests} requests`}
+                        title={`${entry.requests} ${t("requests")}`}
                       >
                         {entry.model}
                       </button>
@@ -312,13 +324,13 @@ function UsageRollup({
                     <table>
                       <thead>
                         <tr>
-                          <th>Key</th>
-                          <th>State</th>
-                          <th>Requests</th>
-                          <th>Tokens in / out</th>
-                          <th>Rate / min</th>
-                          <th>Quota vs limit</th>
-                          <th>Reset</th>
+                          <th>{t("Key")}</th>
+                          <th>{t("State")}</th>
+                          <th>{t("Requests")}</th>
+                          <th>{t("Tokens in / out")}</th>
+                          <th>{t("Rate / min")}</th>
+                          <th>{t("Quota vs limit")}</th>
+                          <th>{t("Reset")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -348,7 +360,7 @@ function UsageRollup({
                               <td className="small faint">
                                 {credential.quota?.available && credential.quota.resetAt
                                   ? timeAgo(credential.quota.resetAt)
-                                  : "unknown"}
+                                  : t("unknown")}
                               </td>
                             </tr>
                           );
@@ -357,21 +369,21 @@ function UsageRollup({
                     </table>
                   </div>
                 ) : (
-                  <Empty>No model usage for this provider yet.</Empty>
+                  <Empty>{t("No model usage for this provider yet.")}</Empty>
                 )}
 
-                <h4 className="section-title">Daily rollup</h4>
+                <h4 className="section-title">{t("Daily rollup")}</h4>
                 {provider.daily.length === 0 ? (
-                  <Empty>No daily totals yet.</Empty>
+                  <Empty>{t("No daily totals yet.")}</Empty>
                 ) : (
                   <div className="table-scroll">
                     <table>
                       <thead>
                         <tr>
-                          <th>Day</th>
-                          <th>Requests</th>
-                          <th>Tokens in</th>
-                          <th>Tokens out</th>
+                          <th>{t("Day")}</th>
+                          <th>{t("Requests")}</th>
+                          <th>{t("Tokens in")}</th>
+                          <th>{t("Tokens out")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -380,7 +392,7 @@ function UsageRollup({
                             <td className="mono small">
                               {day.day}
                               {day.day === view.today ? (
-                                <span className="badge"> today</span>
+                                <span className="badge"> {t("today")}</span>
                               ) : null}
                             </td>
                             <td className="small">{formatNumber(day.requests)}</td>
@@ -419,6 +431,7 @@ function UsageRollup({
 /** Local request history with filters and a real pager. */
 function RequestHistory({ refreshKey }: { refreshKey: number }) {
   const toast = useToast();
+  const { t } = useLang();
   const [entries, setEntries] = useState<RequestLogEntry[]>([]);
   const [stats, setStats] = useState<HistoryStats | null>(null);
   const [query, setQuery] = useState("");
@@ -449,7 +462,7 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
     try {
       await api.clearRequests();
       await load();
-      toast.ok("History cleared");
+      toast.ok(t("History cleared"));
       setClearingHistory(false);
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -458,25 +471,25 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
 
   return (
     <>
-      <Panel title="Request statistics">
+      <Panel title={t("Request statistics")}>
         <div className="grid cards">
-          <Stat label="Recorded" value={stats ? formatNumber(stats.total) : "0"} />
-          <Stat label="Succeeded" value={stats ? formatNumber(stats.success) : "0"} />
-          <Stat label="Failed" value={stats ? formatNumber(stats.failure) : "0"} />
+          <Stat label={t("Recorded")} value={stats ? formatNumber(stats.total) : "0"} />
+          <Stat label={t("Succeeded")} value={stats ? formatNumber(stats.success) : "0"} />
+          <Stat label={t("Failed")} value={stats ? formatNumber(stats.failure) : "0"} />
           <Stat
-            label="Used fallback"
+            label={t("Used fallback")}
             value={stats ? formatNumber(stats.fallbackCount) : "0"}
-            hint="Requests that rotated to another key or node"
+            hint={t("Requests that rotated to another key or node")}
           />
           <Stat
-            label="Average latency"
+            label={t("Average latency")}
             value={stats ? formatDuration(stats.averageLatencyMs) : "0ms"}
           />
         </div>
       </Panel>
 
       <Panel
-        title={`Request history (${total})`}
+        title={`${t("Request history")} (${total})`}
         actions={
           <div className="row" style={{ gap: 8 }}>
             <select
@@ -487,13 +500,13 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
               }}
               style={{ width: 130 }}
             >
-              <option value="">All outcomes</option>
-              <option value="success">Succeeded</option>
-              <option value="error">Failed</option>
+              <option value="">{t("All outcomes")}</option>
+              <option value="success">{t("Succeeded")}</option>
+              <option value="error">{t("Failed")}</option>
             </select>
             <input
               className="search"
-              placeholder="Search chain, model or key"
+              placeholder={t("Search chain, model or key")}
               value={query}
               onChange={(event) => {
                 setQuery(event.target.value);
@@ -505,28 +518,28 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
               onClick={() => setClearingHistory(true)}
               disabled={total === 0}
             >
-              Clear
+              {t("Clear")}
             </button>
           </div>
         }
       >
         {entries.length === 0 ? (
           <Empty>
-            Nothing recorded yet. Send a request to <code>/v1/chat/completions</code>.
+            {t("Nothing recorded yet. Send a request to")} <code>/v1/chat/completions</code>.
           </Empty>
         ) : (
           <div className="table-scroll">
             <table>
               <thead>
                 <tr>
-                  <th>When</th>
-                  <th>Chain</th>
-                  <th>Provider / model</th>
-                  <th>Key</th>
-                  <th>Result</th>
-                  <th>Attempts</th>
-                  <th>Latency</th>
-                  <th>Mode</th>
+                  <th>{t("When")}</th>
+                  <th>{t("Chain")}</th>
+                  <th>{t("Provider / model")}</th>
+                  <th>{t("Key")}</th>
+                  <th>{t("Result")}</th>
+                  <th>{t("Attempts")}</th>
+                  <th>{t("Latency")}</th>
+                  <th>{t("Mode")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -540,19 +553,19 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
                     <td className="small">{entry.credentialDescription}</td>
                     <td className="small">
                       {entry.outcome === "success" ? (
-                        <span className="badge">ok</span>
+                        <span className="badge">{t("ok")}</span>
                       ) : (
                         <span className="badge bad">{entry.classification}</span>
                       )}
                       {entry.fallback ? (
                         <span className="badge warn" style={{ marginLeft: 4 }}>
-                          {entry.fallbackReason ?? "fallback"}
+                          {entry.fallbackReason ?? t("fallback")}
                         </span>
                       ) : null}
                     </td>
                     <td className="small muted">{entry.attempts}</td>
                     <td className="small muted">{formatDuration(entry.latencyMs)}</td>
-                    <td className="small faint">{entry.stream ? "stream" : "buffered"}</td>
+                    <td className="small faint">{entry.stream ? t("stream") : t("buffered")}</td>
                   </tr>
                 ))}
               </tbody>
@@ -578,11 +591,11 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
 
       {clearingHistory ? (
         <ConfirmModal
-          title="Clear request history"
-          message="Clear the local request history? This cannot be undone."
+          title={t("Clear request history")}
+          message={t("Clear the local request history? This cannot be undone.")}
           onConfirm={() => void clear()}
           onClose={() => setClearingHistory(false)}
-          actionLabel="Clear"
+          actionLabel={t("Clear")}
         />
       ) : null}
     </>
@@ -600,20 +613,21 @@ function QuotaVsLimit({
 }: {
   quota?: UsageView["providers"][number]["credentials"][number]["quota"];
 }) {
-  if (!quota || !quota.available) return <span className="faint">no declared limit</span>;
+  const { t } = useLang();
+  if (!quota || !quota.available) return <span className="faint">{t("no declared limit")}</span>;
 
   const parts: string[] = [];
   if (typeof quota.requestsRemaining === "number")
-    parts.push(`${formatNumber(quota.requestsRemaining)} req left`);
+    parts.push(`${formatNumber(quota.requestsRemaining)} ${t("req left")}`);
   if (typeof quota.tokensRemaining === "number")
-    parts.push(`${formatNumber(quota.tokensRemaining)} tok left`);
+    parts.push(`${formatNumber(quota.tokensRemaining)} ${t("tok left")}`);
   if (typeof quota.requestsPerMinute === "number") parts.push(`${quota.requestsPerMinute} RPM`);
   if (typeof quota.tokensPerMinute === "number")
     parts.push(`${formatNumber(quota.tokensPerMinute)} TPM`);
-  if (parts.length === 0) return <span className="faint">no declared limit</span>;
+  if (parts.length === 0) return <span className="faint">{t("no declared limit")}</span>;
 
   return (
-    <span className="muted" title={`source: ${quota.source}`}>
+    <span className="muted" title={`${t("source:")} ${quota.source}`}>
       {parts.join(" · ")}
       <span className="faint small"> ({quota.source})</span>
     </span>

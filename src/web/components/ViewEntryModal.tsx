@@ -5,6 +5,7 @@ import { ConfirmModal, Modal } from "./Primitives.js";
 import { RateLabel, StatusDot } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
+import { useLang } from "../lang.js";
 
 interface Props {
   entry: ChainEntryView;
@@ -14,6 +15,7 @@ interface Props {
 
 export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
   const toast = useToast();
+  const { t } = useLang();
   const [testingCredId, setTestingCredId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<
     Record<string, { ok: boolean; latencyMs?: number; message?: string }>
@@ -39,7 +41,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
   async function removeCredential(credential: PublicCredential) {
     try {
       await api.removeEntryCredential(entry.id, credential.id);
-      toast.ok("Credential removed");
+      toast.ok(t("Credential removed"));
       setRemovingCredential(null);
       onChanged();
       onClose();
@@ -50,38 +52,38 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
 
   return (
     <Modal
-      title={`${entry.model} · Details`}
-      subtitle="Everything this node routes to. Keys are tried in the strategy order below."
+      title={`${entry.model} · ${t("Details")}`}
+      subtitle={t("Everything this node routes to. Keys are tried in the strategy order below.")}
       onClose={onClose}
     >
       <div style={{ maxHeight: "70vh", overflowY: "auto" }}>
         <div className="detail-grid">
           <div className="detail-row">
-            <span className="detail-label">Provider</span>
+            <span className="detail-label">{t("Provider")}</span>
             <span className="mono">{entry.providerId}</span>
           </div>
 
           <div className="detail-row">
-            <span className="detail-label">Model</span>
+            <span className="detail-label">{t("Model")}</span>
             <span className="mono">{entry.model}</span>
           </div>
 
           <div className="detail-row">
-            <span className="detail-label">Base URL</span>
+            <span className="detail-label">{t("Base URL")}</span>
             <span className="mono small">{entry.baseUrl}</span>
           </div>
 
           <div className="detail-row">
-            <span className="detail-label">Strategy</span>
-            <span className="badge" title="How credentials are rotated for this node">
+            <span className="detail-label">{t("Strategy")}</span>
+            <span className="badge" title={t("How credentials are rotated for this node")}>
               {entry.routingStrategy === "sequential"
-                ? "sequential · in order"
-                : "round-robin · rotate"}
+                ? t("sequential · in order")
+                : t("round-robin · rotate")}
             </span>
           </div>
 
           <div className="detail-row">
-            <span className="detail-label">Status</span>
+            <span className="detail-label">{t("Status")}</span>
             <span
               className="badge"
               style={{
@@ -89,7 +91,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                 color: entry.enabled ? "var(--ok)" : "var(--warn)",
               }}
             >
-              {entry.enabled ? "✓ enabled" : "⊘ disabled"}
+              {entry.enabled ? `✓ ${t("enabled")}` : `⊘ ${t("disabled")}`}
             </span>
           </div>
         </div>
@@ -103,22 +105,24 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
               marginBottom: 4,
             }}
           >
-            <h4 style={{ margin: 0 }}>Keys ({entry.credentials.length})</h4>
+            <h4 style={{ margin: 0 }}>
+              {t("Keys")} ({entry.credentials.length})
+            </h4>
             <button
               className="secondary"
               style={{ padding: "4px 8px", fontSize: 12 }}
               onClick={() => setAddingCredential(true)}
             >
-              + Add key
+              + {t("Add key")}
             </button>
           </div>
           <p className="small faint" style={{ margin: "0 0 12px" }}>
-            Test a key against <span className="mono">{entry.model}</span>. A red pill means the key
-            failed for this model; a green pill shows its latency.
+            {t("Test a key against")} <span className="mono">{entry.model}</span>.{" "}
+            {t("A red pill means the key failed for this model; a green pill shows its latency.")}
           </p>
 
           {entry.credentials.length === 0 ? (
-            <p className="small faint">No credentials linked to this entry.</p>
+            <p className="small faint">{t("No credentials linked to this entry.")}</p>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {entry.credentials.map((credential) => {
@@ -159,7 +163,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                           padding: "3px 6px",
                         }}
                       >
-                        {isPassed ? `✓ ${testResult.latencyMs}ms` : "✗ failed"}
+                        {isPassed ? `✓ ${testResult.latencyMs}ms` : `✗ ${t("failed")}`}
                       </span>
                     )}
 
@@ -169,7 +173,9 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                       onClick={() => void testCredential(credential)}
                       disabled={testingCredId === credential.id}
                       title={
-                        testingCredId === credential.id ? "Testing..." : "Test this credential"
+                        testingCredId === credential.id
+                          ? t("Testing...")
+                          : t("Test this credential")
                       }
                     >
                       {testingCredId === credential.id ? "⟳" : "↻"}
@@ -179,7 +185,7 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
                       className="ghost danger"
                       style={{ padding: "2px 4px", fontSize: 12 }}
                       onClick={() => setRemovingCredential(credential)}
-                      title="Remove credential"
+                      title={t("Remove credential")}
                     >
                       ✕
                     </button>
@@ -203,11 +209,11 @@ export function ViewEntryModal({ entry, onClose, onChanged }: Props) {
 
       {removingCredential ? (
         <ConfirmModal
-          title="Remove credential"
-          message={`Remove ${removingCredential.description}?`}
+          title={t("Remove credential")}
+          message={`${t("Remove")} ${removingCredential.description}?`}
           onConfirm={() => void removeCredential(removingCredential)}
           onClose={() => setRemovingCredential(null)}
-          actionLabel="Remove"
+          actionLabel={t("Remove")}
         />
       ) : null}
     </Modal>

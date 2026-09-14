@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ProviderCatalogEntry, Settings as SettingsModel } from "../types.js";
 import { ConfirmModal, Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { useLang } from "../lang.js";
 
 /**
  * Gateway settings.
@@ -20,6 +21,7 @@ export function Settings({
   refreshKey: number;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [draft, setDraft] = useState<SettingsModel | null>(settings);
   const [busy, setBusy] = useState(false);
   const [endpoints, setEndpoints] = useState<ProviderCatalogEntry[]>([]);
@@ -37,7 +39,7 @@ export function Settings({
       await api.setPassword(newPassword.trim());
       setDraft((current) => (current ? { ...current, passwordLocked: true } : current));
       setNewPassword("");
-      toast.ok("Password set. It is now permanent.");
+      toast.ok(t("Password set. It is now permanent."));
       setConfirmingPassword(false);
       onSaved();
     } catch (error) {
@@ -76,7 +78,7 @@ export function Settings({
         autoProxyStrategy: draft.autoProxyStrategy,
         fallback: draft.fallback,
       });
-      toast.ok("Settings saved");
+      toast.ok(t("Settings saved"));
       onSaved();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -87,7 +89,7 @@ export function Settings({
 
   async function addEndpoint() {
     if (!endpointName.trim() || !endpointUrl.trim()) {
-      toast.err("A display name and base URL are required");
+      toast.err(t("A display name and base URL are required"));
       return;
     }
     try {
@@ -103,7 +105,7 @@ export function Settings({
       setEndpointUrl("");
       setEndpointModels("");
       setEndpoints(await api.customEndpoints());
-      toast.ok("Custom endpoint registered");
+      toast.ok(t("Custom endpoint registered"));
       onSaved();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -120,22 +122,22 @@ export function Settings({
     }
   }
 
-  if (!draft) return <Empty>Loading settings…</Empty>;
+  if (!draft) return <Empty>{t("Loading settings…")}</Empty>;
 
   return (
     <>
       <Panel
-        title="Gateway"
+        title={t("Gateway")}
         actions={
           <button onClick={() => void save()} disabled={busy}>
-            {busy ? "Saving…" : "Save"}
+            {busy ? t("Saving…") : t("Save")}
           </button>
         }
       >
         <div className="grid cols-2">
           <div>
             <div className="field">
-              <label htmlFor="setting-port">Port</label>
+              <label htmlFor="setting-port">{t("Port")}</label>
               <input
                 id="setting-port"
                 type="number"
@@ -144,19 +146,20 @@ export function Settings({
               />
             </div>
             <div className="field">
-              <label htmlFor="setting-host">Host</label>
+              <label htmlFor="setting-host">{t("Host")}</label>
               <input
                 id="setting-host"
                 value={draft.host}
                 onChange={(event) => setDraft({ ...draft, host: event.target.value })}
               />
               <div className="small faint" style={{ marginTop: 5 }}>
-                Loopback by default. Binding to 0.0.0.0 exposes the gateway to your network - set an
-                auth token first.
+                {t(
+                  "Loopback by default. Binding to 0.0.0.0 exposes the gateway to your network - set an auth token first.",
+                )}
               </div>
             </div>
             <div className="field">
-              <label htmlFor="setting-log">Log level</label>
+              <label htmlFor="setting-log">{t("Log level")}</label>
               <select
                 id="setting-log"
                 value={draft.logLevel}
@@ -174,21 +177,21 @@ export function Settings({
 
           <div>
             <div className="field">
-              <label>Data directory</label>
+              <label>{t("Data directory")}</label>
               <input value={draft.dataDir} readOnly />
             </div>
             <div className="field">
-              <label>Admin password</label>
+              <label>{t("Admin password")}</label>
               {draft.passwordLocked ? (
                 <div className="small faint" style={{ marginTop: 4 }}>
-                  Set. The password is permanent and can no longer be changed here.
+                  {t("Set. The password is permanent and can no longer be changed here.")}
                 </div>
               ) : (
                 <>
                   <div className="row" style={{ gap: 8, marginTop: 4 }}>
                     <input
                       type="password"
-                      placeholder="New password"
+                      placeholder={t("New password")}
                       value={newPassword}
                       onChange={(event) => setNewPassword(event.target.value)}
                     />
@@ -197,27 +200,29 @@ export function Settings({
                       onClick={() => setConfirmingPassword(true)}
                       disabled={passwordBusy || !newPassword.trim()}
                     >
-                      {passwordBusy ? "Saving…" : "Set password"}
+                      {passwordBusy ? t("Saving…") : t("Set password")}
                     </button>
                   </div>
                   <div className="small faint" style={{ marginTop: 5 }}>
-                    Currently the default (<code>coco-the-best</code>). Setting a password locks it
-                    permanently - there is no way to change it afterwards.
+                    {t("Currently the default")} (<code>coco-the-best</code>).{" "}
+                    {t(
+                      "Setting a password locks it permanently - there is no way to change it afterwards.",
+                    )}
                   </div>
                 </>
               )}
             </div>
             <div className="hint-box">
-              Config export (no secrets):{" "}
+              {t("Config export (no secrets):")}{" "}
               <a href="/api/config/export" download="cokey-export.json">
-                download cokey-export.json
+                {t("download cokey-export.json")}
               </a>
             </div>
           </div>
         </div>
       </Panel>
 
-      <Panel title="Fallback policy">
+      <Panel title={t("Fallback policy")}>
         <div className="grid cols-2">
           <label className="selected-item" style={{ marginBottom: 0 }}>
             <input
@@ -231,7 +236,7 @@ export function Settings({
                 })
               }
             />
-            Fallback enabled
+            {t("Fallback enabled")}
           </label>
           <label className="selected-item" style={{ marginBottom: 0 }}>
             <input
@@ -245,7 +250,7 @@ export function Settings({
                 })
               }
             />
-            Try the next credential within an entry
+            {t("Try the next credential within an entry")}
           </label>
           <label className="selected-item" style={{ marginBottom: 0 }}>
             <input
@@ -259,7 +264,7 @@ export function Settings({
                 })
               }
             />
-            Fall through to the next entry
+            {t("Fall through to the next entry")}
           </label>
           <label className="selected-item" style={{ marginBottom: 0 }}>
             <input
@@ -273,12 +278,12 @@ export function Settings({
                 })
               }
             />
-            Automatic cooldowns
+            {t("Automatic cooldowns")}
           </label>
         </div>
 
         <div className="field" style={{ marginTop: 14, maxWidth: 320 }}>
-          <label htmlFor="setting-retries">Max retries per credential</label>
+          <label htmlFor="setting-retries">{t("Max retries per credential")}</label>
           <input
             id="setting-retries"
             type="number"
@@ -298,7 +303,7 @@ export function Settings({
         </div>
       </Panel>
 
-      <Panel title="Free-provider suggestions">
+      <Panel title={t("Free-provider suggestions")}>
         <label className="selected-item" style={{ marginBottom: 0 }}>
           <input
             type="checkbox"
@@ -308,10 +313,10 @@ export function Settings({
               setDraft({ ...draft, showFreeProviderNudger: event.target.checked })
             }
           />
-          Show the free-provider nudger
+          {t("Show the free-provider nudger")}
         </label>
         <div className="field" style={{ marginTop: 14, maxWidth: 320 }}>
-          <label htmlFor="setting-target">Target number of connected free providers</label>
+          <label htmlFor="setting-target">{t("Target number of connected free providers")}</label>
           <input
             id="setting-target"
             type="number"
@@ -324,25 +329,26 @@ export function Settings({
           />
         </div>
         <div className="hint-box">
-          Entirely local — COKEY never phones home, and only providers that advertise a free tier
-          are counted.
+          {t(
+            "Entirely local — COKEY never phones home, and only providers that advertise a free tier are counted.",
+          )}
         </div>
       </Panel>
 
-      <Panel title="Custom OpenAI-compatible endpoints">
+      <Panel title={t("Custom OpenAI-compatible endpoints")}>
         <div className="grid cols-2">
           <div>
             <div className="field">
-              <label htmlFor="endpoint-name">Display name</label>
+              <label htmlFor="endpoint-name">{t("Display name")}</label>
               <input
                 id="endpoint-name"
                 value={endpointName}
-                placeholder="My self-hosted vLLM"
+                placeholder={t("My self-hosted vLLM")}
                 onChange={(event) => setEndpointName(event.target.value)}
               />
             </div>
             <div className="field">
-              <label htmlFor="endpoint-url">Base URL</label>
+              <label htmlFor="endpoint-url">{t("Base URL")}</label>
               <input
                 id="endpoint-url"
                 value={endpointUrl}
@@ -351,7 +357,7 @@ export function Settings({
               />
             </div>
             <div className="field">
-              <label htmlFor="endpoint-models">Models (comma separated)</label>
+              <label htmlFor="endpoint-models">{t("Models (comma separated)")}</label>
               <input
                 id="endpoint-models"
                 value={endpointModels}
@@ -359,7 +365,7 @@ export function Settings({
                 onChange={(event) => setEndpointModels(event.target.value)}
               />
             </div>
-            <button onClick={() => void addEndpoint()}>Add endpoint</button>
+            <button onClick={() => void addEndpoint()}>{t("Add endpoint")}</button>
           </div>
 
           <div>
@@ -372,16 +378,17 @@ export function Settings({
                   setDraft({ ...draft, allowPrivateEndpoints: event.target.checked })
                 }
               />
-              Allow private, loopback and plain-HTTP endpoints
+              {t("Allow private, loopback and plain-HTTP endpoints")}
             </label>
             <div className="hint-box">
-              Off by default. Custom URLs are SSRF-checked: loopback, private ranges, link-local and
-              cloud metadata are all blocked. Enable only for a service you run.
+              {t(
+                "Off by default. Custom URLs are SSRF-checked: loopback, private ranges, link-local and cloud metadata are all blocked. Enable only for a service you run.",
+              )}
             </div>
 
             <div className="selected-list" style={{ marginTop: 14 }}>
               {endpoints.length === 0 ? (
-                <Empty>No custom endpoints yet.</Empty>
+                <Empty>{t("No custom endpoints yet.")}</Empty>
               ) : (
                 endpoints.map((endpoint) => (
                   <div key={endpoint.id} className="selected-item">
@@ -393,7 +400,7 @@ export function Settings({
                       style={{ padding: "4px 9px" }}
                       onClick={() => void removeEndpoint(endpoint.id)}
                     >
-                      delete
+                      {t("delete")}
                     </button>
                   </div>
                 ))
@@ -405,20 +412,20 @@ export function Settings({
 
       <div className="row end">
         <button className="secondary" onClick={() => setDraft(settings)} disabled={busy}>
-          Revert
+          {t("Revert")}
         </button>
         <button onClick={() => void save()} disabled={busy}>
-          {busy ? "Saving…" : "Save settings"}
+          {busy ? t("Saving…") : t("Save settings")}
         </button>
       </div>
 
       {confirmingPassword ? (
         <ConfirmModal
-          title="Set password"
-          message="Set this password permanently? It cannot be changed again."
+          title={t("Set password")}
+          message={t("Set this password permanently? It cannot be changed again.")}
           onConfirm={() => void savePassword()}
           onClose={() => setConfirmingPassword(false)}
-          actionLabel="Set password"
+          actionLabel={t("Set password")}
         />
       ) : null}
     </>

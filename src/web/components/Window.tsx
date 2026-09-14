@@ -1,6 +1,7 @@
 import { useCallback, useId, useRef, useState, type ReactNode } from "react";
 import { burstSparkles } from "../lib/motion.js";
 import { IconChevron, IconClose } from "./Icons.js";
+import { useLang } from "../lang.js";
 
 /** The five blocked hues a window can take. */
 export type WindowHue = "pink" | "lav" | "sky" | "butter" | "mint";
@@ -61,6 +62,7 @@ export function Window({
   onClose,
   label,
 }: WindowProps) {
+  const { t } = useLang();
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const bodyId = useId();
   const hasChrome =
@@ -88,7 +90,7 @@ export function Window({
                 <button
                   type="button"
                   className="window-control"
-                  aria-label={collapsed ? "Expand panel" : "Collapse panel"}
+                  aria-label={collapsed ? t("Expand panel") : t("Collapse panel")}
                   aria-expanded={!collapsed}
                   aria-controls={bodyId}
                   onClick={() => setCollapsed((value) => !value)}
@@ -100,7 +102,7 @@ export function Window({
                 <button
                   type="button"
                   className="window-control"
-                  aria-label={`Close ${typeof title === "string" ? title : "panel"}`}
+                  aria-label={`${t("Close")} ${typeof title === "string" ? title : t("panel")}`}
                   onClick={onClose}
                 >
                   <IconClose size={14} />

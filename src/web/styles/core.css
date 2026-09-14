@@ -1298,8 +1298,50 @@ select {
   padding-right: 30px;
 }
 input[type="checkbox"] {
-  width: auto;
-  accent-color: var(--violet);
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  vertical-align: middle;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+input[type="checkbox"]::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  margin-top: -2px;
+  border: solid var(--violet-ink);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.12s ease;
+}
+input[type="checkbox"]:checked {
+  background: var(--violet);
+  border-color: var(--violet);
+}
+input[type="checkbox"]:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--violet);
+}
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--violet-line);
+  outline-offset: 2px;
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 label {
@@ -1380,7 +1422,7 @@ label {
   color: var(--rose);
 }
 .badge.tier-s {
-  color: var(--violet-strong);
+  color: var(--sky);
 }
 .badge.tier-a {
   color: var(--sage);
@@ -2343,6 +2385,9 @@ button.play.fail {
   font-size: 16px;
   color: var(--violet-strong);
 }
+.closing-logo {
+  color: var(--violet-strong);
+}
 .closing span {
   font-size: 12px;
   color: var(--muted);
@@ -2627,6 +2672,17 @@ button.play.fail {
 
 .search {
   max-width: 300px;
+}
+
+/* Matches .search's own box exactly (same padding, border and line-height)
+   so the two sit flush at the same height in the actions row, instead of the
+   shorter box a plain small button renders at. */
+.recheck-all-btn {
+  height: 39px;
+  padding: 9px 15px;
+  background: var(--violet-strong);
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 /* ---- login ---------------------------------------------------------------- */

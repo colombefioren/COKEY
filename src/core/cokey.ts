@@ -38,6 +38,7 @@ import {
   type ModelCatalogView,
 } from "./models/availability.js";
 import {
+  eligibleModels,
   isTrustworthyListing,
   normaliseModelIds,
   reconcileModels,
@@ -466,7 +467,8 @@ export class Cokey {
     }
     const latencyMs = Date.now() - started;
 
-    const discovered = normaliseModelIds(listing.map((model) => model.id));
+    const eligible = eligibleModels(listing, catalog.freeTier.freeModelsOnly);
+    const discovered = normaliseModelIds(eligible.map((model) => model.id));
 
     if (!isTrustworthyListing(discovered)) {
       // A 200 with an empty list is not evidence that a provider stopped serving

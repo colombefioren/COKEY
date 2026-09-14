@@ -10,9 +10,9 @@ import type {
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
 import { Pagination } from "../components/Pagination.js";
 import { Empty, Modal, Panel } from "../components/Primitives.js";
-import { IconGrid } from "../components/Icons.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
+import { useLang } from "../lang.js";
 
 const VERDICT_ORDER: ProviderDossier["verdict"][] = ["recommended", "usable", "limited", "avoid"];
 
@@ -54,6 +54,7 @@ export function Providers({
   onChanged: () => void;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [rows, setRows] = useState<CatalogProviderRow[]>([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -98,17 +99,17 @@ export function Providers({
       try {
         const report = await api.refreshProviderModels(providerId);
         if (!report.ok) {
-          toast.err(report.message ?? `${displayName} could not be checked`);
+          toast.err(report.message ?? `${displayName} ${t("could not be checked")}`);
         } else {
           const parts = [
-            report.added.length ? `${report.added.length} new` : "",
-            report.restored.length ? `${report.restored.length} restored` : "",
-            report.removed.length ? `${report.removed.length} retired` : "",
+            report.added.length ? `${report.added.length} ${t("new")}` : "",
+            report.restored.length ? `${report.restored.length} ${t("restored")}` : "",
+            report.removed.length ? `${report.removed.length} ${t("retired")}` : "",
           ].filter(Boolean);
           toast.ok(
             parts.length
-              ? `${displayName}: ${parts.join(", ")} model(s)`
-              : `${displayName} is unchanged (${report.discovered} models)`,
+              ? `${displayName}: ${parts.join(", ")} ${t("model(s)")}`
+              : `${displayName} ${t("is unchanged")} (${report.discovered} ${t("models")})`,
           );
         }
         await load();
@@ -132,8 +133,7 @@ export function Providers({
     <>
       <Panel
         hue="sky"
-        icon={<IconGrid size={14} />}
-        title={`Providers (${total})`}
+        title={`${t("Providers")} (${total})`}
         actions={
           <div className="row" style={{ gap: 8 }}>
             <label className="small muted row" style={{ gap: 6 }}>
@@ -143,12 +143,12 @@ export function Providers({
                 style={{ width: "auto" }}
                 onChange={(event) => setConnectedOnly(event.target.checked)}
               />
-              connected only
+              {t("connected only")}
             </label>
             <input
               className="search"
               value={query}
-              placeholder="Search providers"
+              placeholder={t("Search providers")}
               onChange={(event) => {
                 setQuery(event.target.value);
                 setPage(1);
@@ -158,12 +158,14 @@ export function Providers({
         }
       >
         <div className="hint-box" style={{ marginBottom: 16 }}>
-          Much of this list is one free pool re-exported under several names, so the verdicts are
-          the point: start at the top and never build on an <strong>avoid</strong>.
+          {t(
+            "Much of this list is one free pool re-exported under several names, so the verdicts are the point: start at the top and never build on an",
+          )}{" "}
+          <strong>{t("avoid")}</strong>.
         </div>
 
         {visible.length === 0 ? (
-          <Empty>Nothing matches.</Empty>
+          <Empty>{t("Nothing matches.")}</Empty>
         ) : (
           VERDICT_ORDER.map((verdict) => {
             const group = visible.filter((row) => row.dossier.verdict === verdict);
@@ -171,7 +173,7 @@ export function Providers({
             return (
               <section key={verdict} className="provider-section">
                 <h3 className="provider-section-title">
-                  {VERDICT_LABEL[verdict]}
+                  {t(VERDICT_LABEL[verdict])}
                   <span className="badge neutral">{group.length}</span>
                 </h3>
                 <div className="grid cards">
@@ -207,10 +209,10 @@ export function Providers({
         />
       </Panel>
 
-      <Panel title={`Custom endpoints (${custom.length})`}>
+      <Panel title={`${t("Custom endpoints")} (${custom.length})`}>
         {custom.length === 0 ? (
           <Empty>
-            None yet — add one in Settings. URLs are SSRF-checked before they are stored.
+            {t("None yet — add one in Settings. URLs are SSRF-checked before they are stored.")}
           </Empty>
         ) : (
           <div className="grid cards">
@@ -221,7 +223,8 @@ export function Providers({
                   {endpoint.baseUrl}
                 </div>
                 <div className="sub faint">
-                  {endpoint.knownModels.length} models · {endpoint.apiStyle} · {endpoint.authScheme}
+                  {endpoint.knownModels.length} {t("models")} · {endpoint.apiStyle} ·{" "}
+                  {endpoint.authScheme}
                 </div>
               </div>
             ))}
@@ -258,11 +261,12 @@ function ProviderDossierCard({
   onConnect: (provider: ProviderStatus) => void;
   onRefreshModels: (providerId: string, displayName: string) => void;
 }) {
+  const { t } = useLang();
   const dossier = row.dossier;
   const [open, setOpen] = useState(false);
   const credentialLabel = row.credentialFields.includes("accountId")
-    ? "API token and account id"
-    : "API key";
+    ? t("API token and account id")
+    : t("API key");
 
   const stale = inventory?.staleModels ?? [];
   const staleSet = useMemo(() => new Set(stale), [stale]);
@@ -280,19 +284,22 @@ function ProviderDossierCard({
     <div className="card provider-card">
       <div className="title">
         {row.displayName}
-        <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{dossier.verdict}</span>
+        <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{t(dossier.verdict)}</span>
         {dossier.reviewedAt ? (
-          <span className="badge neutral" title={`Reviewed ${dossier.reviewedAt}`}>
-            reviewed
+          <span className="badge neutral" title={`${t("Reviewed")} ${dossier.reviewedAt}`}>
+            {t("reviewed")}
           </span>
         ) : null}
         {stale.length > 0 ? (
-          <span className="badge bad" title={`No longer returned: ${stale.slice(0, 6).join(", ")}`}>
-            {stale.length} retired
+          <span
+            className="badge bad"
+            title={`${t("No longer returned:")} ${stale.slice(0, 6).join(", ")}`}
+          >
+            {stale.length} {t("retired")}
           </span>
         ) : checkedAt ? (
-          <span className="badge" title={`Model list checked ${timeAgo(checkedAt)}`}>
-            live
+          <span className="badge" title={`${t("Model list checked")} ${timeAgo(checkedAt)}`}>
+            {t("live")}
           </span>
         ) : null}
       </div>
@@ -305,16 +312,16 @@ function ProviderDossierCard({
        */}
       <div className="sub faint" style={{ marginTop: 4 }}>
         {checkedAt
-          ? `model list checked ${timeAgo(checkedAt)}`
+          ? `${t("model list checked")} ${timeAgo(checkedAt)}`
           : row.connected
-            ? "model list never checked"
-            : "connect a key to check"}
+            ? t("model list never checked")
+            : t("connect a key to check")}
       </div>
 
       <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
-        <button onClick={() => onConnect(row)}>Connect</button>
+        <button onClick={() => onConnect(row)}>{t("Connect")}</button>
         <button className="secondary" type="button" onClick={() => setOpen(true)}>
-          Models ({row.knownModels.length})
+          {t("Models")} ({row.knownModels.length})
         </button>
         <button
           className="secondary"
@@ -322,18 +329,18 @@ function ProviderDossierCard({
           disabled={!row.connected || refreshing}
           title={
             row.connected
-              ? `Ask ${row.displayName} what it serves right now`
-              : "Connect a key first"
+              ? `${t("Ask")} ${row.displayName} ${t("what it serves right now")}`
+              : t("Connect a key first")
           }
           onClick={() => onRefreshModels(row.id, row.displayName)}
         >
-          {refreshing ? "checking…" : "re-check"}
+          {refreshing ? t("checking…") : t("re-check")}
         </button>
         <span className="spacer" />
         <span className="small faint">
           {row.connected
-            ? `${row.credentialCount} key${row.credentialCount === 1 ? "" : "s"}`
-            : "none"}
+            ? `${row.credentialCount} ${row.credentialCount === 1 ? t("key") : t("keys")}`
+            : t("none")}
         </span>
       </div>
 
@@ -346,23 +353,23 @@ function ProviderDossierCard({
         >
           <dl className="dossier">
             <div>
-              <dt>Type</dt>
-              <dd>{KIND_LABEL[dossier.kind]}</dd>
+              <dt>{t("Type")}</dt>
+              <dd>{t(KIND_LABEL[dossier.kind])}</dd>
             </div>
             <div>
-              <dt>Free tier</dt>
+              <dt>{t("Free tier")}</dt>
               {/* The dossier's own one-liner wins when it has one. */}
               <dd>{dossier.freeTierSummary ?? row.freeTier.summary}</dd>
             </div>
             <div>
-              <dt>Credential</dt>
+              <dt>{t("Credential")}</dt>
               <dd>
-                {credentialLabel} · {row.knownModels.length} curated model(s)
+                {credentialLabel} · {row.knownModels.length} {t("curated model(s)")}
               </dd>
             </div>
             {dossier.reviewedAt ? (
               <div>
-                <dt>Reviewed</dt>
+                <dt>{t("Reviewed")}</dt>
                 <dd>{dossier.reviewedAt}</dd>
               </div>
             ) : null}
@@ -398,7 +405,7 @@ function ProviderDossierCard({
                     </span>
                     <span className="spacer" />
                     {retired ? (
-                      <span className="badge bad">retired</span>
+                      <span className="badge bad">{t("retired")}</span>
                     ) : (
                       <>
                         {model.latencySeconds ? (
@@ -410,7 +417,7 @@ function ProviderDossierCard({
                             model.id,
                           )}&provider=${encodeURIComponent(row.id)}`}
                         >
-                          add to chain
+                          {t("add to chain")}
                         </a>
                       </>
                     )}
@@ -421,7 +428,7 @@ function ProviderDossierCard({
           ) : (
             <div className="model-list">
               {row.knownModels.length === 0 ? (
-                <div className="sub faint">No curated models.</div>
+                <div className="sub faint">{t("No curated models.")}</div>
               ) : (
                 row.knownModels.map((model) => {
                   const retired = staleSet.has(model);
@@ -430,7 +437,7 @@ function ProviderDossierCard({
                       <span className="model-list-id">{model}</span>
                       <span className="spacer" />
                       {retired ? (
-                        <span className="badge bad">retired</span>
+                        <span className="badge bad">{t("retired")}</span>
                       ) : (
                         <a
                           className="small"
@@ -438,7 +445,7 @@ function ProviderDossierCard({
                             model,
                           )}&provider=${encodeURIComponent(row.id)}`}
                         >
-                          add to chain
+                          {t("add to chain")}
                         </a>
                       )}
                     </div>
@@ -456,13 +463,13 @@ function ProviderDossierCard({
           {unlistedStale.length > 0 ? (
             <div className="model-list">
               <div className="small faint">
-                Retired · gone since {timeAgo(checkedAt ?? Date.now())}
+                {t("Retired · gone since")} {timeAgo(checkedAt ?? Date.now())}
               </div>
               {unlistedStale.map((model) => (
                 <div className="model-list-item retired" key={model}>
                   <span className="model-list-id">{model}</span>
                   <span className="spacer" />
-                  <span className="badge bad">retired</span>
+                  <span className="badge bad">{t("retired")}</span>
                 </div>
               ))}
             </div>
@@ -471,15 +478,15 @@ function ProviderDossierCard({
           <div className="modal-actions">
             {dossier.sourceUrl ? (
               <a className="small" href={dossier.sourceUrl} target="_blank" rel="noreferrer">
-                source
+                {t("source")}
               </a>
             ) : null}
             {row.signupUrl ? (
               <a className="small" href={row.signupUrl} target="_blank" rel="noreferrer">
-                get a free key
+                {t("get a free key")}
               </a>
             ) : null}
-            <button onClick={() => setOpen(false)}>Close</button>
+            <button onClick={() => setOpen(false)}>{t("Close")}</button>
           </div>
         </Modal>
       ) : null}

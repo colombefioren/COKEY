@@ -3,6 +3,7 @@ import { href, type Navigate } from "../router.js";
 import { CokeyLogo, CokeyMark } from "./Logo.js";
 import { IconChevron } from "./Icons.js";
 import { SIDEBAR_TEXT, type Lang } from "../i18n.js";
+import { useLang } from "../lang.js";
 
 /** Must match the sidebar-becomes-a-drawer breakpoint in responsive.css. */
 const MOBILE_QUERY = "(max-width: 860px)";
@@ -56,6 +57,7 @@ export function Sidebar({
   lang?: Lang;
 }) {
   const text = SIDEBAR_TEXT[lang];
+  const { t } = useLang();
   const navRef = useRef<HTMLElement>(null);
   const sidebarRef = useRef<HTMLElement>(null);
   const activeRef = useRef<HTMLAnchorElement | null>(null);
@@ -131,7 +133,7 @@ export function Sidebar({
         className="sidebar-brand"
         href={href("/dashboard")}
         onClick={() => navigate("/dashboard")}
-        aria-label="COKEY dashboard"
+        aria-label={t("COKEY dashboard")}
       >
         {collapsed ? (
           <CokeyMark height={30} className="brand-logo" />
@@ -140,7 +142,7 @@ export function Sidebar({
         )}
       </a>
 
-      <nav className="sidebar-nav" ref={navRef} aria-label="Sections">
+      <nav className="sidebar-nav" ref={navRef} aria-label={t("Sections")}>
         {glider ? (
           <div
             className="nav-glider"

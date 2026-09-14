@@ -14,6 +14,25 @@ import type { ProviderModelRecord } from "../db/provider-models.repo.js";
 /** How long a model that stopped being returned is remembered before forgetting. */
 export const RETAIN_MISSING_MS = 14 * 24 * 60 * 60 * 1000;
 
+/**
+ * Drop listing entries a gateway itself prices, on a catalog entry whose
+ * entire premise is that everything it serves is free.
+ *
+ * A provider that also happens to have a free tier alongside paid ones is
+ * unaffected — this only applies when `freeModelsOnly` is set, which the
+ * catalog reserves for aggregators that advertise nothing but free models.
+ * On one of those, a listing entry the provider prices is not something a
+ * free key can actually call; tracking it as newly "added" would misreport
+ * what the user gained, and leaving it in the inventory forever as
+ * uncurated noise would misreport what is actually usable.
+ */
+export function eligibleModels<T extends { free?: boolean }>(
+  listing: readonly T[],
+  freeModelsOnly: boolean | undefined,
+): T[] {
+  return freeModelsOnly ? listing.filter((model) => model.free !== false) : [...listing];
+}
+
 /** What changed between the inventory we had and the one the provider just gave. */
 export interface ModelChangeSet {
   /** Models present after this check that were not known before. */

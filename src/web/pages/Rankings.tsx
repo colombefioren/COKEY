@@ -4,6 +4,7 @@ import type { RankingsResponse, RateLimitEntry } from "../types.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 import { useRoute } from "../router.js";
+import { useLang } from "../lang.js";
 
 type Board = "skill" | "rate" | "combined" | "redundancy";
 
@@ -24,6 +25,7 @@ const BOARDS: Array<{ id: Board; label: string; hint: string }> = [
 export function Rankings({ refreshKey }: { refreshKey: number }) {
   const { route, navigate } = useRoute();
   const toast = useToast();
+  const { t } = useLang();
   const [data, setData] = useState<RankingsResponse | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -46,9 +48,9 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
       const result = await api.refreshRankings();
       if (result.changed && result.rankings) {
         setData(result.rankings);
-        toast.ok("Rankings updated from the published bundle.");
+        toast.ok(t("Rankings updated from the published bundle."));
       } else {
-        toast.info(result.message ?? "No update available.");
+        toast.info(result.message ?? t("No update available."));
       }
     } catch (error) {
       toast.err(error instanceof Error ? error.message : String(error));
@@ -57,12 +59,12 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
     }
   }
 
-  if (!data) return <Empty>Loading rankings…</Empty>;
+  if (!data) return <Empty>{t("Loading rankings…")}</Empty>;
 
   return (
     <>
       <Panel
-        title="How to read this"
+        title={t("How to read this")}
         actions={
           <div className="tabs tabs-inline">
             {BOARDS.map((item) => (
@@ -71,10 +73,10 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
                 type="button"
                 className="tab"
                 aria-selected={item.id === board}
-                title={item.hint}
+                title={t(item.hint)}
                 onClick={() => navigate(`/models/rankings/${item.id}`)}
               >
-                {item.label}
+                {t(item.label)}
               </button>
             ))}
           </div>
@@ -90,8 +92,8 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
         <div className="row between center" style={{ marginTop: 8, flexWrap: "wrap", gap: 8 }}>
           <p className="small faint" style={{ margin: 0 }}>
             {data.source === "remote"
-              ? `Published boards${data.fetchedAt ? `, fetched ${new Date(data.fetchedAt).toLocaleString()}` : ""}.`
-              : "Compiled-in boards: this build's own snapshot."}
+              ? `${t("Published boards")}${data.fetchedAt ? `, ${t("fetched")} ${new Date(data.fetchedAt).toLocaleString()}` : ""}.`
+              : t("Compiled-in boards: this build's own snapshot.")}
           </p>
           <button
             type="button"
@@ -99,7 +101,7 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
             disabled={checking}
             onClick={() => void checkForUpdates()}
           >
-            {checking ? "checking…" : "check for updates"}
+            {checking ? t("checking…") : t("check for updates")}
           </button>
         </div>
       </Panel>
@@ -109,7 +111,7 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
       {board === "combined" ? <CombinedBoard data={data} /> : null}
       {board === "redundancy" ? <RedundancyBoard data={data} /> : null}
 
-      <Panel title="Sources">
+      <Panel title={t("Sources")}>
         <ul className="source-list">
           {data.sources.map((source) => (
             <li key={source.url}>
@@ -120,8 +122,9 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
           ))}
         </ul>
         <p className="small faint" style={{ marginBottom: 0 }}>
-          Benchmark scores move every month and vendor-run numbers flatter the vendor. The play
-          button in the catalog is the only score that reflects your own key.
+          {t(
+            "Benchmark scores move every month and vendor-run numbers flatter the vendor. The play button in the catalog is the only score that reflects your own key.",
+          )}
         </p>
       </Panel>
     </>
@@ -129,23 +132,24 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
 }
 
 function SkillBoard({ data }: { data: RankingsResponse }) {
+  const { t } = useLang();
   return (
     <>
       {data.tiers.map((tier) => {
         const rows = data.skill.filter((entry) => entry.tierName === tier.name);
         return (
-          <Panel key={tier.name} title={`Tier ${tier.name}: ${tier.label}`}>
+          <Panel key={tier.name} title={`${t("Tier")} ${tier.name}: ${tier.label}`}>
             <p className="small muted" style={{ marginTop: 0 }}>
               {tier.blurb}
             </p>
             <table>
               <thead>
                 <tr>
-                  <th style={{ width: 44 }}>Tier</th>
-                  <th>Model</th>
+                  <th style={{ width: 44 }}>{t("Tier")}</th>
+                  <th>{t("Model")}</th>
                   <th style={{ width: 120 }}>SWE-bench</th>
-                  <th>Provider</th>
-                  <th>Why</th>
+                  <th>{t("Provider")}</th>
+                  <th>{t("Why")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,7 +163,7 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                       <td className="mono small">
                         <a
                           href={`#/models?q=${encodeURIComponent(entry.model)}`}
-                          title={`Find ${entry.model} in the catalog`}
+                          title={`${t("Find")} ${entry.model} ${t("in the catalog")}`}
                         >
                           {entry.model}
                         </a>
@@ -184,12 +188,12 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                           <a
                             className="link-quiet"
                             href={`#/providers?q=${encodeURIComponent(entry.providerId)}`}
-                            title={`Open ${entry.providerId} in the provider catalog`}
+                            title={`${t("Open")} ${entry.providerId} ${t("in the provider catalog")}`}
                           >
                             {entry.providerId}
                           </a>
                         ) : (
-                          "vendor direct"
+                          t("vendor direct")
                         )}
                       </td>
                       <td className="small">{entry.reason}</td>
@@ -205,21 +209,23 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
 }
 
 function RateBoard({ data }: { data: RankingsResponse }) {
+  const { t } = useLang();
   return (
     <>
-      <Panel title="Rate limits">
+      <Panel title={t("Rate limits")}>
         <p className="small muted" style={{ marginTop: 0 }}>
-          Ordered by how much a provider gives away, not how good it is — a provider can top this
-          board and still be useless for coding.
+          {t(
+            "Ordered by how much a provider gives away, not how good it is — a provider can top this board and still be useless for coding.",
+          )}
         </p>
         <table>
           <thead>
             <tr>
-              <th style={{ width: 56 }}>Tier</th>
-              <th>Provider</th>
-              <th>Quota</th>
-              <th style={{ width: 110 }}>Source</th>
-              <th style={{ width: 100 }}>Reliability</th>
+              <th style={{ width: 56 }}>{t("Tier")}</th>
+              <th>{t("Provider")}</th>
+              <th>{t("Quota")}</th>
+              <th style={{ width: 110 }}>{t("Source")}</th>
+              <th style={{ width: 100 }}>{t("Reliability")}</th>
             </tr>
           </thead>
           <tbody>
@@ -233,9 +239,9 @@ function RateBoard({ data }: { data: RankingsResponse }) {
                   {entry.note ? <div className="small faint">{entry.note}</div> : null}
                 </td>
                 <td className="small">{entry.quota}</td>
-                <td className="small muted">{provenanceLabel(entry)}</td>
+                <td className="small muted">{t(provenanceLabel(entry))}</td>
                 <td>
-                  <span className={`badge ${reliabilityTone(entry)}`}>{entry.reliability}</span>
+                  <span className={`badge ${reliabilityTone(entry)}`}>{t(entry.reliability)}</span>
                 </td>
               </tr>
             ))}
@@ -243,12 +249,12 @@ function RateBoard({ data }: { data: RankingsResponse }) {
         </table>
       </Panel>
 
-      <Panel title="Dropped on purpose">
+      <Panel title={t("Dropped on purpose")}>
         <table>
           <thead>
             <tr>
-              <th style={{ width: 240 }}>Provider</th>
-              <th>Why</th>
+              <th style={{ width: 240 }}>{t("Provider")}</th>
+              <th>{t("Why")}</th>
             </tr>
           </thead>
           <tbody>
@@ -266,15 +272,16 @@ function RateBoard({ data }: { data: RankingsResponse }) {
 }
 
 function CombinedBoard({ data }: { data: RankingsResponse }) {
+  const { t } = useLang();
   return (
-    <Panel title="What to actually use, in order">
+    <Panel title={t("What to actually use, in order")}>
       <table>
         <thead>
           <tr>
             <th style={{ width: 44 }}>#</th>
-            <th style={{ width: 140 }}>Provider</th>
-            <th>Model</th>
-            <th>Why</th>
+            <th style={{ width: 140 }}>{t("Provider")}</th>
+            <th>{t("Model")}</th>
+            <th>{t("Why")}</th>
           </tr>
         </thead>
         <tbody>
@@ -292,28 +299,30 @@ function CombinedBoard({ data }: { data: RankingsResponse }) {
         {data.bottomLine}
       </div>
       <p className="small faint" style={{ marginBottom: 0 }}>
-        Six or seven providers is the practical ceiling here. Beyond that you are wiring the same
-        models up twice and paying for it in cooldowns.
+        {t(
+          "Six or seven providers is the practical ceiling here. Beyond that you are wiring the same models up twice and paying for it in cooldowns.",
+        )}
       </p>
     </Panel>
   );
 }
 
 function RedundancyBoard({ data }: { data: RankingsResponse }) {
+  const { t } = useLang();
   return (
-    <Panel title="Duplicated model families">
+    <Panel title={t("Duplicated model families")}>
       <p className="small muted" style={{ marginTop: 0 }}>
-        Dozens of these providers resell the same underlying free pool. OpenRouter's free catalogue
-        shows up almost verbatim on several others, so the redundancy is structural rather than
-        accidental. Keep one of each row, and treat the rest as a fallback only.
+        {t(
+          "Dozens of these providers resell the same underlying free pool. OpenRouter's free catalogue shows up almost verbatim on several others, so the redundancy is structural rather than accidental. Keep one of each row, and treat the rest as a fallback only.",
+        )}
       </p>
       <table>
         <thead>
           <tr>
-            <th>Model family</th>
-            <th>Also available on</th>
-            <th style={{ width: 140 }}>Keep</th>
-            <th style={{ width: 140 }}>Fallback</th>
+            <th>{t("Model family")}</th>
+            <th>{t("Also available on")}</th>
+            <th style={{ width: 140 }}>{t("Keep")}</th>
+            <th style={{ width: 140 }}>{t("Fallback")}</th>
           </tr>
         </thead>
         <tbody>

@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ProviderStatus } from "../types.js";
 import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
+import { useLang } from "../lang.js";
 
 /**
  * Edit one chain node.
@@ -25,6 +26,7 @@ export function EditEntryModal({
   onChanged: () => void;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [model, setModel] = useState(entry.model);
   const [label, setLabel] = useState(entry.label ?? "");
@@ -56,7 +58,7 @@ export function EditEntryModal({
   async function save() {
     const nextModel = model.trim();
     if (!nextModel) {
-      setError("Pick or type a model");
+      setError(t("Pick or type a model"));
       return;
     }
 
@@ -74,7 +76,7 @@ export function EditEntryModal({
       }
 
       await api.updateEntry(entry.id, updates);
-      toast.ok("Chain node updated");
+      toast.ok(t("Chain node updated"));
       onChanged();
       onClose();
     } catch (err) {
@@ -86,12 +88,12 @@ export function EditEntryModal({
 
   return (
     <Modal
-      title="Edit chain node"
-      subtitle={`${entry.providerId} cannot be changed here: this node's keys belong to it.`}
+      title={t("Edit chain node")}
+      subtitle={`${entry.providerId} ${t("cannot be changed here: this node's keys belong to it.")}`}
       onClose={onClose}
     >
       <div className="field">
-        <label htmlFor="entry-edit-label">Display name (optional)</label>
+        <label htmlFor="entry-edit-label">{t("Display name (optional)")}</label>
         <input
           id="entry-edit-label"
           value={label}
@@ -100,13 +102,13 @@ export function EditEntryModal({
           autoFocus
         />
         <span className="small faint">
-          Shown in the dashboard and in <code>/v1/models</code>. Leave it empty to show the raw
-          model id.
+          {t("Shown in the dashboard and in")} <code>/v1/models</code>.{" "}
+          {t("Leave it empty to show the raw model id.")}
         </span>
       </div>
 
       <div className="field">
-        <label htmlFor="entry-edit-model">Model</label>
+        <label htmlFor="entry-edit-model">{t("Model")}</label>
         <input
           id="entry-edit-model"
           list="entry-edit-model-options"
@@ -119,20 +121,20 @@ export function EditEntryModal({
           ))}
         </datalist>
         <span className="small faint">
-          {knownModels.length} curated model(s) for {entry.providerId}. Any id the provider accepts
-          works.
+          {knownModels.length} {t("curated model(s) for")} {entry.providerId}.{" "}
+          {t("Any id the provider accepts works.")}
         </span>
       </div>
 
       <div className="field">
-        <label htmlFor="entry-edit-strategy">Routing strategy</label>
+        <label htmlFor="entry-edit-strategy">{t("Routing strategy")}</label>
         <select
           id="entry-edit-strategy"
           value={strategy}
           onChange={(event) => setStrategy(event.target.value as "sequential" | "round-robin")}
         >
-          <option value="sequential">Sequential: use the keys in order</option>
-          <option value="round-robin">Round robin: rotate the keys</option>
+          <option value="sequential">{t("Sequential: use the keys in order")}</option>
+          <option value="round-robin">{t("Round robin: rotate the keys")}</option>
         </select>
       </div>
 
@@ -140,10 +142,10 @@ export function EditEntryModal({
 
       <div className="modal-actions">
         <button className="secondary" onClick={onClose} disabled={busy}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button onClick={() => void save()} disabled={busy || !hasChanges || !model.trim()}>
-          {busy ? "Saving…" : "Save"}
+          {busy ? t("Saving…") : t("Save")}
         </button>
       </div>
     </Modal>

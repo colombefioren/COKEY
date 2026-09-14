@@ -8,9 +8,9 @@ import type {
 } from "../types.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { Pagination } from "../components/Pagination.js";
-import { IconSparkle } from "../components/Icons.js";
 import { useToast } from "../components/Toast.js";
 import { queryParam, useRoute } from "../router.js";
+import { useLang } from "../lang.js";
 import { Rankings } from "./Rankings.js";
 
 type ProbeState = { status: "running" | "ok" | "fail"; message: string; latencyMs?: number };
@@ -39,6 +39,7 @@ const MODELS_PER_PROVIDER = 12;
  */
 export function Models({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const { route, navigate } = useRoute();
+  const { t } = useLang();
   const tab =
     route.section === "rankings" ? "rankings" : route.section === "mine" ? "mine" : "catalog";
 
@@ -51,7 +52,7 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
           aria-selected={tab === "catalog"}
           onClick={() => navigate("/models")}
         >
-          Catalog
+          {t("Catalog")}
         </button>
         <button
           type="button"
@@ -59,7 +60,7 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
           aria-selected={tab === "mine"}
           onClick={() => navigate("/models/mine")}
         >
-          My models
+          {t("My models")}
         </button>
         <button
           type="button"
@@ -67,7 +68,7 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
           aria-selected={tab === "rankings"}
           onClick={() => navigate("/models/rankings")}
         >
-          Rankings
+          {t("Rankings")}
         </button>
       </div>
 
@@ -101,6 +102,7 @@ const MY_MODELS_PER_PAGE = 25;
 
 function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const toast = useToast();
+  const { t } = useLang();
   const [rankings, setRankings] = useState<MyModelRanking[] | null>(null);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
@@ -143,22 +145,22 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
     setBusy(key);
     setProbes((current) => ({
       ...current,
-      [key]: { status: "running", message: "sending hello" },
+      [key]: { status: "running", message: t("sending hello") },
     }));
     try {
       const result = await api.probeModel({ providerId: row.providerId, model: row.model });
       setProbes((current) => ({
         ...current,
         [key]: result.ok
-          ? { status: "ok", message: "working", latencyMs: result.latencyMs }
+          ? { status: "ok", message: t("working"), latencyMs: result.latencyMs }
           : {
               status: "fail",
-              message: result.classification ?? "failed",
+              message: result.classification ?? t("failed"),
               latencyMs: result.latencyMs,
             },
       }));
       if (result.ok) toast.ok(`${row.model} · ${result.latencyMs}ms`);
-      else toast.err(`${row.model} · ${result.classification ?? "failed"}`);
+      else toast.err(`${row.model} · ${result.classification ?? t("failed")}`);
       await load();
       onChanged();
     } catch (error) {
@@ -177,17 +179,17 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
     try {
       const report = await api.refreshProviderModels(row.providerId);
       if (!report.ok) {
-        toast.err(report.message ?? `${row.displayName} could not be checked`);
+        toast.err(report.message ?? `${row.displayName} ${t("could not be checked")}`);
       } else {
         const parts = [
-          report.added.length ? `${report.added.length} new` : "",
-          report.restored.length ? `${report.restored.length} restored` : "",
-          report.removed.length ? `${report.removed.length} retired` : "",
+          report.added.length ? `${report.added.length} ${t("new")}` : "",
+          report.restored.length ? `${report.restored.length} ${t("restored")}` : "",
+          report.removed.length ? `${report.removed.length} ${t("retired")}` : "",
         ].filter(Boolean);
         toast.ok(
           parts.length
             ? `${row.displayName}: ${parts.join(", ")}`
-            : `${row.displayName} unchanged · ${report.discovered} models · ${report.latencyMs}ms`,
+            : `${row.displayName} ${t("unchanged")} · ${report.discovered} ${t("models")} · ${report.latencyMs}ms`,
         );
       }
       await load();
@@ -205,9 +207,9 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
     try {
       const result = await api.refreshAllProviderModels();
       toast.ok(
-        `checked ${result.refreshed}${result.failed ? ` · ${result.failed} unreachable` : ""}` +
-          (result.added ? ` · ${result.added} new` : "") +
-          (result.removed ? ` · ${result.removed} retired` : ""),
+        `${t("checked")} ${result.refreshed}${result.failed ? ` · ${result.failed} ${t("unreachable")}` : ""}` +
+          (result.added ? ` · ${result.added} ${t("new")}` : "") +
+          (result.removed ? ` · ${result.removed} ${t("retired")}` : ""),
       );
       await load();
       onChanged();
@@ -223,13 +225,12 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
   return (
     <Panel
       hue="mint"
-      icon={<IconSparkle size={14} />}
-      title={`My models (${rankings?.length ?? 0})`}
+      title={`${t("My models")} (${rankings?.length ?? 0})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
           <input
             className="search"
-            placeholder="Search model or provider"
+            placeholder={t("Search model or provider")}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -238,26 +239,26 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
           />
           <button
             type="button"
-            className="secondary small"
+            className="recheck-all-btn small"
             disabled={busy !== null}
-            title="Ask every connected provider what it serves right now"
+            title={t("Ask every connected provider what it serves right now")}
             onClick={() => void researchAll()}
           >
-            {busy === "all" ? "checking…" : "re-check all"}
+            {busy === "all" ? t("checking…") : t("re-check all")}
           </button>
         </div>
       }
     >
       <p className="small muted" style={{ marginTop: 0 }}>
-        {tested} of {rankings?.length ?? 0} tested. Ranked by your own results.
+        {tested} {t("of")} {rankings?.length ?? 0} {t("tested. Ranked by your own results.")}
       </p>
 
       {rankings && rankings.length === 0 ? (
-        <Empty>Connect a provider to see your models here.</Empty>
+        <Empty>{t("Connect a provider to see your models here.")}</Empty>
       ) : null}
 
       {rows.length === 0 && rankings && rankings.length > 0 ? (
-        <Empty>No model matches that search.</Empty>
+        <Empty>{t("No model matches that search.")}</Empty>
       ) : null}
 
       {visible.length > 0 ? (
@@ -266,11 +267,11 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
             <thead>
               <tr>
                 <th>#</th>
-                <th>Model</th>
-                <th>Provider</th>
-                <th>Success</th>
-                <th>Latency</th>
-                <th>Checked</th>
+                <th>{t("Model")}</th>
+                <th>{t("Provider")}</th>
+                <th>{t("Success")}</th>
+                <th>{t("Latency")}</th>
+                <th>{t("Checked")}</th>
                 <th />
               </tr>
             </thead>
@@ -291,14 +292,14 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
                           {Math.round((row.successRate ?? 0) * 100)}%
                         </span>
                       ) : (
-                        <span className="badge neutral">untested</span>
+                        <span className="badge neutral">{t("untested")}</span>
                       )}
                     </td>
                     <td className="small">
                       {row.avgLatencyMs !== undefined ? `${row.avgLatencyMs}ms` : "—"}
                     </td>
                     <td className="small faint">
-                      {row.lastCheckedAt ? timeAgo(row.lastCheckedAt) : "never"}
+                      {row.lastCheckedAt ? timeAgo(row.lastCheckedAt) : t("never")}
                     </td>
                     <td>
                       <div className="row" style={{ gap: 4 }}>
@@ -311,29 +312,29 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
                           title={
                             probeState && probeState.status !== "running"
                               ? probeState.message
-                              : `Test ${row.model} with a working ${row.displayName} key`
+                              : `${t("Test")} ${row.model} ${t("with a working")} ${row.displayName} ${t("key")}`
                           }
                           onClick={() => void test(row)}
                         >
-                          {probeState?.status === "running" ? "…" : "test"}
+                          {probeState?.status === "running" ? "…" : t("test")}
                         </button>
                         <button
                           type="button"
                           className="secondary small"
                           disabled={rowBusy}
-                          title={`Re-read what ${row.displayName} serves right now`}
+                          title={`${t("Re-read what")} ${row.displayName} ${t("serves right now")}`}
                           onClick={() => void research(row)}
                         >
-                          re-check
+                          {t("re-check")}
                         </button>
                         <a
                           className="small"
                           href={`#/chains?model=${encodeURIComponent(row.model)}&provider=${encodeURIComponent(
                             row.providerId,
                           )}`}
-                          title="Add this model to a chain"
+                          title={t("Add this model to a chain")}
                         >
-                          add to chain
+                          {t("add to chain")}
                         </a>
                       </div>
                     </td>
@@ -361,7 +362,7 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
       />
 
       <p className="small faint" style={{ marginBottom: 0 }}>
-        Ranked by success rate, then speed. A test is one real request through a working key.
+        {t("Ranked by success rate, then speed. A test is one real request through a working key.")}
       </p>
     </Panel>
   );
@@ -377,6 +378,7 @@ function Catalog({
   initialQuery: string;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [data, setData] = useState<ModelsResponse | null>(null);
   const [query, setQuery] = useState(initialQuery);
   const [availableOnly, setAvailableOnly] = useState(false);
@@ -441,17 +443,17 @@ function Catalog({
     try {
       const report = await api.refreshProviderModels(provider.providerId);
       if (!report.ok) {
-        toast.err(report.message ?? `${provider.displayName} could not be checked`);
+        toast.err(report.message ?? `${provider.displayName} ${t("could not be checked")}`);
       } else {
         const parts = [
-          report.added.length ? `${report.added.length} new` : "",
-          report.restored.length ? `${report.restored.length} restored` : "",
-          report.removed.length ? `${report.removed.length} retired` : "",
+          report.added.length ? `${report.added.length} ${t("new")}` : "",
+          report.restored.length ? `${report.restored.length} ${t("restored")}` : "",
+          report.removed.length ? `${report.removed.length} ${t("retired")}` : "",
         ].filter(Boolean);
         toast.ok(
           parts.length
-            ? `${provider.displayName}: ${parts.join(", ")} model(s)`
-            : `${provider.displayName} is unchanged (${report.discovered} models) · ${report.latencyMs}ms`,
+            ? `${provider.displayName}: ${parts.join(", ")} ${t("model(s)")}`
+            : `${provider.displayName} ${t("is unchanged")} (${report.discovered} ${t("models")}) · ${report.latencyMs}ms`,
         );
       }
       onChanged();
@@ -471,7 +473,7 @@ function Catalog({
     setBusyKey(key);
     setProbes((current) => ({
       ...current,
-      [key]: { status: "running", message: "sending hello" },
+      [key]: { status: "running", message: t("sending hello") },
     }));
 
     try {
@@ -481,23 +483,23 @@ function Catalog({
           ...current,
           [key]: {
             status: "ok",
-            message: result.reply ? `replied: ${result.reply}` : "answered 200",
+            message: result.reply ? `${t("replied:")} ${result.reply}` : t("answered 200"),
             latencyMs: result.latencyMs,
           },
         }));
-        toast.ok(`${model.id} is working (${result.latencyMs}ms)`);
+        toast.ok(`${model.id} ${t("is working")} (${result.latencyMs}ms)`);
       } else {
         setProbes((current) => ({
           ...current,
           [key]: {
             status: "fail",
-            message: `${result.status ?? "no response"} ${result.classification}${
+            message: `${result.status ?? t("no response")} ${result.classification}${
               result.message ? `: ${result.message}` : ""
             }`,
             latencyMs: result.latencyMs,
           },
         }));
-        toast.err(`${model.id} did not answer: ${result.classification}`);
+        toast.err(`${model.id} ${t("did not answer:")} ${result.classification}`);
       }
       onChanged();
     } catch (error) {
@@ -512,8 +514,7 @@ function Catalog({
   return (
     <Panel
       hue="pink"
-      icon={<IconSparkle size={14} />}
-      title={`Catalog (${data?.total ?? 0})`}
+      title={`${t("Catalog")} (${data?.total ?? 0})`}
       actions={
         <div className="row" style={{ gap: 8 }}>
           <label className="small muted row" style={{ gap: 6 }}>
@@ -526,11 +527,11 @@ function Catalog({
                 setPage(1);
               }}
             />
-            usable only
+            {t("usable only")}
           </label>
           <input
             className="search"
-            placeholder="Search model, use or provider"
+            placeholder={t("Search model, use or provider")}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -542,8 +543,8 @@ function Catalog({
       }
     >
       <p className="small muted" style={{ marginTop: 0 }}>
-        {availableProviders}/{data?.providers.length ?? 0} providers usable. <strong>▶</strong>{" "}
-        sends one real hello and turns green only on a 200.
+        {availableProviders}/{data?.providers.length ?? 0} {t("providers usable.")}{" "}
+        <strong>▶</strong> {t("sends one real hello and turns green only on a 200.")}
       </p>
 
       {/*
@@ -552,12 +553,13 @@ function Catalog({
        */}
       {data && data.stale > 0 ? (
         <div className="hint-box" style={{ marginBottom: 14 }}>
-          {data.stale} model(s) were gone on the last check, so they are hidden. Use{" "}
-          <strong>re-check</strong> to look again; the bell lists the chains that depend on one.
+          {data.stale} {t("model(s) were gone on the last check, so they are hidden. Use")}{" "}
+          <strong>{t("re-check")}</strong>{" "}
+          {t("to look again; the bell lists the chains that depend on one.")}
         </div>
       ) : null}
 
-      {visible.length === 0 ? <Empty>No models match that search.</Empty> : null}
+      {visible.length === 0 ? <Empty>{t("No models match that search.")}</Empty> : null}
 
       <div className="model-providers">
         {visible.map((provider) => {
@@ -584,40 +586,40 @@ function Catalog({
                   className="badge neutral"
                   title={
                     provider.inventoryCheckedAt
-                      ? `Last checked ${timeAgo(provider.inventoryCheckedAt)}`
-                      : "Never checked — showing the curated catalog only"
+                      ? `${t("Last checked")} ${timeAgo(provider.inventoryCheckedAt)}`
+                      : t("Never checked — showing the curated catalog only")
                   }
                 >
                   {provider.inventoryCheckedAt
-                    ? `${provider.counts.live}/${provider.counts.curated} live`
-                    : "not checked"}
+                    ? `${provider.counts.live}/${provider.counts.curated} ${t("live")}`
+                    : t("not checked")}
                 </span>
                 {provider.counts.discovered > 0 ? (
                   <span
                     className="badge"
-                    title="Models this provider returns that the curated catalog does not list"
+                    title={t("Models this provider returns that the curated catalog does not list")}
                   >
-                    +{provider.counts.discovered} new
+                    +{provider.counts.discovered} {t("new")}
                   </span>
                 ) : null}
                 {provider.staleModels.length > 0 ? (
                   <span
                     className="badge bad"
-                    title={`No longer returned: ${provider.staleModels.slice(0, 6).join(", ")}`}
+                    title={`${t("No longer returned:")} ${provider.staleModels.slice(0, 6).join(", ")}`}
                   >
-                    {provider.staleModels.length} retired
+                    {provider.staleModels.length} {t("retired")}
                   </span>
                 ) : null}
 
                 {provider.available ? (
                   <span className="badge">
-                    {provider.healthyCount} key{provider.healthyCount === 1 ? "" : "s"}
+                    {provider.healthyCount} {provider.healthyCount === 1 ? t("key") : t("keys")}
                   </span>
                 ) : provider.credentialCount > 0 ? (
-                  <span className="badge warn">keys unhealthy</span>
+                  <span className="badge warn">{t("keys unhealthy")}</span>
                 ) : (
                   <a className="small" href={provider.signupUrl} target="_blank" rel="noreferrer">
-                    get a free key
+                    {t("get a free key")}
                   </a>
                 )}
 
@@ -627,12 +629,12 @@ function Catalog({
                   disabled={provider.credentialCount === 0 || refreshing !== null}
                   title={
                     provider.credentialCount === 0
-                      ? `Connect a ${provider.displayName} key to check its model list`
-                      : `Ask ${provider.displayName} what it serves right now`
+                      ? `${t("Connect a")} ${provider.displayName} ${t("key to check its model list")}`
+                      : `${t("Ask")} ${provider.displayName} ${t("what it serves right now")}`
                   }
                   onClick={() => void refreshModels(provider)}
                 >
-                  {refreshing === provider.providerId ? "checking…" : "re-check"}
+                  {refreshing === provider.providerId ? t("checking…") : t("re-check")}
                 </button>
               </header>
 
@@ -661,8 +663,8 @@ function Catalog({
                           disabled={!selectable || busyKey === key}
                           title={
                             selectable
-                              ? `Send a hello to ${model.id} with a working ${provider.displayName} key`
-                              : `Connect a working ${provider.displayName} key first`
+                              ? `${t("Send a hello to")} ${model.id} ${t("with a working")} ${provider.displayName} ${t("key")}`
+                              : `${t("Connect a working")} ${provider.displayName} ${t("key first")}`
                           }
                           onClick={() => void probe(provider, model)}
                         >
@@ -679,9 +681,9 @@ function Catalog({
                           href={`#/chains?model=${encodeURIComponent(model.id)}&provider=${encodeURIComponent(
                             provider.providerId,
                           )}`}
-                          title="Add this model to a chain"
+                          title={t("Add this model to a chain")}
                         >
-                          add to chain
+                          {t("add to chain")}
                         </a>
                       </span>
 
@@ -690,7 +692,7 @@ function Catalog({
                           className={`probe-note small ${probeState.status === "ok" ? "ok" : "err"}`}
                           title={probeState.message}
                         >
-                          {probeState.status === "ok" ? "working" : "failed"}
+                          {probeState.status === "ok" ? t("working") : t("failed")}
                           {probeState.latencyMs !== undefined
                             ? ` \u00B7 ${probeState.latencyMs}ms`
                             : ""}
@@ -704,7 +706,8 @@ function Catalog({
               {modelPagesTotal > 1 ? (
                 <div className="model-pager">
                   <span className="pager-count">
-                    {provider.models.length} models · page {modelPageCurrent} of {modelPagesTotal}
+                    {provider.models.length} {t("models")} · {t("page")} {modelPageCurrent}{" "}
+                    {t("of")} {modelPagesTotal}
                   </span>
                   <span className="spacer" />
                   <div className="pager-nav">
@@ -712,7 +715,7 @@ function Catalog({
                       type="button"
                       className="ghost"
                       disabled={modelPageCurrent <= 1}
-                      title="Previous models"
+                      title={t("Previous models")}
                       onClick={() =>
                         setModelPages((current) => ({
                           ...current,
@@ -726,7 +729,7 @@ function Catalog({
                       type="button"
                       className="ghost"
                       disabled={modelPageCurrent >= modelPagesTotal}
-                      title="More models"
+                      title={t("More models")}
                       onClick={() =>
                         setModelPages((current) => ({
                           ...current,
@@ -760,7 +763,7 @@ function Catalog({
       />
 
       <p className="small faint" style={{ marginBottom: 0 }}>
-        API equivalent:{" "}
+        {t("API equivalent:")}{" "}
         <code>
           POST /api/models/probe {pageQuery({}, { providerId: "groq", model: "qwen/qwen3.8-27b" })}
         </code>

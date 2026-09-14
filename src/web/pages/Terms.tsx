@@ -2,6 +2,7 @@ import { ContactGrid } from "../components/Contact.js";
 import { Markdown } from "../components/Markdown.js";
 import { Panel } from "../components/Primitives.js";
 import { CREATOR } from "../links.js";
+import { useLang } from "../lang.js";
 
 /**
  * Terms of service.
@@ -132,48 +133,49 @@ The version you are running is shown in the gateway's status bar.`,
 ];
 
 export function Terms() {
+  const { t } = useLang();
   return (
     <>
-      <Panel hue="lav" title="Terms of service">
+      <Panel hue="lav" title={t("Terms of service")}>
         <p className="small muted" style={{ marginTop: 0 }}>
-          The short version: COKEY is a local tool, the keys are yours, the providers' rules come
-          first, and legal problems between you and a provider are yours to resolve.
+          {t(
+            "The short version: COKEY is a local tool, the keys are yours, the providers' rules come first, and legal problems between you and a provider are yours to resolve.",
+          )}
         </p>
 
         <div className="terms">
           {TERMS_SECTIONS.map((section) => (
             <section key={section.order}>
               <h3>
-                {section.order}. {section.title}
+                {section.order}. {t(section.title)}
               </h3>
-              <Markdown text={section.body} />
+              <Markdown text={t(section.body)} />
             </section>
           ))}
         </div>
       </Panel>
 
-      <Panel hue="butter" title="In one sentence">
+      <Panel hue="butter" title={t("In one sentence")}>
         <div className="hint-box">
-          You are responsible for the keys you add, you agree to respect each provider's own terms
-          and limits, and you accept that the author is not liable for how you use their software or
-          for any consequences that follow from it. If a dispute arises with a provider, it is
-          between you and that provider.
+          {t(
+            "You are responsible for the keys you add, you agree to respect each provider's own terms and limits, and you accept that the author is not liable for how you use their software or for any consequences that follow from it. If a dispute arises with a provider, it is between you and that provider.",
+          )}
         </div>
       </Panel>
 
-      <Panel hue="sky" title="Contact the creator">
+      <Panel hue="sky" title={t("Contact the creator")}>
         <p className="small muted" style={{ marginTop: 0 }}>
-          COKEY is built and maintained by one person, <strong>@{CREATOR.name}</strong>. Bug
-          reports, provider tips, a free tier that changed under you, and pull requests are all
-          welcome - the software is MIT licensed and the source is public. If a provider changed its
-          limits, the fastest fix is a pull request against the catalog rather than an issue.
+          {t("COKEY is built and maintained by one person,")} <strong>@{CREATOR.name}</strong>.{" "}
+          {t(
+            "Bug reports, provider tips, a free tier that changed under you, and pull requests are all welcome - the software is MIT licensed and the source is public. If a provider changed its limits, the fastest fix is a pull request against the catalog rather than an issue.",
+          )}
         </p>
         <ContactGrid />
       </Panel>
 
       <div className="closing">
         <strong>COKEY</strong>
-        <span>a tool for broke lads made by a broke princess</span>
+        <span>{t("a tool for broke lads made by a broke princess")}</span>
       </div>
     </>
   );

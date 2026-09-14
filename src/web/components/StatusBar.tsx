@@ -1,4 +1,5 @@
 import { CREATOR, REPO_URL } from "../links.js";
+import { useLang } from "../lang.js";
 
 /**
  * The status bar, docked at the bottom of the desktop.
@@ -31,39 +32,40 @@ export function StatusBar({
    */
   live?: boolean;
 }) {
+  const { t } = useLang();
   return (
     <footer className="statusbar">
       <span
         className={`status-cell live-flag${live ? " on" : ""}`}
         title={
           live
-            ? "Connected to the live event stream — this page updates as the gateway changes"
-            : "Event stream offline — falling back to a periodic refresh"
+            ? t("Connected to the live event stream — this page updates as the gateway changes")
+            : t("Event stream offline — falling back to a periodic refresh")
         }
       >
-        {live ? "live" : "offline"}
+        {live ? t("live") : t("offline")}
       </span>
-      <span className="status-cell" title="Connected providers">
-        <strong>{providers}</strong> providers
+      <span className="status-cell" title={t("Connected providers")}>
+        <strong>{providers}</strong> {t("providers")}
       </span>
-      <span className="status-cell" title="Stored credentials">
-        <strong>{keys}</strong> keys
+      <span className="status-cell" title={t("Stored credentials")}>
+        <strong>{keys}</strong> {t("keys")}
       </span>
-      <span className="status-cell" title="Configured chains">
-        <strong>{chains}</strong> chains
+      <span className="status-cell" title={t("Configured chains")}>
+        <strong>{chains}</strong> {t("chains")}
       </span>
 
-      <span className="status-cell" title={dataDir || "data directory"}>
-        data: {dataDir ? shortenPath(dataDir) : "default"}
+      <span className="status-cell" title={dataDir || t("data directory")}>
+        {t("data:")} {dataDir ? shortenPath(dataDir) : t("default")}
       </span>
-      <span className="status-cell" title="Gateway version">
+      <span className="status-cell" title={t("Gateway version")}>
         v{version || "0.1.0"}
       </span>
 
       <span className="spacer" />
 
       <span className="status-cell">
-        made by{" "}
+        {t("made by")}{" "}
         <a href={CREATOR.github} target="_blank" rel="noreferrer">
           @{CREATOR.name}
         </a>
@@ -72,7 +74,7 @@ export function StatusBar({
         LinkedIn
       </a>
       <a href={REPO_URL} target="_blank" rel="noreferrer">
-        source
+        {t("source")}
       </a>
     </footer>
   );

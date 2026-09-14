@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
+import { href } from "../router.js";
 import type { ChainEntryView, PublicCredential, ValidationResult } from "../types.js";
 import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
+import { useLang } from "../lang.js";
 
 /**
  * Add a key to a chain entry.
@@ -21,6 +23,7 @@ export function AddCredentialModal({
   onChanged: () => void;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [mode, setMode] = useState<"new" | "existing">("new");
   const [description, setDescription] = useState("");
   const [secret, setSecret] = useState("");
@@ -32,6 +35,7 @@ export function AddCredentialModal({
   const [result, setResult] = useState<ValidationResult | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [useProxy, setUseProxy] = useState(true);
+  const [agreed, setAgreed] = useState(false);
 
   const needsAccountId = entry.provider?.credentialFields.includes("accountId") ?? false;
 
@@ -54,7 +58,7 @@ export function AddCredentialModal({
     setError(undefined);
     try {
       await api.addEntryCredential(entry.id, { credentialId: selectedId });
-      toast.ok("Credential attached");
+      toast.ok(t("Credential attached"));
       onChanged();
       onClose();
     } catch (err) {
@@ -66,7 +70,7 @@ export function AddCredentialModal({
 
   async function testNew() {
     if (!secret.trim()) {
-      setError("Key is required");
+      setError(t("Key is required"));
       return;
     }
     setBusy(true);
@@ -93,7 +97,11 @@ export function AddCredentialModal({
 
   async function createAndVerify() {
     if (!description.trim() || !secret.trim()) {
-      setError("Name and key are both required");
+      setError(t("Name and key are both required"));
+      return;
+    }
+    if (!agreed) {
+      setError(t("Agree to the Terms before saving a key"));
       return;
     }
     setBusy(true);
@@ -116,8 +124,8 @@ export function AddCredentialModal({
       setResult(response.validation);
       toast.ok(
         response.validation.ok
-          ? `Verified and attached to ${entry.providerId}/${entry.model}`
-          : `Saved (${response.validation.classification}) and attached to ${entry.providerId}/${entry.model}`,
+          ? `${t("Verified and attached to")} ${entry.providerId}/${entry.model}`
+          : `${t("Saved")} (${response.validation.classification}) ${t("and attached to")} ${entry.providerId}/${entry.model}`,
       );
       onChanged();
       onClose();
@@ -133,11 +141,11 @@ export function AddCredentialModal({
 
   return (
     <Modal
-      title={`Add key · ${entry.providerId} / ${entry.model}`}
+      title={`${t("Add key")} · ${entry.providerId} / ${entry.model}`}
       subtitle={
         entry.provider?.verification.method === "chat"
-          ? "A one-token probe verifies the key against this exact model."
-          : "The key is verified against the provider's model list."
+          ? t("A one-token probe verifies the key against this exact model.")
+          : t("The key is verified against the provider's model list.")
       }
       onClose={onClose}
     >
@@ -147,10 +155,10 @@ export function AddCredentialModal({
             className={mode === "existing" ? "" : "secondary"}
             onClick={() => setMode("existing")}
           >
-            Use existing key
+            {t("Use existing key")}
           </button>
           <button className={mode === "new" ? "" : "secondary"} onClick={() => setMode("new")}>
-            Add a new key
+            {t("Add a new key")}
           </button>
         </div>
       ) : null}
@@ -158,7 +166,7 @@ export function AddCredentialModal({
       {mode === "existing" ? (
         <>
           <div className="field">
-            <label htmlFor="existing-credential">Credential</label>
+            <label htmlFor="existing-credential">{t("Credential")}</label>
             <select
               id="existing-credential"
               value={selectedId}
@@ -173,27 +181,39 @@ export function AddCredentialModal({
           </div>
           <div className="modal-actions">
             <button className="secondary" onClick={onClose} disabled={busy}>
-              Cancel
+              {t("Cancel")}
             </button>
             <button onClick={() => void attachExisting()} disabled={busy || !selectedId}>
-              Attach
+              {t("Attach")}
             </button>
           </div>
         </>
       ) : (
         <>
+          <label className="selected-item">
+            <input
+              type="checkbox"
+              checked={agreed}
+              onChange={(event) => setAgreed(event.target.checked)}
+            />
+            {t("I agree to the")}{" "}
+            <a href={href("/terms")} target="_blank" rel="noreferrer">
+              {t("Terms")}
+            </a>
+          </label>
+
           <div className="field">
-            <label htmlFor="credential-description">Name</label>
+            <label htmlFor="credential-description">{t("Name")}</label>
             <input
               id="credential-description"
               value={description}
-              placeholder="Main account"
+              placeholder={t("Main account")}
               onChange={(event) => setDescription(event.target.value)}
             />
           </div>
 
           <div className="field">
-            <label htmlFor="credential-secret">API key</label>
+            <label htmlFor="credential-secret">{t("API key")}</label>
             <input
               id="credential-secret"
               type="password"
@@ -206,7 +226,7 @@ export function AddCredentialModal({
 
           {needsAccountId ? (
             <div className="field">
-              <label htmlFor="credential-account">Account id</label>
+              <label htmlFor="credential-account">{t("Account id")}</label>
               <input
                 id="credential-account"
                 value={accountId}
@@ -216,18 +236,17 @@ export function AddCredentialModal({
           ) : null}
 
           <div className="field">
-            <label htmlFor="credential-proxy">Egress proxy (optional override)</label>
+            <label htmlFor="credential-proxy">{t("Egress proxy (optional override)")}</label>
             <input
               id="credential-proxy"
               value={proxyUrl}
-              placeholder="Leave empty to use the automatic pool"
+              placeholder={t("Leave empty to use the automatic pool")}
               onChange={(event) => setProxyUrl(event.target.value)}
             />
             <span className="small faint">
-              COKEY already assigns exit IPs on its own: add proxies to the egress pool once and
-              every key of a provider gets a different one, re-planned as keys appear. Leave this
-              empty to inherit that. Type a URL here only to pin this key to a specific exit, which
-              overrides the pool for it.
+              {t(
+                "COKEY already assigns exit IPs on its own: add proxies to the egress pool once and every key of a provider gets a different one, re-planned as keys appear. Leave this empty to inherit that. Type a URL here only to pin this key to a specific exit, which overrides the pool for it.",
+              )}
             </span>
           </div>
 
@@ -238,17 +257,23 @@ export function AddCredentialModal({
               checked={useProxy}
               onChange={(event) => setUseProxy(event.target.checked)}
             />
-            Route this test/save through the egress pool
+            {t("Route this test/save through the egress pool")}
             <span className="small faint" style={{ display: "block", marginLeft: 22 }}>
-              Protects your real IP, but free pool exits can hang, error or get blocked — no proxy
-              is faster. Off = direct.
+              {t(
+                "Protects your real IP, but free pool exits can hang, error or get blocked — no proxy is faster. Off = direct.",
+              )}
             </span>
           </label>
 
-          {busy ? <div className="verify pending">Verifying with {entry.providerId}…</div> : null}
+          {busy ? (
+            <div className="verify pending">
+              {t("Verifying with")} {entry.providerId}…
+            </div>
+          ) : null}
           {result?.ok ? (
             <div className="verify ok">
-              ✓ Verified · {entry.providerId} accepted the key · {result.latencyMs ?? 0}ms
+              ✓ {t("Verified")} · {entry.providerId} {t("accepted the key")} ·{" "}
+              {result.latencyMs ?? 0}ms
             </div>
           ) : result ? (
             <div className="verify err">
@@ -260,20 +285,20 @@ export function AddCredentialModal({
 
           <div className="modal-actions">
             <button className="secondary" onClick={onClose} disabled={busy}>
-              Cancel
+              {t("Cancel")}
             </button>
             <button
               className="secondary"
               onClick={() => void testNew()}
               disabled={busy || !secret.trim()}
             >
-              {busy ? "Testing…" : "Test"}
+              {busy ? t("Testing…") : t("Test")}
             </button>
             <button
               onClick={() => void createAndVerify()}
-              disabled={busy || !description.trim() || !secret.trim()}
+              disabled={busy || !description.trim() || !secret.trim() || !agreed}
             >
-              {busy ? "Saving…" : "Save key"}
+              {busy ? t("Saving…") : t("Save key")}
             </button>
           </div>
         </>

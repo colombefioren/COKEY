@@ -28,7 +28,8 @@ import {
   IconSparkle,
 } from "./components/Icons.js";
 import { useRoute } from "./router.js";
-import { getStoredLang, setStoredLang, NAV_HINTS, PAGE_TITLES, type Lang } from "./i18n.js";
+import { NAV_HINTS, PAGE_TITLES, type Lang } from "./i18n.js";
+import { LangProvider, useLang } from "./lang.js";
 import { useLive, useLiveInvalidation } from "./live.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -87,15 +88,7 @@ function Shell() {
     () => window.localStorage.getItem(NAV_COLLAPSED_KEY) === "1",
   );
   const [navOpen, setNavOpen] = useState(false);
-  const [lang, setLang] = useState<Lang>(() => getStoredLang());
-
-  const toggleLang = useCallback(() => {
-    setLang((current) => {
-      const next = current === "en" ? "fr" : "en";
-      setStoredLang(next);
-      return next;
-    });
-  }, []);
+  const { lang, toggleLang, t } = useLang();
 
   // The gateway always requires a session cookie, so the first authenticated
   // call decides whether to render the login form.
@@ -266,7 +259,7 @@ function Shell() {
           <button
             type="button"
             className="nav-toggle"
-            aria-label={navOpen ? "Close navigation" : "Open navigation"}
+            aria-label={navOpen ? t("Close navigation") : t("Open navigation")}
             onClick={() => setNavOpen((value) => !value)}
           >
             <IconMenu size={17} />
@@ -294,7 +287,7 @@ function Shell() {
             target="_blank"
             rel="noreferrer"
             className="topbar-link mono"
-            title="The public model list, as any OpenAI client would see it"
+            title={t("The public model list, as any OpenAI client would see it")}
           >
             /v1/models
           </a>
@@ -389,8 +382,10 @@ function renderPage(path: string, context: PageContext) {
 
 export function App() {
   return (
-    <ToastProvider>
-      <Shell />
-    </ToastProvider>
+    <LangProvider>
+      <ToastProvider>
+        <Shell />
+      </ToastProvider>
+    </LangProvider>
   );
 }

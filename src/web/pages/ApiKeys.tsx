@@ -3,9 +3,11 @@ import { api, ApiError, timeAgo } from "../api.js";
 import type { ApiKeyView } from "../types.js";
 import { ConfirmModal, Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { useLang } from "../lang.js";
 
 export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const toast = useToast();
+  const { t } = useLang();
   const [keys, setKeys] = useState<ApiKeyView[]>([]);
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
@@ -28,7 +30,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
   async function create() {
     const trimmed = name.trim();
     if (!trimmed) {
-      toast.err("Give the key a name, e.g. OpenCode");
+      toast.err(t("Give the key a name, e.g. OpenCode"));
       return;
     }
     setBusy(true);
@@ -50,7 +52,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
       await api.revokeApiKey(key.id);
       await load();
       onChanged();
-      toast.ok("API key revoked");
+      toast.ok(t("API key revoked"));
       setRevokingKey(null);
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -59,10 +61,10 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
 
   return (
     <>
-      <Panel title="New API key">
+      <Panel title={t("New API key")}>
         <div className="row wrap">
           <div style={{ flex: "1 1 320px" }}>
-            <label htmlFor="api-key-name">Name</label>
+            <label htmlFor="api-key-name">{t("Name")}</label>
             <input
               id="api-key-name"
               value={name}
@@ -74,18 +76,19 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
             />
           </div>
           <button onClick={() => void create()} disabled={busy} style={{ alignSelf: "flex-end" }}>
-            {busy ? "Creating…" : "Create key"}
+            {busy ? t("Creating…") : t("Create key")}
           </button>
         </div>
         <div className="small faint" style={{ marginTop: 8 }}>
-          Clients send this key as <code>Authorization: Bearer …</code> against <code>/v1</code>.
+          {t("Clients send this key as")} <code>Authorization: Bearer …</code> {t("against")}{" "}
+          <code>/v1</code>.
         </div>
       </Panel>
 
       {created ? (
-        <Panel title="Copy this key now">
+        <Panel title={t("Copy this key now")}>
           <div className="hint-box">
-            It is shown once and never stored in plaintext.
+            {t("It is shown once and never stored in plaintext.")}
             <div className="mono" style={{ marginTop: 10, wordBreak: "break-all" }}>
               {created}
             </div>
@@ -95,27 +98,27 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
               className="secondary"
               onClick={() => {
                 void navigator.clipboard.writeText(created);
-                toast.ok("Copied");
+                toast.ok(t("Copied"));
               }}
             >
-              Copy
+              {t("Copy")}
             </button>
-            <button onClick={() => setCreated(null)}>Done</button>
+            <button onClick={() => setCreated(null)}>{t("Done")}</button>
           </div>
         </Panel>
       ) : null}
 
-      <Panel title={`API keys (${keys.length})`}>
+      <Panel title={`${t("API keys")} (${keys.length})`}>
         {keys.length === 0 ? (
-          <Empty>No keys yet — create one above.</Empty>
+          <Empty>{t("No keys yet — create one above.")}</Empty>
         ) : (
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Prefix</th>
-                <th>Created</th>
-                <th>Last used</th>
+                <th>{t("Name")}</th>
+                <th>{t("Prefix")}</th>
+                <th>{t("Created")}</th>
+                <th>{t("Last used")}</th>
                 <th />
               </tr>
             </thead>
@@ -126,7 +129,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
                   <td className="mono small">{key.prefix}…</td>
                   <td className="small muted">{timeAgo(key.createdAt)}</td>
                   <td className="small muted">
-                    {key.lastUsedAt ? timeAgo(key.lastUsedAt) : "never"}
+                    {key.lastUsedAt ? timeAgo(key.lastUsedAt) : t("never")}
                   </td>
                   <td>
                     <button
@@ -134,7 +137,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
                       style={{ padding: "4px 9px" }}
                       onClick={() => setRevokingKey(key)}
                     >
-                      revoke
+                      {t("revoke")}
                     </button>
                   </td>
                 </tr>
@@ -146,11 +149,11 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
 
       {revokingKey ? (
         <ConfirmModal
-          title="Revoke API key"
-          message={`Revoke "${revokingKey.name}"? Clients using it stop working immediately.`}
+          title={t("Revoke API key")}
+          message={`${t("Revoke")} "${revokingKey.name}"? ${t("Clients using it stop working immediately.")}`}
           onConfirm={() => void revoke(revokingKey)}
           onClose={() => setRevokingKey(null)}
-          actionLabel="Revoke"
+          actionLabel={t("Revoke")}
         />
       ) : null}
     </>

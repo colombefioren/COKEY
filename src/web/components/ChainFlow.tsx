@@ -3,6 +3,7 @@ import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
 import { Empty } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
+import { useLang } from "../lang.js";
 
 /**
  * The live route, drawn as an actual node graph.
@@ -42,6 +43,7 @@ export function ChainFlow({
   refreshKey: number;
   onChanged?: () => void;
 }) {
+  const { t } = useLang();
   const [route, setRoute] = useState<LiveRouteSnapshot | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -77,7 +79,7 @@ export function ChainFlow({
     route?.providerId && route?.model ? `${route.providerId}/${route.model}` : null;
 
   if (chains.length === 0) {
-    return <Empty>No chains yet. Create one in Chains and the route draws itself here.</Empty>;
+    return <Empty>{t("No chains yet. Create one in Chains and the route draws itself here.")}</Empty>;
   }
 
   const steps = selected ? [...selected.entries].sort((a, b) => a.priority - b.priority) : [];
@@ -92,7 +94,7 @@ export function ChainFlow({
   return (
     <div className={`flow${route?.active ? " flow-live" : ""}`}>
       <div className="flow-head">
-        <div className="flow-pills" role="tablist" aria-label="Chains">
+        <div className="flow-pills" role="tablist" aria-label={t("Chains")}>
           {chains.map((chain) => {
             const live = activeAlias === chain.alias && route?.active;
             return (
@@ -118,16 +120,16 @@ export function ChainFlow({
           {route?.active ? (
             <span className="flow-state live">
               <i aria-hidden="true" />
-              routing
+              {t("routing")}
             </span>
           ) : route?.updatedAt ? (
             <span className="flow-state">
-              idle · {new Date(route.updatedAt).toLocaleTimeString()}
+              {t("idle")} · {new Date(route.updatedAt).toLocaleTimeString()}
             </span>
           ) : (
-            <span className="flow-state">waiting</span>
+            <span className="flow-state">{t("waiting")}</span>
           )}
-          {route?.fallback ? <span className="flow-state warn">fallback</span> : null}
+          {route?.fallback ? <span className="flow-state warn">{t("fallback")}</span> : null}
         </div>
 
         <button
@@ -135,9 +137,9 @@ export function ChainFlow({
           className="flow-sweep"
           onClick={() => void sweep.refresh()}
           disabled={sweep.busy}
-          title="Test every node and keep the first that answers"
+          title={t("Test every node and keep the first that answers")}
         >
-          {sweep.busy ? "testing" : "test all"}
+          {sweep.busy ? t("testing") : t("test all")}
         </button>
       </div>
 
@@ -172,13 +174,13 @@ export function ChainFlow({
 
         <div className="flow-node flow-client" style={{ top: hubY - 65 }}>
           <span className="flow-tape" aria-hidden="true" />
-          <span className="flow-node-kicker">client</span>
-          <span className="flow-node-title">your editor</span>
-          <span className="flow-node-sub">one base URL</span>
+          <span className="flow-node-kicker">{t("client")}</span>
+          <span className="flow-node-title">{t("your editor")}</span>
+          <span className="flow-node-sub">{t("one base URL")}</span>
         </div>
 
         <div className="flow-node flow-hub" style={{ top: hubY - HUB_SIZE / 2, left: HUB_X }}>
-          <span className="flow-node-kicker">alias</span>
+          <span className="flow-node-kicker">{t("alias")}</span>
           <span className="flow-node-title mono">{selected?.alias ?? "COKEY"}</span>
         </div>
 
@@ -204,24 +206,24 @@ export function ChainFlow({
           })
         ) : (
           <div className="flow-node flow-empty" style={{ top: hubY - 65, left: BRANCH_X }}>
-            <span className="flow-node-kicker">empty</span>
-            <span className="flow-node-title">no nodes yet</span>
+            <span className="flow-node-kicker">{t("empty")}</span>
+            <span className="flow-node-title">{t("no nodes yet")}</span>
           </div>
         )}
       </div>
 
       <div className="flow-legend">
         <span className="flow-legend-dot healthy" aria-hidden="true" />
-        healthy
+        {t("healthy")}
         <span className="flow-legend-dot cooldown" aria-hidden="true" />
-        cooldown
+        {t("cooldown")}
         <span className="flow-legend-dot invalid" aria-hidden="true" />
-        invalid
+        {t("invalid")}
         <span className="spacer" />
         {sweep.winnerId ? (
-          <span className="flow-legend-note ok">current · first node that answered</span>
+          <span className="flow-legend-note ok">{t("current · first node that answered")}</span>
         ) : (
-          <span className="flow-legend-note">tried top to bottom</span>
+          <span className="flow-legend-note">{t("tried top to bottom")}</span>
         )}
       </div>
     </div>
@@ -249,6 +251,7 @@ function EntryNode({
   sweepState: RefreshState;
   current?: boolean;
 }) {
+  const { t } = useLang();
   const failed =
     entry.credentials.length > 0 &&
     entry.credentials.every(
@@ -271,24 +274,24 @@ function EntryNode({
       {sweepState !== "idle" || current ? (
         <span className="flow-node-flag">
           {current
-            ? "current"
+            ? t("current")
             : sweepState === "testing"
-              ? "testing"
+              ? t("testing")
               : sweepState === "ok"
-                ? "ok"
-                : "fail"}
+                ? t("ok")
+                : t("fail")}
         </span>
       ) : live ? (
-        <span className="flow-node-flag live">currently serving</span>
+        <span className="flow-node-flag live">{t("currently serving")}</span>
       ) : dead ? (
-        <span className="flow-node-flag skip">not reached</span>
+        <span className="flow-node-flag skip">{t("not reached")}</span>
       ) : index === 0 ? (
-        <span className="flow-node-flag first">tried first</span>
+        <span className="flow-node-flag first">{t("tried first")}</span>
       ) : null}
       <span className="flow-node-sub mono">{entry.providerId}</span>
       <div className="flow-keys">
         {entry.credentials.length === 0 ? (
-          <span className="flow-keys-empty">no keys</span>
+          <span className="flow-keys-empty">{t("no keys")}</span>
         ) : (
           entry.credentials.map((credential) => (
             <KeyChip
@@ -306,8 +309,13 @@ function EntryNode({
 /** One bound key, as a plain coloured dot — the tooltip carries the exact
     description, the legend underneath carries the colour key. */
 function KeyChip({ credential, active }: { credential: PublicCredential; active: boolean }) {
+  const { t } = useLang();
   const title = `${credential.description} (${credential.status})${
-    credential.proxy.auto ? " · auto egress" : credential.proxy.configured ? " · pinned egress" : ""
+    credential.proxy.auto
+      ? ` · ${t("auto egress")}`
+      : credential.proxy.configured
+        ? ` · ${t("pinned egress")}`
+        : ""
   }`;
   return (
     <span className={`flow-key ${credential.status}${active ? " active" : ""}`} title={title}>

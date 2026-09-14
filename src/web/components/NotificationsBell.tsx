@@ -1,8 +1,32 @@
-import { useEffect, useRef, useState } from "react";
-import { api } from "../api.js";
-import type { GuidanceSeverity } from "../types.js";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useLang } from "../lang.js";
+import { api, ApiError } from "../api.js";
+import type { GuidanceResponse } from "../types.js";
 import { IconBell } from "./Icons.js";
 import { Guidance } from "./Guidance.js";
+import { useToast } from "./Toast.js";
+
+const DISMISS_KEY = "cokey.guidance.dismissed";
+
+function readDismissed(): string[] {
+  try {
+    const raw = window.localStorage.getItem(DISMISS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? parsed.filter((id): id is string => typeof id === "string") : [];
+  } catch {
+    return [];
+  }
+}
+
+function writeDismissed(ids: string[]): void {
+  try {
+    if (ids.length === 0) window.localStorage.removeItem(DISMISS_KEY);
+    else window.localStorage.setItem(DISMISS_KEY, JSON.stringify(ids));
+  } catch {
+    // Private browsing or a blocked store: dismissals just don't persist.
+  }
+}
 
 /**
  * "Needs attention", as a notification bell rather than a fixture on the
@@ -13,6 +37,12 @@ import { Guidance } from "./Guidance.js";
  * require being on the Dashboard to see. The badge is a plain count, not a
  * generic dot: the first thing anyone wants to know is how many, before they
  * open it to find out which.
+ *
+ * The dismissed set lives here, one level above the dropdown, rather than
+ * inside it — the badge needs to know the same thing the dropdown does
+ * ("dismissed notices don't count"), and two components independently
+ * reading the same localStorage key is exactly how the badge and the panel
+ * drift apart the moment one of them updates without the other noticing.
  */
 export function NotificationsBell({
   refreshKey,
@@ -21,24 +51,26 @@ export function NotificationsBell({
   refreshKey: number;
   onChanged: () => void;
 }) {
+  const toast = useToast();
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
-  const [summary, setSummary] = useState<Record<GuidanceSeverity, number> | null>(null);
+  const [data, setData] = useState<GuidanceResponse | null>(null);
+  const [dismissed, setDismissed] = useState<string[]>(() => readDismissed());
   const rootRef = useRef<HTMLDivElement>(null);
 
+  const load = useCallback(async () => {
+    try {
+      setData(await api.guidance());
+    } catch (error) {
+      // Guidance is advisory. A failure to load it must never break the page it
+      // is rendered on, so it degrades to silence rather than a toast storm.
+      if (error instanceof ApiError && error.status >= 500) toast.err(error.message);
+    }
+  }, [toast]);
+
   useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const data = await api.guidance();
-        if (!cancelled) setSummary(data.summary);
-      } catch {
-        // Advisory only — the bell simply stays quiet until the next refresh.
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey, open]);
+    void load();
+  }, [load, refreshKey]);
 
   useEffect(() => {
     if (!open) return;
@@ -56,7 +88,31 @@ export function NotificationsBell({
     };
   }, [open]);
 
-  const count = summary ? summary.critical + summary.warn : 0;
+  const dismiss = useCallback((id: string) => {
+    setDismissed((current) => {
+      const next = current.includes(id) ? current : [...current, id];
+      writeDismissed(next);
+      return next;
+    });
+  }, []);
+
+  const dismissMany = useCallback((ids: string[]) => {
+    setDismissed((current) => {
+      const next = [...new Set([...current, ...ids])];
+      writeDismissed(next);
+      return next;
+    });
+  }, []);
+
+  const restore = useCallback(() => {
+    setDismissed([]);
+    writeDismissed([]);
+  }, []);
+
+  const visibleNotices = (data?.notices ?? []).filter((notice) => !dismissed.includes(notice.id));
+  const count = visibleNotices.filter(
+    (notice) => notice.severity === "critical" || notice.severity === "warn",
+  ).length;
 
   return (
     <div className="notif-bell" ref={rootRef}>
@@ -65,8 +121,8 @@ export function NotificationsBell({
         className={`notif-trigger${count > 0 ? " has-alerts" : ""}`}
         onClick={() => setOpen((value) => !value)}
         aria-expanded={open}
-        aria-label={count > 0 ? `${count} notice(s) need attention` : "Notifications"}
-        title="Needs attention"
+        aria-label={count > 0 ? `${count} ${t("notice(s) need attention")}` : t("Notifications")}
+        title={t("Needs attention")}
       >
         <IconBell size={18} />
         {count > 0 ? <span className="notif-count">{count > 9 ? "9+" : count}</span> : null}
@@ -80,9 +136,17 @@ export function NotificationsBell({
        * instead of through.
        */}
       {open ? (
-        <div className="notif-panel" role="dialog" aria-label="Needs attention">
+        <div className="notif-panel" role="dialog" aria-label={t("Needs attention")}>
           <div className="notif-scroll">
-            <Guidance refreshKey={refreshKey} onChanged={onChanged} />
+            <Guidance
+              data={data}
+              dismissed={dismissed}
+              onDismiss={dismiss}
+              onDismissMany={dismissMany}
+              onRestore={restore}
+              onReload={load}
+              onChanged={onChanged}
+            />
           </div>
         </div>
       ) : null}

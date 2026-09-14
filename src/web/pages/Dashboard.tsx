@@ -6,6 +6,7 @@ import { ChainFlow } from "../components/ChainFlow.js";
 import { Resilience } from "../components/Resilience.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { useLang } from "../lang.js";
 
 type DashboardTab = "route" | "resilience" | "activity";
 
@@ -35,6 +36,7 @@ export function Dashboard({
   refreshKey: number;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [tab, setTab] = useState<DashboardTab>("route");
   const [stats, setStats] = useState<Stats | null>(null);
   const [chains, setChains] = useState<ChainView[]>([]);
@@ -94,13 +96,13 @@ export function Dashboard({
             aria-selected={tab === item.id}
             onClick={() => setTab(item.id)}
           >
-            {item.label}
+            {t(item.label)}
           </button>
         ))}
       </div>
 
       {tab === "route" ? (
-        <Panel title="Live route">
+        <Panel title={t("Live route")}>
           <ChainFlow chains={chains} refreshKey={refreshKey} onChanged={() => void load()} />
         </Panel>
       ) : null}
@@ -109,46 +111,46 @@ export function Dashboard({
 
       {tab === "activity" ? (
         <>
-          <Panel title="Gateway">
+          <Panel title={t("Gateway")}>
             <div className="grid cards">
-              <Stat label="Chains" value={stats?.chains ?? "-"} hint="aliases clients call" />
+              <Stat label={t("Chains")} value={stats?.chains ?? "-"} hint={t("aliases clients call")} />
               <Stat
-                label="Credentials"
+                label={t("Credentials")}
                 value={stats?.credentials ?? "-"}
                 hint={
                   stats
-                    ? `${stats.healthyCredentials} healthy · ${stats.cooldownCredentials} cooldown · ${stats.invalidCredentials} invalid`
+                    ? `${stats.healthyCredentials} ${t("healthy")} · ${stats.cooldownCredentials} ${t("cooldown")} · ${stats.invalidCredentials} ${t("invalid")}`
                     : undefined
                 }
               />
               <Stat
-                label="Providers connected"
+                label={t("Providers connected")}
                 value={stats?.providersConnected ?? "-"}
-                hint={stats ? `${stats.customEndpoints} custom endpoint(s)` : undefined}
+                hint={stats ? `${stats.customEndpoints} ${t("custom endpoint(s)")}` : undefined}
               />
               <Stat
-                label="Requests"
+                label={t("Requests")}
                 value={stats ? formatNumber(stats.history.total) : "-"}
                 hint={
                   stats
-                    ? `${stats.history.fallbackCount} fell back · avg ${formatDuration(stats.history.averageLatencyMs)}`
+                    ? `${stats.history.fallbackCount} ${t("fell back")} · ${t("avg")} ${formatDuration(stats.history.averageLatencyMs)}`
                     : undefined
                 }
               />
             </div>
           </Panel>
 
-          <Panel title="Chain summary">
+          <Panel title={t("Chain summary")}>
             {chains.length === 0 ? (
-              <Empty>No chains yet — create one in Chains.</Empty>
+              <Empty>{t("No chains yet — create one in Chains.")}</Empty>
             ) : (
               <table>
                 <thead>
                   <tr>
-                    <th>Chain</th>
-                    <th>Nodes</th>
-                    <th>Keys</th>
-                    <th>Status</th>
+                    <th>{t("Chain")}</th>
+                    <th>{t("Nodes")}</th>
+                    <th>{t("Keys")}</th>
+                    <th>{t("Status")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -163,15 +165,23 @@ export function Dashboard({
                         <td className="mono">{chain.alias}</td>
                         <td>{chain.entries.length}</td>
                         <td className="small">
-                          <span className="badge">{healthy} healthy</span>{" "}
+                          <span className="badge">
+                            {healthy} {t("healthy")}
+                          </span>{" "}
                           {cooldown > 0 ? (
-                            <span className="badge warn">{cooldown} cooldown</span>
+                            <span className="badge warn">
+                              {cooldown} {t("cooldown")}
+                            </span>
                           ) : null}{" "}
                           {invalid > 0 ? (
-                            <span className="badge bad">{invalid} invalid</span>
+                            <span className="badge bad">
+                              {invalid} {t("invalid")}
+                            </span>
                           ) : null}
                         </td>
-                        <td className="small muted">{chain.enabled ? "enabled" : "disabled"}</td>
+                        <td className="small muted">
+                          {chain.enabled ? t("enabled") : t("disabled")}
+                        </td>
                       </tr>
                     );
                   })}
@@ -181,7 +191,7 @@ export function Dashboard({
           </Panel>
 
           <Panel
-            title="Recent requests"
+            title={t("Recent requests")}
             actions={
               <button
                 type="button"
@@ -189,24 +199,25 @@ export function Dashboard({
                 disabled={requestsBusy}
                 onClick={() => void refreshRequests()}
               >
-                {requestsBusy ? "refreshing…" : "refresh"}
+                {requestsBusy ? t("refreshing…") : t("refresh")}
               </button>
             }
           >
             {requests.length === 0 ? (
               <Empty>
-                Nothing routed yet. Point a client at <code>/v1</code> and it shows up here.
+                {t("Nothing routed yet. Point a client at")} <code>/v1</code>{" "}
+                {t("and it shows up here.")}
               </Empty>
             ) : (
               <table>
                 <thead>
                   <tr>
-                    <th>When</th>
-                    <th>Chain</th>
-                    <th>Model</th>
-                    <th>Credential</th>
-                    <th>Result</th>
-                    <th>Latency</th>
+                    <th>{t("When")}</th>
+                    <th>{t("Chain")}</th>
+                    <th>{t("Model")}</th>
+                    <th>{t("Credential")}</th>
+                    <th>{t("Result")}</th>
+                    <th>{t("Latency")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -218,13 +229,13 @@ export function Dashboard({
                       <td className="small">{entry.credentialDescription}</td>
                       <td className="small">
                         {entry.outcome === "success" ? (
-                          <span className="badge">ok</span>
+                          <span className="badge">{t("ok")}</span>
                         ) : (
                           <span className="badge bad">{entry.classification}</span>
                         )}
                         {entry.fallback ? (
                           <span className="badge warn" style={{ marginLeft: 4 }}>
-                            {entry.fallbackReason ?? "fallback"}
+                            {entry.fallbackReason ?? t("fallback")}
                           </span>
                         ) : null}
                       </td>
