@@ -17,7 +17,9 @@ const RankingSourceSchema = z.object({ label: z.string(), url: z.string() });
 const SkillTierSchema = z.object({
   name: z.enum(["S", "A", "B", "C"]),
   label: z.string(),
+  labelFr: z.string().optional(),
   blurb: z.string(),
+  blurbFr: z.string().optional(),
 });
 
 const SkillEntrySchema = z.object({
@@ -26,6 +28,7 @@ const SkillEntrySchema = z.object({
   tierName: z.enum(["S", "A", "B", "C"]),
   sweScore: z.number().optional(),
   reason: z.string(),
+  reasonFr: z.string().optional(),
 });
 
 const RateLimitEntrySchema = z.object({
@@ -36,6 +39,7 @@ const RateLimitEntrySchema = z.object({
   provenance: z.enum(["operator", "third-party", "unpublished"]),
   reliability: z.enum(["solid", "watch", "avoid"]),
   note: z.string().optional(),
+  noteFr: z.string().optional(),
 });
 
 const CombinedEntrySchema = z.object({
@@ -43,6 +47,7 @@ const CombinedEntrySchema = z.object({
   providerId: z.string(),
   model: z.string(),
   why: z.string(),
+  whyFr: z.string().optional(),
   tier: z.union([z.literal(1), z.literal(2), z.literal(3), z.literal(4)]),
 });
 
@@ -59,11 +64,16 @@ const RankingsBundleSchema = z.object({
   rateLimit: z.array(RateLimitEntrySchema),
   combined: z.array(CombinedEntrySchema),
   redundancy: z.array(RedundancyEntrySchema),
-  dropList: z.array(z.object({ provider: z.string(), reason: z.string() })),
+  dropList: z.array(
+    z.object({ provider: z.string(), reason: z.string(), reasonFr: z.string().optional() }),
+  ),
   bottomLine: z.string(),
+  bottomLineFr: z.string().optional(),
   disclaimer: z.string(),
+  disclaimerFr: z.string().optional(),
   sources: z.array(RankingSourceSchema),
   funFacts: z.array(z.string()).optional(),
+  funFactsFr: z.array(z.string()).optional(),
 });
 
 export type RankingsFetchResult =

@@ -54,6 +54,61 @@ describe("fetchRemoteRankings", () => {
     if (result.ok) expect(result.rankings.funFacts).toEqual(["Did you know?"]);
   });
 
+  it("carries every French sibling field through when the bundle includes them", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        jsonResponse(
+          bundle({
+            tiers: [{ name: "S", label: "Top tier", labelFr: "Palier du haut", blurb: "The best.", blurbFr: "Le meilleur." }],
+            skill: [
+              {
+                model: "some-model",
+                tierName: "S",
+                reason: "Because.",
+                reasonFr: "Parce que.",
+              },
+            ],
+            rateLimit: [
+              {
+                providerId: "p",
+                provider: "P",
+                tier: 1,
+                quota: "10/day",
+                provenance: "operator",
+                reliability: "solid",
+                note: "Caveat.",
+                noteFr: "Réserve.",
+              },
+            ],
+            combined: [
+              { rank: 1, providerId: "p", model: "m", why: "Good.", whyFr: "Bon.", tier: 1 },
+            ],
+            dropList: [{ provider: "p", reason: "Weak.", reasonFr: "Faible." }],
+            bottomLineFr: "Utilisez le haut de la liste.",
+            disclaimerFr: "Les chiffres varient.",
+            funFacts: ["Fact"],
+            funFactsFr: ["Anecdote"],
+          }),
+        ),
+      ),
+    );
+
+    const result = await fetchRemoteRankings("https://example.test/rankings.json");
+
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.rankings.tiers[0]?.labelFr).toBe("Palier du haut");
+    expect(result.rankings.tiers[0]?.blurbFr).toBe("Le meilleur.");
+    expect(result.rankings.skill[0]?.reasonFr).toBe("Parce que.");
+    expect(result.rankings.rateLimit[0]?.noteFr).toBe("Réserve.");
+    expect(result.rankings.combined[0]?.whyFr).toBe("Bon.");
+    expect(result.rankings.dropList[0]?.reasonFr).toBe("Faible.");
+    expect(result.rankings.bottomLineFr).toBe("Utilisez le haut de la liste.");
+    expect(result.rankings.disclaimerFr).toBe("Les chiffres varient.");
+    expect(result.rankings.funFactsFr).toEqual(["Anecdote"]);
+  });
+
   it("accepts a bundle with no funFacts field at all", async () => {
     vi.stubGlobal(
       "fetch",

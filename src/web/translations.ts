@@ -1467,4 +1467,12 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "Nécessite un compte Telegram lié et l'adhésion à un groupe obligatoire avant que l'API se débloque. laguna-s-2.1 est gratuit et vérifié ; deepseek-v4-flash et deepseek-v4-pro nécessitent des crédits payants.",
   "Requires email verification before requests start working. On free tier the same caveat applies: shared, capacity-limited compute.":
     "Nécessite une vérification par e-mail avant que les requêtes fonctionnent. Sur le palier gratuit, la même réserve s'applique : calcul partagé à capacité limitée.",
+
+  // ---- Insights bundled fallback fun facts (no remote funFactsFr needed) -------------
+  "Did you know COKEY never fabricates a quota? A provider that publishes no rate-limit header is reported as Quota: Unknown, not a guess.":
+    "Saviez-vous que COKEY n'invente jamais un quota ? Un fournisseur qui ne publie pas d'en-tête de limite de débit est signalé comme Quota : Inconnu, jamais deviné.",
+  "COKEY's routing invariant fits in five words: node, then key, then node.":
+    "L'invariant de routage de COKEY tient en quelques mots : nœud, puis clé, puis nœud.",
+  "Two keys of the same provider never share an exit IP once the automatic egress pool is on - that's the whole point of it.":
+    "Deux clés d'un même fournisseur ne partagent jamais d'IP de sortie une fois le pool d'égress automatique activé - c'est tout son intérêt.",
 };

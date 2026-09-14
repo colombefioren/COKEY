@@ -89,12 +89,17 @@ function bulkTextFor(area: "credential" | "model", t: (s: string) => string): st
  * overlap when both have something to say at once.
  */
 export function Insights() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [card, setCard] = useState<Card | null>(null);
   const queue = useRef<Card[]>([]);
   const nextId = useRef(0);
   const lastTipAt = useRef<Map<string, number>>(new Map());
+  // English facts plus an optional, index-aligned French sibling. The bundled
+  // fallback has no French sibling array of its own - its three lines are
+  // short enough to live in the ordinary `t()` dictionary instead, so `t()` is
+  // still tried below even when `factsFr` is null.
   const facts = useRef<string[]>(FALLBACK_FACTS);
+  const factsFr = useRef<string[] | null>(null);
   const dismissTimer = useRef<number | undefined>(undefined);
 
   // Set synchronously inside `advance` itself, not via an effect on `card`:
@@ -136,6 +141,10 @@ export function Insights() {
       .then((rankings) => {
         if (!cancelled && rankings.funFacts && rankings.funFacts.length > 0) {
           facts.current = rankings.funFacts;
+          factsFr.current =
+            rankings.funFactsFr && rankings.funFactsFr.length === rankings.funFacts.length
+              ? rankings.funFactsFr
+              : null;
         }
       })
       .catch(() => {
@@ -167,7 +176,9 @@ export function Insights() {
     const showFact = () => {
       const list = facts.current;
       if (list.length > 0) {
-        const text = list[Math.floor(Math.random() * list.length)]!;
+        const index = Math.floor(Math.random() * list.length);
+        const fr = factsFr.current?.[index];
+        const text = lang === "fr" && fr ? fr : t(list[index]!);
         enqueue({ kind: "fact", text });
       }
       const delay =
@@ -176,7 +187,7 @@ export function Insights() {
     };
     timer = window.setTimeout(showFact, FIRST_FACT_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [enqueue]);
+  }, [enqueue, t, lang]);
 
   useEffect(() => () => window.clearTimeout(dismissTimer.current), []);
 

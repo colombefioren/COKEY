@@ -648,12 +648,15 @@ export interface SkillEntry {
   tierName: "S" | "A" | "B" | "C";
   sweScore?: number;
   reason: string;
+  reasonFr?: string;
 }
 
 export interface SkillTier {
   name: "S" | "A" | "B" | "C";
   label: string;
+  labelFr?: string;
   blurb: string;
+  blurbFr?: string;
 }
 
 export interface RateLimitEntry {
@@ -664,6 +667,7 @@ export interface RateLimitEntry {
   provenance: QuotaProvenance;
   reliability: "solid" | "watch" | "avoid";
   note?: string;
+  noteFr?: string;
 }
 
 export interface CombinedEntry {
@@ -671,6 +675,7 @@ export interface CombinedEntry {
   providerId: string;
   model: string;
   why: string;
+  whyFr?: string;
   tier: RateLimitEntry["tier"];
 }
 
@@ -687,9 +692,11 @@ export interface RankingsResponse {
   rateLimit: RateLimitEntry[];
   combined: CombinedEntry[];
   redundancy: RedundancyEntry[];
-  dropList: Array<{ provider: string; reason: string }>;
+  dropList: Array<{ provider: string; reason: string; reasonFr?: string }>;
   bottomLine: string;
+  bottomLineFr?: string;
   disclaimer: string;
+  disclaimerFr?: string;
   sources: RankingSource[];
   /** `remote` when a published bundle replaced these boards. */
   source: "remote" | "compiled";
@@ -697,4 +704,6 @@ export interface RankingsResponse {
   fetchedAt?: string;
   /** Short trivia for the dashboard's Insights cards. */
   funFacts?: string[];
+  /** French sibling of `funFacts`, same order and length when present. */
+  funFactsFr?: string[];
 }

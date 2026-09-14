@@ -6,6 +6,17 @@ import { useToast } from "../components/Toast.js";
 import { useRoute } from "../router.js";
 import { useLang } from "../lang.js";
 
+/**
+ * Rankings are fetchable content, not static UI copy, so they carry their own
+ * French sibling field (`xFr`) instead of going through the `t()` dictionary -
+ * a published bundle's exact English text can never be known ahead of time,
+ * but its own French field always can. Falls back to English when a bundle
+ * (or an older one) has not filled the French field in.
+ */
+function loc(en: string, fr: string | undefined, lang: string): string {
+  return lang === "fr" && fr ? fr : en;
+}
+
 type Board = "skill" | "rate" | "combined" | "redundancy";
 
 const BOARDS: Array<{ id: Board; label: string; hint: string }> = [
@@ -25,7 +36,7 @@ const BOARDS: Array<{ id: Board; label: string; hint: string }> = [
 export function Rankings({ refreshKey }: { refreshKey: number }) {
   const { route, navigate } = useRoute();
   const toast = useToast();
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [data, setData] = useState<RankingsResponse | null>(null);
   const [checking, setChecking] = useState(false);
 
@@ -83,7 +94,7 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
         }
       >
         <p className="small muted" style={{ margin: 0 }}>
-          {data.disclaimer}
+          {loc(data.disclaimer, data.disclaimerFr, lang)}
         </p>
         {/*
          * Provenance for the boards themselves. Fetched only when a person
@@ -132,15 +143,18 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
 }
 
 function SkillBoard({ data }: { data: RankingsResponse }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <>
       {data.tiers.map((tier) => {
         const rows = data.skill.filter((entry) => entry.tierName === tier.name);
         return (
-          <Panel key={tier.name} title={`${t("Tier")} ${tier.name}: ${tier.label}`}>
+          <Panel
+            key={tier.name}
+            title={`${t("Tier")} ${tier.name}: ${loc(tier.label, tier.labelFr, lang)}`}
+          >
             <p className="small muted" style={{ marginTop: 0 }}>
-              {tier.blurb}
+              {loc(tier.blurb, tier.blurbFr, lang)}
             </p>
             <table>
               <thead>
@@ -196,7 +210,7 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                           t("vendor direct")
                         )}
                       </td>
-                      <td className="small">{entry.reason}</td>
+                      <td className="small">{loc(entry.reason, entry.reasonFr, lang)}</td>
                     </tr>
                   ))}
               </tbody>
@@ -209,7 +223,7 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
 }
 
 function RateBoard({ data }: { data: RankingsResponse }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <>
       <Panel title={t("Rate limits")}>
@@ -236,7 +250,9 @@ function RateBoard({ data }: { data: RankingsResponse }) {
                 </td>
                 <td>
                   <div>{entry.provider}</div>
-                  {entry.note ? <div className="small faint">{entry.note}</div> : null}
+                  {entry.note ? (
+                    <div className="small faint">{loc(entry.note, entry.noteFr, lang)}</div>
+                  ) : null}
                 </td>
                 <td className="small">{entry.quota}</td>
                 <td className="small muted">{t(provenanceLabel(entry))}</td>
@@ -261,7 +277,7 @@ function RateBoard({ data }: { data: RankingsResponse }) {
             {data.dropList.map((entry) => (
               <tr key={entry.provider}>
                 <td>{entry.provider}</td>
-                <td className="small muted">{entry.reason}</td>
+                <td className="small muted">{loc(entry.reason, entry.reasonFr, lang)}</td>
               </tr>
             ))}
           </tbody>
@@ -272,7 +288,7 @@ function RateBoard({ data }: { data: RankingsResponse }) {
 }
 
 function CombinedBoard({ data }: { data: RankingsResponse }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <Panel title={t("What to actually use, in order")}>
       <table>
@@ -290,13 +306,13 @@ function CombinedBoard({ data }: { data: RankingsResponse }) {
               <td className="mono">{entry.rank}</td>
               <td className="mono small">{entry.providerId}</td>
               <td className="small">{entry.model}</td>
-              <td className="small muted">{entry.why}</td>
+              <td className="small muted">{loc(entry.why, entry.whyFr, lang)}</td>
             </tr>
           ))}
         </tbody>
       </table>
       <div className="hint-box" style={{ marginTop: 14 }}>
-        {data.bottomLine}
+        {loc(data.bottomLine, data.bottomLineFr, lang)}
       </div>
       <p className="small faint" style={{ marginBottom: 0 }}>
         {t(
