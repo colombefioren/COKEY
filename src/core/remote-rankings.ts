@@ -63,6 +63,7 @@ const RankingsBundleSchema = z.object({
   bottomLine: z.string(),
   disclaimer: z.string(),
   sources: z.array(RankingSourceSchema),
+  funFacts: z.array(z.string()).optional(),
 });
 
 export type RankingsFetchResult =

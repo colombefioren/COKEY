@@ -42,6 +42,30 @@ describe("fetchRemoteRankings", () => {
     }
   });
 
+  it("carries funFacts through when the bundle includes them", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse(bundle({ funFacts: ["Did you know?"] }))),
+    );
+
+    const result = await fetchRemoteRankings("https://example.test/rankings.json");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.rankings.funFacts).toEqual(["Did you know?"]);
+  });
+
+  it("accepts a bundle with no funFacts field at all", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse(bundle())),
+    );
+
+    const result = await fetchRemoteRankings("https://example.test/rankings.json");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.rankings.funFacts).toBeUndefined();
+  });
+
   it("refuses a non-https URL without making a request", async () => {
     const fetchSpy = vi.fn();
     vi.stubGlobal("fetch", fetchSpy);

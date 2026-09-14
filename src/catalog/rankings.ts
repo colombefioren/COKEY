@@ -633,6 +633,27 @@ export const DROP_LIST: Array<{ provider: string; reason: string }> = [
 export const RANKING_BOTTOM_LINE =
   "Groq and Cloudflare cover daily high-volume coding. OpenCode Zen or Poolside cover needing a coding specialist. xKiro, Void AI and Mistral direct are the deep fallbacks. Everything else on the list is either a re-export of those same models or too rate-limited to build around, so six or seven providers is the practical ceiling.";
 
+/**
+ * Fun facts for the dashboard's Insights cards.
+ *
+ * Same distribution story as the rankings: compiled into the build so there is
+ * always something to show, and replaceable by a published bundle so a new one
+ * does not need a release. Kept short - these render in a small card, not a
+ * paragraph.
+ */
+export const FUN_FACTS: string[] = [
+  "Did you know COKEY was built with the help of COKEY? The gateway spent part of its own development pooling free keys for the assistant that wrote it.",
+  "A provider rate limit is almost always per key *and* per IP. That is the entire reason the automatic egress pool exists.",
+  "COKEY never guesses a quota. If a provider does not publish rate-limit headers, the dashboard says 'Quota: Unknown' rather than making a number up.",
+  "The routing invariant fits in five words: node, then key, then node. A lower-priority node never gets a turn while a higher one still has an unused key.",
+  "Every secret on disk is AES-256-GCM encrypted, prefixed with a format version, so a future COKEY can change the scheme without breaking old data.",
+  "COKEY's own name is a pun: pool your keys, COKEY. The two leaves on the logo are the 'broke princess' sprout the tagline promises.",
+  "Redirects are never followed on a custom endpoint. That one rule alone stops an upstream from ever bouncing your Authorization header to a different origin.",
+  "The live route panel is fed by the same server-sent-events stream a CLI could subscribe to directly - the dashboard has no private channel the API does not.",
+  "A chain's node order is the only thing that decides fallback. COKEY does not silently reorder your nodes to 'optimize' anything.",
+  "Some providers count a single verification call against the same daily quota as real traffic. Testing ten keys back-to-back can look, to them, like ten real requests.",
+];
+
 /** The ranking boards, in the shape `/api/catalog/rankings` returns. */
 export interface RankingsView {
   tiers: SkillTier[];
@@ -648,6 +669,8 @@ export interface RankingsView {
   source: "remote" | "compiled";
   /** When the remote boards were last fetched, when they are in use. */
   fetchedAt?: string;
+  /** Short trivia for the dashboard's Insights cards. Optional in a remote bundle. */
+  funFacts?: string[];
 }
 
 /** The boards exactly as compiled into this build. */
@@ -663,5 +686,6 @@ export function compiledRankingsView(): RankingsView {
     disclaimer: RANKING_DISCLAIMER,
     sources: RANKING_SOURCES,
     source: "compiled",
+    funFacts: FUN_FACTS,
   };
 }

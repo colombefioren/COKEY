@@ -10,6 +10,7 @@ import { ToastProvider } from "./components/Toast.js";
 import { LiveStatus } from "./components/LiveStatus.js";
 import { LoginForm } from "./components/LoginForm.js";
 import { NotificationsBell } from "./components/NotificationsBell.js";
+import { Insights } from "./components/Insights.js";
 import { KineticText } from "./components/KineticText.js";
 import { Sidebar, type NavItem } from "./components/Sidebar.js";
 import { StatusBar } from "./components/StatusBar.js";
@@ -292,6 +293,8 @@ function Shell() {
             /v1/models
           </a>
         </header>
+
+        <Insights />
 
         {/*
          * Keyed on the route so each page remounts: the windows pop in on a real
