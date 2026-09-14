@@ -136,11 +136,16 @@ export function Sidebar({
   // `inert` is a real DOM boolean attribute React forwards as-is, but the
   // installed @types/react predates its addition to the JSX typings.
   const inertProps = { inert: hidden || undefined } as React.HTMLAttributes<HTMLElement>;
+  // The icon-only rail is a desktop space-saving preference, persisted across
+  // sessions. On a phone the sidebar is already an overlay drawer that costs
+  // no permanent layout width, so a `collapsed` preference carried over from
+  // a previous desktop visit must not fold it into an unusable icon strip.
+  const effectiveCollapsed = collapsed && !isMobile;
 
   return (
     <aside
       ref={sidebarRef}
-      className={`sidebar${collapsed ? " collapsed" : ""}`}
+      className={`sidebar${effectiveCollapsed ? " collapsed" : ""}`}
       onMouseLeave={() => setHint(null)}
       {...inertProps}
     >
@@ -150,7 +155,7 @@ export function Sidebar({
         onClick={() => navigate("/dashboard")}
         aria-label={t("COKEY dashboard")}
       >
-        {collapsed ? (
+        {effectiveCollapsed ? (
           <CokeyMark height={30} className="brand-logo" />
         ) : (
           <CokeyLogo height={30} withWordmark uid="sidebar-brand" className="brand-logo" />
@@ -176,7 +181,7 @@ export function Sidebar({
               href={href(item.path)}
               data-tour={`nav-${item.path.replace(/^\//, "").replace(/\//g, "-")}`}
               title={item.hint}
-              aria-label={collapsed ? item.label : undefined}
+              aria-label={effectiveCollapsed ? item.label : undefined}
               aria-current={isActive ? "page" : undefined}
               style={{ "--nav-index": index } as React.CSSProperties}
               onMouseEnter={showHint(item.label)}
@@ -194,21 +199,23 @@ export function Sidebar({
         })}
       </nav>
 
-      {collapsed && hint ? (
+      {effectiveCollapsed && hint ? (
         <span className="nav-hint" style={{ top: hint.top }} aria-hidden="true">
           {hint.label}
         </span>
       ) : null}
 
-      <button
-        type="button"
-        className="sidebar-fold"
-        onClick={onToggleCollapsed}
-        aria-label={collapsed ? text.expand : text.collapse}
-        title={collapsed ? text.expand : text.collapse}
-      >
-        <IconChevron size={14} />
-      </button>
+      {isMobile ? null : (
+        <button
+          type="button"
+          className="sidebar-fold"
+          onClick={onToggleCollapsed}
+          aria-label={collapsed ? text.expand : text.collapse}
+          title={collapsed ? text.expand : text.collapse}
+        >
+          <IconChevron size={14} />
+        </button>
+      )}
 
       <div className="sidebar-foot">
         <div className="sidebar-stats">

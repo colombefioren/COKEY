@@ -261,14 +261,6 @@
   transition: width 0.5s var(--ease);
 }
 
-.source-list {
-  margin: 0;
-  padding-left: 20px;
-  display: grid;
-  gap: 8px;
-  color: var(--muted);
-  font-size: 13px;
-}
 .source-list a {
   color: var(--violet);
 }
@@ -874,16 +866,30 @@
  * the key recedes behind it, and the state is a single breathing dot on the
  * leading edge — not three badges fighting over the same line.
  */
+.live {
+  position: relative;
+}
 .live-chip {
+  display: inline-flex;
+  align-items: center;
   max-width: 460px;
   gap: 9px;
   padding: 6px 13px 6px 11px;
   border: 1px solid var(--border-strong);
+  border-radius: 999px;
   background: var(--surface);
+  color: var(--muted);
   font-size: 11.5px;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
+}
+.live-chip:hover {
+  border-color: var(--violet-line);
 }
 .live-chip:hover:not(:disabled) {
   border-color: var(--violet-line);
@@ -891,20 +897,47 @@
   box-shadow: none;
 }
 .live-model {
+  color: var(--text);
   font-family: var(--font-display);
   font-style: italic;
   font-size: 14px;
   font-weight: 400;
 }
+.live-key,
+.live-mask,
+.live-proxy,
+.live-time,
+.live-type {
+  color: var(--faint);
+}
+.live-sep {
+  color: var(--border-strong);
+}
 .live-dot {
+  color: var(--faint);
   font-size: 8px;
   line-height: 1;
 }
 .live-chip.active {
   border-color: var(--sage-line);
   background: var(--sage-soft);
+  color: var(--text);
+}
+.live-chip.active .live-dot {
+  color: var(--sage);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
 }
 .live-count {
+  border-radius: 999px;
   padding: 1px 8px;
   background: var(--violet-soft);
   color: var(--violet-strong);
@@ -917,6 +950,10 @@
  * a long routing feed from looking broken the moment it moves.
  */
 .live-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  z-index: 40;
   width: min(482px, 88vw);
   max-height: none;
   overflow: visible;
@@ -926,19 +963,47 @@
   background: var(--surface);
   box-shadow: var(--shadow-pop);
 }
+.live-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 .live-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
   max-height: 300px;
   overflow-y: auto;
   overscroll-behavior: contain;
   padding-right: 2px;
 }
 .live-item {
+  display: grid;
   grid-template-columns: 66px 84px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 8px;
   padding: 6px 10px;
   border-radius: 10px;
+  background: var(--surface-2);
+  font-size: 11px;
+}
+.live-item.warn .live-type {
+  color: var(--peach);
+}
+.live-item.error .live-type {
+  color: var(--rose);
+}
+.live-item.success .live-type {
+  color: var(--sage);
 }
 .live-time {
   font-variant-numeric: tabular-nums;
+}
+.live-msg {
+  color: var(--muted);
 }
 
 /* ---- tutorial and terms --------------------------------------------------- */
@@ -952,6 +1017,10 @@
 
 .hero {
   position: relative;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
   padding: 28px;
   border-radius: 20px;
   border: none;
@@ -959,17 +1028,61 @@
   box-shadow: var(--shadow-lift);
   overflow: hidden;
 }
+.hero-copy {
+  flex: 1 1 380px;
+  display: grid;
+  gap: 8px;
+}
 .hero h2 {
+  margin: 0;
   font-size: 26px;
   letter-spacing: -0.01em;
   line-height: 1.2;
 }
 .hero p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 70ch;
   font-size: 13.5px;
 }
+.hero-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
 
+.steps-list,
+.bullet-list,
+.source-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.steps-list {
+  counter-reset: step;
+  padding-left: 0;
+  list-style: none;
+}
+.steps-list > li {
+  position: relative;
+  padding-left: 38px;
+  min-height: 26px;
+}
 /* The same hand-cut tab the route diagram and the chain nodes use. */
 .steps-list > li::before {
+  counter-increment: step;
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
   font-family: var(--font-display);
   font-style: italic;
@@ -980,12 +1093,20 @@
   border: 0;
   box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
+.steps-list strong {
+  color: var(--text);
+}
 
+.recipe-list {
+  display: grid;
+  gap: 8px;
+}
 .recipe {
   border: 1.5px solid var(--border);
   border-radius: 18px 20px 16px 19px;
   background: var(--surface-2);
   overflow: hidden;
+  transition: border-color 0.22s ease;
 }
 .recipe.open {
   border-color: var(--violet-line);
@@ -993,11 +1114,21 @@
   box-shadow: var(--shadow);
 }
 .recipe-head {
+  display: flex;
+  align-items: center;
   gap: 10px;
+  width: 100%;
   padding: 14px 16px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
 }
 .recipe-head:hover:not(:disabled) {
   background: var(--violet-soft);
+  box-shadow: none;
 }
 .recipe-name {
   font-family: var(--font-display);
@@ -1016,31 +1147,58 @@
   background: var(--violet-soft);
   color: var(--violet-strong);
   font-size: 14px;
+  line-height: 1;
 }
 .recipe-body {
   padding: 0 16px 18px;
+  border-top: 1px solid var(--border);
+  animation: block-in 0.34s var(--ease) both;
+}
+.recipe-steps {
+  margin: 14px 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 12px;
+}
+.recipe-steps > li {
+  color: var(--muted);
 }
 
 .code-block {
+  margin-top: 8px;
   border: 1.5px solid var(--border);
   border-radius: 14px;
   background: var(--surface-3);
+  overflow: hidden;
 }
 .code-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 7px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
 }
 .code-block pre {
+  margin: 0;
   padding: 14px;
+  overflow-x: auto;
 }
 .code-block code {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--text);
   font-size: 12px;
   line-height: 1.7;
 }
 
 .terms {
+  display: grid;
   gap: 18px;
 }
 .terms section h3 {
+  margin: 0 0 4px;
   font-family: var(--font-display);
   font-style: italic;
   font-size: 18px;
@@ -1048,6 +1206,7 @@
   color: var(--violet-strong);
 }
 .terms section div {
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.78;
 }
@@ -1056,6 +1215,9 @@
    ramp, so the two documents feel like a pair. */
 .closing {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 6px;
   padding: 28px;
   border: none;
@@ -1063,6 +1225,7 @@
   background: var(--surface);
   box-shadow: var(--shadow-lift);
   overflow: hidden;
+  text-align: center;
 }
 .closing strong {
   font-family: var(--font-display);
@@ -1071,8 +1234,13 @@
   font-size: 21px;
   color: var(--violet-strong);
 }
+.closing-logo {
+  color: var(--violet-strong);
+}
 .closing span {
   font-size: 12.5px;
+  color: var(--muted);
+  font-style: italic;
 }
 
 /* ---- boards, cards and chips ---------------------------------------------- */
@@ -1101,10 +1269,96 @@
   color: var(--sky);
 }
 
+.model-providers {
+  display: grid;
+  gap: 14px;
+}
+.model-provider > header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.model-provider > header .spacer {
+  flex: 1;
+}
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 8px;
+}
+
+.model-id {
+  font-size: 11.5px;
+  word-break: break-all;
+  color: var(--text);
+}
+.model-meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.model-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+/* Each provider's grid pages on its own, so one provider with 200 models can
+   no longer push every other provider off the page. */
+.model-pager {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border-strong);
+  flex-wrap: wrap;
+}
+button.play {
+  min-width: 34px;
+  padding: 3px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  color: var(--text);
+}
+button.play:hover:not(:disabled) {
+  border-color: var(--violet);
+  background: var(--surface);
+}
+button.play.ok {
+  background: var(--sage-soft);
+  border-color: var(--sage-line);
+  color: var(--sage);
+}
+button.play.fail {
+  background: var(--rose-soft);
+  border-color: var(--rose-line);
+  color: var(--rose);
+}
+.probe-note.ok {
+  color: var(--sage);
+}
+.probe-note.err {
+  color: var(--rose);
+}
+
+.provider-section {
+  margin-bottom: 24px;
+}
+
 /* Verdict headings are names, not micro-labels: display face, sentence case,
    with the same hand-cut tab the rest of the app uses. */
 .provider-section-title {
+  display: flex;
+  align-items: center;
   gap: 9px;
+  margin: 0 0 10px;
   font-family: var(--font-display);
   font-style: italic;
   font-size: 17px;
@@ -1114,6 +1368,7 @@
   color: var(--text);
 }
 .provider-section-title::before {
+  content: "";
   width: 9px;
   height: 9px;
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
@@ -1125,36 +1380,142 @@
   background: var(--violet);
 }
 
+/* The whole card opens the dossier now, not just the Models button inside it. */
+.provider-card.clickable {
+  cursor: pointer;
+}
+.provider-card.clickable:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+}
+
+/*
+ * Four facts about a provider, as a small grid of tiles rather than a striped
+ * settings table - the shape a definition list defaults to reads as a form,
+ * and this is reference material, not something anyone is filling in.
+ *
+ * Scoped to `.modal .dossier`, not `.provider-card .dossier`: the modal that
+ * holds this list is rendered through a portal straight onto `document.body`
+ * (see `Modal` in Primitives.tsx), so in the real DOM it is never a
+ * descendant of the card that opened it - a `.provider-card .dossier`
+ * selector can never match at all, which is why this grid rendered as an
+ * unstyled definition list despite the rule existing.
+ */
+.modal .dossier {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 12px;
+}
+.modal .dossier > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+}
+.modal .dossier dt {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.modal .dossier dd {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+/* Free tier earns the same accent as the card's own quota chip - it is the
+   fact most worth a second glance, so it should not read as identical to
+   "type" or "reviewed". */
+.modal .dossier > div.dossier-freetier {
+  border-color: var(--sage-line);
+  background: var(--sage-soft);
+}
+.modal .dossier > div.dossier-freetier dt {
+  color: var(--sage);
+}
+
 .model-provider {
+  padding: 14px;
   border: 1.5px solid var(--border);
   border-radius: 18px 20px 16px 19px;
-  background: linear-gradient(165deg, var(--surface-2), var(--surface));
+  background: var(--surface-2);
 }
 
 .model-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 10px 11px;
   border: 1.5px solid var(--border);
   border-radius: 14px 16px 13px 17px;
   background: var(--surface);
+  font-size: 12px;
+  transition:
+    border-color 0.18s ease,
+    transform 0.18s var(--ease);
 }
 .model-chip:hover {
   border-color: var(--violet-line);
   box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+.model-chip.locked {
+  opacity: 0.55;
+  border-style: dashed;
 }
 
+/* The full model list, revealed per provider. */
+.model-list {
+  display: grid;
+  gap: 6px;
+  margin-top: 12px;
+}
 .model-list-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
   border: 1px solid var(--border);
   border-radius: 12px;
   background: var(--surface);
+  font-size: 12px;
+}
+.model-list-item .model-list-id {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--text);
+  word-break: break-all;
+}
+.model-list-item .spacer {
+  flex: 1;
+}
+/* The provider stopped serving it: still named, so a reader knows what it
+   was, but visibly inert — no "add to chain" link exists for this row. */
+.model-list-item.retired {
+  opacity: 0.55;
+  background: var(--surface-3);
+}
+.model-list-item.retired .model-list-id {
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
 }
 
 .stack-chip {
   border: 1.5px solid var(--border-strong);
-  background: linear-gradient(150deg, var(--surface), var(--surface-3));
+  background: var(--surface);
   font-weight: 550;
 }
 .stack-chip.alt {
   border-color: var(--violet-line);
-  background: linear-gradient(150deg, var(--surface), var(--violet-soft));
+  background: var(--violet-soft);
 }
 
 .about-logo {
