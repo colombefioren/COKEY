@@ -50,6 +50,15 @@ export interface RouteResult {
   attempts: AttemptLog[];
   /** Identity used when translating a non-OpenAI upstream response. */
   context: TransformContext;
+  /**
+   * Frees this credential's in-flight slot. The credential stays counted as
+   * busy - so the "no thundering herd" load balancing in `CredentialSelector`
+   * reflects reality - until the caller has actually finished reading
+   * `response`'s body, not merely until its headers arrived. Call exactly
+   * once, after the body (streamed or not) is fully drained or the request
+   * gives up on it.
+   */
+  release: () => void;
 }
 
 export class AllChainsExhaustedError extends Error {
@@ -290,20 +299,18 @@ export class RouterEngine {
       });
 
       this.selector.acquire(entry.id, credential.id);
-      let outcome: SendResult;
-      try {
-        outcome = await this.attemptWithRetries(
-          adapter,
-          entry,
-          credential,
-          request,
-          chainAlias,
-          policy,
-          state,
-        );
-      } finally {
-        this.selector.release(entry.id, credential.id);
-      }
+      // `attemptWithRetries` never throws - a failed `adapter.send` becomes a
+      // `{ ok: false }` result - so releasing is always reached from here on,
+      // whichever branch below returns.
+      const outcome = await this.attemptWithRetries(
+        adapter,
+        entry,
+        credential,
+        request,
+        chainAlias,
+        policy,
+        state,
+      );
 
       if (outcome.ok) {
         const latencyMs = Date.now() - started;
@@ -356,10 +363,12 @@ export class RouterEngine {
               requestId: `chatcmpl-cokey-${randomUUID()}`,
               created: Math.floor(Date.now() / 1000),
             },
+            release: () => this.selector.release(entry.id, credential.id),
           },
         };
       }
 
+      this.selector.release(entry.id, credential.id);
       state.lastError = outcome.error;
       const classification = adapter.classifyError(outcome.error);
 

@@ -257,4 +257,29 @@ describe("live routing feedback", () => {
     expect(h.rates.snapshot(key1.id).recentlyRateLimited).toBe(true);
     expect(h.rates.snapshot(key2.id).recentlyRateLimited).toBe(false);
   });
+
+  it("keeps a successful credential counted as in-flight until the caller releases it", async () => {
+    const key1 = addCredential(h, "groq", "key-1");
+    h.registry.register("groq", new StubAdapter(() => ({ status: 200 })));
+
+    const chain = h.chains.createChain({ alias: "best" });
+    const entry = h.chains.addEntry({
+      chainId: chain.id,
+      providerId: "groq",
+      model: "qwen/qwen3.8-27b",
+      baseUrl: BASE,
+      credentialIds: [key1.id],
+    });
+
+    const result = await h.router.route("best", REQUEST);
+
+    // The response has resolved, but nothing has read its body yet - the
+    // credential must still look busy, not free, so a concurrent request
+    // doesn't pile onto it under the illusion that it's idle.
+    expect(h.selector.inFlightCount(entry.id, key1.id)).toBe(1);
+
+    result.release();
+
+    expect(h.selector.inFlightCount(entry.id, key1.id)).toBe(0);
+  });
 });

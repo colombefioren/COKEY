@@ -109,6 +109,7 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
           attempts: result.attempts.length,
           stream: true,
         });
+        result.release();
         reply.hijack();
         reply.raw.writeHead(502, { "content-type": "application/json" });
         reply.raw.end(JSON.stringify({ error: { message: "Upstream returned no stream body" } }));
@@ -139,6 +140,9 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
 
       const sniffer = createStreamUsageSniffer();
       await pipeStream(reply, stream, { onChunk: sniffer.onChunk });
+      // Only now has the body actually finished draining to the client - this
+      // is what the in-flight load balancer should have been waiting for.
+      result.release();
 
       const usage = sniffer.usage();
       let streamedInputTokens = 0;
@@ -170,6 +174,7 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
     }
 
     const text = await upstream.text();
+    result.release();
     let parsedBody: unknown;
     try {
       parsedBody = text ? JSON.parse(text) : undefined;
