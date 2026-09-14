@@ -1194,4 +1194,9 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "That's everything": "C'est tout",
   "Go connect a free key and build your first chain. Terms and About, in the sidebar, are where bug reports and provider tips live.":
     "Allez connecter une clé gratuite et construire votre première chaîne. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
+
+  // ---- Provider card free-tier chip ------------------------------------------------
+  "This provider does not publish its free-tier limits.":
+    "Ce fournisseur ne publie pas ses limites de palier gratuit.",
+  "Published by the provider.": "Publié par le fournisseur.",
 };

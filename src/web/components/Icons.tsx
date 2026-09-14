@@ -262,3 +262,11 @@ export function IconCompass(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconZap(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12.5 3 5 13.5h5.5L11 21l7.5-10.5H13L12.5 3Z" />
+    </Svg>
+  );
+}

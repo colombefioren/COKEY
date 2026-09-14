@@ -1193,6 +1193,47 @@ section.panel.soft {
   font-size: 12px;
   margin-top: 6px;
 }
+/* Capped so a long dossier summary never crowds out the quota chip below it -
+   the number is the reason the card exists, the summary is background. */
+.card .sub.clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/*
+ * The free-tier limit, right on the card face instead of two clicks deep in a
+ * modal - RPD, RPM, whatever the provider actually publishes. Tone carries
+ * whether that number came from the provider itself.
+ */
+.quota-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  margin-top: 8px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--sage-line);
+  background: var(--sage-soft);
+  color: var(--sage);
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.quota-chip svg {
+  flex: none;
+}
+.quota-chip span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.quota-chip.unknown {
+  border-color: var(--border-strong);
+  background: var(--surface-3);
+  color: var(--faint);
+}
 
 /* ---- controls ------------------------------------------------------------- */
 

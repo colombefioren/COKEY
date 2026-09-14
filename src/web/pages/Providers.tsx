@@ -8,6 +8,7 @@ import type {
   ProviderStatus,
 } from "../types.js";
 import { ConnectProviderModal } from "../components/ConnectProviderModal.js";
+import { IconZap } from "../components/Icons.js";
 import { Pagination } from "../components/Pagination.js";
 import { Empty, Modal, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
@@ -304,7 +305,27 @@ function ProviderDossierCard({
         ) : null}
       </div>
 
-      <div className="sub">{dossier.summary}</div>
+      <div className="sub clamp-2">{dossier.summary}</div>
+
+      {/*
+       * The number that actually decides whether this provider is worth a
+       * click, right on the card - not two clicks deep in the model-list
+       * modal. Tone follows whether the provider itself published the
+       * number: an operator's own figure reads as a confident chip, a gap in
+       * their docs reads as the same honest "we don't know" as the rest of
+       * the app uses for an unpublished rate limit.
+       */}
+      <div
+        className={`quota-chip${row.freeTier.quotaSource === "unknown" ? " unknown" : ""}`}
+        title={
+          row.freeTier.quotaSource === "unknown"
+            ? t("This provider does not publish its free-tier limits.")
+            : t("Published by the provider.")
+        }
+      >
+        <IconZap size={12} />
+        <span>{dossier.freeTierSummary ?? row.freeTier.summary}</span>
+      </div>
 
       {/*
        * The state that used to be invisible: whether this provider's model list
