@@ -1,4 +1,5 @@
 import { ContactGrid } from "../components/Contact.js";
+import { CokeyLogo } from "../components/Logo.js";
 import { Markdown } from "../components/Markdown.js";
 import { Panel } from "../components/Primitives.js";
 import { CREATOR } from "../links.js";
@@ -174,7 +175,7 @@ export function Terms() {
       </Panel>
 
       <div className="closing">
-        <strong>COKEY</strong>
+        <CokeyLogo height={28} className="closing-logo" />
         <span>{t("a tool for broke lads made by a broke princess")}</span>
       </div>
     </>
