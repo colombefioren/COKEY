@@ -24,9 +24,26 @@ export function LiveStatus() {
   const [route, setRoute] = useState<LiveRouteSnapshot | null>(null);
   const [events, setEvents] = useState<CokeyEvent[]>([]);
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Event ids are stable, so a reconnecting EventSource cannot double-notify.
   const seen = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
 
   useEffect(() => {
     let closed = false;
@@ -138,7 +155,7 @@ export function LiveStatus() {
   const key = route?.credentialDescription ?? "—";
 
   return (
-    <div className="live" data-tour="live-status">
+    <div className="live" data-tour="live-status" ref={rootRef}>
       <button
         type="button"
         className={`live-chip ${route?.active ? "active" : "idle"}`}
