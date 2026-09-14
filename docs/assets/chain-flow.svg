@@ -4,197 +4,86 @@
   width="980"
   height="380"
   role="img"
-  aria-label="A request entering COKEY, spending every key of node one, and falling back to node two"
+  aria-label="A request entering COKEY, exhausting every key of node one, and falling back to node two, which serves it"
 >
-  <title>COKEY chain fallback</title>
+  <title>COKEY chain fallback, live</title>
   <desc>
-    A client sends one request to the alias cokey-best. All three keys of node one go
-    into cooldown, so the request walks down the chain to node two, which serves it.
+    A client sends one request to the alias cokey-best. All three keys of node one are in
+    cooldown, so the request walks down the chain to node two, which serves it live.
   </desc>
 
   <defs>
-    <radialGradient id="bloom" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#E07A9C" stop-opacity="0.42" />
-      <stop offset="1" stop-color="#E07A9C" stop-opacity="0" />
-    </radialGradient>
-    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#EFB4E0" />
-      <stop offset="0.55" stop-color="#F0B0B4" />
-      <stop offset="1" stop-color="#E07A9C" />
-    </linearGradient>
-    <linearGradient id="rail" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#E07A9C" stop-opacity="0.1" />
-      <stop offset="0.45" stop-color="#F0B0B4" stop-opacity="0.6" />
-      <stop offset="1" stop-color="#E07A9C" stop-opacity="0.1" />
-    </linearGradient>
-    <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#581833" />
-      <stop offset="1" stop-color="#3D0F21" />
-    </linearGradient>
+    <pattern id="dotgrid" width="22" height="22" patternUnits="userSpaceOnUse">
+      <circle cx="1.4" cy="1.4" r="1.4" fill="#dd5c95" opacity="0.16" />
+    </pattern>
+    <filter id="lift" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#2b1a2f" flood-opacity="0.12" />
+    </filter>
     <style>
-      .kicker {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 9.5px;
-        letter-spacing: 2.4px;
-        fill: #C984A1;
-      }
-      .model {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 12.5px;
-        fill: #FCEEF2;
-      }
-      .body {
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        font-size: 13.5px;
-        fill: #FCEEF2;
-      }
-      .soft {
-        font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-        font-size: 11px;
-        fill: #E6AEC5;
-      }
-      .tiny {
-        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-        font-size: 10px;
-        fill: #C984A1;
-      }
+      .kicker { font: 500 10px/1 ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.09em; text-transform: uppercase; fill: #6d5871; }
+      .title { font: italic 21px/1 "Instrument Serif", Georgia, serif; fill: #2b1a2f; }
+      .title-sm { font: italic 17px/1 "Instrument Serif", Georgia, serif; fill: #2b1a2f; }
+      .sub { font: 11.5px/1 ui-sans-serif, system-ui, sans-serif; fill: #6d5871; }
+      .mono { font: 12px/1 ui-monospace, SFMono-Regular, Menlo, monospace; fill: #2b1a2f; }
+      .flag { font: 600 9.5px/1 ui-sans-serif, system-ui, sans-serif; letter-spacing: 0.03em; }
     </style>
   </defs>
 
-  <rect x="0.5" y="0.5" width="979" height="379" rx="20" fill="#20060F" stroke="#702545" />
-
-  <!-- the router's bloom -->
-  <circle cx="407" cy="190" r="150" fill="url(#bloom)">
-    <animate attributeName="opacity" values="0.55;0.95;0.55" dur="6s" repeatCount="indefinite" />
-  </circle>
-
-  <!-- client -->
-  <rect x="36" y="152" width="176" height="76" rx="14" fill="url(#card)" stroke="#702545" />
-  <text class="kicker" x="56" y="180">CLIENT</text>
-  <text class="body" x="56" y="203">your editor / CLI</text>
-  <text class="tiny" x="56" y="220">one base URL</text>
-
-  <!-- router -->
-  <rect x="300" y="118" width="214" height="144" rx="18" fill="#581833" stroke="#E07A9C" />
-  <g transform="translate(376 132) scale(0.19)">
-    <path
-      d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"
-      fill="none"
-      stroke="url(#mark)"
-      stroke-width="13"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    />
-    <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="#F0B0B4" />
-    <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="#E07A9C" />
-  </g>
-  <text x="407" y="192" text-anchor="middle" fill="#FCEEF2" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="7">COKEY</text>
-  <text class="tiny" x="407" y="214" text-anchor="middle">alias: cokey-best</text>
-  <text class="tiny" x="407" y="234" text-anchor="middle" fill="#A86882">key first, node second</text>
+  <rect width="980" height="380" fill="#fffaf7" />
+  <rect width="980" height="380" fill="url(#dotgrid)" />
 
   <!-- connectors -->
-  <line x1="212" y1="190" x2="300" y2="190" stroke="url(#rail)" stroke-width="2" />
-  <path d="M514 190 H560 V88 H612" fill="none" stroke="#702545" stroke-width="2" />
-  <path d="M560 88 V292" fill="none" stroke="#702545" stroke-width="2" />
-  <path d="M560 190 H612" fill="none" stroke="#702545" stroke-width="2" />
-  <path d="M560 292 H612" fill="none" stroke="#702545" stroke-width="2" />
+  <path d="M 220 190 C 255 190, 255 190, 290 190" fill="none" stroke="#e3c6dc" stroke-width="2.5" stroke-linecap="round" />
+  <path d="M 460 190 C 520 190, 520 100, 600 100" fill="none" stroke="#e3c6dc" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="2 7" opacity="0.5" />
+  <path d="M 460 190 C 520 190, 520 280, 600 280" fill="none" stroke="#2f9d74" stroke-width="3" stroke-linecap="round" stroke-dasharray="9 9">
+    <animate attributeName="stroke-dashoffset" from="0" to="-36" dur="1.1s" repeatCount="indefinite" />
+  </path>
 
-  <!-- node 1: every key spent -->
-  <rect x="612" y="44" width="332" height="88" rx="14" fill="url(#card)" stroke="#702545" stroke-width="1.4">
-    <animate
-      attributeName="stroke"
-      dur="6s"
-      repeatCount="indefinite"
-      values="#702545;#702545;#F6C46E;#F6C46E;#702545;#702545"
-      keyTimes="0;0.33;0.5;0.9;0.94;1"
-    />
-  </rect>
-  <text class="kicker" x="632" y="70">NODE 1 · PRIORITY 1</text>
-  <text class="model" x="632" y="92">groq / qwen3.8-27b</text>
-  <text class="tiny" x="632" y="114" fill="#F6C46E" opacity="0">
-    3 keys spent, cooling down
-    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.48;0.54;0.9;0.95;1" />
-  </text>
-
-  <g>
-    <circle cx="872" cy="92" r="5.5" fill="#86E6B0">
-      <animate attributeName="fill" dur="6s" repeatCount="indefinite" values="#86E6B0;#F6C46E;#F6C46E;#86E6B0" keyTimes="0;0.38;0.94;1" />
-    </circle>
-    <circle cx="894" cy="92" r="5.5" fill="#86E6B0">
-      <animate attributeName="fill" dur="6s" repeatCount="indefinite" values="#86E6B0;#F6C46E;#F6C46E;#86E6B0" keyTimes="0;0.42;0.94;1" />
-    </circle>
-    <circle cx="916" cy="92" r="5.5" fill="#86E6B0">
-      <animate attributeName="fill" dur="6s" repeatCount="indefinite" values="#86E6B0;#F6C46E;#F6C46E;#86E6B0" keyTimes="0;0.46;0.94;1" />
-    </circle>
+  <!-- client card -->
+  <g filter="url(#lift)">
+    <rect x="0" y="141" width="220" height="98" rx="20" fill="#ffffff" />
   </g>
+  <rect x="26" y="133" width="52" height="18" rx="2" fill="#f482b4" opacity="0.24" transform="rotate(-3 52 142)" />
+  <text x="22" y="168" class="kicker">client</text>
+  <text x="22" y="192" class="title-sm">your editor</text>
+  <text x="22" y="212" class="sub">one base URL</text>
 
-  <!-- node 2: the fallback that serves -->
-  <rect x="612" y="146" width="332" height="88" rx="14" fill="url(#card)" stroke="#702545" stroke-width="1.4">
-    <animate
-      attributeName="stroke"
-      dur="6s"
-      repeatCount="indefinite"
-      values="#702545;#702545;#86E6B0;#86E6B0;#702545"
-      keyTimes="0;0.82;0.9;0.96;1"
-    />
-  </rect>
-  <text class="kicker" x="632" y="172">NODE 2 · PRIORITY 2</text>
-  <text class="model" x="632" y="194">openrouter / deepseek-v4:free</text>
-  <text class="tiny" x="632" y="216" fill="#86E6B0" opacity="0">
-    fallback · serving
-    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0" keyTimes="0;0.86;0.92;0.97;1" />
-  </text>
-  <circle cx="894" cy="194" r="5.5" fill="#86E6B0" />
-  <circle cx="916" cy="194" r="5.5" fill="#86E6B0" />
+  <!-- hub -->
+  <circle cx="375" cy="190" r="85" fill="#f482b4" />
+  <text x="375" y="184" text-anchor="middle" class="kicker" fill="#ffffff" opacity="0.85">alias</text>
+  <text x="375" y="206" text-anchor="middle" class="mono" fill="#ffffff">cokey-best</text>
 
-  <!-- node 3: never reached -->
-  <g opacity="0.55">
-    <rect x="612" y="248" width="332" height="88" rx="14" fill="url(#card)" stroke="#702545" />
-    <text class="kicker" x="632" y="274">NODE 3 · PRIORITY 3</text>
-    <text class="model" x="632" y="296">cloudflare / gpt-oss-120b</text>
-    <text class="tiny" x="632" y="318">never reached this request</text>
-    <circle cx="916" cy="296" r="5.5" fill="#86E6B0" />
+  <!-- node one: exhausted, fallen back from -->
+  <g filter="url(#lift)">
+    <rect x="600" y="52" width="270" height="96" rx="20" fill="#ffffff" opacity="0.88" />
   </g>
+  <circle cx="622" cy="76" r="10" fill="#ffeaf4" />
+  <text x="622" y="80" text-anchor="middle" class="flag" fill="#dd5c95">1</text>
+  <text x="640" y="80" class="title-sm">groq / qwen3.8-27b</text>
+  <rect x="810" y="64" width="52" height="20" rx="10" fill="#fde8e7" />
+  <text x="836" y="78" text-anchor="middle" class="flag" fill="#c9424a">SKIPPED</text>
+  <text x="622" y="102" class="sub">groq</text>
+  <circle cx="622" cy="122" r="7" fill="#e2565a" />
+  <circle cx="640" cy="122" r="7" fill="#e2565a" />
+  <circle cx="658" cy="122" r="7" fill="#e2565a" />
+  <text x="674" y="126" class="sub">3 keys, all cooling down</text>
 
-  <!-- the travelling request -->
-  <circle r="4.5" fill="#F0B0B4">
-    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.04;0.1;0.26;0.3;1" />
-    <animateMotion
-      dur="6s"
-      repeatCount="indefinite"
-      calcMode="linear"
-      keyPoints="0;0;1;1"
-      keyTimes="0;0.04;0.3;1"
-      path="M216 190 H300"
-    />
+  <!-- node two: live -->
+  <g filter="url(#lift)">
+    <rect x="600" y="232" width="270" height="96" rx="20" fill="#ffffff" />
+  </g>
+  <circle cx="622" cy="256" r="10" fill="#e2f5ec" />
+  <text x="622" y="260" text-anchor="middle" class="flag" fill="#2f9d74">2</text>
+  <text x="640" y="260" class="title-sm">openrouter / glm-5</text>
+  <rect x="792" y="244" width="70" height="20" rx="10" fill="#e2f5ec">
+    <animate attributeName="opacity" values="1;0.55;1" dur="1.6s" repeatCount="indefinite" />
+  </rect>
+  <text x="827" y="258" text-anchor="middle" class="flag" fill="#1f7a58">SERVING</text>
+  <text x="622" y="282" class="sub">openrouter</text>
+  <circle cx="622" cy="302" r="7" fill="#2f9d74" />
+  <circle cx="622" cy="302" r="11" fill="none" stroke="#2f9d74" stroke-width="2" opacity="0.6">
+    <animate attributeName="r" values="8;14;8" dur="1.6s" repeatCount="indefinite" />
+    <animate attributeName="opacity" values="0.7;0;0.7" dur="1.6s" repeatCount="indefinite" />
   </circle>
-
-  <circle r="4.5" fill="#F0B0B4">
-    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.32;0.38;0.6;0.64;1" />
-    <animateMotion
-      dur="6s"
-      repeatCount="indefinite"
-      calcMode="linear"
-      keyPoints="0;0;1;1"
-      keyTimes="0;0.32;0.6;1"
-      path="M518 190 H560 V88 H612"
-    />
-  </circle>
-
-  <circle r="4.5" fill="#86E6B0">
-    <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.66;0.72;0.94;0.98;1" />
-    <animateMotion
-      dur="6s"
-      repeatCount="indefinite"
-      calcMode="linear"
-      keyPoints="0;0;1;1"
-      keyTimes="0;0.66;0.94;1"
-      path="M560 88 V190 H612"
-    />
-  </circle>
-
-  <!-- caption -->
-  <text class="tiny" x="36" y="352" fill="#A86882">
-    keys rotate first · the node only falls through once every key above it is spent
-  </text>
+  <text x="638" y="306" class="sub">1 key, answering now</text>
 </svg>

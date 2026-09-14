@@ -9,24 +9,26 @@
 
 <br />
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square&labelColor=1F2937)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-3B82F6?style=flat-square&labelColor=1F2937)](package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-6366F1?style=flat-square&labelColor=1F2937)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-passing-10B981?style=flat-square&labelColor=1F2937)](tests)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-F59E0B?style=flat-square&labelColor=1F2937)](https://github.com/colombefioren/COKEY/pulls)
-[![No telemetry](https://img.shields.io/badge/telemetry-none-A855F7?style=flat-square&labelColor=1F2937)](#security)
-[![Price](https://img.shields.io/badge/price-%240.00-EC4899?style=flat-square&labelColor=1F2937)](#every-free-lab-one-endpoint)
+[![npm](https://img.shields.io/npm/v/cokey?style=flat-square&color=DD5C95&labelColor=2B1A2F&logo=npm&logoColor=white)](https://www.npmjs.com/package/cokey)
+[![Docker Hub](https://img.shields.io/docker/v/cocofiore/cokey?style=flat-square&color=F482B4&labelColor=2B1A2F&logo=docker&logoColor=white&label=docker)](https://hub.docker.com/r/cocofiore/cokey)
+[![License: MIT](https://img.shields.io/badge/License-MIT-2F9D74?style=flat-square&labelColor=2B1A2F)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-6B86E8?style=flat-square&labelColor=2B1A2F)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-7452F0?style=flat-square&labelColor=2B1A2F)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/tests-passing-2F9D74?style=flat-square&labelColor=2B1A2F)](tests)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-D98830?style=flat-square&labelColor=2B1A2F)](https://github.com/colombefioren/COKEY/pulls)
+[![No telemetry](https://img.shields.io/badge/telemetry-none-7452F0?style=flat-square&labelColor=2B1A2F)](#-security)
+[![Price](https://img.shields.io/badge/price-%240.00-F482B4?style=flat-square&labelColor=2B1A2F)](#-every-free-lab-one-endpoint)
 
 <br />
 
 <br />
 <br />
 
-# 400+ free models &middot; 50+ providers
+# 🔑 400+ free models &middot; 50+ providers, one key
 
 ### No subscription. No credit card. Not a dime.
 
-OpenAI-compatible access to GPT-oss, Mistral, DeepSeek, Qwen, Gemini, GLM and dozens more, every single one of them through a real, self-replenishing free tier.
+OpenAI-compatible access to GPT-oss, Mistral, DeepSeek, Qwen, Gemini, GLM and dozens more — every single one of them through a real, self-replenishing free tier, stitched behind one endpoint that never tells your editor a key just died.
 
 **100% free, always.** No trial credit that quietly runs out, no "free" that needs a card on file.
 
@@ -36,7 +38,7 @@ OpenAI-compatible access to GPT-oss, Mistral, DeepSeek, Qwen, Gemini, GLM and do
 
 <div align="center">
 
-## What COKEY actually does
+## 🧠 What COKEY actually does
 
 </div>
 
@@ -71,7 +73,7 @@ There's one more wall free tiers hit that key rotation alone can't solve: most p
 
 <div align="center">
 
-## Every client you already use
+## 🧩 Every client you already use
 
 One base URL. Take an API key from COKEY (or use a placeholder) and point any of these at it.
 
@@ -102,7 +104,7 @@ One base URL. Take an API key from COKEY (or use a placeholder) and point any of
 
 <div align="center">
 
-## Every free lab, one endpoint
+## 🌐 Every free lab, one endpoint
 
 50+ providers, every one of them free. Connect a key once and use it from any chain.
 
@@ -133,7 +135,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
 
 <div align="center">
 
-## Resilience
+## 🛡️ Resilience
 
 </div>
 
@@ -170,7 +172,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
 
 <div align="center">
 
-## Why COKEY
+## ⚔️ Why COKEY
 
 </div>
 
@@ -217,7 +219,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
 
 <div align="center">
 
-## Where COKEY runs
+## 🖥️ Where COKEY runs
 
 </div>
 
@@ -232,7 +234,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
   </tr>
   <tr>
     <td align="center">Docker</td>
-    <td align="center"><code>docker run -p 8787:8787 -v cokey:/data colombefioren/cokey</code></td>
+    <td align="center"><code>docker run -p 8787:8787 -v cokey:/data cocofiore/cokey</code></td>
   </tr>
   <tr>
     <td align="center">Render / Railway / Fly</td>
@@ -256,7 +258,7 @@ Local, containerized or platform-hosted, the privacy story doesn't change: SQLit
 
 ---
 
-## Client configuration
+## ⚙️ Client configuration
 
 Any OpenAI-compatible tool needs only a base URL. The provider is always `COKEY`, the model is whatever you named your chain.
 
@@ -274,7 +276,7 @@ Contact, bug reports and provider tips live in the app under **Terms** and **Abo
 
 ---
 
-## The invariant
+## 📐 The invariant
 
 Routing priority, without exception:
 
@@ -286,7 +288,7 @@ A lower-priority node is never attempted while a higher-priority node still has 
 
 ---
 
-## How a request is routed
+## 🔀 How a request is routed
 
 1. The client asks for a chain alias (`model: "cokey-best"`).
 2. Each node is tried in your order.
@@ -308,7 +310,7 @@ Headers never contain a secret.
 
 ---
 
-## The live route
+## 📡 The live route
 
 `GET /api/events` streams server-sent events. The first frame is a snapshot, so a UI that connects mid-request still renders correctly.
 
@@ -324,7 +326,7 @@ data: {"kind":"event","event":{"type":"credential.cooldown","data":{"cooldownUnt
 
 ---
 
-## Automatic egress pool
+## 🕵️ Automatic egress pool
 
 Provider limits are usually tracked per key and per IP, so rotating keys from one address still trips them. The pool fixes that without manual wiring:
 
@@ -349,7 +351,7 @@ curl -X PATCH http://localhost:8787/api/credentials/<id> \
 
 ---
 
-## Management API
+## 🔌 Management API
 
 ```
 GET    /api/models                    # curated free models + availability
@@ -399,7 +401,7 @@ No response ever contains a stored secret.
 
 ---
 
-## CLI
+## ⌨️ CLI
 
 ```bash
 cokey                        # start the gateway and UI
@@ -424,7 +426,7 @@ cokey catalog                # dump the provider catalog
 
 ---
 
-## Programmatic API
+## 🧑‍💻 Programmatic API
 
 ```ts
 import { Cokey } from "cokey";
@@ -449,7 +451,7 @@ await cokey.addChain({
 
 ---
 
-## Security
+## 🔒 Security
 
 - Secrets are encrypted with **AES-256-GCM**. The on-disk value is `v1:` + `base64(iv, authTag, ciphertext)`.
 - The master key comes from `COKEY_MASTER_KEY`, a passphrase (`COKEY_PASSPHRASE`), the OS keychain, or a `0600` key file, in that order.
@@ -461,7 +463,7 @@ await cokey.addChain({
 
 ---
 
-## Provider dossiers and rankings
+## 📚 Provider dossiers and rankings
 
 Who runs a provider, and which models are worth your time, is reference data compiled into `src/catalog/` (`dossiers.ts`, `models.ts`, `rankings.ts`). Correcting it is a normal pull request against COKEY itself.
 
@@ -469,7 +471,7 @@ The ranking boards are the exception: free tier availability drifts faster than 
 
 ---
 
-## Testing
+## ✅ Testing
 
 ```bash
 npm test          # vitest
@@ -480,7 +482,7 @@ The suite covers the routing invariant (key rotation before node fallback, cross
 
 ---
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 src/
@@ -507,7 +509,7 @@ Adding a provider is a data change: append to the catalog. No router, adapter or
 
 ---
 
-## Credits
+## 🙏 Credits
 
 The provider and free-tier catalog is built in part from [awesome-free-byok-models](https://github.com/velo4705/awesome-free-byok-models) by [velo4705](https://github.com/velo4705).
 
@@ -517,7 +519,7 @@ Rate limits and capabilities change constantly, so every ranking board in the ap
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 COKEY is MIT licensed and open source.
 
@@ -537,7 +539,7 @@ npm run typecheck && npm test
 
 <div align="center">
 
-## Stack
+## 🧰 Stack
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)
 ![Node.js](https://img.shields.io/badge/Node.js%2020%2B-339933?style=flat-square&logo=node.js&logoColor=white)
@@ -556,7 +558,7 @@ npm run typecheck && npm test
 
 <div align="center">
 
-## License
+## 📄 License
 
 MIT. See [LICENSE](LICENSE).
 
