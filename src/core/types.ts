@@ -336,7 +336,7 @@ export function defaultSettings(dataDir: string): Settings {
     showFreeProviderNudger: true,
     freeProviderTarget: 3,
     allowPrivateEndpoints: false,
-    autoProxy: true,
+    autoProxy: false,
     autoProxyStrategy: "per-provider",
     fallback: { ...DEFAULT_FALLBACK_POLICY },
   };
