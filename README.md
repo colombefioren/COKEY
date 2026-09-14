@@ -431,10 +431,10 @@ cokey catalog                # dump the provider catalog
 ## 🧑‍💻 Programmatic API
 
 ```ts
-import { Cokey } from "cokey";
+import { Cokey, startServer } from "cokey";
 
 const cokey = new Cokey({ port: 8787 });
-cokey.start();
+cokey.start(); // background upkeep: cooldown expiry, proxy assignment
 
 await cokey.addChain({
   alias: "cokey-best",
@@ -449,6 +449,8 @@ await cokey.addChain({
     },
   ],
 });
+
+await startServer(cokey); // actually binds the port and serves /v1
 ```
 
 ---
