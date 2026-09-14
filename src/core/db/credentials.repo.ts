@@ -52,8 +52,8 @@ export class CredentialsRepo {
   constructor(private readonly db: DatabaseClient) {}
 
   insert(input: InsertCredentialInput): void {
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO credentials
            (id, provider_id, account_id, secret_encrypted, proxy_url, proxy_auto, description, status,
             created_at, updated_at, usage, consecutive_failures)
@@ -75,18 +75,18 @@ export class CredentialsRepo {
   }
 
   get(id: string): CredentialRow | undefined {
-    return this.db.db.prepare(`SELECT * FROM credentials WHERE id = ?`).get(id) as
+    return this.db.prepareCached(`SELECT * FROM credentials WHERE id = ?`).get(id) as
       CredentialRow | undefined;
   }
 
   list(providerId?: string): CredentialRow[] {
     if (providerId) {
-      return this.db.db
-        .prepare(`SELECT * FROM credentials WHERE provider_id = ? ORDER BY created_at ASC`)
+      return this.db
+        .prepareCached(`SELECT * FROM credentials WHERE provider_id = ? ORDER BY created_at ASC`)
         .all(providerId) as CredentialRow[];
     }
-    return this.db.db
-      .prepare(`SELECT * FROM credentials ORDER BY created_at ASC`)
+    return this.db
+      .prepareCached(`SELECT * FROM credentials ORDER BY created_at ASC`)
       .all() as CredentialRow[];
   }
 
@@ -94,8 +94,8 @@ export class CredentialsRepo {
   listByIds(ids: string[]): CredentialRow[] {
     if (ids.length === 0) return [];
     const placeholders = ids.map(() => "?").join(", ");
-    return this.db.db
-      .prepare(`SELECT * FROM credentials WHERE id IN (${placeholders})`)
+    return this.db
+      .prepareCached(`SELECT * FROM credentials WHERE id IN (${placeholders})`)
       .all(...ids) as CredentialRow[];
   }
 
@@ -112,21 +112,21 @@ export class CredentialsRepo {
     }
     if (sets.length === 0) return;
     values.push(id);
-    this.db.db.prepare(`UPDATE credentials SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+    this.db.prepareCached(`UPDATE credentials SET ${sets.join(", ")} WHERE id = ?`).run(...values);
   }
 
   delete(id: string): void {
-    this.db.db.prepare(`DELETE FROM credentials WHERE id = ?`).run(id);
+    this.db.prepareCached(`DELETE FROM credentials WHERE id = ?`).run(id);
   }
 
   deleteByProvider(providerId: string): number {
-    return this.db.db.prepare(`DELETE FROM credentials WHERE provider_id = ?`).run(providerId)
+    return this.db.prepareCached(`DELETE FROM credentials WHERE provider_id = ?`).run(providerId)
       .changes;
   }
 
   countsByProvider(): Array<{ provider_id: string; total: number; healthy: number }> {
-    return this.db.db
-      .prepare(
+    return this.db
+      .prepareCached(
         `SELECT provider_id,
                 COUNT(*) AS total,
                 SUM(CASE WHEN status = 'healthy' THEN 1 ELSE 0 END) AS healthy
@@ -136,7 +136,7 @@ export class CredentialsRepo {
   }
 
   count(): number {
-    const row = this.db.db.prepare(`SELECT COUNT(*) AS n FROM credentials`).get() as { n: number };
+    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM credentials`).get() as { n: number };
     return row.n;
   }
 }

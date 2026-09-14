@@ -5,7 +5,7 @@ export class SettingsRepo {
   constructor(private readonly db: DatabaseClient) {}
 
   get(key: string): string | undefined {
-    const row = this.db.db.prepare(`SELECT value FROM settings WHERE key = ?`).get(key) as
+    const row = this.db.prepareCached(`SELECT value FROM settings WHERE key = ?`).get(key) as
       { value: string } | undefined;
     return row?.value;
   }
@@ -21,8 +21,8 @@ export class SettingsRepo {
   }
 
   set(key: string, value: string): void {
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO settings (key, value) VALUES (?, ?)
          ON CONFLICT(key) DO UPDATE SET value = excluded.value`,
       )
@@ -34,12 +34,12 @@ export class SettingsRepo {
   }
 
   delete(key: string): void {
-    this.db.db.prepare(`DELETE FROM settings WHERE key = ?`).run(key);
+    this.db.prepareCached(`DELETE FROM settings WHERE key = ?`).run(key);
   }
 
   all(): Record<string, string> {
-    const rows = this.db.db
-      .prepare(`SELECT key, value FROM settings ORDER BY key ASC`)
+    const rows = this.db
+      .prepareCached(`SELECT key, value FROM settings ORDER BY key ASC`)
       .all() as Array<{
       key: string;
       value: string;

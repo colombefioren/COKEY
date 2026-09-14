@@ -57,8 +57,8 @@ export class RequestsRepo {
     const inputTokens = input.inputTokens ?? 0;
     const outputTokens = input.outputTokens ?? 0;
 
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO request_log
            (id, at, chain_alias, entry_id, provider_id, model, credential_id,
             credential_description, latency_ms, outcome, classification, fallback,
@@ -100,8 +100,8 @@ export class RequestsRepo {
     const day = new Date(input.at).toISOString().slice(0, 10);
     const success = input.outcome === "success" ? 1 : 0;
     const failure = input.outcome === "success" ? 0 : 1;
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO usage_daily
            (day, provider_id, credential_id, model, requests, success, failure,
             input_tokens, output_tokens, latency_ms_sum)
@@ -129,30 +129,30 @@ export class RequestsRepo {
 
   /** Daily rollup rows in [sinceDay, today], newest first. */
   rollupSince(sinceDay: string): UsageRollupRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM usage_daily WHERE day >= ? ORDER BY day DESC`)
+    return this.db
+      .prepareCached(`SELECT * FROM usage_daily WHERE day >= ? ORDER BY day DESC`)
       .all(sinceDay) as UsageRollupRow[];
   }
 
   list(limit = 100): RequestLogRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM request_log ORDER BY at DESC LIMIT ?`)
+    return this.db
+      .prepareCached(`SELECT * FROM request_log ORDER BY at DESC LIMIT ?`)
       .all(Math.max(1, Math.min(limit, this.maxRows))) as RequestLogRow[];
   }
 
   count(): number {
-    const row = this.db.db.prepare(`SELECT COUNT(*) AS n FROM request_log`).get() as { n: number };
+    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM request_log`).get() as { n: number };
     return row.n;
   }
 
   clear(): void {
-    this.db.db.prepare(`DELETE FROM request_log`).run();
+    this.db.prepareCached(`DELETE FROM request_log`).run();
   }
 
   /** Keep only the newest `maxRows` records. */
   prune(): void {
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `DELETE FROM request_log WHERE id NOT IN (
            SELECT id FROM request_log ORDER BY at DESC LIMIT ?
          )`,
@@ -165,6 +165,6 @@ export class RequestsRepo {
    * without this. */
   pruneUsageDaily(retainDays = USAGE_DAILY_RETENTION_DAYS): void {
     const cutoff = new Date(Date.now() - retainDays * 86_400_000).toISOString().slice(0, 10);
-    this.db.db.prepare(`DELETE FROM usage_daily WHERE day < ?`).run(cutoff);
+    this.db.prepareCached(`DELETE FROM usage_daily WHERE day < ?`).run(cutoff);
   }
 }

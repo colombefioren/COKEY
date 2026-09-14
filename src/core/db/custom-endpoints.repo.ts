@@ -20,8 +20,8 @@ export class CustomEndpointsRepo {
   constructor(private readonly db: DatabaseClient) {}
 
   insert(input: InsertCustomEndpointInput): void {
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO custom_endpoints
            (id, display_name, base_url, api_style, auth_scheme, models, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -39,22 +39,22 @@ export class CustomEndpointsRepo {
   }
 
   get(id: string): CustomEndpointRow | undefined {
-    return this.db.db.prepare(`SELECT * FROM custom_endpoints WHERE id = ?`).get(id) as
+    return this.db.prepareCached(`SELECT * FROM custom_endpoints WHERE id = ?`).get(id) as
       CustomEndpointRow | undefined;
   }
 
   list(): CustomEndpointRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM custom_endpoints ORDER BY created_at ASC`)
+    return this.db
+      .prepareCached(`SELECT * FROM custom_endpoints ORDER BY created_at ASC`)
       .all() as CustomEndpointRow[];
   }
 
   delete(id: string): void {
-    this.db.db.prepare(`DELETE FROM custom_endpoints WHERE id = ?`).run(id);
+    this.db.prepareCached(`DELETE FROM custom_endpoints WHERE id = ?`).run(id);
   }
 
   count(): number {
-    const row = this.db.db.prepare(`SELECT COUNT(*) AS n FROM custom_endpoints`).get() as {
+    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM custom_endpoints`).get() as {
       n: number;
     };
     return row.n;

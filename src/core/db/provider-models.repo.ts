@@ -34,8 +34,8 @@ export class ProviderModelsRepo {
    * that would read as "everything was removed".
    */
   replace(providerId: string, records: ProviderModelRecord[]): void {
-    const deleteStmt = this.db.db.prepare(`DELETE FROM provider_models WHERE provider_id = ?`);
-    const insertStmt = this.db.db.prepare(
+    const deleteStmt = this.db.prepareCached(`DELETE FROM provider_models WHERE provider_id = ?`);
+    const insertStmt = this.db.prepareCached(
       `INSERT INTO provider_models
          (provider_id, model, curated, available, first_seen, last_seen, last_checked)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
@@ -58,36 +58,36 @@ export class ProviderModelsRepo {
   }
 
   listByProvider(providerId: string): ProviderModelRecord[] {
-    const rows = this.db.db
-      .prepare(`SELECT * FROM provider_models WHERE provider_id = ? ORDER BY model ASC`)
+    const rows = this.db
+      .prepareCached(`SELECT * FROM provider_models WHERE provider_id = ? ORDER BY model ASC`)
       .all(providerId) as ProviderModelRow[];
     return rows.map(toRecord);
   }
 
   listAll(): ProviderModelRecord[] {
-    const rows = this.db.db
-      .prepare(`SELECT * FROM provider_models ORDER BY provider_id ASC, model ASC`)
+    const rows = this.db
+      .prepareCached(`SELECT * FROM provider_models ORDER BY provider_id ASC, model ASC`)
       .all() as ProviderModelRow[];
     return rows.map(toRecord);
   }
 
   /** The moment this provider's inventory was last written. */
   lastCheckedAt(providerId: string): number | undefined {
-    const row = this.db.db
-      .prepare(`SELECT MAX(last_checked) AS at FROM provider_models WHERE provider_id = ?`)
+    const row = this.db
+      .prepareCached(`SELECT MAX(last_checked) AS at FROM provider_models WHERE provider_id = ?`)
       .get(providerId) as { at: number | null };
     return row.at ?? undefined;
   }
 
   deleteByProvider(providerId: string): number {
-    return this.db.db.prepare(`DELETE FROM provider_models WHERE provider_id = ?`).run(providerId)
+    return this.db.prepareCached(`DELETE FROM provider_models WHERE provider_id = ?`).run(providerId)
       .changes;
   }
 
   /** Total and available model counts per provider, for list views. */
   countsByProvider(): Map<string, { total: number; available: number }> {
-    const rows = this.db.db
-      .prepare(
+    const rows = this.db
+      .prepareCached(
         `SELECT provider_id,
                 COUNT(*) AS total,
                 SUM(CASE WHEN available = 1 THEN 1 ELSE 0 END) AS available

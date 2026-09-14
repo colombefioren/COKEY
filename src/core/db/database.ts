@@ -243,6 +243,7 @@ export const MIGRATIONS: Migration[] = [
 export class DatabaseClient {
   readonly db: SqliteDatabase;
   readonly path: string;
+  private readonly statementCache = new Map<string, Database.Statement>();
 
   constructor(path: string) {
     this.path = path;
@@ -255,6 +256,22 @@ export class DatabaseClient {
     // (e.g. `sqlite3 .cokey/cokey.db`) always see committed data.
     this.db.pragma("wal_checkpoint(TRUNCATE)");
     runMigrations(this.db);
+  }
+
+  /**
+   * `db.prepare()` compiles the SQL every time it's called - better-sqlite3
+   * does not cache by source text on its own. Every repo runs the same
+   * handful of statements over and over on the request-handling hot path, so
+   * this keeps one compiled `Statement` per distinct SQL string for the
+   * lifetime of the connection instead of recompiling it on every call.
+   */
+  prepareCached(sql: string): Database.Statement {
+    let statement = this.statementCache.get(sql);
+    if (!statement) {
+      statement = this.db.prepare(sql);
+      this.statementCache.set(sql, statement);
+    }
+    return statement;
   }
 
   /** Run a function inside a SQLite transaction. */

@@ -68,8 +68,8 @@ export class ChainsRepo {
   // ---- chains -------------------------------------------------------------
 
   insertChain(input: InsertChainInput): void {
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO chains (id, alias, description, enabled, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?)`,
       )
@@ -84,16 +84,16 @@ export class ChainsRepo {
   }
 
   getChain(id: string): ChainRow | undefined {
-    return this.db.db.prepare(`SELECT * FROM chains WHERE id = ?`).get(id) as ChainRow | undefined;
+    return this.db.prepareCached(`SELECT * FROM chains WHERE id = ?`).get(id) as ChainRow | undefined;
   }
 
   getChainByAlias(alias: string): ChainRow | undefined {
-    return this.db.db.prepare(`SELECT * FROM chains WHERE alias = ?`).get(alias) as
+    return this.db.prepareCached(`SELECT * FROM chains WHERE alias = ?`).get(alias) as
       ChainRow | undefined;
   }
 
   listChains(): ChainRow[] {
-    return this.db.db.prepare(`SELECT * FROM chains ORDER BY created_at ASC`).all() as ChainRow[];
+    return this.db.prepareCached(`SELECT * FROM chains ORDER BY created_at ASC`).all() as ChainRow[];
   }
 
   updateChain(id: string, patch: ChainPatch): void {
@@ -101,14 +101,14 @@ export class ChainsRepo {
   }
 
   deleteChain(id: string): void {
-    this.db.db.prepare(`DELETE FROM chains WHERE id = ?`).run(id);
+    this.db.prepareCached(`DELETE FROM chains WHERE id = ?`).run(id);
   }
 
   // ---- entries ------------------------------------------------------------
 
   insertEntry(input: InsertEntryInput): void {
-    this.db.db
-      .prepare(
+    this.db
+      .prepareCached(
         `INSERT INTO chain_entries
            (id, chain_id, provider_id, model, label, base_url, credential_ids, enabled,
             priority, routing_strategy, created_at, updated_at)
@@ -131,19 +131,19 @@ export class ChainsRepo {
   }
 
   getEntry(id: string): ChainEntryRow | undefined {
-    return this.db.db.prepare(`SELECT * FROM chain_entries WHERE id = ?`).get(id) as
+    return this.db.prepareCached(`SELECT * FROM chain_entries WHERE id = ?`).get(id) as
       ChainEntryRow | undefined;
   }
 
   listEntries(chainId: string): ChainEntryRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM chain_entries WHERE chain_id = ? ORDER BY priority ASC`)
+    return this.db
+      .prepareCached(`SELECT * FROM chain_entries WHERE chain_id = ? ORDER BY priority ASC`)
       .all(chainId) as ChainEntryRow[];
   }
 
   listEntriesByProvider(providerId: string): ChainEntryRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM chain_entries WHERE provider_id = ?`)
+    return this.db
+      .prepareCached(`SELECT * FROM chain_entries WHERE provider_id = ?`)
       .all(providerId) as ChainEntryRow[];
   }
 
@@ -152,16 +152,16 @@ export class ChainsRepo {
   }
 
   deleteEntry(id: string): void {
-    this.db.db.prepare(`DELETE FROM chain_entries WHERE id = ?`).run(id);
+    this.db.prepareCached(`DELETE FROM chain_entries WHERE id = ?`).run(id);
   }
 
   deleteEntriesForChain(chainId: string): void {
-    this.db.db.prepare(`DELETE FROM chain_entries WHERE chain_id = ?`).run(chainId);
+    this.db.prepareCached(`DELETE FROM chain_entries WHERE chain_id = ?`).run(chainId);
   }
 
   /** Apply an explicit priority ordering in one transaction. */
   reorder(chainId: string, orderedEntryIds: string[]): void {
-    const statement = this.db.db.prepare(
+    const statement = this.db.prepareCached(
       `UPDATE chain_entries SET priority = ?, updated_at = ? WHERE id = ? AND chain_id = ?`,
     );
     const now = Date.now();
@@ -173,8 +173,8 @@ export class ChainsRepo {
   }
 
   maxPriority(chainId: string): number {
-    const row = this.db.db
-      .prepare(`SELECT MAX(priority) AS p FROM chain_entries WHERE chain_id = ?`)
+    const row = this.db
+      .prepareCached(`SELECT MAX(priority) AS p FROM chain_entries WHERE chain_id = ?`)
       .get(chainId) as { p: number | null };
     return row.p ?? 0;
   }
@@ -196,6 +196,6 @@ export class ChainsRepo {
     }
     if (sets.length === 0) return;
     values.push(id);
-    this.db.db.prepare(`UPDATE ${table} SET ${sets.join(", ")} WHERE id = ?`).run(...values);
+    this.db.prepareCached(`UPDATE ${table} SET ${sets.join(", ")} WHERE id = ?`).run(...values);
   }
 }
