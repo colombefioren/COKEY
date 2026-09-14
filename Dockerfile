@@ -1,16 +1,19 @@
-# syntax=docker/dockerfile:1
-
-# ---- build -----------------------------------------------------------------
-FROM node:20-bookworm-slim AS build
+FROM node:20-bookworm-slim AS base
 
 WORKDIR /app
 
-# better-sqlite3 ships a native addon; the toolchain is only needed to build it.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 make g++ ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY package.json package-lock.json ./
+
+FROM base AS deps
+
+RUN npm ci --omit=dev && npm cache clean --force
+
+FROM base AS build
+
 RUN npm ci
 
 COPY tsconfig.json tsconfig.test.json vite.config.ts ./
@@ -19,7 +22,6 @@ COPY scripts ./scripts
 
 RUN npm run build
 
-# ---- runtime ---------------------------------------------------------------
 FROM node:20-bookworm-slim AS runtime
 
 ENV NODE_ENV=production \
@@ -35,8 +37,9 @@ RUN apt-get update \
     && mkdir -p /data \
     && chown -R node:node /data
 
+COPY --from=deps /app/node_modules ./node_modules
+
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --from=build /app/dist ./dist
 
