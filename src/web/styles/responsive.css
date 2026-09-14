@@ -106,6 +106,38 @@
   }
 
   /*
+   * The topbar packs a hamburger, a kinetic (per-glyph) title, a language
+   * toggle, the guide button, notifications, the live-route chip and the
+   * /v1/models link into one row - more controls than a phone's width can
+   * hold. Left alone, the title (the only item willing to shrink) was
+   * squeezed down to a sliver, and since its letters are individually
+   * wrappable inline-blocks, that read as its text raining down in a
+   * vertical column instead of overflowing sideways.
+   *
+   * The topbar's own `.spacer` already sits right after the title in the
+   * DOM - forcing it to the full line width is the standard flexbox
+   * full-width-break trick, so it pushes every control after it onto a
+   * second row without touching the markup.
+   */
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  .topbar .spacer {
+    flex-basis: 100%;
+    height: 0;
+  }
+  /* `.live` (not `.live-chip`) is the actual flex child here, so it is the
+     one that needs `min-width: 0` before a `max-width` on the chip inside
+     it can have any effect on how much room the row gives it. */
+  .topbar .live {
+    min-width: 0;
+  }
+  .live-chip {
+    max-width: 150px;
+  }
+
+  /*
    * The live-route graph is fixed-coordinate by design (see views.css) so it
    * can scroll sideways on a narrow screen rather than collapse - but on a
    * phone that just means the dashboard's default tab opens on a diagram

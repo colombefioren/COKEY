@@ -656,6 +656,11 @@ h3 {
 }
 
 .topbar-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 400;
