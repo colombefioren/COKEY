@@ -20,3 +20,9 @@ export const DATA_CREDIT = {
   label: "awesome-free-byok-models",
   url: "https://github.com/velo4705/awesome-free-byok-models",
 } as const;
+
+/** Where the automatic egress pool's free-proxy import pulls its list from. */
+export const PROXY_CREDIT = {
+  label: "proxifly/free-proxy-list",
+  url: "https://github.com/proxifly/free-proxy-list",
+} as const;

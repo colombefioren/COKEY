@@ -965,6 +965,10 @@ The provider and free-tier catalog is built in part from
 **[awesome-free-byok-models](https://github.com/velo4705/awesome-free-byok-models)** by
 [velo4705](https://github.com/velo4705). Thank you for collecting and keeping that list honest.
 
+The automatic egress pool's free-proxy import pulls from
+**[proxifly/free-proxy-list](https://github.com/proxifly/free-proxy-list)** - a community-maintained
+list, refreshed continuously and pulled by COKEY straight off jsDelivr, no key and no quota.
+
 Rate limits and capabilities change constantly, so every ranking board in the app names its source
 and leaves the judgement to you.
 
