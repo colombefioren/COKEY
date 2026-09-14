@@ -5,22 +5,50 @@
 <br />
 <br />
 
-**Local LLM credential pool and chain-fallback gateway.**
+**An LLM credential pool and chain-fallback gateway.**
 
 Point any OpenAI-compatible tool at `http://localhost:8787/v1` and let COKEY rotate your free API
 keys, across accounts, across models, across providers, without ever leaking a key or inventing a
 quota.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-DD5C95?style=flat-square&labelColor=2B1A2F)](LICENSE)
-[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-7452F0?style=flat-square&labelColor=2B1A2F)](package.json)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-7452F0?style=flat-square&labelColor=2B1A2F)](https://www.typescriptlang.org/)
-[![Tests](https://img.shields.io/badge/tests-156%20passing-B98CF6?style=flat-square&labelColor=2B1A2F)](tests)
-[![PRs welcome](https://img.shields.io/badge/PRs-welcome-DD5C95?style=flat-square&labelColor=2B1A2F)](https://github.com/colombefioren/COKEY/pulls)
-[![No telemetry](https://img.shields.io/badge/telemetry-none-6B4BE0?style=flat-square&labelColor=2B1A2F)](#-security)
+[![License: MIT](https://img.shields.io/badge/License-MIT-F482B4?style=flat-square&labelColor=2B1A2F)](LICENSE)
+[![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-DD5C95?style=flat-square&labelColor=2B1A2F)](package.json)
+[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-F482B4?style=flat-square&labelColor=2B1A2F)](https://www.typescriptlang.org/)
+[![Tests](https://img.shields.io/badge/tests-passing-DD5C95?style=flat-square&labelColor=2B1A2F)](tests)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-F482B4?style=flat-square&labelColor=2B1A2F)](https://github.com/colombefioren/COKEY/pulls)
+[![No telemetry](https://img.shields.io/badge/telemetry-none-DD5C95?style=flat-square&labelColor=2B1A2F)](#-security)
+[![Price](https://img.shields.io/badge/price-%240.00-F482B4?style=flat-square&labelColor=2B1A2F)](#-every-free-lab-through-one-endpoint)
 
 <sub><b>a tool for broke lads made by a broke princess</b></sub>
 
+<br />
+
+> **If it's not free, it's not in COKEY.** Every provider in the catalog advertises a real,
+> self-replenishing free tier — no trial credit that quietly runs out, no "free" that needs a card
+> on file.
+
 </div>
+
+---
+
+<div align="center">
+
+## 📺 A word from our sponsor (there isn't one)
+
+</div>
+
+> **TIRED of watching your one good free-tier key expire mid-refactor at 2 AM?** STOP paying $0.00
+> a month and getting $0.00 of reliability for it! Introducing **COKEY** — the gateway that pools
+> the free keys you already collected and rotates them *for* you, so you don't have to keep eleven
+> provider dashboards open like some kind of unpaid intern.
+>
+> ✅ No subscription — there is nothing to subscribe to.
+> ✅ No credit card — we would have nowhere to put it.
+> ✅ No "Contact Sales" button — there is no sales.
+>
+> *Terms and conditions: there are no terms, and there are no conditions. Offer valid for as long as
+> free tiers exist, which — per the catalog below — is a surprisingly aggressive number of
+> providers. COKEY is not responsible for you finally shipping that side project.*
 
 ---
 
@@ -32,10 +60,10 @@ quota.
 
 <img src="./docs/assets/chain-flow.svg" alt="A request entering COKEY, spending every key of node one, then falling back to node two" width="980" />
 
-COKEY is a **local gateway, not a service**. It runs on your machine, keeps your keys encrypted at
-rest, and exposes one OpenAI-compatible endpoint. When a provider rate-limits a key, COKEY cools
-that key down and retries the next one **inside the same node** - only falling through to the next
-node once every key of the current one is spent.
+COKEY runs wherever you put it — your laptop, a container, a hosting platform — keeps your keys
+encrypted at rest, and exposes one OpenAI-compatible endpoint. When a provider rate-limits a key,
+COKEY cools that key down and retries the next one **inside the same node** - only falling through
+to the next node once every key of the current one is spent.
 
 <table>
   <tr>
@@ -55,7 +83,7 @@ node once every key of the current one is spent.
   <tr>
     <td align="center" width="33%">
       <b>🩺 Live route</b><br />
-      <sub>the dashboard draws the node and key serving right now</sub>
+      <sub>the topbar chip's dot pulses while a request is in flight, and announces every switch</sub>
     </td>
     <td align="center" width="33%">
       <b>🛡️ Per-key egress</b><br />
@@ -81,12 +109,12 @@ node once every key of the current one is spent.
 <table>
   <tr>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/opencode/CDB0F0" width="28" height="28" alt="opencode" /><br />
+      <img src="https://cdn.simpleicons.org/opencode" width="28" height="28" alt="opencode" /><br />
       <b>opencode</b><br />
       <sub>the reference client</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/claude/CDB0F0" width="28" height="28" alt="Claude Code" /><br />
+      <img src="https://cdn.simpleicons.org/claude" width="28" height="28" alt="Claude Code" /><br />
       <b>Claude Code</b><br />
       <sub>Anthropic wire format</sub>
     </td>
@@ -103,34 +131,34 @@ node once every key of the current one is spent.
   </tr>
   <tr>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/cursor/CDB0F0" width="28" height="28" alt="Cursor" /><br />
+      <img src="https://cdn.simpleicons.org/cursor" width="28" height="28" alt="Cursor" /><br />
       <b>Cursor</b><br />
       <sub>custom OpenAI provider</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/jetbrains/CDB0F0" width="28" height="28" alt="JetBrains" /><br />
+      <img src="https://cdn.simpleicons.org/jetbrains" width="28" height="28" alt="JetBrains" /><br />
       <b>JetBrains IDEs</b><br />
       <sub>AI Assistant endpoint</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/cline/CDB0F0" width="28" height="28" alt="Cline" /><br />
+      <img src="https://cdn.simpleicons.org/cline" width="28" height="28" alt="Cline" /><br />
       <b>Cline and forks</b><br />
       <sub>OpenAI-compatible</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/gnometerminal/CDB0F0" width="28" height="28" alt="Any CLI" /><br />
+      <img src="https://cdn.simpleicons.org/gnometerminal" width="28" height="28" alt="Any CLI" /><br />
       <b>Any other CLI</b><br />
       <sub>base URL and a placeholder key like your_cokey_api_key</sub>
     </td>
   </tr>
   <tr>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/windsurf/CDB0F0" width="28" height="28" alt="Windsurf" /><br />
+      <img src="https://cdn.simpleicons.org/windsurf" width="28" height="28" alt="Windsurf" /><br />
       <b>Windsurf</b><br />
       <sub>Cascade with a custom endpoint</sub>
     </td>
     <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/zedindustries/CDB0F0" width="28" height="28" alt="Zed" /><br />
+      <img src="https://cdn.simpleicons.org/zedindustries" width="28" height="28" alt="Zed" /><br />
       <b>Zed</b><br />
       <sub>OpenAI-compatible provider</sub>
     </td>
@@ -151,84 +179,144 @@ node once every key of the current one is spent.
 
 <div align="center">
 
-## 🧠 Every major free lab, through one endpoint
+## 🧠 Every free lab, through one endpoint
 
-**45 providers, 340 curated free models. Connect a key once and chain it anywhere.**
+**57 providers, every one of them free. Connect a key once and chain it anywhere.**
 
 </div>
 
 <table>
   <tr>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/googlegemini/CDB0F0" width="28" height="28" alt="Google Gemini" /><br />
-      <b>Google Gemini</b><br />
-      <sub>Flash and Pro tiers</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/googlegemini" width="26" height="26" alt="Google Gemini" /><br />
+      <sub><b>Google Gemini</b></sub>
     </td>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/mistralai/CDB0F0" width="28" height="28" alt="Mistral AI" /><br />
-      <b>Mistral AI</b><br />
-      <sub>free tier</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/mistralai" width="26" height="26" alt="Mistral AI" /><br />
+      <sub><b>Mistral AI</b></sub>
     </td>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/nvidia/CDB0F0" width="28" height="28" alt="NVIDIA NIM" /><br />
-      <b>NVIDIA NIM</b><br />
-      <sub>hosted endpoints</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/nvidia" width="26" height="26" alt="NVIDIA NIM" /><br />
+      <sub><b>NVIDIA NIM</b></sub>
     </td>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/cloudflare/CDB0F0" width="28" height="28" alt="Cloudflare Workers AI" /><br />
-      <b>Cloudflare Workers AI</b><br />
-      <sub>daily free allocation</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/cloudflare" width="26" height="26" alt="Cloudflare Workers AI" /><br />
+      <sub><b>Cloudflare</b></sub>
     </td>
-  </tr>
-  <tr>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/huggingface/CDB0F0" width="28" height="28" alt="Hugging Face" /><br />
-      <b>Hugging Face</b><br />
-      <sub>Inference Providers</sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/openrouter/CDB0F0" width="28" height="28" alt="OpenRouter" /><br />
-      <b>OpenRouter</b><br />
-      <sub><code>:free</code> models</sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/ollama/CDB0F0" width="28" height="28" alt="Ollama Cloud" /><br />
-      <b>Ollama Cloud</b><br />
-      <sub>local and hosted</sub>
-    </td>
-    <td align="center" width="25%">
-      <img src="https://cdn.simpleicons.org/opencode/CDB0F0" width="28" height="28" alt="OpenCode Zen" /><br />
-      <b>OpenCode Zen</b><br />
-      <sub>the curated gateway</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/huggingface" width="26" height="26" alt="Hugging Face" /><br />
+      <sub><b>Hugging Face</b></sub>
     </td>
   </tr>
   <tr>
-    <td align="center" width="25%">
-      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Groq" /><br />
-      <b>Groq API</b><br />
-      <sub>very fast free tier</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/openrouter" width="26" height="26" alt="OpenRouter" /><br />
+      <sub><b>OpenRouter</b></sub>
     </td>
-    <td align="center" width="25%">
-      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Cerebras" /><br />
-      <b>Cerebras</b><br />
-      <sub>free inference</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/ollama" width="26" height="26" alt="Ollama Cloud" /><br />
+      <sub><b>Ollama Cloud</b></sub>
     </td>
-    <td align="center" width="25%">
-      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Cohere AI" /><br />
-      <b>Cohere AI</b><br />
-      <sub>trial keys</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/opencode" width="26" height="26" alt="OpenCode Zen" /><br />
+      <sub><b>OpenCode Zen</b></sub>
     </td>
-    <td align="center" width="25%">
-      <img src="./docs/assets/plate.svg" width="28" height="28" alt="Z.AI" /><br />
-      <b>Z.AI (Zhipu AI)</b><br />
-      <sub>GLM free models</sub>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/amd" width="26" height="26" alt="AMD Radeon API" /><br />
+      <sub><b>AMD Radeon</b></sub>
+    </td>
+    <td align="center" width="20%">
+      <img src="https://cdn.simpleicons.org/alibabacloud" width="26" height="26" alt="ModelScope" /><br />
+      <sub><b>ModelScope</b></sub>
     </td>
   </tr>
 </table>
 
-<sub>Brand marks come from [Simple Icons](https://simpleicons.org) and belong to their owners. Where a
-project publishes no usable mark, the COKEY plate stands in. The full catalog, with free-tier limits
-and dossiers, is in the app under **Providers**.</sub>
+<sub>Brand marks come from [Simple Icons](https://simpleicons.org) and belong to their owners.</sub>
+
+<details>
+<summary><b>+ 47 more free hubs</b> — click to unfold the rest of the catalog</summary>
+
+<br />
+
+Most of these are small, independent free-tier resellers with no public brand mark to borrow, so
+the COKEY plate stands in for all of them alike:
+
+<table>
+<tr>
+<td width="20%">
+
+<img src="./docs/assets/plate.svg" width="16" height="16" /> AION Labs<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Agnes AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> AI 121628 Free<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> AIHubMix<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> AnyAPI AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Auriko<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> BazaarLink<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Cerebras<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Cohere AI<br />
+
+</td>
+<td width="20%">
+
+<img src="./docs/assets/plate.svg" width="16" height="16" /> ElectronHub<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> EvolveX<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> FastRouter<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> FH Router<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Free.ai<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> FreeInference<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Gonka Broker<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Groq API<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> HelixMind<br />
+
+</td>
+<td width="20%">
+
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Intern AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Kilo Gateway<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> LiteRouter<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> LLM.Kiwi<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> LLM7.IO<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> MegaNova AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Mixlayer<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Naga AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> NaraRouter<br />
+
+</td>
+<td width="20%">
+
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Odirouter<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Orcarouter<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Poixe AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Pollinations<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Pooled AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Poolside<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> QZZ API<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Requesty<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Routeway AI<br />
+
+</td>
+<td width="20%">
+
+<img src="./docs/assets/plate.svg" width="16" height="16" /> SEA-LION<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> TokenHarbor<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> TokenReply<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> TokenRouter<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Void AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> WusRouter<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> xKiro AI<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Yolo-Auto<br />
+<img src="./docs/assets/plate.svg" width="16" height="16" /> Z.AI (Zhipu AI)<br />
+
+</td>
+</tr>
+</table>
+
+...and Zydit AI, Zylo API rounding things out. The full catalog, with each provider's real free-tier
+rate limit (RPD, RPM, TPD — whatever they actually publish) and dossier, is in the app under
+**Providers**.
+
+</details>
 
 ---
 
@@ -308,7 +396,7 @@ Two exceptions exist, and both are deliberate:
   </tr>
   <tr>
     <td>❌ You have to trust someone else's cloud with your prompts</td>
-    <td>✅ <b>Local-first</b> - your machine, your keys, no telemetry, no phone-home</td>
+    <td>✅ <b>No telemetry</b> - your keys, your prompts, no phone-home, wherever you run it</td>
   </tr>
 </table>
 
@@ -318,18 +406,23 @@ Two exceptions exist, and both are deliberate:
 
 ## 🖥️ Where COKEY runs - anywhere
 
-**Same app, your machine, your rules. From a global npm install to a container on a Pi.**
+**Same app, your rules. From a laptop, to a container, to a platform that builds it for you.**
 
 </div>
 
 | Platform | Install | Highlights |
 | :------- | :------ | :--------- |
 | 📦 **npm (global)** | `npm install -g cokey` | one command, any OS |
-| 🐳 **Docker** | `docker run -p 8787:8787 -v cokey:/data colombefioren/cokey` | multi-arch, data volume on `/data` |
+| <img src="https://cdn.simpleicons.org/docker" width="16" height="16" valign="middle" /> **Docker** | `docker run -p 8787:8787 -v cokey:/data colombefioren/cokey` | multi-arch, data volume on `/data`, `0.0.0.0` baked in |
+| <img src="https://cdn.simpleicons.org/render" width="16" height="16" valign="middle" /> **Render / Railway / Fly** | build `npm install && npm run build`, start `npm start` | reads the platform's own `PORT` automatically |
 | 🧑‍💻 **From source** | `npm install && npm run build && npm start` | hack on it, contribute |
 | 🍓 **ARM / Raspberry Pi** | `native arm64` | runs on ARM hosts, Apple Silicon and small boxes |
 | 🖨️ **Any OpenAI-compatible client** | base URL only | editors, CLIs, agents, your own code |
 | 🧩 **Programmatic API** | `import { Cokey } from "cokey"` | embed the gateway in a script or test |
+
+Local, containerized or platform-hosted, the privacy story does not change: SQLite on disk, secrets
+encrypted with AES-256-GCM, nothing phoned home. "Local by default" just means `COKEY_HOST` starts
+at `127.0.0.1` until you tell it otherwise — the Dockerfile and the platform builds above already do.
 
 ---
 
@@ -361,7 +454,7 @@ Two exceptions exist, and both are deliberate:
   <tr>
     <td align="right"><b>Clients</b></td>
     <td><a href="#-every-client-you-already-use">Tools</a></td>
-    <td><a href="#-every-major-free-lab-through-one-endpoint">Providers</a></td>
+    <td><a href="#-every-free-lab-through-one-endpoint">Providers</a></td>
     <td><a href="#-resilience---three-self-healing-layers">Resilience</a></td>
   </tr>
   <tr>
@@ -389,6 +482,9 @@ npm start            # UI and gateway on http://127.0.0.1:8787
 # or install globally
 npm install -g cokey
 cokey
+
+# or a container
+docker run -p 8787:8787 -v cokey:/data colombefioren/cokey
 ```
 
 Running `cokey` prints the logo and starts everything. The mark is rasterised from the same
@@ -495,7 +591,7 @@ first: `429`, quota exhaustion, invalid keys, provider `5xx`, network errors.
   key cooldown, model gating - and which failure trips which one.
 - **Automatic egress pool.** Add proxies once and COKEY spreads them so two keys of the *same*
   provider never share an exit IP, while keys of different providers may share one. No manual
-  wiring, stable across restarts.
+  wiring, stable across restarts, and off by default until you turn it on.
 - **Per-key throughput.** Locally measured requests-per-minute and a trailing-minute sparkline per
   credential, so two keys of the same provider are never indistinguishable.
 - **Model test button.** The play button in Models sends one real hello through a working key and
@@ -504,8 +600,8 @@ first: `429`, quota exhaustion, invalid keys, provider `5xx`, network errors.
   source so a third-party blog post is never mistaken for provider documentation.
 - **Honest quotas.** When a provider exposes no rate-limit headers, COKEY says `Quota: Unknown`. It
   never fabricates numbers.
-- **340 curated free models across 45 providers**, each annotated with context window, best use and
-  measured latency.
+- **57 free-tier providers**, curated free models only, each annotated with context window, best use
+  and measured latency.
 - **Your name for the model.** A node's display label is free text you type. COKEY never invents
   something like `DeepSeek V4 Pro (xKiro)`.
 - **OpenAI-compatible API** including streaming, plus a full management API and CLI.
@@ -551,7 +647,8 @@ change notification from `X-Cokey-State` without any integration work.
 </div>
 
 `GET /api/events` streams server-sent events. The first frame is a snapshot, so a UI that connects
-mid-request still renders correctly:
+mid-request still renders correctly - it's the same stream that makes the dashboard's topbar chip
+light up the instant a key or node changes, no polling involved:
 
 ```
 data: {"kind":"snapshot","route":{...},"recent":[...]}
@@ -578,7 +675,9 @@ trips them. The pool fixes that without any manual wiring:
 - every key of a provider gets a different pool entry, so two keys of one provider never share an
   exit IP;
 - two keys of *different* providers may share an entry, because nothing correlates them upstream;
-- the mapping is derived from the provider id and the pool order, so it is stable across restarts.
+- the mapping is derived from the provider id and the pool order, so it is stable across restarts;
+- it stays off until you opt in - **Settings → Automatic egress pool** - so a fresh install never
+  routes traffic through proxies you did not add.
 
 ```bash
 # seed a pool without touching the UI
@@ -616,11 +715,6 @@ POST   /api/providers/:id/connect     # { secret, description, accountId?, proxy
 
 GET    /api/catalog/rankings          # skill, rate, combined and redundancy boards
 GET    /api/catalog/providers         # provider dossiers
-
-GET    /api/content/status            # where the curated content came from, and what failed
-GET    /api/content/terms             # the terms document, in reading order
-POST   /api/content/reload            # re-read the content directory on demand
-GET    /api/content/providers/:id     # one provider's dossier, with its source
 
 GET    /api/chains
 POST   /api/chains
@@ -736,7 +830,8 @@ await cokey.addChain({
   settings.
 - Redirects are never followed, so an upstream cannot bounce an `Authorization` header to another
   origin.
-- Local-only by default. No telemetry, no phone-home.
+- No telemetry, no phone-home, no analytics - on your laptop, in a container, or on a host you
+  don't control. `COKEY_HOST` starts at `127.0.0.1` and only widens when you say so.
 
 ---
 

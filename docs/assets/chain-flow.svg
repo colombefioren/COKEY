@@ -14,68 +14,68 @@
 
   <defs>
     <radialGradient id="bloom" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#8D7AE0" stop-opacity="0.42" />
-      <stop offset="1" stop-color="#8D7AE0" stop-opacity="0" />
+      <stop offset="0" stop-color="#E07A9C" stop-opacity="0.42" />
+      <stop offset="1" stop-color="#E07A9C" stop-opacity="0" />
     </radialGradient>
     <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#EFB4E0" />
-      <stop offset="0.55" stop-color="#CDB0F0" />
-      <stop offset="1" stop-color="#8D7AE0" />
+      <stop offset="0.55" stop-color="#F0B0B4" />
+      <stop offset="1" stop-color="#E07A9C" />
     </linearGradient>
     <linearGradient id="rail" x1="0" y1="0" x2="1" y2="0">
-      <stop offset="0" stop-color="#8D7AE0" stop-opacity="0.1" />
-      <stop offset="0.45" stop-color="#CDB0F0" stop-opacity="0.6" />
-      <stop offset="1" stop-color="#8D7AE0" stop-opacity="0.1" />
+      <stop offset="0" stop-color="#E07A9C" stop-opacity="0.1" />
+      <stop offset="0.45" stop-color="#F0B0B4" stop-opacity="0.6" />
+      <stop offset="1" stop-color="#E07A9C" stop-opacity="0.1" />
     </linearGradient>
     <linearGradient id="card" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1E1858" />
-      <stop offset="1" stop-color="#150F3D" />
+      <stop offset="0" stop-color="#581833" />
+      <stop offset="1" stop-color="#3D0F21" />
     </linearGradient>
     <style>
       .kicker {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 9.5px;
         letter-spacing: 2.4px;
-        fill: #8b84c9;
+        fill: #C984A1;
       }
       .model {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 12.5px;
-        fill: #f1eefc;
+        fill: #FCEEF2;
       }
       .body {
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         font-size: 13.5px;
-        fill: #f1eefc;
+        fill: #FCEEF2;
       }
       .soft {
         font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
         font-size: 11px;
-        fill: #b4aee6;
+        fill: #E6AEC5;
       }
       .tiny {
         font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
         font-size: 10px;
-        fill: #8b84c9;
+        fill: #C984A1;
       }
     </style>
   </defs>
 
-  <rect x="0.5" y="0.5" width="979" height="379" rx="20" fill="#0A0620" stroke="#2C2570" />
+  <rect x="0.5" y="0.5" width="979" height="379" rx="20" fill="#20060F" stroke="#702545" />
 
   <!-- the router's bloom -->
   <circle cx="407" cy="190" r="150" fill="url(#bloom)">
     <animate attributeName="opacity" values="0.55;0.95;0.55" dur="6s" repeatCount="indefinite" />
   </circle>
 
-  <!-- ---- client ---------------------------------------------------------- -->
-  <rect x="36" y="152" width="176" height="76" rx="14" fill="url(#card)" stroke="#2C2570" />
+  <!-- client -->
+  <rect x="36" y="152" width="176" height="76" rx="14" fill="url(#card)" stroke="#702545" />
   <text class="kicker" x="56" y="180">CLIENT</text>
   <text class="body" x="56" y="203">your editor / CLI</text>
   <text class="tiny" x="56" y="220">one base URL</text>
 
-  <!-- ---- router ---------------------------------------------------------- -->
-  <rect x="300" y="118" width="214" height="144" rx="18" fill="#1E1858" stroke="#8D7AE0" />
+  <!-- router -->
+  <rect x="300" y="118" width="214" height="144" rx="18" fill="#581833" stroke="#E07A9C" />
   <g transform="translate(376 132) scale(0.19)">
     <path
       d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"
@@ -85,27 +85,27 @@
       stroke-linecap="round"
       stroke-linejoin="round"
     />
-    <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="#CDB0F0" />
-    <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="#8D7AE0" />
+    <path d="M150 27 C150 8 168 0 191 2 C189 23 170 35 150 27 Z" fill="#F0B0B4" />
+    <path d="M161 35 C169 18 187 12 205 15 C197 33 179 43 161 35 Z" fill="#E07A9C" />
   </g>
-  <text x="407" y="192" text-anchor="middle" fill="#F1EEFC" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="7">COKEY</text>
+  <text x="407" y="192" text-anchor="middle" fill="#FCEEF2" font-family="ui-monospace, Menlo, monospace" font-size="17" letter-spacing="7">COKEY</text>
   <text class="tiny" x="407" y="214" text-anchor="middle">alias: cokey-best</text>
-  <text class="tiny" x="407" y="234" text-anchor="middle" fill="#6F68A8">key first, node second</text>
+  <text class="tiny" x="407" y="234" text-anchor="middle" fill="#A86882">key first, node second</text>
 
-  <!-- ---- connectors ------------------------------------------------------ -->
+  <!-- connectors -->
   <line x1="212" y1="190" x2="300" y2="190" stroke="url(#rail)" stroke-width="2" />
-  <path d="M514 190 H560 V88 H612" fill="none" stroke="#2C2570" stroke-width="2" />
-  <path d="M560 88 V292" fill="none" stroke="#2C2570" stroke-width="2" />
-  <path d="M560 190 H612" fill="none" stroke="#2C2570" stroke-width="2" />
-  <path d="M560 292 H612" fill="none" stroke="#2C2570" stroke-width="2" />
+  <path d="M514 190 H560 V88 H612" fill="none" stroke="#702545" stroke-width="2" />
+  <path d="M560 88 V292" fill="none" stroke="#702545" stroke-width="2" />
+  <path d="M560 190 H612" fill="none" stroke="#702545" stroke-width="2" />
+  <path d="M560 292 H612" fill="none" stroke="#702545" stroke-width="2" />
 
-  <!-- ---- node 1: every key spent ---------------------------------------- -->
-  <rect x="612" y="44" width="332" height="88" rx="14" fill="url(#card)" stroke="#2C2570" stroke-width="1.4">
+  <!-- node 1: every key spent -->
+  <rect x="612" y="44" width="332" height="88" rx="14" fill="url(#card)" stroke="#702545" stroke-width="1.4">
     <animate
       attributeName="stroke"
       dur="6s"
       repeatCount="indefinite"
-      values="#2C2570;#2C2570;#F6C46E;#F6C46E;#2C2570;#2C2570"
+      values="#702545;#702545;#F6C46E;#F6C46E;#702545;#702545"
       keyTimes="0;0.33;0.5;0.9;0.94;1"
     />
   </rect>
@@ -128,13 +128,13 @@
     </circle>
   </g>
 
-  <!-- ---- node 2: the fallback that serves ------------------------------- -->
-  <rect x="612" y="146" width="332" height="88" rx="14" fill="url(#card)" stroke="#2C2570" stroke-width="1.4">
+  <!-- node 2: the fallback that serves -->
+  <rect x="612" y="146" width="332" height="88" rx="14" fill="url(#card)" stroke="#702545" stroke-width="1.4">
     <animate
       attributeName="stroke"
       dur="6s"
       repeatCount="indefinite"
-      values="#2C2570;#2C2570;#86E6B0;#86E6B0;#2C2570"
+      values="#702545;#702545;#86E6B0;#86E6B0;#702545"
       keyTimes="0;0.82;0.9;0.96;1"
     />
   </rect>
@@ -147,17 +147,17 @@
   <circle cx="894" cy="194" r="5.5" fill="#86E6B0" />
   <circle cx="916" cy="194" r="5.5" fill="#86E6B0" />
 
-  <!-- ---- node 3: never reached ------------------------------------------ -->
+  <!-- node 3: never reached -->
   <g opacity="0.55">
-    <rect x="612" y="248" width="332" height="88" rx="14" fill="url(#card)" stroke="#2C2570" />
+    <rect x="612" y="248" width="332" height="88" rx="14" fill="url(#card)" stroke="#702545" />
     <text class="kicker" x="632" y="274">NODE 3 · PRIORITY 3</text>
     <text class="model" x="632" y="296">cloudflare / gpt-oss-120b</text>
     <text class="tiny" x="632" y="318">never reached this request</text>
     <circle cx="916" cy="296" r="5.5" fill="#86E6B0" />
   </g>
 
-  <!-- ---- the travelling request ----------------------------------------- -->
-  <circle r="4.5" fill="#CDB0F0">
+  <!-- the travelling request -->
+  <circle r="4.5" fill="#F0B0B4">
     <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.04;0.1;0.26;0.3;1" />
     <animateMotion
       dur="6s"
@@ -169,7 +169,7 @@
     />
   </circle>
 
-  <circle r="4.5" fill="#CDB0F0">
+  <circle r="4.5" fill="#F0B0B4">
     <animate attributeName="opacity" dur="6s" repeatCount="indefinite" values="0;0;1;1;0;0" keyTimes="0;0.32;0.38;0.6;0.64;1" />
     <animateMotion
       dur="6s"
@@ -193,8 +193,8 @@
     />
   </circle>
 
-  <!-- ---- caption -------------------------------------------------------- -->
-  <text class="tiny" x="36" y="352" fill="#6F68A8">
+  <!-- caption -->
+  <text class="tiny" x="36" y="352" fill="#A86882">
     keys rotate first · the node only falls through once every key above it is spent
   </text>
 </svg>

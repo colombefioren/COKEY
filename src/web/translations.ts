@@ -764,6 +764,7 @@ export const FR: Record<string, string> = {
     "un outil pour les fauchés, fait par une princesse fauchée",
   "Pool the free API keys you already have into ordered chains, behind one OpenAI-compatible endpoint. When a key runs out, the next one takes over and the client never notices. It runs on your machine, encrypted at rest, and sends nothing anywhere.":
     "Réunissez les clés API gratuites que vous avez déjà en chaînes ordonnées, derrière un seul point de terminaison compatible OpenAI. Quand une clé s'épuise, la suivante prend le relais sans que le client s'en aperçoive. Ça tourne sur votre machine, chiffré au repos, et n'envoie rien nulle part.",
+  "If it's not free, it's not in COKEY": "Si ce n'est pas gratuit, ce n'est pas dans COKEY",
   "Source on GitHub": "Code source sur GitHub",
   Follow: "Suivre",
   Credits: "Crédits",
