@@ -1475,4 +1475,92 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "L'invariant de routage de COKEY tient en quelques mots : nœud, puis clé, puis nœud.",
   "Two keys of the same provider never share an exit IP once the automatic egress pool is on - that's the whole point of it.":
     "Deux clés d'un même fournisseur ne partagent jamais d'IP de sortie une fois le pool d'égress automatique activé - c'est tout son intérêt.",
+
+  // ---- Insights fallback fun facts, as a static safety net alongside the remote-bundle
+  // French array: covers the case where the backend hasn't restarted onto the version
+  // that serves funFactsFr yet, so the cards never silently stay English. ----------------
+  "Did you know COKEY was built with the help of COKEY? The gateway spent part of its own development pooling free keys for the assistant that wrote it.":
+    "Saviez-vous que COKEY a été construit avec l'aide de COKEY ? La passerelle a passé une partie de son propre développement à mutualiser des clés gratuites pour l'assistant qui l'a écrite.",
+  "A provider rate limit is almost always per key *and* per IP. That is the entire reason the automatic egress pool exists.":
+    "Une limite de débit de fournisseur est presque toujours par clé *et* par IP. C'est la seule raison d'être du pool d'égress automatique.",
+  "COKEY never guesses a quota. If a provider does not publish rate-limit headers, the dashboard says 'Quota: Unknown' rather than making a number up.":
+    "COKEY ne devine jamais un quota. Si un fournisseur ne publie pas d'en-têtes de limite de débit, le tableau de bord affiche « Quota : Inconnu » plutôt que d'inventer un chiffre.",
+  "The routing invariant fits in five words: node, then key, then node. A lower-priority node never gets a turn while a higher one still has an unused key.":
+    "L'invariant de routage tient en quelques mots : nœud, puis clé, puis nœud. Un nœud de priorité inférieure n'a jamais son tour tant qu'un nœud supérieur a encore une clé inutilisée.",
+  "Every secret on disk is AES-256-GCM encrypted, prefixed with a format version, so a future COKEY can change the scheme without breaking old data.":
+    "Chaque secret sur le disque est chiffré en AES-256-GCM, préfixé d'une version de format, pour qu'un futur COKEY puisse changer de schéma sans casser les anciennes données.",
+  "COKEY's own name is a pun: pool your keys, COKEY. The two leaves on the logo are the 'broke princess' sprout the tagline promises.":
+    "Le nom même de COKEY est un jeu de mots : mutualisez vos clés (pool your keys), COKEY. Les deux feuilles du logo sont la pousse de « princesse fauchée » que promet le slogan.",
+  "Redirects are never followed on a custom endpoint. That one rule alone stops an upstream from ever bouncing your Authorization header to a different origin.":
+    "Les redirections ne sont jamais suivies sur un point de terminaison personnalisé. Cette seule règle empêche un service en amont de jamais faire rebondir votre en-tête Authorization vers une autre origine.",
+  "The live route panel is fed by the same server-sent-events stream a CLI could subscribe to directly - the dashboard has no private channel the API does not.":
+    "Le panneau de route en direct est alimenté par le même flux d'événements envoyés par le serveur qu'une CLI pourrait suivre directement - le tableau de bord n'a aucun canal privé que l'API n'a pas.",
+  "A chain's node order is the only thing that decides fallback. COKEY does not silently reorder your nodes to 'optimize' anything.":
+    "L'ordre des nœuds d'une chaîne est la seule chose qui décide du repli. COKEY ne réordonne jamais silencieusement vos nœuds pour « optimiser » quoi que ce soit.",
+  "Some providers count a single verification call against the same daily quota as real traffic. Testing ten keys back-to-back can look, to them, like ten real requests.":
+    "Certains fournisseurs comptent un simple appel de vérification dans le même quota quotidien que le trafic réel. Tester dix clés à la suite peut ressembler, pour eux, à dix vraies requêtes.",
+
+  // ---- Free-tier quota strings (src/catalog/dossiers.ts + providers.ts) --------------
+  // Numbers and unit abbreviations (RPM/RPD/TPD/TPM) are language-neutral and read the
+  // same in French; every entry below is still listed explicitly so none can be mistaken
+  // for a missed translation. Only the handful with real English words actually change.
+  "$0.10/month credits": "0,10 $/mois de crédits",
+  "$20 daily credits · 2 concurrent": "20 $ de crédits quotidiens · 2 simultanés",
+  "10 RPD per model": "10 RPD par modèle",
+  "10 RPM": "10 RPM",
+  "10 RPM · 100 RPD": "10 RPM · 100 RPD",
+  "10 RPM · 30,000 TPD": "10 RPM · 30 000 TPD",
+  "10 RPM · 50 RPD": "10 RPM · 50 RPD",
+  "10 RPM · 7,200 RPD · 200,000 TPD": "10 RPM · 7 200 RPD · 200 000 TPD",
+  "10,000 RPD shared across all models": "10 000 RPD partagées entre tous les modèles",
+  "10,000 RPD · 10M TPD": "10 000 RPD · 10M TPD",
+  "100 RPM · 125,000 daily credits": "100 RPM · 125 000 crédits quotidiens",
+  "100,000 TPD": "100 000 TPD",
+  "100,000 tokens/day": "100 000 jetons/jour",
+  "15 RPD": "15 RPD",
+  "15 RPM · 20,000 TPD": "15 RPM · 20 000 TPD",
+  "1M TPD": "1M TPD",
+  "1M TPD · MiniMax models": "1M TPD · modèles MiniMax",
+  "20 RPM": "20 RPM",
+  "20 RPM · 1,000 RPD": "20 RPM · 1 000 RPD",
+  "20 RPM · 1,000 calls/month": "20 RPM · 1 000 appels/mois",
+  "20 RPM · 200 RPD · 1M TPD": "20 RPM · 200 RPD · 1M TPD",
+  "20 RPM · 50 RPD": "20 RPM · 50 RPD",
+  "200 RPD": "200 RPD",
+  "200 RPD · free models only": "200 RPD · modèles gratuits uniquement",
+  "3 RPM": "3 RPM",
+  "3 RPM · 50 RPD": "3 RPM · 50 RPD",
+  "3 RPM · free models only": "3 RPM · modèles gratuits uniquement",
+  "30 RPM · 14,400 RPD · 18,000 TPM": "30 RPM · 14 400 RPD · 18 000 TPM",
+  "30 RPM · 300,000 TPM · 90M tokens/month": "30 RPM · 300 000 TPM · 90M jetons/mois",
+  "30 RPM · 500 RPD · 1M TPD": "30 RPM · 500 RPD · 1M TPD",
+  "40 RPH": "40 RPH",
+  "40 RPM": "40 RPM",
+  "40 RPM · 2,400 RPD · 1M TPD": "40 RPM · 2 400 RPD · 1M TPD",
+  "40 RPM · recurring free budget, eval-only ToS":
+    "40 RPM · budget gratuit récurrent, CGU réservées à l'évaluation",
+  "40 requests/hour": "40 requêtes/heure",
+  "5 RPM": "5 RPM",
+  "5 RPM · $0.25 weekly credits": "5 RPM · 0,25 $ de crédits hebdomadaires",
+  "5 RPM · 200 RPD": "5 RPM · 200 RPD",
+  "5 RPM · 200 RPD · 300,000 TPD": "5 RPM · 200 RPD · 300 000 TPD",
+  "5 RPM · 50 RPD": "5 RPM · 50 RPD",
+  "5 RPM · 50 RPD · free models only": "5 RPM · 50 RPD · modèles gratuits uniquement",
+  "5 RPM · unspecified RPD": "5 RPM · RPD non précisé",
+  "500 RPM (BYOK) · permanently-free models": "500 RPM (BYOK) · modèles gratuits en permanence",
+  "500 RPM · BYOK": "500 RPM · BYOK",
+  "5M TPD · free models only": "5M TPD · modèles gratuits uniquement",
+  "6 RPM": "6 RPM",
+  "6 RPM · ~1M tokens per month": "6 RPM · ~1M jetons par mois",
+  "60 RPM · 550 RPD": "60 RPM · 550 RPD",
+  "60 RPM · 550 RPD · 200,000 TPM": "60 RPM · 550 RPD · 200 000 TPM",
+  "90M tokens/month": "90M jetons/mois",
+  "Free models only": "Modèles gratuits uniquement",
+  "Paid models · works with a funded key": "Modèles payants · fonctionne avec une clé approvisionnée",
+
+  // ---- About page credits ------------------------------------------------------------
+  "The automatic egress pool's free-proxy import pulls its list from":
+    "L'importation de proxys gratuits du pool d'égress automatique récupère sa liste depuis",
+  "a community-maintained list refreshed continuously, no key and no quota.":
+    "une liste maintenue par la communauté, actualisée en continu, sans clé ni quota.",
 };
