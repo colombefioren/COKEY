@@ -330,6 +330,8 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("c4ai-aya-expanse-32b", "128K", "General", 0.82),
   ],
   nvidia: [
+    m("deepseek-ai/deepseek-v4-flash-0731", "262K", "Reasoning"),
+    m("deepseek-ai/deepseek-v4-pro-0813", "262K", "Reasoning"),
     m("meta/llama-3.2-11b-vision-instruct", "128K", "Vision", 1.0),
     m("meta/muse-glimmer-30b", "131K", "General", 1.3),
     m("mistralai/mistral-nemotron", "128K", "General", 1.3),

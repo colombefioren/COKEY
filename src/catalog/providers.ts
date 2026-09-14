@@ -454,10 +454,12 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     docsUrl: "https://docs.api.nvidia.com/",
     freeTier: {
       advertised: true,
-      summary: "40 RPM per model · uncapped TPD",
+      summary: "40 RPM · recurring free budget, eval-only ToS",
       quotaSource: "provider",
     },
     knownModels: [
+      "deepseek-ai/deepseek-v4-flash-0731",
+      "deepseek-ai/deepseek-v4-pro-0813",
       "meta/llama-3.2-11b-vision-instruct",
       "meta/muse-glimmer-30b",
       "moonshotai/kimi-k3",
@@ -467,6 +469,8 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     ],
     credentialFields: ["secret"],
     verification: { method: "models" },
+    notes:
+      "NVIDIA NIM replaced depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model). The free tier's ToS scopes usage to evaluation/prototyping, not production.",
   },
   {
     id: "odirouter",
