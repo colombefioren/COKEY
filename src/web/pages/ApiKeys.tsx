@@ -112,38 +112,40 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
         {keys.length === 0 ? (
           <Empty>{t("No keys yet — create one above.")}</Empty>
         ) : (
-          <table>
-            <thead>
-              <tr>
-                <th>{t("Name")}</th>
-                <th>{t("Prefix")}</th>
-                <th>{t("Created")}</th>
-                <th>{t("Last used")}</th>
-                <th />
-              </tr>
-            </thead>
-            <tbody>
-              {keys.map((key) => (
-                <tr key={key.id}>
-                  <td>{key.name}</td>
-                  <td className="mono small">{key.prefix}…</td>
-                  <td className="small muted">{timeAgo(key.createdAt)}</td>
-                  <td className="small muted">
-                    {key.lastUsedAt ? timeAgo(key.lastUsedAt) : t("never")}
-                  </td>
-                  <td>
-                    <button
-                      className="danger"
-                      style={{ padding: "4px 9px" }}
-                      onClick={() => setRevokingKey(key)}
-                    >
-                      {t("revoke")}
-                    </button>
-                  </td>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>{t("Name")}</th>
+                  <th>{t("Prefix")}</th>
+                  <th>{t("Created")}</th>
+                  <th>{t("Last used")}</th>
+                  <th />
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {keys.map((key) => (
+                  <tr key={key.id}>
+                    <td>{key.name}</td>
+                    <td className="mono small">{key.prefix}…</td>
+                    <td className="small muted">{timeAgo(key.createdAt)}</td>
+                    <td className="small muted">
+                      {key.lastUsedAt ? timeAgo(key.lastUsedAt) : t("never")}
+                    </td>
+                    <td>
+                      <button
+                        className="danger"
+                        style={{ padding: "4px 9px" }}
+                        onClick={() => setRevokingKey(key)}
+                      >
+                        {t("revoke")}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Panel>
 

@@ -144,49 +144,51 @@ export function Dashboard({
             {chains.length === 0 ? (
               <Empty>{t("No chains yet — create one in Chains.")}</Empty>
             ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>{t("Chain")}</th>
-                    <th>{t("Nodes")}</th>
-                    <th>{t("Keys")}</th>
-                    <th>{t("Status")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {chains.map((chain) => {
-                    const credentials = chain.entries.flatMap((entry) => entry.credentials);
-                    const healthy = credentials.filter((c) => c.status === "healthy").length;
-                    const cooldown = credentials.filter((c) => c.status === "cooldown").length;
-                    const invalid = credentials.filter((c) => c.status === "invalid").length;
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("Chain")}</th>
+                      <th>{t("Nodes")}</th>
+                      <th>{t("Keys")}</th>
+                      <th>{t("Status")}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {chains.map((chain) => {
+                      const credentials = chain.entries.flatMap((entry) => entry.credentials);
+                      const healthy = credentials.filter((c) => c.status === "healthy").length;
+                      const cooldown = credentials.filter((c) => c.status === "cooldown").length;
+                      const invalid = credentials.filter((c) => c.status === "invalid").length;
 
-                    return (
-                      <tr key={chain.id}>
-                        <td className="mono">{chain.alias}</td>
-                        <td>{chain.entries.length}</td>
-                        <td className="small">
-                          <span className="badge">
-                            {healthy} {t("healthy")}
-                          </span>{" "}
-                          {cooldown > 0 ? (
-                            <span className="badge warn">
-                              {cooldown} {t("cooldown")}
-                            </span>
-                          ) : null}{" "}
-                          {invalid > 0 ? (
-                            <span className="badge bad">
-                              {invalid} {t("invalid")}
-                            </span>
-                          ) : null}
-                        </td>
-                        <td className="small muted">
-                          {chain.enabled ? t("enabled") : t("disabled")}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      return (
+                        <tr key={chain.id}>
+                          <td className="mono">{chain.alias}</td>
+                          <td>{chain.entries.length}</td>
+                          <td className="small">
+                            <span className="badge">
+                              {healthy} {t("healthy")}
+                            </span>{" "}
+                            {cooldown > 0 ? (
+                              <span className="badge warn">
+                                {cooldown} {t("cooldown")}
+                              </span>
+                            ) : null}{" "}
+                            {invalid > 0 ? (
+                              <span className="badge bad">
+                                {invalid} {t("invalid")}
+                              </span>
+                            ) : null}
+                          </td>
+                          <td className="small muted">
+                            {chain.enabled ? t("enabled") : t("disabled")}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             )}
           </Panel>
 
@@ -209,41 +211,43 @@ export function Dashboard({
                 {t("and it shows up here.")}
               </Empty>
             ) : (
-              <table>
-                <thead>
-                  <tr>
-                    <th>{t("When")}</th>
-                    <th>{t("Chain")}</th>
-                    <th>{t("Model")}</th>
-                    <th>{t("Credential")}</th>
-                    <th>{t("Result")}</th>
-                    <th>{t("Latency")}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requests.map((entry) => (
-                    <tr key={entry.id}>
-                      <td className="small muted">{timeAgo(entry.at)}</td>
-                      <td className="mono small">{entry.chainAlias}</td>
-                      <td className="small">{entry.model}</td>
-                      <td className="small">{entry.credentialDescription}</td>
-                      <td className="small">
-                        {entry.outcome === "success" ? (
-                          <span className="badge">{t("ok")}</span>
-                        ) : (
-                          <span className="badge bad">{entry.classification}</span>
-                        )}
-                        {entry.fallback ? (
-                          <span className="badge warn" style={{ marginLeft: 4 }}>
-                            {entry.fallbackReason ?? t("fallback")}
-                          </span>
-                        ) : null}
-                      </td>
-                      <td className="small muted">{formatDuration(entry.latencyMs)}</td>
+              <div className="table-scroll">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>{t("When")}</th>
+                      <th>{t("Chain")}</th>
+                      <th>{t("Model")}</th>
+                      <th>{t("Credential")}</th>
+                      <th>{t("Result")}</th>
+                      <th>{t("Latency")}</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {requests.map((entry) => (
+                      <tr key={entry.id}>
+                        <td className="small muted">{timeAgo(entry.at)}</td>
+                        <td className="mono small">{entry.chainAlias}</td>
+                        <td className="small">{entry.model}</td>
+                        <td className="small">{entry.credentialDescription}</td>
+                        <td className="small">
+                          {entry.outcome === "success" ? (
+                            <span className="badge">{t("ok")}</span>
+                          ) : (
+                            <span className="badge bad">{entry.classification}</span>
+                          )}
+                          {entry.fallback ? (
+                            <span className="badge warn" style={{ marginLeft: 4 }}>
+                              {entry.fallbackReason ?? t("fallback")}
+                            </span>
+                          ) : null}
+                        </td>
+                        <td className="small muted">{formatDuration(entry.latencyMs)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </Panel>
         </>

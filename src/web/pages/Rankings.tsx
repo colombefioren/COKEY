@@ -156,65 +156,69 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
             <p className="small muted" style={{ marginTop: 0 }}>
               {loc(tier.blurb, tier.blurbFr, lang)}
             </p>
-            <table>
-              <thead>
-                <tr>
-                  <th style={{ width: 44 }}>{t("Tier")}</th>
-                  <th>{t("Model")}</th>
-                  <th style={{ width: 120 }}>SWE-bench</th>
-                  <th>{t("Provider")}</th>
-                  <th>{t("Why")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[...rows]
-                  .sort((a, b) => (b.sweScore ?? -1) - (a.sweScore ?? -1))
-                  .map((entry) => (
-                    <tr key={`${tier.name}-${entry.model}`}>
-                      <td>
-                        <span className={`badge tier-${tier.name.toLowerCase()}`}>{tier.name}</span>
-                      </td>
-                      <td className="mono small">
-                        <a
-                          href={`#/models?q=${encodeURIComponent(entry.model)}`}
-                          title={`${t("Find")} ${entry.model} ${t("in the catalog")}`}
-                        >
-                          {entry.model}
-                        </a>
-                      </td>
-                      <td>
-                        {entry.sweScore !== undefined ? (
-                          <span className="swe-score">
-                            <span className="swe-bar" aria-hidden="true">
-                              <span
-                                className="swe-fill"
-                                style={{ width: `${Math.min(100, entry.sweScore)}%` }}
-                              />
-                            </span>
-                            <span className="mono small">{entry.sweScore.toFixed(1)}%</span>
+            <div className="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th style={{ width: 44 }}>{t("Tier")}</th>
+                    <th>{t("Model")}</th>
+                    <th style={{ width: 120 }}>SWE-bench</th>
+                    <th>{t("Provider")}</th>
+                    <th>{t("Why")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...rows]
+                    .sort((a, b) => (b.sweScore ?? -1) - (a.sweScore ?? -1))
+                    .map((entry) => (
+                      <tr key={`${tier.name}-${entry.model}`}>
+                        <td>
+                          <span className={`badge tier-${tier.name.toLowerCase()}`}>
+                            {tier.name}
                           </span>
-                        ) : (
-                          <span className="small faint">—</span>
-                        )}
-                      </td>
-                      <td className="small muted">
-                        {entry.providerId ? (
+                        </td>
+                        <td className="mono small">
                           <a
-                            className="link-quiet"
-                            href={`#/providers?q=${encodeURIComponent(entry.providerId)}`}
-                            title={`${t("Open")} ${entry.providerId} ${t("in the provider catalog")}`}
+                            href={`#/models?q=${encodeURIComponent(entry.model)}`}
+                            title={`${t("Find")} ${entry.model} ${t("in the catalog")}`}
                           >
-                            {entry.providerId}
+                            {entry.model}
                           </a>
-                        ) : (
-                          t("vendor direct")
-                        )}
-                      </td>
-                      <td className="small">{loc(entry.reason, entry.reasonFr, lang)}</td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+                        </td>
+                        <td>
+                          {entry.sweScore !== undefined ? (
+                            <span className="swe-score">
+                              <span className="swe-bar" aria-hidden="true">
+                                <span
+                                  className="swe-fill"
+                                  style={{ width: `${Math.min(100, entry.sweScore)}%` }}
+                                />
+                              </span>
+                              <span className="mono small">{entry.sweScore.toFixed(1)}%</span>
+                            </span>
+                          ) : (
+                            <span className="small faint">—</span>
+                          )}
+                        </td>
+                        <td className="small muted">
+                          {entry.providerId ? (
+                            <a
+                              className="link-quiet"
+                              href={`#/providers?q=${encodeURIComponent(entry.providerId)}`}
+                              title={`${t("Open")} ${entry.providerId} ${t("in the provider catalog")}`}
+                            >
+                              {entry.providerId}
+                            </a>
+                          ) : (
+                            t("vendor direct")
+                          )}
+                        </td>
+                        <td className="small">{loc(entry.reason, entry.reasonFr, lang)}</td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </div>
           </Panel>
         );
       })}
@@ -232,56 +236,62 @@ function RateBoard({ data }: { data: RankingsResponse }) {
             "Ordered by how much a provider gives away, not how good it is — a provider can top this board and still be useless for coding.",
           )}
         </p>
-        <table>
-          <thead>
-            <tr>
-              <th style={{ width: 56 }}>{t("Tier")}</th>
-              <th>{t("Provider")}</th>
-              <th>{t("Quota")}</th>
-              <th style={{ width: 110 }}>{t("Source")}</th>
-              <th style={{ width: 100 }}>{t("Reliability")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.rateLimit.map((entry) => (
-              <tr key={`${entry.tier}-${entry.provider}`}>
-                <td>
-                  <span className="badge neutral">{entry.tier}</span>
-                </td>
-                <td>
-                  <div>{entry.provider}</div>
-                  {entry.note ? (
-                    <div className="small faint">{loc(entry.note, entry.noteFr, lang)}</div>
-                  ) : null}
-                </td>
-                <td className="small">{entry.quota}</td>
-                <td className="small muted">{t(provenanceLabel(entry))}</td>
-                <td>
-                  <span className={`badge ${reliabilityTone(entry)}`}>{t(entry.reliability)}</span>
-                </td>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: 56 }}>{t("Tier")}</th>
+                <th>{t("Provider")}</th>
+                <th>{t("Quota")}</th>
+                <th style={{ width: 110 }}>{t("Source")}</th>
+                <th style={{ width: 100 }}>{t("Reliability")}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.rateLimit.map((entry) => (
+                <tr key={`${entry.tier}-${entry.provider}`}>
+                  <td>
+                    <span className="badge neutral">{entry.tier}</span>
+                  </td>
+                  <td>
+                    <div>{entry.provider}</div>
+                    {entry.note ? (
+                      <div className="small faint">{loc(entry.note, entry.noteFr, lang)}</div>
+                    ) : null}
+                  </td>
+                  <td className="small">{entry.quota}</td>
+                  <td className="small muted">{t(provenanceLabel(entry))}</td>
+                  <td>
+                    <span className={`badge ${reliabilityTone(entry)}`}>
+                      {t(entry.reliability)}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Panel>
 
       <Panel title={t("Dropped on purpose")}>
-        <table>
-          <thead>
-            <tr>
-              <th style={{ width: 240 }}>{t("Provider")}</th>
-              <th>{t("Why")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.dropList.map((entry) => (
-              <tr key={entry.provider}>
-                <td>{entry.provider}</td>
-                <td className="small muted">{loc(entry.reason, entry.reasonFr, lang)}</td>
+        <div className="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th style={{ width: 240 }}>{t("Provider")}</th>
+                <th>{t("Why")}</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {data.dropList.map((entry) => (
+                <tr key={entry.provider}>
+                  <td>{entry.provider}</td>
+                  <td className="small muted">{loc(entry.reason, entry.reasonFr, lang)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Panel>
     </>
   );
@@ -291,26 +301,28 @@ function CombinedBoard({ data }: { data: RankingsResponse }) {
   const { t, lang } = useLang();
   return (
     <Panel title={t("What to actually use, in order")}>
-      <table>
-        <thead>
-          <tr>
-            <th style={{ width: 44 }}>#</th>
-            <th style={{ width: 140 }}>{t("Provider")}</th>
-            <th>{t("Model")}</th>
-            <th>{t("Why")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.combined.map((entry) => (
-            <tr key={entry.rank}>
-              <td className="mono">{entry.rank}</td>
-              <td className="mono small">{entry.providerId}</td>
-              <td className="small">{entry.model}</td>
-              <td className="small muted">{loc(entry.why, entry.whyFr, lang)}</td>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th style={{ width: 44 }}>#</th>
+              <th style={{ width: 140 }}>{t("Provider")}</th>
+              <th>{t("Model")}</th>
+              <th>{t("Why")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.combined.map((entry) => (
+              <tr key={entry.rank}>
+                <td className="mono">{entry.rank}</td>
+                <td className="mono small">{entry.providerId}</td>
+                <td className="small">{entry.model}</td>
+                <td className="small muted">{loc(entry.why, entry.whyFr, lang)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <div className="hint-box" style={{ marginTop: 14 }}>
         {loc(data.bottomLine, data.bottomLineFr, lang)}
       </div>
@@ -332,30 +344,32 @@ function RedundancyBoard({ data }: { data: RankingsResponse }) {
           "Dozens of these providers resell the same underlying free pool. OpenRouter's free catalogue shows up almost verbatim on several others, so the redundancy is structural rather than accidental. Keep one of each row, and treat the rest as a fallback only.",
         )}
       </p>
-      <table>
-        <thead>
-          <tr>
-            <th>{t("Model family")}</th>
-            <th>{t("Also available on")}</th>
-            <th style={{ width: 140 }}>{t("Keep")}</th>
-            <th style={{ width: 140 }}>{t("Fallback")}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.redundancy.map((entry) => (
-            <tr key={entry.family}>
-              <td className="mono small">{entry.family}</td>
-              <td className="small muted">{entry.alsoOn.join(", ")}</td>
-              <td className="small">
-                <span className="badge">{entry.keep}</span>
-              </td>
-              <td className="small">
-                <span className="badge neutral">{entry.fallback}</span>
-              </td>
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>{t("Model family")}</th>
+              <th>{t("Also available on")}</th>
+              <th style={{ width: 140 }}>{t("Keep")}</th>
+              <th style={{ width: 140 }}>{t("Fallback")}</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {data.redundancy.map((entry) => (
+              <tr key={entry.family}>
+                <td className="mono small">{entry.family}</td>
+                <td className="small muted">{entry.alsoOn.join(", ")}</td>
+                <td className="small">
+                  <span className="badge">{entry.keep}</span>
+                </td>
+                <td className="small">
+                  <span className="badge neutral">{entry.fallback}</span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </Panel>
   );
 }
