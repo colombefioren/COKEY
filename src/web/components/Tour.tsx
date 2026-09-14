@@ -211,32 +211,50 @@ function cardPosition(
   return { top: Math.min(spot.top + spot.height + 22, window.innerHeight - 200), left };
 }
 
+/**
+ * Both arrows share one shape: a gently curved shaft ending exactly where the
+ * chevron's two wings meet, so the head reads as the tip of the stroke rather
+ * than a separate decoration glued on nearby. `strokeLinejoin="round"` keeps
+ * the meeting point soft, like a mark drawn in one unhurried motion.
+ */
 function TourArrowLeft() {
   return (
-    <svg className="tour-arrow tour-arrow-left" width="46" height="34" viewBox="0 0 46 34" aria-hidden="true">
+    <svg
+      className="tour-arrow tour-arrow-left"
+      width="48"
+      height="30"
+      viewBox="0 0 48 30"
+      aria-hidden="true"
+    >
       <path
-        d="M43 27C33 30 12 29 5 15C2 9 4 5 8 3"
+        d="M44 22 Q26 6 10 15 L20 8 M10 15 L19 22"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path d="M3 10 5 3 12 6" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
 function TourArrowUp() {
   return (
-    <svg className="tour-arrow tour-arrow-up" width="34" height="46" viewBox="0 0 34 46" aria-hidden="true">
+    <svg
+      className="tour-arrow tour-arrow-up"
+      width="30"
+      height="48"
+      viewBox="0 0 30 48"
+      aria-hidden="true"
+    >
       <path
-        d="M27 43C30 33 29 12 15 5C9 2 5 4 3 8"
+        d="M22 44 Q6 26 15 10 L8 20 M15 10 L22 19"
         fill="none"
         stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path d="M10 3 3 5 6 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

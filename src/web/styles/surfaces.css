@@ -387,12 +387,17 @@
  * window punched into it via a spotlight element whose own box-shadow fills
  * everything *outside* itself. That trick keeps the cutout a real DOM box
  * (so it can transition smoothly between steps) instead of an SVG mask.
+ *
+ * The scrim itself carries most of the darkening now, not just the spot's own
+ * box-shadow, so the very first and last steps - which have no target and
+ * therefore no spot - are dark from the moment the tour opens instead of only
+ * tinted.
  */
 .tour-scrim {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: color-mix(in srgb, var(--text) 20%, transparent);
+  background: color-mix(in srgb, black 62%, var(--text) 10%);
   animation: scrim-in 0.24s ease both;
 }
 
@@ -419,6 +424,16 @@
   background: var(--surface);
   box-shadow: var(--shadow-pop);
   animation: modal-in 0.3s var(--ease) both;
+}
+/*
+ * The centred (no-target) steps position themselves with an inline
+ * `transform: translate(-50%, -50%)` - `modal-in`'s own `transform` keyframe
+ * would otherwise win and settle on `transform: none`, silently uncentring
+ * the card the moment its entrance animation finishes. A transform-free fade
+ * keeps the inline centring intact throughout.
+ */
+.tour-card-center {
+  animation: tour-fade-in 0.3s var(--ease) both;
 }
 
 .tour-eyebrow {
@@ -455,24 +470,33 @@
   font-size: 12.5px;
 }
 
+@keyframes tour-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 /*
- * A hand-drawn arrow, not a geometric one: a single wobbly stroke with an
- * open, slightly overshot arrowhead, sketched the way someone would circle
- * something on a screenshot. It is a decoration, not a precise pointer, so
- * the exact path only has to read as "this way," not line up to the pixel.
+ * A hand-drawn arrow, not a geometric one: a single wobbly stroke ending in an
+ * open chevron whose two wings meet exactly at the stroke's tip, sketched the
+ * way someone would circle something on a screenshot. It is a decoration, not
+ * a precise pointer, so the exact path only has to read as "this way."
  */
 .tour-arrow {
   position: absolute;
   color: var(--violet);
 }
 .tour-arrow-left {
-  left: -44px;
-  top: 6px;
+  left: -46px;
+  top: 2px;
 }
 .tour-arrow-up {
-  top: -42px;
+  top: -44px;
   left: 50%;
-  margin-left: -17px;
+  margin-left: -15px;
 }
 
 /* ---- login ---------------------------------------------------------------- */
