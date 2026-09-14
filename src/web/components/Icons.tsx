@@ -253,3 +253,12 @@ export function IconShield(props: IconProps) {
     </Svg>
   );
 }
+
+export function IconCompass(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M15 9l-4.2 2.8L9 16l4.2-2.8L15 9Z" />
+    </Svg>
+  );
+}

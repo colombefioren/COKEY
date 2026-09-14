@@ -95,4 +95,13 @@
   .contact-grid {
     grid-template-columns: minmax(0, 1fr);
   }
+
+  .guide-toggle {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
+  .guide-label {
+    display: none;
+  }
 }
