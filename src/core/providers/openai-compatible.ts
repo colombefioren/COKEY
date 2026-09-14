@@ -64,10 +64,18 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   ): ProviderRequest {
     const base = this.resolveBaseUrl(entry, credential);
     const headers = this.chatHeaders(credential);
+    const streaming = request.stream === true;
     const body = JSON.stringify({
       ...request,
       model: entry.model,
-      stream: request.stream === true,
+      stream: streaming,
+      // Ask for the trailing usage chunk OpenAI's own streaming dialect
+      // supports, so per-key quota tracking isn't blind to streamed
+      // requests - the majority of real traffic. Left alone if the caller
+      // already has an opinion on it.
+      ...(streaming && request.stream_options === undefined
+        ? { stream_options: { include_usage: true } }
+        : {}),
     });
 
     return {

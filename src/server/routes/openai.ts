@@ -9,6 +9,7 @@ import {
 } from "../../core/router/engine.js";
 import { ChatCompletionSchema } from "../../core/validation/schemas.js";
 import { pipeStream, prependStream } from "../streaming/sse.js";
+import { createStreamUsageSniffer } from "../../core/providers/transform.js";
 import {
   COKEY_PROVIDER_NAME,
   chainStateMessage,
@@ -108,6 +109,7 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
           attempts: result.attempts.length,
           stream: true,
         });
+        result.release();
         reply.hijack();
         reply.raw.writeHead(502, { "content-type": "application/json" });
         reply.raw.end(JSON.stringify({ error: { message: "Upstream returned no stream body" } }));
@@ -136,11 +138,20 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         fallback: result.fallback,
       });
 
-      await pipeStream(reply, stream, {
-        onChunk: () => {
-          /* chunk-level hooks reserved for metrics */
-        },
-      });
+      const sniffer = createStreamUsageSniffer();
+      await pipeStream(reply, stream, { onChunk: sniffer.onChunk });
+      // Only now has the body actually finished draining to the client - this
+      // is what the in-flight load balancer should have been waiting for.
+      result.release();
+
+      const usage = sniffer.usage();
+      let streamedInputTokens = 0;
+      let streamedOutputTokens = 0;
+      if (usage && (usage.inputTokens || usage.outputTokens)) {
+        cokey.credentials.recordTokens(result.credentialId, usage);
+        streamedInputTokens = usage.inputTokens ?? 0;
+        streamedOutputTokens = usage.outputTokens ?? 0;
+      }
 
       cokey.history.record({
         chainAlias: result.chainAlias,
@@ -156,11 +167,14 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         fallbackReason: result.fallbackReason,
         attempts: result.attempts.length,
         stream: true,
+        inputTokens: streamedInputTokens,
+        outputTokens: streamedOutputTokens,
       });
       return reply;
     }
 
     const text = await upstream.text();
+    result.release();
     let parsedBody: unknown;
     try {
       parsedBody = text ? JSON.parse(text) : undefined;

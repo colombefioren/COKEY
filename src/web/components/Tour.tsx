@@ -15,9 +15,6 @@ interface SpotRect {
 
 /** Loose margin around the real element, so the spotlight has room to breathe. */
 const SPOT_PADDING = 8;
-/** A route change re-renders the new page synchronously, but give it one frame
- * before measuring so layout has actually settled. */
-const ROUTE_SETTLE_MS = 50;
 
 function measureTarget(target: string | undefined): SpotRect | null {
   if (!target) return null;
@@ -82,28 +79,31 @@ export function Tour({
   useEffect(() => {
     if (!open || !step) return;
 
-    // Invalidate the previous target immediately, before anything else: a
-    // step change (whether or not it needs a new route) must never keep
-    // showing yesterday's rectangle while this effect works out the new one,
-    // since that stale box briefly satisfies "on the right route" once
-    // navigation lands and gets drawn in a meaningless place and size.
-    setRect(null);
-
     if (step.route && currentPath !== step.route) {
+      // Yesterday's rectangle belongs to a page we're about to leave - null
+      // it before navigating so it can never be drawn, even briefly, against
+      // the page that replaces it.
+      setRect(null);
       navigate(step.route);
       return;
     }
 
+    // Already on the right page: the target is already mounted, so there is
+    // nothing to wait for. Measuring synchronously - rather than nulling the
+    // rect and waiting out an artificial delay - matters most for a step
+    // that only changes *target* on the same page (two steps sharing a
+    // route): without it, the previous target's rectangle would flash under
+    // the new step's copy for that whole delay. It also means `rect` moves
+    // directly from the old value to the new one, so the spotlight's own
+    // CSS transition actually gets to glide between them instead of
+    // vanishing and reappearing.
     const measure = () => {
       setRect(measureTarget(step.target));
       setSidebarEdge(measureSidebarEdge());
     };
-    const timer = window.setTimeout(measure, ROUTE_SETTLE_MS);
+    measure();
     window.addEventListener("resize", measure);
-    return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("resize", measure);
-    };
+    return () => window.removeEventListener("resize", measure);
   }, [open, step, currentPath, navigate]);
 
   const finish = useCallback(() => {
@@ -270,7 +270,11 @@ function cardPosition(
       Math.max(spot.top, margin),
       window.innerHeight - margin - 40, // leaves room for a short card near the bottom
     );
-    return { top, left: Math.min(spot.left + spot.width + 22, window.innerWidth - cardWidth - margin) };
+    return {
+      top,
+      left: Math.min(spot.left + spot.width + 22, window.innerWidth - cardWidth - margin),
+      transform: "none",
+    };
   }
 
   // bottom
@@ -278,7 +282,11 @@ function cardPosition(
     Math.max(spot.left + spot.width / 2 - cardWidth / 2, margin),
     window.innerWidth - cardWidth - margin,
   );
-  return { top: Math.min(spot.top + spot.height + 22, window.innerHeight - 200), left };
+  return {
+    top: Math.min(spot.top + spot.height + 22, window.innerHeight - 200),
+    left,
+    transform: "none",
+  };
 }
 
 function TourArrowLeft() {
