@@ -831,7 +831,7 @@ h3 {
   width: min(452px, calc(100vw - 28px));
   padding: 12px;
   border-radius: 30px;
-  background: linear-gradient(180deg, var(--surface-2), var(--surface-3));
+  background: var(--surface-2);
   box-shadow:
     0 0 0 1px var(--border),
     inset 0 1px 0 rgba(255, 255, 255, 0.9),
@@ -1225,7 +1225,7 @@ section.panel.soft {
  * outline, because there is only ever one primary action on a screen.
  */
 button {
-  background: linear-gradient(140deg, var(--violet), var(--violet-strong));
+  background: var(--violet);
   border: 1px solid transparent;
   color: var(--violet-ink);
   padding: 8px 15px;
@@ -1241,7 +1241,7 @@ button {
     transform 0.18s var(--ease);
 }
 button:hover:not(:disabled) {
-  background: linear-gradient(140deg, var(--violet-strong), var(--violet-strong));
+  background: var(--violet-strong);
   box-shadow:
     1.5px 2px 0 0 var(--violet-line),
     var(--shadow);
@@ -1265,7 +1265,7 @@ button.secondary {
 }
 button.secondary:hover:not(:disabled) {
   border-color: var(--violet-line);
-  background: linear-gradient(140deg, var(--surface), var(--violet-soft));
+  background: var(--violet-soft);
   color: var(--violet-strong);
 }
 button.danger {
@@ -1863,7 +1863,7 @@ tbody tr:hover td:first-child {
   text-align: center;
   border: 1.5px dashed var(--border-strong);
   border-radius: var(--radius-md);
-  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
+  background: var(--surface-2);
 }
 
 /*
@@ -1877,7 +1877,7 @@ tbody tr:hover td:first-child {
   position: fixed;
   z-index: 80;
   pointer-events: none;
-  background: linear-gradient(140deg, var(--violet), var(--violet-strong));
+  background: var(--violet);
   color: var(--violet-ink);
   font-size: 11.5px;
   font-weight: 700;
@@ -2196,7 +2196,7 @@ button.model-name:hover {
   text-align: center;
   color: var(--muted);
   font-size: 12px;
-  background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
+  background: var(--surface-2);
 }
 
 /* ---- credentials ---------------------------------------------------------- */
@@ -2205,7 +2205,7 @@ button.model-name:hover {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  background: linear-gradient(140deg, var(--surface), var(--surface-2));
+  background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   padding: 3px 11px 3px 9px;

@@ -1510,12 +1510,12 @@ button.play.fail {
 
 .stack-chip {
   border: 1.5px solid var(--border-strong);
-  background: linear-gradient(150deg, var(--surface), var(--surface-3));
+  background: var(--surface);
   font-weight: 550;
 }
 .stack-chip.alt {
   border-color: var(--violet-line);
-  background: linear-gradient(150deg, var(--surface), var(--violet-soft));
+  background: var(--violet-soft);
 }
 
 .about-logo {

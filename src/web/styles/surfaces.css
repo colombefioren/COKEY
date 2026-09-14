@@ -38,7 +38,6 @@
 
 .toast {
   --toast-accent: var(--violet);
-  --toast-accent-2: var(--violet-strong);
   --toast-bg: var(--surface);
   --toast-line: var(--violet-line);
 
@@ -65,17 +64,15 @@
 
 .toast.err {
   --toast-accent: var(--rose);
-  --toast-accent-2: var(--rose-strong);
   --toast-line: var(--rose-line);
 }
 .toast.ok {
   --toast-accent: var(--sage);
-  --toast-accent-2: var(--sage);
   --toast-line: var(--sage-line);
-  --toast-bg: linear-gradient(140deg, var(--surface), var(--sage-soft));
+  --toast-bg: var(--sage-soft);
 }
 .toast:not(.ok):not(.err) {
-  --toast-bg: linear-gradient(140deg, var(--surface), var(--violet-soft));
+  --toast-bg: var(--violet-soft);
 }
 
 /* The leading rule: the state, stated once and quietly. */
@@ -86,7 +83,7 @@
   top: 0;
   bottom: 0;
   width: 4px;
-  background: linear-gradient(180deg, var(--toast-accent), var(--toast-accent-2));
+  background: var(--toast-accent);
 }
 
 /* The life line, draining left to right over the toast's four seconds. */
@@ -560,17 +557,18 @@
   width: 620px;
   height: 620px;
   border-radius: 50%;
+  filter: blur(70px);
   pointer-events: none;
 }
 .login::before {
   top: -240px;
   left: -180px;
-  background: radial-gradient(closest-side, var(--pink-soft), transparent 70%);
+  background: var(--pink-soft);
 }
 .login::after {
   bottom: -280px;
   right: -160px;
-  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
+  background: var(--violet-soft);
 }
 
 .login-card {
