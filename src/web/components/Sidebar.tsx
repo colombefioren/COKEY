@@ -96,7 +96,22 @@ export function Sidebar({
     // A text-zoom or font change can resize nav rows without touching any of
     // the other dependencies below, so the glider still needs to catch it.
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+
+    // The fold/unfold toggle animates the rail's width on `.shell`, a CSS
+    // transition React never renders for — so a snapshot taken once, right
+    // when `collapsed` flips, can go stale the moment that transition nudges
+    // a row's real offset afterwards, leaving the glider parked wherever it
+    // last measured instead of on the active row. A ResizeObserver on the
+    // nav column re-measures for every frame of that transition, so the
+    // glider keeps tracking the real layout throughout it and always lands
+    // exactly on the active row once it settles, collapsed or not.
+    const observer = new ResizeObserver(measure);
+    if (navRef.current) observer.observe(navRef.current);
+
+    return () => {
+      window.removeEventListener("resize", measure);
+      observer.disconnect();
+    };
   }, [activePath, collapsed, items.length]);
 
   // A folded rail is the only place the float-out label exists, so leaving the
