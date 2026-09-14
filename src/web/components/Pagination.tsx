@@ -1,4 +1,5 @@
 import type { PageParams } from "../types.js";
+import { useLang } from "../lang.js";
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
@@ -24,6 +25,7 @@ export function Pagination({
   onChange: (params: PageParams) => void;
   noun?: string;
 }) {
+  const { t } = useLang();
   if (total === 0) return null;
 
   const first = (page - 1) * pageSize + 1;
@@ -32,13 +34,14 @@ export function Pagination({
   return (
     <div className="pager">
       <span className="pager-count">
-        {total.toLocaleString()} {noun} · {first.toLocaleString()} to {last.toLocaleString()}
+        {total.toLocaleString()} {t(noun)} · {first.toLocaleString()} {t("to")}{" "}
+        {last.toLocaleString()}
       </span>
 
       <span className="spacer" />
 
       <label className="pager-size">
-        <span className="faint small">per page</span>
+        <span className="faint small">{t("per page")}</span>
         <select
           value={pageSize}
           onChange={(event) => onChange({ page: 1, pageSize: Number(event.target.value) })}
@@ -57,7 +60,7 @@ export function Pagination({
           className="ghost"
           disabled={page <= 1}
           onClick={() => onChange({ page: 1 })}
-          title="First page"
+          title={t("First page")}
         >
           «
         </button>
@@ -66,7 +69,7 @@ export function Pagination({
           className="ghost"
           disabled={page <= 1}
           onClick={() => onChange({ page: page - 1 })}
-          title="Previous page"
+          title={t("Previous page")}
         >
           ‹
         </button>
@@ -86,7 +89,7 @@ export function Pagination({
           className="ghost"
           disabled={page >= totalPages}
           onClick={() => onChange({ page: page + 1 })}
-          title="Next page"
+          title={t("Next page")}
         >
           ›
         </button>
@@ -95,7 +98,7 @@ export function Pagination({
           className="ghost"
           disabled={page >= totalPages}
           onClick={() => onChange({ page: totalPages })}
-          title="Last page"
+          title={t("Last page")}
         >
           »
         </button>

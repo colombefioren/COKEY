@@ -16,6 +16,7 @@ import {
   formatNumber,
 } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { useLang } from "../lang.js";
 
 const KEYS_PER_PAGE = 25;
 
@@ -42,6 +43,7 @@ export function Keys({
   providers: ProviderStatus[];
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [credentials, setCredentials] = useState<PublicCredential[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [addingFor, setAddingFor] = useState<ProviderStatus | null>(null);
@@ -99,7 +101,8 @@ export function Keys({
     setBusyId(credential.id);
     try {
       const result = await api.testCredential(credential.id);
-      if (result.ok) toast.ok(`${credential.description}: verified in ${result.latencyMs ?? 0}ms`);
+      if (result.ok)
+        toast.ok(`${credential.description}: ${t("verified in")} ${result.latencyMs ?? 0}ms`);
       else toast.err(`${credential.description}: ${result.classification} ${result.message ?? ""}`);
       await load();
       onChanged();
@@ -124,14 +127,14 @@ export function Keys({
 
   async function replace(credential: PublicCredential, newSecret: string) {
     if (!newSecret) {
-      toast.err("A replacement key cannot be empty");
+      toast.err(t("A replacement key cannot be empty"));
       return;
     }
     setBusyId(credential.id);
     try {
       await api.updateCredential(credential.id, { secret: newSecret });
       await api.testCredential(credential.id);
-      toast.ok("Key replaced");
+      toast.ok(t("Key replaced"));
       setReplacingKey(null);
       await load();
       onChanged();
@@ -167,8 +170,8 @@ export function Keys({
       await api.updateCredential(credential.id, { proxyPoolId: poolId });
       toast.ok(
         poolId
-          ? `${credential.description} pinned to a pool exit`
-          : `${credential.description} returned to the automatic pool`,
+          ? `${credential.description} ${t("pinned to a pool exit")}`
+          : `${credential.description} ${t("returned to the automatic pool")}`,
       );
       setAssignFor(null);
       await load();
@@ -183,7 +186,7 @@ export function Keys({
   async function remove(credential: PublicCredential) {
     try {
       await api.deleteCredential(credential.id);
-      toast.ok("Credential deleted");
+      toast.ok(t("Credential deleted"));
       setRemovingKey(null);
       await load();
       onChanged();
@@ -195,11 +198,11 @@ export function Keys({
   return (
     <>
       <Panel
-        title={`Keys (${credentials.length})`}
+        title={`${t("Keys")} (${credentials.length})`}
         actions={
           <input
             className="search"
-            placeholder="Search keys"
+            placeholder={t("Search keys")}
             value={query}
             onChange={(event) => {
               setQuery(event.target.value);
@@ -209,7 +212,9 @@ export function Keys({
         }
       >
         {groups.length === 0 ? (
-          <Empty>No keys yet. Connect a provider and COKEY proves the key before storing it.</Empty>
+          <Empty>
+            {t("No keys yet. Connect a provider and COKEY proves the key before storing it.")}
+          </Empty>
         ) : (
           visible.map((group) => (
             <div key={group.providerId} className="provider-group">
@@ -217,7 +222,7 @@ export function Keys({
                 <strong>{group.displayName}</strong>
                 <span className="mono small faint">{group.providerId}</span>
                 <span className="badge">
-                  {group.credentials.length} key{group.credentials.length === 1 ? "" : "s"}
+                  {group.credentials.length} {group.credentials.length === 1 ? t("key") : t("keys")}
                 </span>
                 <span className="spacer" />
                 <button
@@ -230,7 +235,7 @@ export function Keys({
                     if (provider) setAddingFor(provider);
                   }}
                 >
-                  + key
+                  + {t("key")}
                 </button>
               </div>
 
@@ -238,14 +243,14 @@ export function Keys({
                 <table>
                   <thead>
                     <tr>
-                      <th>State</th>
-                      <th>Description</th>
-                      <th>Key</th>
-                      <th>Rate</th>
-                      <th>Egress</th>
-                      <th>Usage</th>
-                      <th>Quota</th>
-                      <th>Used</th>
+                      <th>{t("State")}</th>
+                      <th>{t("Description")}</th>
+                      <th>{t("Key")}</th>
+                      <th>{t("Rate")}</th>
+                      <th>{t("Egress")}</th>
+                      <th>{t("Usage")}</th>
+                      <th>{t("Quota")}</th>
+                      <th>{t("Used")}</th>
                       <th />
                     </tr>
                   </thead>
@@ -256,7 +261,7 @@ export function Keys({
                           <StatusBadge status={credential.status} />
                           {credential.cooldownUntil && credential.cooldownUntil > Date.now() ? (
                             <div className="small faint">
-                              {formatDuration(credential.cooldownUntil - Date.now())} left
+                              {formatDuration(credential.cooldownUntil - Date.now())} {t("left")}
                             </div>
                           ) : null}
                         </td>
@@ -269,31 +274,32 @@ export function Keys({
                           <button
                             className="ghost mono small"
                             style={{ padding: "2px 6px" }}
-                            title="Exit IP for this key: automatic pool, a pinned exit, or direct"
+                            title={t("Exit IP for this key: automatic pool, a pinned exit, or direct")}
                             onClick={() => void openAssign(credential)}
                           >
                             {credential.proxy.configured
-                              ? `${credential.proxy.label ?? "proxy"}${credential.proxy.auto ? " (auto)" : " (pinned)"}`
-                              : "direct"}
+                              ? `${credential.proxy.label ?? t("proxy")}${credential.proxy.auto ? ` (${t("auto")})` : ` (${t("pinned")})`}`
+                              : t("direct")}
                           </button>
                         </td>
                         <td className="small muted">
-                          {formatNumber(credential.usage.requests)} req ·{" "}
-                          {formatNumber(credential.usage.successfulRequests)} ok
+                          {formatNumber(credential.usage.requests)} {t("req")} ·{" "}
+                          {formatNumber(credential.usage.successfulRequests)} {t("ok")}
                           {credential.usage.totalTokens > 0
-                            ? ` · ${formatNumber(credential.usage.totalTokens)} tok`
+                            ? ` · ${formatNumber(credential.usage.totalTokens)} ${t("tok")}`
                             : ""}
                         </td>
                         <td className="small">
                           <QuotaLabel
                             quota={credential.quota}
                             quotaErrors={credential.usage.quotaErrors}
+                            status={credential.status}
                           />
                         </td>
                         <td className="small muted">
                           {credential.usage.lastUsedAt
                             ? timeAgo(credential.usage.lastUsedAt)
-                            : "never"}
+                            : t("never")}
                         </td>
                         <td>
                           <div className="row" style={{ gap: 4 }}>
@@ -303,20 +309,20 @@ export function Keys({
                               onClick={() => void test(credential)}
                               disabled={busyId === credential.id}
                             >
-                              {busyId === credential.id ? "…" : "test"}
+                              {busyId === credential.id ? "…" : t("test")}
                             </button>
                             <button className="ghost" onClick={() => setReplacingKey(credential)}>
-                              replace
+                              {t("replace")}
                             </button>
                             <button className="ghost" onClick={() => void toggle(credential)}>
-                              {credential.status === "disabled" ? "enable" : "disable"}
+                              {credential.status === "disabled" ? t("enable") : t("disable")}
                             </button>
                             <button
                               className="danger"
                               style={{ padding: "4px 9px" }}
                               onClick={() => setRemovingKey(credential)}
                             >
-                              revoke
+                              {t("revoke")}
                             </button>
                           </div>
                         </td>
@@ -358,8 +364,8 @@ export function Keys({
 
       {replacingKey ? (
         <PromptModal
-          title="Replace API key"
-          message={`Enter a new secret for "${replacingKey.description}". The key is verified before it is stored.`}
+          title={t("Replace API key")}
+          message={`${t('Enter a new secret for')} "${replacingKey.description}". ${t("The key is verified before it is stored.")}`}
           defaultValue=""
           placeholder="sk-..."
           onSubmit={(value) => void replace(replacingKey, value)}
@@ -369,23 +375,24 @@ export function Keys({
 
       {removingKey ? (
         <ConfirmModal
-          title="Revoke key"
-          message={`Delete credential "${removingKey.description}"? It is detached from every chain.`}
+          title={t("Revoke key")}
+          message={`${t("Delete credential")} "${removingKey.description}"? ${t("It is detached from every chain.")}`}
           onConfirm={() => void remove(removingKey)}
           onClose={() => setRemovingKey(null)}
-          actionLabel="Revoke"
+          actionLabel={t("Revoke")}
         />
       ) : null}
 
       {assignFor ? (
         <Modal
-          title="Egress for this key"
+          title={t("Egress for this key")}
           subtitle={assignFor.description}
           onClose={() => setAssignFor(null)}
         >
           <p className="small muted" style={{ marginTop: 0 }}>
-            Add proxies to the pool once and every key of a provider gets a different exit. Leave
-            this automatic, or pin the key to one exit.
+            {t(
+              "Add proxies to the pool once and every key of a provider gets a different exit. Leave this automatic, or pin the key to one exit.",
+            )}
           </p>
 
           <div className="selected-list">
@@ -395,16 +402,16 @@ export function Keys({
               disabled={poolBusy}
               onClick={() => void assignProxy(assignFor, null)}
             >
-              Automatic pool
-              {assignFor.proxy.auto ? " (current)" : ""}
+              {t("Automatic pool")}
+              {assignFor.proxy.auto ? ` (${t("current")})` : ""}
             </button>
 
             {poolBusy ? (
-              <div className="small faint">Loading the pool…</div>
+              <div className="small faint">{t("Loading the pool…")}</div>
             ) : pool.length === 0 ? (
               <Empty>
-                The pool is empty. Add proxies under Settings, Egress pool, or set{" "}
-                <code>COKEY_PROXY_POOL</code> before first start.
+                {t("The pool is empty. Add proxies under Settings, Egress pool, or set")}{" "}
+                <code>COKEY_PROXY_POOL</code> {t("before first start.")}
               </Empty>
             ) : (
               pool.map((entry) => (
@@ -418,7 +425,7 @@ export function Keys({
                   <span className="mono">{entry.label}</span>
                   <span className="spacer" />
                   <span className="small faint">
-                    {entry.enabled ? `${entry.assignedTo} key(s)` : "disabled"}
+                    {entry.enabled ? `${entry.assignedTo} ${t("key(s)")}` : t("disabled")}
                   </span>
                 </button>
               ))
@@ -427,7 +434,7 @@ export function Keys({
 
           <div className="modal-actions">
             <button className="ghost" onClick={() => setAssignFor(null)}>
-              Close
+              {t("Close")}
             </button>
           </div>
         </Modal>

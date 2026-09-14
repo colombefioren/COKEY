@@ -8,6 +8,7 @@ import { EditEntryModal } from "./EditEntryModal.js";
 import { ViewEntryModal } from "./ViewEntryModal.js";
 import { useToast } from "./Toast.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
+import { useLang } from "../lang.js";
 
 /**
  * One chain: a user-ordered list of provider+model entries.
@@ -17,6 +18,7 @@ import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
  */
 export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: () => void }) {
   const toast = useToast();
+  const { t } = useLang();
   const [entries, setEntries] = useState<ChainEntryView[]>(chain.entries);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
@@ -107,7 +109,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function duplicate(entry: ChainEntryView) {
     try {
       await api.duplicateEntry(entry.id);
-      toast.ok("Entry duplicated");
+      toast.ok(t("Entry duplicated"));
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -133,7 +135,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
     }
     try {
       await api.updateChain(chain.id, { alias: next });
-      toast.ok(`Renamed to ${next}`);
+      toast.ok(`${t("Renamed to")} ${next}`);
       setRenaming(false);
       onChanged();
     } catch (error) {
@@ -153,7 +155,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function deleteChain() {
     try {
       await api.deleteChain(chain.id);
-      toast.ok(`Deleted ${chain.alias}`);
+      toast.ok(`${t("Deleted")} ${chain.alias}`);
       setDeletingChain(false);
       onChanged();
     } catch (error) {
@@ -177,9 +179,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               style={{ width: 220 }}
               autoFocus
             />
-            <button onClick={() => void saveAlias()}>Save</button>
+            <button onClick={() => void saveAlias()}>{t("Save")}</button>
             <button className="secondary" onClick={() => setRenaming(false)}>
-              Cancel
+              {t("Cancel")}
             </button>
           </>
         ) : (
@@ -188,9 +190,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <span className="mono small faint" style={{ marginLeft: 8 }}>
               ID: {chain.id.slice(0, 8)}
             </span>
-            {chain.enabled ? null : <span className="badge warn">disabled</span>}
+            {chain.enabled ? null : <span className="badge warn">{t("disabled")}</span>}
             <span className="small faint">
-              {entries.length} {entries.length === 1 ? "entry" : "entries"} · model id for clients
+              {entries.length} {entries.length === 1 ? t("entry") : t("entries")} ·{" "}
+              {t("model id for clients")}
             </span>
           </>
         )}
@@ -199,25 +202,29 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           className="ghost"
           onClick={() => void sweep.refresh()}
           disabled={sweep.busy}
-          title={sweep.busy ? "Testing nodes…" : "Test every node and go to the first that answers"}
+          title={
+            sweep.busy
+              ? t("Testing nodes…")
+              : t("Test every node and go to the first that answers")
+          }
         >
-          {sweep.busy ? "testing…" : "⟳ refresh"}
+          {sweep.busy ? t("testing…") : `⟳ ${t("refresh")}`}
         </button>
-        <button className="ghost" onClick={() => setRenaming(true)} title="Rename">
-          rename
+        <button className="ghost" onClick={() => setRenaming(true)} title={t("Rename")}>
+          {t("rename")}
         </button>
         <button className="ghost" onClick={() => void toggleChain()}>
-          {chain.enabled ? "disable" : "enable"}
+          {chain.enabled ? t("disable") : t("enable")}
         </button>
         <button className="danger" onClick={() => setDeletingChain(true)}>
-          delete
+          {t("delete")}
         </button>
       </div>
 
       <div className="entries">
         {entries.length === 0 ? (
           <div className="drop-hint">
-            No entries yet. Add a provider and model to start building the fallback order.
+            {t("No entries yet. Add a provider and model to start building the fallback order.")}
           </div>
         ) : null}
 
@@ -245,14 +252,22 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                 move(entry.id, 1);
               }
             }}
-            title="Drag to reorder, or Alt+↑ / Alt+↓"
+            title={t("Drag to reorder, or Alt+↑ / Alt+↓")}
           >
             {/* Left: reorder buttons */}
             <div className="entry-reorder">
-              <button className="ghost" title="Move up (Alt+↑)" onClick={() => move(entry.id, -1)}>
+              <button
+                className="ghost"
+                title={t("Move up (Alt+↑)")}
+                onClick={() => move(entry.id, -1)}
+              >
                 ▲
               </button>
-              <button className="ghost" title="Move down (Alt+↓)" onClick={() => move(entry.id, 1)}>
+              <button
+                className="ghost"
+                title={t("Move down (Alt+↓)")}
+                onClick={() => move(entry.id, 1)}
+              >
                 ▼
               </button>
             </div>
@@ -262,45 +277,49 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               <span className="priority">{index + 1}.</span>
               <button
                 className="model-name"
-                title="View details"
+                title={t("View details")}
                 onClick={() => setViewingEntry(entry)}
               >
                 {entry.label ?? entry.model}
               </button>
               {entry.label ? <span className="small faint mono">{entry.model}</span> : null}
-              <span className="small faint" title={`Provider: ${entry.providerId}`}>
+              <span className="small faint" title={`${t("Provider")}: ${entry.providerId}`}>
                 {entry.providerId}
               </span>
               {entry.credentials.length > 0 ? (
-                <span className="badge neutral" title="Keys bound to this node">
-                  {entry.healthyCount}/{entry.credentials.length} keys
+                <span className="badge neutral" title={t("Keys bound to this node")}>
+                  {entry.healthyCount}/{entry.credentials.length} {t("keys")}
                 </span>
               ) : (
-                <span className="badge bad">no keys</span>
+                <span className="badge bad">{t("no keys")}</span>
               )}
-              {sweepStateBadge(sweep.states[entry.id], sweep.winnerId === entry.id)}
+              {sweepStateBadge(sweep.states[entry.id], sweep.winnerId === entry.id, t)}
               {entry.credentials.some((credential) => credential.proxy.auto) ? (
-                <span className="badge neutral" title="Automatic egress pool is assigning exits">
-                  auto proxy
+                <span className="badge neutral" title={t("Automatic egress pool is assigning exits")}>
+                  {t("auto proxy")}
                 </span>
               ) : null}
-              {!entry.enabled && <span className="badge warn">disabled</span>}
+              {!entry.enabled && <span className="badge warn">{t("disabled")}</span>}
             </div>
 
             {/* Right: action buttons */}
             <div className="entry-actions">
-              <button className="ghost" title="View details" onClick={() => setViewingEntry(entry)}>
+              <button
+                className="ghost"
+                title={t("View details")}
+                onClick={() => setViewingEntry(entry)}
+              >
                 👁
               </button>
-              <button className="ghost" title="Edit" onClick={() => setEditingEntry(entry)}>
+              <button className="ghost" title={t("Edit")} onClick={() => setEditingEntry(entry)}>
                 ✎
               </button>
-              <button className="ghost" title="Duplicate" onClick={() => void duplicate(entry)}>
+              <button className="ghost" title={t("Duplicate")} onClick={() => void duplicate(entry)}>
                 ⧉
               </button>
               <button
                 className="ghost"
-                title={entry.enabled ? "Disable" : "Enable"}
+                title={entry.enabled ? t("Disable") : t("Enable")}
                 onClick={() => void toggleEntry(entry)}
               >
                 {entry.enabled ? "⊘" : "✓"}
@@ -310,7 +329,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                 style={{ fontSize: 12 }}
                 onClick={() => setRemovingEntry(entry)}
               >
-                remove
+                {t("remove")}
               </button>
             </div>
           </div>
@@ -319,11 +338,12 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
 
       <div className="entry-add-row">
         <button className="secondary" onClick={() => setAddingEntry(true)}>
-          + Add entry
+          + {t("Add entry")}
         </button>
         <span className="small faint">
-          Nodes run top to bottom. Drag or Alt+↑ / Alt+↓ to reorder; click a model to view, edit, or
-          test its keys.
+          {t(
+            "Nodes run top to bottom. Drag or Alt+↑ / Alt+↓ to reorder; click a model to view, edit, or test its keys.",
+          )}
         </span>
       </div>
 
@@ -369,53 +389,57 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
 
       {removingEntry ? (
         <ConfirmModal
-          title="Remove entry"
-          message={`Remove ${removingEntry.providerId}/${removingEntry.model} from ${chain.alias}?`}
+          title={t("Remove entry")}
+          message={`${t("Remove")} ${removingEntry.providerId}/${removingEntry.model} ${t("from")} ${chain.alias}?`}
           onConfirm={() => void removeEntry(removingEntry)}
           onClose={() => setRemovingEntry(null)}
-          actionLabel="Remove"
+          actionLabel={t("Remove")}
         />
       ) : null}
 
       {deletingChain ? (
         <ConfirmModal
-          title="Delete chain"
-          message={`Delete chain ${chain.alias} and all of its entries?`}
+          title={t("Delete chain")}
+          message={`${t("Delete chain")} ${chain.alias} ${t("and all of its entries?")}`}
           onConfirm={() => void deleteChain()}
           onClose={() => setDeletingChain(false)}
-          actionLabel="Delete"
+          actionLabel={t("Delete")}
         />
       ) : null}
     </div>
   );
 }
 
-function sweepStateBadge(state: RefreshState | undefined, current: boolean) {
+function sweepStateBadge(
+  state: RefreshState | undefined,
+  current: boolean,
+  t: (text: string) => string,
+) {
   if (current) {
     return (
-      <span className="badge ok" title="first node that answered OK">
-        ← current
+      <span className="badge ok" title={t("first node that answered OK")}>
+        ← {t("current")}
       </span>
     );
   }
   if (state === "testing") {
     return (
-      <span className="badge neutral" title="Testing this node's key">
-        testing…
+      <span className="badge neutral" title={t("Testing this node's key")}>
+        {t("testing…")}
       </span>
     );
   }
   if (state === "ok") {
     return (
-      <span className="badge ok" title="Answered OK">
-        ok
+      <span className="badge ok" title={t("Answered OK")}>
+        {t("ok")}
       </span>
     );
   }
   if (state === "fail") {
     return (
-      <span className="badge bad" title="Failed">
-        fail
+      <span className="badge bad" title={t("Failed")}>
+        {t("fail")}
       </span>
     );
   }

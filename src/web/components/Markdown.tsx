@@ -1,16 +1,15 @@
 import type { ReactNode } from "react";
 
 /**
- * A small Markdown renderer for content-repository prose.
+ * A small Markdown renderer for the terms text.
  *
- * The terms and dossier bodies are written in the content repository, so they
- * arrive as Markdown rather than as React nodes. This covers the subset the
- * content actually uses — paragraphs, `##` headings, `-` lists, bold, italic,
- * inline code and links — and nothing else.
+ * The terms are written as Markdown strings so the source stays readable
+ * with real lists and emphasis. This covers the subset that text actually
+ * uses — paragraphs, `##` headings, `-` lists, bold, italic, inline code and
+ * links — and nothing else.
  *
- * It deliberately does not support raw HTML. Rendering untrusted markup from a
- * file on disk into the dashboard is how a content edit becomes a script
- * injection, and no dossier needs it.
+ * It deliberately does not support raw HTML: rendering arbitrary markup here
+ * is how a text edit turns into a script injection, and nothing here needs it.
  */
 
 /** Split on the inline constructs that need wrapping, keeping the separators. */

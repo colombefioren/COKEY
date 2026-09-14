@@ -23,10 +23,13 @@ import {
   IconMenu,
   IconRoute,
   IconScroll,
+  IconShield,
   IconSliders,
   IconSparkle,
 } from "./components/Icons.js";
 import { useRoute } from "./router.js";
+import { NAV_HINTS, PAGE_TITLES, type Lang } from "./i18n.js";
+import { LangProvider, useLang } from "./lang.js";
 import { useLive, useLiveInvalidation } from "./live.js";
 import { Dashboard } from "./pages/Dashboard.js";
 import { Chains } from "./pages/Chains.js";
@@ -35,95 +38,39 @@ import { Providers } from "./pages/Providers.js";
 import { ApiKeys } from "./pages/ApiKeys.js";
 import { Usage } from "./pages/Usage.js";
 import { Settings } from "./pages/Settings.js";
+import { Proxies } from "./pages/Proxies.js";
 import { Tutorial } from "./pages/Tutorial.js";
 import { Terms } from "./pages/Terms.js";
 import { About } from "./pages/About.js";
 
 const NUDGER_KEY = "cokey.nudger.dismissed";
 
-/** Page titles, in one place so the title bar and the router agree. */
-const TITLES: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/chains": "Chains",
-  "/models": "Models",
-  "/providers": "Providers",
-  "/api-keys": "API keys",
-  "/usage": "Usage",
-  "/settings": "Settings",
-  "/tutorial": "Tutorial",
-  "/terms": "Terms of service",
-  "/about": "About",
-};
-
 const NAV_COLLAPSED_KEY = "cokey.nav.collapsed";
 
-/** The whole navigation, in one place. */
-function navItems(counts: { chains: number; keys: number; providers: number }): NavItem[] {
+/** The whole navigation, in one place. Labels and hints follow the toggle. */
+function navItems(
+  counts: { chains: number; keys: number; providers: number },
+  lang: Lang,
+): NavItem[] {
+  const titles = PAGE_TITLES[lang];
+  const hints = NAV_HINTS[lang];
   return [
-    {
-      path: "/dashboard",
-      label: "Dashboard",
-      icon: <IconGauge size={18} />,
-      hint: "Gateway summary, the live route and the resilience layers",
-    },
-    {
-      path: "/chains",
-      label: "Chains",
-      icon: <IconRoute size={18} />,
-      hint: "Your failover chains, their nodes and their keys",
-      count: counts.chains || undefined,
-    },
-    {
-      path: "/models",
-      label: "Models",
-      icon: <IconSparkle size={18} />,
-      hint: "Model catalog, live probes and rankings",
-    },
-    {
-      path: "/providers",
-      label: "Providers",
-      icon: <IconGrid size={18} />,
-      hint: "Who runs each provider and whether to depend on it",
-      count: counts.providers || undefined,
-    },
-    {
-      path: "/api-keys",
-      label: "API keys",
-      icon: <IconKey size={18} />,
-      hint: "Keys for talking to the gateway itself",
-    },
-    {
-      path: "/usage",
-      label: "Usage",
-      icon: <IconActivity size={18} />,
-      hint: "Request history and token usage together",
-      count: counts.keys || undefined,
-    },
-    {
-      path: "/settings",
-      label: "Settings",
-      icon: <IconSliders size={18} />,
-      hint: "Gateway, fallback and egress settings",
-    },
-    {
-      path: "/tutorial",
-      label: "Tutorial",
-      icon: <IconBook size={18} />,
-      hint: "Wire COKEY into your editor or CLI",
-    },
-    {
-      path: "/terms",
-      label: "Terms",
-      icon: <IconScroll size={18} />,
-      hint: "What you agree to by using COKEY",
-    },
-    {
-      path: "/about",
-      label: "About",
-      icon: <IconLayers size={18} />,
-      hint: "The stack, the credits and how to reach the creator",
-    },
-  ];
+    { path: "/dashboard", icon: <IconGauge size={18} /> },
+    { path: "/chains", icon: <IconRoute size={18} />, count: counts.chains || undefined },
+    { path: "/models", icon: <IconSparkle size={18} /> },
+    { path: "/providers", icon: <IconGrid size={18} />, count: counts.providers || undefined },
+    { path: "/api-keys", icon: <IconKey size={18} /> },
+    { path: "/usage", icon: <IconActivity size={18} />, count: counts.keys || undefined },
+    { path: "/settings", icon: <IconSliders size={18} /> },
+    { path: "/proxies", icon: <IconShield size={18} /> },
+    { path: "/tutorial", icon: <IconBook size={18} /> },
+    { path: "/terms", icon: <IconScroll size={18} /> },
+    { path: "/about", icon: <IconLayers size={18} /> },
+  ].map((item) => ({
+    ...item,
+    label: item.path === "/terms" ? (lang === "fr" ? "Conditions" : "Terms") : titles[item.path]!,
+    hint: hints[item.path]!,
+  }));
 }
 
 function Shell() {
@@ -141,6 +88,7 @@ function Shell() {
     () => window.localStorage.getItem(NAV_COLLAPSED_KEY) === "1",
   );
   const [navOpen, setNavOpen] = useState(false);
+  const { lang, toggleLang, t } = useLang();
 
   // The gateway always requires a session cookie, so the first authenticated
   // call decides whether to render the login form.
@@ -231,7 +179,7 @@ function Shell() {
     [chainCount, credentials.length, providers],
   );
 
-  const items = useMemo(() => navItems(counts), [counts]);
+  const items = useMemo(() => navItems(counts, lang), [counts, lang]);
 
   const toggleNavCollapsed = useCallback(() => {
     setNavCollapsed((value) => {
@@ -300,6 +248,7 @@ function Shell() {
         keyCount={counts.keys}
         chainCount={counts.chains}
         mobileOpen={navOpen}
+        lang={lang}
       />
       {navOpen ? (
         <div className="nav-backdrop" aria-hidden="true" onClick={() => setNavOpen(false)} />
@@ -310,7 +259,7 @@ function Shell() {
           <button
             type="button"
             className="nav-toggle"
-            aria-label={navOpen ? "Close navigation" : "Open navigation"}
+            aria-label={navOpen ? t("Close navigation") : t("Open navigation")}
             onClick={() => setNavOpen((value) => !value)}
           >
             <IconMenu size={17} />
@@ -318,9 +267,19 @@ function Shell() {
           <KineticText
             className="topbar-title"
             key={route.path}
-            text={TITLES[route.path] ?? "Dashboard"}
+            text={PAGE_TITLES[lang][route.path] ?? PAGE_TITLES[lang]["/dashboard"]}
           />
           <span className="spacer" />
+          <button
+            type="button"
+            className="lang-toggle"
+            onClick={toggleLang}
+            aria-label={lang === "en" ? "Switch to French" : "Passer en anglais"}
+            title={lang === "en" ? "Switch to French" : "Passer en anglais"}
+          >
+            <span className={lang === "en" ? "active" : undefined}>EN</span>
+            <span className={lang === "fr" ? "active" : undefined}>FR</span>
+          </button>
           <NotificationsBell refreshKey={refreshKey} onChanged={bump} />
           <LiveStatus />
           <a
@@ -328,7 +287,7 @@ function Shell() {
             target="_blank"
             rel="noreferrer"
             className="topbar-link mono"
-            title="The public model list, as any OpenAI client would see it"
+            title={t("The public model list, as any OpenAI client would see it")}
           >
             /v1/models
           </a>
@@ -393,10 +352,18 @@ function renderPage(path: string, context: PageContext) {
           refreshKey={context.refreshKey}
         />
       );
+    case "/proxies":
+      return (
+        <Proxies
+          settings={context.settings}
+          onSaved={context.bump}
+          refreshKey={context.refreshKey}
+        />
+      );
     case "/tutorial":
       return <Tutorial />;
     case "/terms":
-      return <Terms refreshKey={context.refreshKey} />;
+      return <Terms />;
     case "/about":
       return <About />;
     default:
@@ -415,9 +382,10 @@ function renderPage(path: string, context: PageContext) {
 
 export function App() {
   return (
-    <ToastProvider>
-      <div className="starfield" aria-hidden="true" />
-      <Shell />
-    </ToastProvider>
+    <LangProvider>
+      <ToastProvider>
+        <Shell />
+      </ToastProvider>
+    </LangProvider>
   );
 }

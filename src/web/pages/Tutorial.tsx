@@ -1,5 +1,7 @@
 import { useState } from "react";
+import { CokeyLogo } from "../components/Logo.js";
 import { Panel } from "../components/Primitives.js";
+import { useLang } from "../lang.js";
 
 interface Recipe {
   id: string;
@@ -292,37 +294,44 @@ export OPENAI_API_KEY="${PLACEHOLDER_KEY}"`,
 const KIND_ORDER: Recipe["kind"][] = ["CLI", "Editor", "Editor extension", "Agent framework"];
 
 export function Tutorial() {
+  const { t } = useLang();
   const [openId, setOpenId] = useState<string>("opencode");
 
   return (
     <>
-      <Panel title="Getting started">
+      <Panel title={t("Getting started")}>
         <ol className="steps-list">
           <li>
-            <strong>Connect two or three providers.</strong> Open the Providers tab and paste a key
-            for each. COKEY verifies every key before storing it, so a typo is caught immediately.
+            <strong>{t("Connect two or three providers.")}</strong>{" "}
+            {t(
+              "Open the Providers tab and paste a key for each. COKEY verifies every key before storing it, so a typo is caught immediately.",
+            )}
           </li>
           <li>
-            <strong>Create one chain.</strong> Chains, then <em>New chain</em>. Name it whatever you
-            will type into your editor, for example <code>cokey-best</code>.
+            <strong>{t("Create one chain.")}</strong> {t("Chains, then")} <em>{t("New chain")}</em>.{" "}
+            {t("Name it whatever you will type into your editor, for example")}{" "}
+            <code>cokey-best</code>.
           </li>
           <li>
-            <strong>Add nodes in the order you want them tried.</strong> Each node is a provider
-            plus a model plus the keys bound to it. Every key of a node is exhausted before the next
-            node runs.
+            <strong>{t("Add nodes in the order you want them tried.")}</strong>{" "}
+            {t(
+              "Each node is a provider plus a model plus the keys bound to it. Every key of a node is exhausted before the next node runs.",
+            )}
           </li>
           <li>
-            <strong>Press play in the Models tab.</strong> A green check means a real 200 came back
-            through a real key, not that a database row says healthy.
+            <strong>{t("Press play in the Models tab.")}</strong>{" "}
+            {t(
+              "A green check means a real 200 came back through a real key, not that a database row says healthy.",
+            )}
           </li>
           <li>
-            <strong>Point your client at the gateway.</strong> Use one of the recipes below. The
-            base URL is always <code>{BASE_URL}</code>.
+            <strong>{t("Point your client at the gateway.")}</strong>{" "}
+            {t("Use one of the recipes below. The base URL is always")} <code>{BASE_URL}</code>.
           </li>
         </ol>
       </Panel>
 
-      <Panel title="Editor and CLI recipes">
+      <Panel title={t("Editor and CLI recipes")}>
         <div className="recipe-list">
           {KIND_ORDER.flatMap((kind) => RECIPES.filter((recipe) => recipe.kind === kind)).map(
             (recipe) => {
@@ -336,23 +345,23 @@ export function Tutorial() {
                     onClick={() => setOpenId(open ? "" : recipe.id)}
                   >
                     <span className="recipe-name">{recipe.name}</span>
-                    <span className="badge neutral">{recipe.kind}</span>
+                    <span className="badge neutral">{t(recipe.kind)}</span>
                     <span className="spacer" />
                     <span className="recipe-toggle">{open ? "\u2212" : "+"}</span>
                   </button>
 
                   {open ? (
                     <div className="recipe-body">
-                      <p className="small muted">{recipe.blurb}</p>
+                      <p className="small muted">{t(recipe.blurb)}</p>
                       <ol className="recipe-steps">
                         {recipe.steps.map((step, index) => (
                           <li key={index}>
-                            <div className="small">{step.text}</div>
+                            <div className="small">{t(step.text)}</div>
                             {step.code ? <CodeBlock code={step.code} lang={step.lang} /> : null}
                           </li>
                         ))}
                       </ol>
-                      {recipe.notes ? <div className="hint-box">{recipe.notes}</div> : null}
+                      {recipe.notes ? <div className="hint-box">{t(recipe.notes)}</div> : null}
                     </div>
                   ) : null}
                 </article>
@@ -362,39 +371,43 @@ export function Tutorial() {
         </div>
       </Panel>
 
-      <Panel title="Automatic egress proxies">
+      <Panel title={t("Automatic egress proxies")}>
         <p className="small muted" style={{ marginTop: 0 }}>
-          Provider limits are usually tracked per key <em>and</em> per IP, so rotating five keys
-          from one address still trips the same limit. Fill the pool once and COKEY assigns the
-          exits for you:
+          {t("Provider limits are usually tracked per key")} <em>{t("and")}</em>{" "}
+          {t(
+            "per IP, so rotating five keys from one address still trips the same limit. Fill the pool once and COKEY assigns the exits for you:",
+          )}
         </p>
         <ul className="bullet-list">
-          <li>Every key of one provider gets a different exit IP.</li>
+          <li>{t("Every key of one provider gets a different exit IP.")}</li>
           <li>
-            Keys of different providers may share an entry, because nothing correlates them
-            upstream.
+            {t(
+              "Keys of different providers may share an entry, because nothing correlates them upstream.",
+            )}
           </li>
           <li>
-            The mapping is stable across restarts, so a key does not appear to move cities every
-            boot.
+            {t(
+              "The mapping is stable across restarts, so a key does not appear to move cities every boot.",
+            )}
           </li>
-          <li>A proxy you set by hand is never overwritten by the pool.</li>
+          <li>{t("A proxy you set by hand is never overwritten by the pool.")}</li>
         </ul>
         <p className="small faint">
-          Add entries under Settings, Egress pool, or supply a comma-separated list through{" "}
-          <code>COKEY_PROXY_POOL</code> before first start.
+          {t("Add entries under Settings, Egress pool, or supply a comma-separated list through")}{" "}
+          <code>COKEY_PROXY_POOL</code> {t("before first start.")}
         </p>
       </Panel>
 
       <div className="closing">
-        <strong>COKEY</strong>
-        <span>a tool for broke lads made by a broke princess</span>
+        <CokeyLogo height={28} className="closing-logo" />
+        <span>{t("a tool for broke lads made by a broke princess")}</span>
       </div>
     </>
   );
 }
 
 function CodeBlock({ code, lang }: { code: string; lang?: string }) {
+  const { t } = useLang();
   const [copied, setCopied] = useState(false);
   return (
     <div className="code-block">
@@ -410,7 +423,7 @@ function CodeBlock({ code, lang }: { code: string; lang?: string }) {
             window.setTimeout(() => setCopied(false), 1500);
           }}
         >
-          {copied ? "copied" : "copy"}
+          {copied ? t("copied") : t("copy")}
         </button>
       </div>
       <pre>

@@ -21,16 +21,9 @@ import { CooldownManager } from "./credentials/cooldown.js";
 import { RateTracker } from "./credentials/rate.js";
 import { CredentialSelector } from "./credentials/selector.js";
 import { EventBus, type CokeyEvent } from "./events.js";
-import {
-  CmsStore,
-  curateProvider,
-  rankingsView,
-  undocumentedProviders,
-  type CmsStatus,
-  type CmsTermsSection,
-  type CuratedDossier,
-  type RankingsView,
-} from "./cms/index.js";
+import { providerDossier, type ProviderDossier } from "../catalog/dossiers.js";
+import { compiledRankingsView, type RankingsView } from "../catalog/rankings.js";
+import { fetchRemoteRankings, type RankingsFetchResult } from "./remote-rankings.js";
 import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
 import { checkProxyUrl, collectHealthy } from "./providers/proxy-health.js";
 import {
@@ -45,13 +38,13 @@ import {
   type ModelCatalogView,
 } from "./models/availability.js";
 import {
+  eligibleModels,
   isTrustworthyListing,
   normaliseModelIds,
   reconcileModels,
   type ModelDiscoveryReport,
 } from "./models/discovery.js";
 import {
-  CONTENT_FRESHNESS_DAYS,
   deriveGuidance,
   guidanceSummary,
   type GuidanceInput,
@@ -229,12 +222,14 @@ export class Cokey {
   readonly router: RouterEngine;
   readonly history: RequestHistory;
   /**
-   * The curated content repository: provider dossiers, terms and rankings.
-   *
-   * It is optional by design. With no content checkout beside COKEY the compiled
-   * catalog is served instead, so a fresh clone is useful with zero setup.
+   * Ranking boards fetched from a published bundle, when one has been pulled
+   * successfully. `undefined` means "serve the boards compiled into this
+   * build" — the default, and the only state on a fresh clone with no network
+   * request ever made.
    */
-  readonly cms: CmsStore;
+  private remoteRankings?: RankingsView;
+  /** Where `refreshRankings()` fetches from. Overridable for a fork or a mirror. */
+  readonly rankingsUrl: string;
   /** Live routing narration: what is running now, and every switch. */
   readonly events = new EventBus();
   /** Locally measured per-credential throughput. */
@@ -294,23 +289,9 @@ export class Cokey {
     this.selector = new CredentialSelector(this.credentials, this.cooldown);
     this.history = new RequestHistory(this.requestsRepo);
 
-    // The store starts watching in `start()`; a reload that changes something
-    // visible is announced on the event bus so every open dashboard refetches
-    // without a reload.
-    this.cms = new CmsStore({
-      env,
-      onChange: (snapshot) => {
-        const counts = snapshot.providers.size;
-        this.events.emit({
-          type: "content.updated",
-          level: "info",
-          message: counts
-            ? `Content reloaded: ${counts} provider dossier(s)`
-            : "Content reloaded: no provider dossiers found",
-          data: { providers: counts, terms: snapshot.terms.length },
-        });
-      },
-    });
+    this.rankingsUrl =
+      env.COKEY_RANKINGS_URL ??
+      "https://raw.githubusercontent.com/colombefioren/COKEY--RANKINGS/main/content/rankings.json";
 
     // A pool supplied through the environment is seeded once; the UI can add,
     // disable and remove entries afterwards without touching the database by
@@ -339,7 +320,6 @@ export class Cokey {
     if (this.started) return;
     this.started = true;
     this.syncProxyAssignments();
-    this.cms.watch();
 
     // Expire elapsed cooldowns so the UI and router always see fresh state.
     this.sweeper = setInterval(() => {
@@ -364,49 +344,40 @@ export class Cokey {
   stop(): void {
     if (this.sweeper) clearInterval(this.sweeper);
     this.sweeper = undefined;
-    this.cms.close();
     this.db.close();
     this.started = false;
   }
 
-  // ---- curated content ----------------------------------------------------
+  // ---- catalog reference data -----------------------------------------------
+
+  /** The dossier for a provider, from the catalog compiled into this build. */
+  providerDossier(providerId: string): ProviderDossier {
+    return providerDossier(providerId);
+  }
+
+  /** The ranking boards: a published bundle if one was fetched, else compiled. */
+  rankings(): RankingsView {
+    return this.remoteRankings ?? compiledRankingsView();
+  }
 
   /**
-   * The dossier for a provider, content repository first.
+   * Fetch and validate the ranking bundle at `rankingsUrl`.
    *
-   * A dossier is an opinion with an argument, and both live in the content
-   * repository so they can be corrected without a release. Everything the
-   * repository does not state falls back to the compiled catalog.
+   * Only runs when asked — there is no timer and no fetch on startup. A
+   * failure never touches what `rankings()` returns; the previous boards
+   * (published or compiled) keep serving.
    */
-  curateProvider(providerId: string): CuratedDossier {
-    return curateProvider(providerId, this.cms.current);
-  }
-
-  /** The ranking boards, from the content repository when it has them. */
-  rankings(): RankingsView {
-    return rankingsView(this.cms.current);
-  }
-
-  /** The terms document, in reading order. Empty when no content is checked out. */
-  termsSections(): CmsTermsSection[] {
-    return this.cms.current.terms;
-  }
-
-  /** Providers the content repository documents but this build cannot serve. */
-  undocumentedProviders(): string[] {
-    return undocumentedProviders(
-      this.cms.current,
-      this.providers.getCatalog().map((entry) => entry.id),
-    );
-  }
-
-  /** Re-read the content directory on demand. Returns whether anything changed. */
-  reloadContent(): boolean {
-    return this.cms.reload();
-  }
-
-  contentStatus(): CmsStatus {
-    return this.cms.status();
+  async refreshRankings(): Promise<RankingsFetchResult> {
+    const result = await fetchRemoteRankings(this.rankingsUrl);
+    if (result.ok) {
+      this.remoteRankings = result.rankings;
+      this.events.emit({
+        type: "content.updated",
+        level: "success",
+        message: `Rankings updated from ${new URL(this.rankingsUrl).host}`,
+      });
+    }
+    return result;
   }
 
   // ---- providers ----------------------------------------------------------
@@ -496,7 +467,8 @@ export class Cokey {
     }
     const latencyMs = Date.now() - started;
 
-    const discovered = normaliseModelIds(listing.map((model) => model.id));
+    const eligible = eligibleModels(listing, catalog.freeTier.freeModelsOnly);
+    const discovered = normaliseModelIds(eligible.map((model) => model.id));
 
     if (!isTrustworthyListing(discovered)) {
       // A 200 with an empty list is not evidence that a provider stopped serving
@@ -1516,34 +1488,6 @@ export class Cokey {
           displayName: entry.displayName,
         })),
       },
-      content: this.guidanceContent(),
-    };
-  }
-
-  /**
-   * The content repository's own health, for the guidance rules.
-   *
-   * Read from the snapshot rather than the filesystem: the store already did the
-   * reading and already knows what Failed, so asking again would be a second
-   * answer to a question that has one.
-   */
-  private guidanceContent(): GuidanceInput["content"] {
-    const snapshot = this.cms.current;
-    const cutoff = Date.now() - CONTENT_FRESHNESS_DAYS * 24 * 60 * 60 * 1000;
-
-    const staleDossiers: string[] = [];
-    for (const provider of snapshot.providers.values()) {
-      // A dossier with no date is treated as stale: an undated claim is exactly
-      // the kind of entry that goes quietly wrong.
-      const reviewed = provider.reviewedAt ? Date.parse(`${provider.reviewedAt}T00:00:00Z`) : NaN;
-      if (!Number.isFinite(reviewed) || reviewed < cutoff) staleDossiers.push(provider.id);
-    }
-
-    return {
-      available: snapshot.providers.size > 0,
-      issues: snapshot.issues,
-      staleDossiers: staleDossiers.sort(),
-      unsupported: this.undocumentedProviders(),
     };
   }
 

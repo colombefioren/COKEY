@@ -56,9 +56,6 @@ function input(overrides: Partial<GuidanceInput> = {}): GuidanceInput {
     ],
     egress: { enabled: false, poolSize: 0, saturatedProviders: [] },
     coverage: { connectedFree: 5, target: 3, suggestions: [] },
-    // A content repository that is present, current and complete: the baseline
-    // that the content rules below deviate from.
-    content: { available: true, issues: [], staleDossiers: [], unsupported: [] },
     ...overrides,
   };
 }
@@ -313,53 +310,6 @@ describe("deriveGuidance", () => {
     );
     expect(kinds(notices)).toContain("egress.saturated");
     expect(kinds(notices)).toContain("coverage.free-providers");
-  });
-
-  it("speaks up about content files that could not be parsed", () => {
-    const notices = deriveGuidance(
-      input({
-        content: {
-          available: true,
-          issues: [{ file: "providers/broken.json", message: "invalid JSON" }],
-          staleDossiers: [],
-          unsupported: [],
-        },
-      }),
-    );
-
-    const notice = notices.find((entry) => entry.kind === "content.files-broken")!;
-    expect(notice.severity).toBe("warn");
-    // The remedy is re-reading the directory, which is a button rather than a
-    // trip to a terminal.
-    expect(notice.actions[0]).toMatchObject({ kind: "reload-content" });
-    expect(notice.detail).toContain("providers/broken.json");
-  });
-
-  it("stays quiet about content when every file parsed", () => {
-    expect(kinds(deriveGuidance(input()))).not.toContain("content.files-broken");
-  });
-
-  it("names the dossiers whose review has gone stale", () => {
-    const notices = deriveGuidance(
-      input({
-        content: { available: true, issues: [], staleDossiers: ["alpha", "beta"], unsupported: [] },
-      }),
-    );
-
-    const notice = notices.find((entry) => entry.kind === "content.dossiers-outdated")!;
-    expect(notice.severity).toBe("info");
-    expect(notice.detail).toContain("alpha, beta");
-  });
-
-  it("names providers the content documents that this build cannot serve", () => {
-    const notices = deriveGuidance(
-      input({
-        content: { available: true, issues: [], staleDossiers: [], unsupported: ["ghost"] },
-      }),
-    );
-
-    const notice = notices.find((entry) => entry.kind === "content.unsupported")!;
-    expect(notice.detail).toContain("ghost");
   });
 
   it("orders by severity and caps the list", () => {

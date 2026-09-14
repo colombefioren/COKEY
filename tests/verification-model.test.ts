@@ -35,9 +35,17 @@ function credential(): Credential {
 
 /** A fetch stub that answers the models list and records every chat body. */
 function stubFetch(liveModels: string[], chatBodies: unknown[]) {
+  return stubFetchWithEntries(
+    liveModels.map((id) => ({ id })),
+    chatBodies,
+  );
+}
+
+/** Same as `stubFetch`, but each listing entry can carry its own fields. */
+function stubFetchWithEntries(liveModels: Array<Record<string, unknown>>, chatBodies: unknown[]) {
   return vi.fn(async (url: string, init?: RequestInit) => {
     if (url.includes("/models")) {
-      return new Response(JSON.stringify({ data: liveModels.map((id) => ({ id })) }), {
+      return new Response(JSON.stringify({ data: liveModels }), {
         status: 200,
         headers: { "content-type": "application/json" },
       });
@@ -76,6 +84,55 @@ describe("OpenAICompatibleAdapter verification model selection", () => {
     await adapter.validateCredential(credential());
 
     expect((chatBodies[0] as { model: string }).model).toBe("brand-new-model");
+  });
+
+  it("prefers a curated :free model over one that merely still appears in the listing", async () => {
+    const chatBodies: unknown[] = [];
+    vi.stubGlobal(
+      "fetch",
+      stubFetch(["mistralai/codestral-2508", "qwen/qwen3.6-27b:free"], chatBodies),
+    );
+
+    const adapter = new OpenAICompatibleAdapter(
+      catalog(["mistralai/codestral-2508", "qwen/qwen3.6-27b:free"]),
+    );
+    await adapter.validateCredential(credential());
+
+    expect((chatBodies[0] as { model: string }).model).toBe("qwen/qwen3.6-27b:free");
+  });
+
+  it("prefers a :free model from the live listing when no curated model survived", async () => {
+    const chatBodies: unknown[] = [];
+    vi.stubGlobal("fetch", stubFetch(["brand-new-paid-model", "brand-new-model:free"], chatBodies));
+
+    const adapter = new OpenAICompatibleAdapter(catalog(["stale-model"]));
+    await adapter.validateCredential(credential());
+
+    expect((chatBodies[0] as { model: string }).model).toBe("brand-new-model:free");
+  });
+
+  it("skips a curated model the listing marks paid, even though it is still served", async () => {
+    // The exact shape that broke xKiro verification: a curated id with no
+    // ":free" suffix is still returned by /models, but its own access_tier
+    // says it now bills against a wallet, while an uncurated model in the
+    // same response is explicitly free.
+    const chatBodies: unknown[] = [];
+    vi.stubGlobal(
+      "fetch",
+      stubFetchWithEntries(
+        [
+          { id: "mistralai/codestral-2508", access_tier: "premium" },
+          { id: "some/new-free-model", access_tier: "free" },
+        ],
+        chatBodies,
+      ),
+    );
+
+    const adapter = new OpenAICompatibleAdapter(catalog(["mistralai/codestral-2508"]));
+    const result = await adapter.validateCredential(credential());
+
+    expect(result.ok).toBe(true);
+    expect((chatBodies[0] as { model: string }).model).toBe("some/new-free-model");
   });
 
   it("falls back to the curated guess when the listing itself fails", async () => {

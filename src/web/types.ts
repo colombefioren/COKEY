@@ -378,9 +378,6 @@ export type GuidanceKind =
   | "chain.node-unhealthy"
   | "chain.none"
   | "egress.saturated"
-  | "content.files-broken"
-  | "content.dossiers-outdated"
-  | "content.unsupported"
   | "coverage.free-providers";
 
 /**
@@ -393,9 +390,7 @@ export type GuidanceKind =
 export type GuidanceAction =
   | { kind: "navigate"; label: string; path: string }
   | { kind: "refresh-models"; label: string; providerId: string }
-  | { kind: "reverify-credential"; label: string; credentialId: string }
-  /** Re-read the curated content directory; does not cross a credential. */
-  | { kind: "reload-content"; label: string };
+  | { kind: "reverify-credential"; label: string; credentialId: string };
 
 export interface GuidanceNotice {
   /** Stable across snapshots, so a dismissal can be remembered. */
@@ -625,66 +620,14 @@ export interface ProviderDossier {
   verdict: ProviderVerdict;
   verdictReason: string;
   sourceUrl?: string;
-  /** `cms` when the content repository supplied this entry, `compiled` otherwise. */
-  source?: "cms" | "compiled";
   /** ISO date a human last checked these claims. */
   reviewedAt?: string;
-  /** One-line free-tier summary, when the content records one. */
+  /** One-line free-tier summary, when it differs from the catalog's own. */
   freeTierSummary?: string;
-  /** The editor's caveat, when there is one. */
+  /** A caveat worth keeping next to the verdict. */
   notes?: string;
-  /** Free model list as curated, when the content repository lists one. */
+  /** Free model list, when the catalog curates one for this provider. */
   models?: CuratedModel[];
-}
-
-export interface ProviderDossierResponse {
-  providerId: string;
-  dossier: ProviderDossier;
-  /** Whether the provider exists in the live catalog at all. */
-  known: boolean;
-}
-
-/* -------------------------------------------------------------------------- *\
- * Curated content
-\* -------------------------------------------------------------------------- */
-
-export interface CmsIssue {
-  file: string;
-  message: string;
-}
-
-/** Where the curated content came from, and what was wrong with it. */
-export interface ContentStatusResponse {
-  /** True when a content directory was found and read. */
-  available: boolean;
-  directory: string;
-  watching: boolean;
-  loadedAt: number;
-  counts: {
-    providers: number;
-    models: number;
-    terms: number;
-    ranked: number;
-    skill: number;
-    issues: number;
-  };
-  issues: CmsIssue[];
-  /** Providers the content documents that this build cannot serve. */
-  unsupportedProviders: string[];
-}
-
-export interface TermsSection {
-  slug: string;
-  title: string;
-  order: number;
-  updatedAt: string;
-  /** Markdown body. */
-  body: string;
-}
-
-export interface TermsResponse {
-  sections: TermsSection[];
-  updatedAt?: string;
 }
 
 /** A provider card with its dossier folded in. */
@@ -748,8 +691,8 @@ export interface RankingsResponse {
   bottomLine: string;
   disclaimer: string;
   sources: RankingSource[];
-  /** Where these boards came from, so the screen can say so honestly. */
-  source: "cms" | "compiled";
-  /** ISO date of the newest review behind the boards. */
-  reviewedAt?: string;
+  /** `remote` when a published bundle replaced these boards. */
+  source: "remote" | "compiled";
+  /** When the remote boards were last fetched, when they are in use. */
+  fetchedAt?: string;
 }

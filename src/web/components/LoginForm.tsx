@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { api, ApiError } from "../api.js";
 import { CokeyLogo } from "./Logo.js";
+import { useLang } from "../lang.js";
 
 /**
  * Full-screen password gate.
@@ -10,6 +11,7 @@ import { CokeyLogo } from "./Logo.js";
  * expires or the gateway restarts.
  */
 export function LoginForm({ onLogin }: { onLogin: () => void }) {
+  const { t } = useLang();
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -33,10 +35,10 @@ export function LoginForm({ onLogin }: { onLogin: () => void }) {
     <div className="login">
       <div className="login-card">
         <CokeyLogo height={48} className="login-mark" uid="login" />
-        <p className="subtitle">Sign in to manage the gateway</p>
+        <p className="subtitle">{t("Sign in to manage the gateway")}</p>
 
         <form onSubmit={handleSubmit}>
-          <label htmlFor="password-input">Password</label>
+          <label htmlFor="password-input">{t("Password")}</label>
           <input
             id="password-input"
             type="password"
@@ -46,11 +48,12 @@ export function LoginForm({ onLogin }: { onLogin: () => void }) {
             autoFocus
           />
           <div className="small faint" style={{ marginTop: 8, marginBottom: 12 }}>
-            Default <code>coco-the-best</code> — change it in Settings and it is permanent.
+            {t("Default")} <code>coco-the-best</code> —{" "}
+            {t("change it in Settings and it is permanent.")}
           </div>
           {error ? <div className="verify err">{error}</div> : null}
           <button type="submit" disabled={busy || !password}>
-            {busy ? "Signing in…" : "Sign in"}
+            {busy ? t("Signing in…") : t("Sign in")}
           </button>
         </form>
       </div>

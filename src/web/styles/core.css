@@ -24,7 +24,7 @@
   color-scheme: light;
 
   /* Warm paper. Not white — baby pink needs something to sit on. */
-  --ground: #fffbfd;
+  --ground: #fffaf7;
   --surface: #ffffff;
   --surface-2: #fdf6fa;
   --surface-3: #f8ecf4;
@@ -111,10 +111,10 @@
   --radius: 22px;
   --radius-md: 15px;
   --radius-sm: 11px;
-  --font-body:
-    "Bricolage Grotesque", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Headings and titles only — a script face slows body reading down. */
-  --font-display: "Shantell Sans", var(--font-body);
+  --font-body: "Work Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* Headings, titles and stat numbers only, always italic — a display serif
+     slows body reading down. */
+  --font-display: "Instrument Serif", Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sidebar-w: 264px;
   --sidebar-w-collapsed: 84px;
@@ -125,12 +125,6 @@
   --bloom-1: #ffd7ea;
   --bloom-2: #d9cbff;
   --bloom-3: #ffe6cf;
-
-  /* The mark's own pink-to-violet ramp, shared by the logo, the favicon and
-     the hub orb so the brand is one gradient wherever it appears. */
-  --mark-1: #ffb3d4;
-  --mark-2: #b98cf6;
-  --mark-3: #6b4be0;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -156,11 +150,13 @@ body,
 body {
   margin: 0;
   color: var(--text);
-  /* Three very soft blooms — pink, lilac, apricot — over the warm ground. */
-  background:
-    radial-gradient(1000px 680px at -4% -10%, var(--pink-soft), transparent 62%),
-    radial-gradient(880px 620px at 104% -6%, var(--violet-soft), transparent 60%),
-    radial-gradient(820px 600px at 52% 114%, var(--bloom-3), transparent 66%), var(--ground);
+  /* A flat beige sheet of paper with one dot-grid texture — no rainbow of
+     soft blooms behind it. The cards are what get to be white; the page
+     underneath stays quiet so they read as sitting on something. */
+  background: radial-gradient(rgba(221, 92, 149, 0.3) 1.4px, transparent 1.4px), var(--ground);
+  background-size:
+    22px 22px,
+    auto;
   background-attachment: fixed;
   font: 14px/1.62 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -173,6 +169,14 @@ a {
   color: var(--violet);
   text-decoration: none;
 }
+/* A secondary reference — a provider id beside the model that matters, a
+   footnote — reads as plain text until it is actually useful to follow. */
+a.link-quiet {
+  color: var(--muted);
+}
+a.link-quiet:hover {
+  color: var(--violet);
+}
 a:hover {
   text-decoration: underline;
 }
@@ -182,12 +186,29 @@ h2,
 h3,
 h4 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-style: italic;
+  font-weight: 400;
 }
 
 h3 {
-  font-size: 15px;
+  font-size: 18px;
   margin: 0 0 8px;
+}
+
+/*
+ * A scrap of tape, for the handful of cards and nodes that get one. It sits
+ * on `position: absolute`, sized and rotated by whichever caller places it —
+ * no shadow: a piece of tape lies flat against the paper, it does not float
+ * above it.
+ */
+.tape {
+  position: absolute;
+  width: 56px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(221, 92, 149, 0.24);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /* ---- shell ---------------------------------------------------------------- */
@@ -327,7 +348,7 @@ h3 {
   height: 18px;
   margin-top: -9px;
   border-radius: 3px;
-  background: linear-gradient(var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 
 .nav-item {
@@ -635,8 +656,9 @@ h3 {
 
 .topbar-title {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-size: 16px;
+  font-style: italic;
+  font-weight: 400;
+  font-size: 19px;
   letter-spacing: 0.005em;
   color: var(--text);
 }
@@ -658,6 +680,36 @@ h3 {
 .nav-toggle:hover:not(:disabled) {
   color: var(--violet);
   border-color: var(--violet-line);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+/* A two-letter segmented switch, the same shape as the tab row, so it reads
+   as a setting rather than another button competing with the bell. */
+.lang-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  font-weight: 600;
+}
+.lang-toggle:hover:not(:disabled) {
+  background: var(--surface-2);
+  box-shadow: none;
+}
+.lang-toggle span {
+  padding: 4px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--faint);
+}
+.lang-toggle span.active {
+  background: var(--surface);
+  color: var(--violet-strong);
+  box-shadow: var(--shadow);
 }
 
 /* ---- notifications --------------------------------------------------------
@@ -682,10 +734,15 @@ h3 {
 .notif-trigger:hover:not(:disabled) {
   color: var(--violet);
   border-color: var(--violet-line);
+  background: var(--surface-2);
+  box-shadow: none;
 }
 .notif-trigger.has-alerts {
   color: var(--violet-strong);
   border-color: var(--violet-line);
+  background: var(--violet-soft);
+}
+.notif-trigger.has-alerts:hover:not(:disabled) {
   background: var(--violet-soft);
 }
 .notif-count {
@@ -698,7 +755,7 @@ h3 {
   height: 17px;
   padding: 0 3px;
   border-radius: 999px;
-  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
   color: var(--violet-ink);
   font-size: 10px;
   font-weight: 700;
@@ -843,15 +900,11 @@ main {
 section.panel {
   position: relative;
   border-radius: var(--radius);
-  border: 1.5px solid var(--border-strong);
+  border: none;
   background: var(--surface);
-  box-shadow:
-    1px 1px 0 0 var(--border),
-    var(--shadow);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
-  transition:
-    border-color 0.25s ease,
-    box-shadow 0.25s ease;
+  transition: box-shadow 0.25s ease;
 }
 
 section.panel {
@@ -874,14 +927,14 @@ section.panel.soft {
   gap: 12px;
   padding: 15px 20px 13px;
   border-bottom: 1px solid var(--border);
-  background: linear-gradient(180deg, var(--surface-2), transparent);
   flex-wrap: wrap;
 }
 
 .window-title {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
   letter-spacing: 0.005em;
   color: var(--text);
   overflow: hidden;
@@ -978,10 +1031,11 @@ section.panel.soft {
 .panel-head h2 {
   margin: 0;
   font-family: var(--font-display);
-  font-size: 14px;
+  font-style: italic;
+  font-size: 17px;
   letter-spacing: 0.005em;
   color: var(--text);
-  font-weight: 700;
+  font-weight: 400;
 }
 .panel-head .spacer {
   flex: 1;
@@ -1032,21 +1086,11 @@ section.panel.soft {
   overflow: hidden;
   padding: 15px 16px;
   border-radius: var(--radius-md);
-  border: 1.5px solid var(--tint-line, var(--border));
-  background: linear-gradient(155deg, var(--surface) 34%, var(--tint, var(--surface-2)));
+  border: 1.5px solid var(--border);
+  background: var(--surface);
   transition:
     transform 0.22s var(--ease),
     box-shadow 0.22s ease;
-}
-.stat::before {
-  content: "";
-  position: absolute;
-  left: 16px;
-  right: 16px;
-  top: 0;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: var(--tint-line, var(--border));
 }
 .stat:hover {
   transform: translateY(-3px);
@@ -1074,8 +1118,9 @@ section.panel.soft {
 }
 .stat .value {
   font-family: var(--font-display);
-  font-size: 28px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 34px;
+  font-weight: 400;
   line-height: 1.15;
   font-variant-numeric: tabular-nums;
   color: var(--text);
@@ -1253,8 +1298,50 @@ select {
   padding-right: 30px;
 }
 input[type="checkbox"] {
-  width: auto;
-  accent-color: var(--violet);
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 0;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  display: inline-grid;
+  place-content: center;
+  cursor: pointer;
+  vertical-align: middle;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+input[type="checkbox"]::after {
+  content: "";
+  width: 5px;
+  height: 9px;
+  margin-top: -2px;
+  border: solid var(--violet-ink);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg) scale(0);
+  transition: transform 0.12s ease;
+}
+input[type="checkbox"]:checked {
+  background: var(--violet);
+  border-color: var(--violet);
+}
+input[type="checkbox"]:checked::after {
+  transform: rotate(45deg) scale(1);
+}
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--violet);
+}
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--violet-line);
+  outline-offset: 2px;
+}
+input[type="checkbox"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 label {
@@ -1296,48 +1383,54 @@ label {
   font-size: 12px;
 }
 
+/*
+ * A status word, not a coloured chip: the preview's whole point is that most
+ * of the page is plain writing, with colour doing the one job of telling
+ * healthy from failing apart. A pill behind every count is what made the
+ * page read as louder and more saturated than it actually needed to be.
+ */
 .badge {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  background: var(--sage-soft);
+  letter-spacing: 0.02em;
   color: var(--sage);
   white-space: nowrap;
 }
+.badge::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
 .badge.neutral {
-  background: var(--surface-3);
   color: var(--muted);
 }
+.badge.neutral::before {
+  background: var(--faint);
+}
 .badge.warn {
-  background: var(--peach-soft);
   color: var(--peach);
 }
 .badge.ok {
-  background: var(--sage-soft);
   color: var(--sage);
 }
 .badge.bad {
-  background: var(--rose-soft);
   color: var(--rose);
 }
 .badge.tier-s {
-  background: var(--violet-soft);
-  color: var(--violet);
+  color: var(--sky);
 }
 .badge.tier-a {
-  background: var(--sage-soft);
   color: var(--sage);
 }
 .badge.tier-b {
-  background: var(--peach-soft);
   color: var(--peach);
 }
 .badge.tier-c {
-  background: var(--rose-soft);
   color: var(--rose);
 }
 
@@ -1619,23 +1712,13 @@ tbody tr:hover td:first-child {
 
 .hint-box {
   position: relative;
-  border: 1.5px solid var(--violet-line);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 13px 16px 13px 18px;
+  padding: 13px 16px;
   color: var(--muted);
   font-size: 12px;
-  background: linear-gradient(140deg, var(--violet-soft), var(--surface));
+  background: var(--surface);
   line-height: 1.7;
-}
-.hint-box::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  border-radius: var(--radius-md) 0 0 var(--radius-md);
-  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
 }
 
 code {
@@ -1651,31 +1734,18 @@ code {
 /* ---- chains --------------------------------------------------------------- */
 
 /*
- * One chain, as a card with a short ramp rule across its leading edge. The rule
- * is the only decoration on the card: it marks the top of a group without
- * needing a coloured header block or a heavier border than everything around
- * it, and it ties the chain list to the route diagram on the dashboard.
+ * One chain, as a plain white card. No coloured header block, no accent rule
+ * across the top — the border and a soft shadow are what separate it from
+ * the one below.
  */
 .chain {
   position: relative;
-  border: 1.5px solid var(--border-strong);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 17px 18px;
   margin-bottom: 14px;
-  background: linear-gradient(170deg, var(--surface), var(--surface-2));
-  box-shadow:
-    1px 1px 0 0 var(--border),
-    var(--shadow);
-}
-.chain::before {
-  content: "";
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  top: -1.5px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 45%, transparent);
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
 }
 .chain-head {
   display: flex;
@@ -1685,8 +1755,9 @@ code {
 }
 .chain-head .alias {
   font-family: var(--font-display);
-  font-size: 17px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 20px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 .chain-head .spacer {
@@ -1798,10 +1869,11 @@ code {
   min-width: 24px;
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
   font-family: var(--font-display);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--mark-3);
-  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--violet-strong);
+  background: var(--violet-soft);
   box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
 .entry-model .model-name,
@@ -1899,7 +1971,7 @@ button.model-name:hover {
 }
 .spark i {
   width: 3px;
-  background: linear-gradient(180deg, var(--mark-2), var(--mark-3));
+  background: var(--violet);
   border-radius: 2px 2px 1px 1px;
   opacity: 0.85;
 }
@@ -2105,6 +2177,16 @@ button.play.fail {
 .model-list-item .spacer {
   flex: 1;
 }
+/* The provider stopped serving it: still named, so a reader knows what it
+   was, but visibly inert — no "add to chain" link exists for this row. */
+.model-list-item.retired {
+  opacity: 0.55;
+  background: var(--surface-3);
+}
+.model-list-item.retired .model-list-id {
+  text-decoration: line-through;
+  text-decoration-color: var(--faint);
+}
 
 /* ---- tutorial ------------------------------------------------------------- */
 
@@ -2115,8 +2197,9 @@ button.play.fail {
   flex-wrap: wrap;
   padding: 26px;
   border-radius: var(--radius);
-  border: 1px solid var(--violet-line);
-  background: linear-gradient(120deg, var(--violet-soft), var(--rose-soft) 70%, var(--peach-soft));
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
 }
 .hero-copy {
   flex: 1 1 380px;
@@ -2291,14 +2374,18 @@ button.play.fail {
   align-items: center;
   gap: 5px;
   padding: 24px;
-  border: 1px solid var(--violet-line);
+  border: none;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, var(--violet-soft), var(--rose-soft));
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   text-align: center;
 }
 .closing strong {
   letter-spacing: 0.2em;
   font-size: 16px;
+  color: var(--violet-strong);
+}
+.closing-logo {
   color: var(--violet-strong);
 }
 .closing span {
@@ -2587,6 +2674,17 @@ button.play.fail {
   max-width: 300px;
 }
 
+/* Matches .search's own box exactly (same padding, border and line-height)
+   so the two sit flush at the same height in the actions row, instead of the
+   shorter box a plain small button renders at. */
+.recheck-all-btn {
+  height: 39px;
+  padding: 9px 15px;
+  background: var(--violet-strong);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 /* ---- login ---------------------------------------------------------------- */
 
 .login {
@@ -2682,6 +2780,53 @@ button.play.fail {
   to {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* A hand-drawn circle that never quite closes on itself, redrawn forever
+   instead of rotating — used anywhere something is actively being probed. */
+@keyframes scribble-wobble {
+  0% {
+    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
+    transform: rotate(0deg);
+  }
+  25% {
+    border-radius: 58% 42% 45% 55% / 40% 60% 40% 60%;
+    transform: rotate(5deg);
+  }
+  50% {
+    border-radius: 50% 50% 38% 62% / 62% 38% 55% 45%;
+    transform: rotate(-4deg);
+  }
+  75% {
+    border-radius: 45% 55% 55% 45% / 48% 52% 45% 55%;
+    transform: rotate(3deg);
+  }
+  100% {
+    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
+    transform: rotate(0deg);
+  }
+}
+
+/* A slow, steady blink for the dot beside anything that is live right now. */
+@keyframes flow-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* A quick fade-in for anything that appears on top of the page: toasts,
+   modal scrims, popovers. */
+@keyframes scrim-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
@@ -2843,513 +2988,9 @@ tbody tr:nth-child(n + 6) {
   color: var(--violet);
 }
 
-/* ---- ambient wash --------------------------------------------------------- */
-
-/*
- * Two very low-opacity blooms that drift. Enough to keep the ground from
- * reading as flat white, not enough to compete with a table of API keys.
- */
-.starfield {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  overflow: hidden;
-}
-.starfield::before,
-.starfield::after {
-  content: "";
-  position: absolute;
-  inset: -25%;
-  border-radius: 50%;
-}
-.starfield::before {
-  opacity: 0.26;
-  background: radial-gradient(closest-side, var(--rose-soft), transparent 70%);
-  animation: wash 34s ease-in-out infinite alternate;
-}
-.starfield::after {
-  opacity: 0.22;
-  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
-  animation: wash 46s ease-in-out infinite alternate-reverse;
-}
-
-@keyframes wash {
-  from {
-    transform: translate3d(4vw, -10vh, 0) scale(1);
-  }
-  to {
-    transform: translate3d(-4vw, 8vh, 0) scale(1.18);
-  }
-}
-
 .shell {
   position: relative;
   z-index: 1;
-}
-
-/* ---- live chain flow ------------------------------------------------------ */
-
-.flow {
-  display: grid;
-  gap: 14px;
-}
-.flow-head {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.flow-pills {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-.flow-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1.5px solid var(--border);
-  background: var(--surface);
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
-}
-.flow-pill:hover {
-  border-color: var(--violet-line);
-  color: var(--text);
-  background: var(--surface);
-}
-.flow-pill.active {
-  border-color: var(--violet-line);
-  color: var(--violet-strong);
-  background: var(--violet-soft);
-  box-shadow: none;
-}
-.flow-pill-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--faint);
-  transition: background 0.2s ease;
-}
-.flow-pill.active .flow-pill-dot {
-  background: var(--violet);
-}
-.flow-pill.live .flow-pill-dot {
-  background: var(--sage);
-  animation: flow-blink 1.6s ease-in-out infinite;
-}
-.flow-pill-count {
-  font-size: 10px;
-  color: var(--faint);
-}
-.flow-meta {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
-.flow-scroll {
-  overflow-x: auto;
-  /* With overflow-x:auto an unspecified overflow-y computes to auto too, which
-     is what drew a stray vertical scrollbar over the diagram. Hidden + generous
-     padding lets the hub ring and the hover lift breathe without one. */
-  overflow-y: hidden;
-  padding: 18px 4px 20px;
-  scrollbar-width: thin;
-}
-.flow-track {
-  display: flex;
-  align-items: stretch;
-  min-width: min-content;
-  padding: 2px;
-}
-
-.flow-node {
-  position: relative;
-  min-width: 156px;
-  display: grid;
-  align-content: center;
-  gap: 6px;
-  padding: 15px 17px;
-  border-radius: var(--radius-md);
-  border: 2px solid var(--border);
-  background: var(--surface-2);
-  box-shadow: 1.5px 2px 0 0 var(--border);
-  /* Each node joins the walk-in animation, one after the next. */
-  animation: node-in 0.5s var(--ease) both;
-  animation-delay: calc(var(--flow-index, 0) * 90ms);
-  transition:
-    border-color 0.25s ease,
-    background 0.25s ease,
-    transform 0.25s var(--ease),
-    box-shadow 0.25s ease;
-}
-.flow-node:hover {
-  transform: translateY(-3px);
-  border-color: var(--border-strong);
-  box-shadow:
-    1.5px 2px 0 0 var(--border-strong),
-    var(--shadow-lift);
-}
-@keyframes node-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px) scale(0.97);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-.flow-node-kicker {
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--faint);
-}
-.flow-node-title {
-  font-size: 13px;
-  font-weight: 620;
-  color: var(--text);
-  overflow-wrap: anywhere;
-}
-.flow-node-sub {
-  display: block;
-}
-.flow-endpoint {
-  min-width: 138px;
-  background: var(--surface);
-}
-/*
- * The hub is the one node drawn as a circle rather than a card — everything
- * else in the diagram is a stop along the way; this is the thing they are all
- * routed through, and it should look like the centre of something.
- */
-.flow-hub {
-  justify-items: center;
-  text-align: center;
-  color: var(--violet);
-  border: none;
-  box-shadow: none;
-  background: none;
-  padding: 4px 12px;
-}
-.flow-hub:hover {
-  transform: none;
-}
-.flow-hub .flow-node-title {
-  color: var(--violet-strong);
-  font-family: var(--font-display);
-  font-size: 14px;
-}
-/*
- * A slow hand-drawn scribble around the COKEY hub, so the centre of the
- * diagram is visibly the thing everything is routed through — breathing
- * gently rather than spinning, the way a doodled circle never quite closes
- * on itself.
- */
-.flow-hub::after {
-  content: "";
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  width: 68px;
-  height: 68px;
-  margin-left: -34px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--violet-line);
-  opacity: 0.8;
-  animation: scribble-wobble 9s ease-in-out infinite;
-  pointer-events: none;
-}
-.flow-hub-mark {
-  box-sizing: border-box;
-  width: 64px;
-  height: 64px;
-  padding: 15px;
-  border-radius: 50%;
-  background: var(--violet-soft);
-  box-shadow:
-    inset 0 0 0 2px var(--violet-line),
-    1.5px 2px 0 0 var(--violet-line);
-  animation: hub-pulse 3.2s ease-in-out infinite;
-}
-@keyframes hub-pulse {
-  0%,
-  100% {
-    opacity: 0.85;
-    transform: translateY(0);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(-2px);
-  }
-}
-.flow-empty {
-  border-style: dashed;
-  background: var(--surface);
-}
-
-.flow-step {
-  display: flex;
-  align-items: stretch;
-}
-.flow-entry {
-  min-width: 182px;
-  background: var(--surface);
-}
-.flow-node-top {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.flow-priority {
-  flex: none;
-  width: 22px;
-  height: 22px;
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  font-family: var(--font-display);
-  font-size: 11px;
-  font-weight: 700;
-  background: var(--violet);
-  color: var(--violet-ink);
-}
-.flow-entry.live {
-  border-color: var(--sage);
-  background: var(--sage-soft);
-}
-.flow-entry.dead {
-  opacity: 0.55;
-}
-
-/*
- * A node whose key is being probed during a chain sweep: a hand-drawn circle
- * being continuously scribbled around it, the way you'd circle an answer
- * while double-checking it — not a mechanical spinner rotating in place.
- * The wobble comes from animating `border-radius` through a set of uneven
- * blob shapes rather than rotating a ring, which is what keeps it reading as
- * drawn rather than engineered.
- */
-.flow-entry.sweep-testing {
-  border-color: var(--violet);
-  box-shadow: 0 0 0 3px var(--violet-soft);
-}
-.flow-entry.sweep-testing::after {
-  content: "";
-  position: absolute;
-  inset: -7px;
-  border: 2.5px dashed var(--violet);
-  animation: scribble-wobble 1.7s ease-in-out infinite;
-  pointer-events: none;
-}
-.flow-entry.sweep-ok {
-  border-color: var(--sage);
-  background: var(--sage-soft);
-  animation: sweep-pop 0.4s var(--ease);
-}
-.flow-entry.sweep-fail {
-  border-color: var(--rose);
-  background: var(--rose-soft);
-}
-.flow-entry.sweep-current {
-  box-shadow:
-    0 0 0 2px var(--sage),
-    0 0 0 5px var(--sage-soft);
-}
-@keyframes scribble-wobble {
-  0% {
-    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
-    transform: rotate(0deg);
-  }
-  25% {
-    border-radius: 58% 42% 45% 55% / 40% 60% 40% 60%;
-    transform: rotate(5deg);
-  }
-  50% {
-    border-radius: 50% 50% 38% 62% / 62% 38% 55% 45%;
-    transform: rotate(-4deg);
-  }
-  75% {
-    border-radius: 45% 55% 55% 45% / 48% 52% 45% 55%;
-    transform: rotate(3deg);
-  }
-  100% {
-    border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
-    transform: rotate(0deg);
-  }
-}
-@keyframes sweep-pop {
-  from {
-    transform: scale(0.98);
-  }
-  to {
-    transform: none;
-  }
-}
-
-.flow-link {
-  position: relative;
-  width: 52px;
-  flex: none;
-  display: grid;
-  place-items: center;
-}
-.flow-rail {
-  position: absolute;
-  left: 0;
-  right: 0;
-  top: 50%;
-  height: 0;
-  border-top: 2.5px dashed var(--border-strong);
-}
-.flow-link.live .flow-rail {
-  border-top-color: var(--sage-line);
-}
-.flow-link.dead .flow-rail {
-  opacity: 0.6;
-}
-/*
- * The travelling token. It runs whether or not traffic is flowing, so the
- * diagram stays legible as a chain; when a request is genuinely in flight the
- * pulse picks up the healthy accent.
- */
-.flow-pulse {
-  position: absolute;
-  top: 50%;
-  width: 10px;
-  height: 10px;
-  margin-top: -5px;
-  border-radius: 50%;
-  background: var(--violet);
-  box-shadow: 0 0 0 4px var(--violet-soft);
-  animation: flow-travel 2.6s var(--ease) infinite;
-}
-.flow-link.live .flow-pulse {
-  background: var(--sage);
-}
-.flow-track > *:nth-child(3) .flow-pulse {
-  animation-delay: 0.3s;
-}
-.flow-track > *:nth-child(4) .flow-pulse {
-  animation-delay: 0.6s;
-}
-.flow-track > *:nth-child(5) .flow-pulse {
-  animation-delay: 0.9s;
-}
-.flow-track > *:nth-child(6) .flow-pulse {
-  animation-delay: 1.2s;
-}
-.flow-track > *:nth-child(7) .flow-pulse {
-  animation-delay: 1.5s;
-}
-.flow-track > *:nth-child(8) .flow-pulse {
-  animation-delay: 1.8s;
-}
-.flow-track > *:nth-child(9) .flow-pulse {
-  animation-delay: 2.1s;
-}
-
-@keyframes flow-travel {
-  from {
-    left: -5px;
-    opacity: 0;
-  }
-  18% {
-    opacity: 1;
-  }
-  82% {
-    opacity: 1;
-  }
-  to {
-    left: calc(100% - 5px);
-    opacity: 0;
-  }
-}
-
-@keyframes flow-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-
-@keyframes scrim-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.flow-keys {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  min-height: 14px;
-}
-.flow-key {
-  position: relative;
-  width: 13px;
-  height: 13px;
-  border-radius: 4px;
-  border: 1.5px solid var(--border-strong);
-  background: var(--surface-3);
-  transition: transform 0.15s var(--ease);
-}
-.flow-key:hover {
-  transform: scale(1.3) rotate(-6deg);
-}
-.flow-key.healthy {
-  background: var(--sage-soft);
-  border-color: var(--sage);
-}
-.flow-key.cooldown {
-  background: var(--peach-soft);
-  border-color: var(--peach);
-}
-.flow-key.invalid {
-  background: var(--rose-soft);
-  border-color: var(--rose);
-}
-.flow-key.disabled {
-  background: var(--surface-3);
-}
-.flow-key.unverified {
-  background: var(--sky-soft);
-  border-color: var(--sky);
-}
-.flow-key.active {
-  transform: scale(1.25);
-}
-.flow-key-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 6px;
-  border: 2px solid var(--sage);
-  animation: flow-blink 1.3s ease-in-out infinite;
-}
-.flow-legend {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.legend-item {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
 }
 
 /* @@PART-9 */

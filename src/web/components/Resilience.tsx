@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { IconKey, IconRoute, IconSparkle } from "./Icons.js";
+import { useLang } from "../lang.js";
 
 /**
  * The three failure scopes, drawn.
@@ -33,6 +34,7 @@ function LayerRow({
   notes: string[];
   children: ReactNode;
 }) {
+  const { t } = useLang();
   return (
     <div className={`layer tint-${index}`}>
       <div className="layer-badge" aria-hidden="true">
@@ -40,14 +42,16 @@ function LayerRow({
         <span className="layer-number">{index}</span>
       </div>
       <div className="layer-copy">
-        <span className="layer-kicker">scope · {scope}</span>
-        <h4>{title}</h4>
-        <p>{blurb}</p>
+        <span className="layer-kicker">
+          {t("scope")} · {t(scope)}
+        </span>
+        <h4>{t(title)}</h4>
+        <p>{t(blurb)}</p>
       </div>
       <div className="layer-track">{children}</div>
       <ul className="layer-notes">
         {notes.map((note) => (
-          <li key={note}>{note}</li>
+          <li key={note}>{t(note)}</li>
         ))}
       </ul>
     </div>
@@ -59,15 +63,16 @@ function Rail() {
 }
 
 export function Resilience() {
+  const { t } = useLang();
   return (
     <section className="panel layers-panel">
       <div className="layer-head">
-        <span className="layer-head-kicker">Resilience · three layers</span>
-        <span className="layer-head-scope">node, then key, then model</span>
+        <span className="layer-head-kicker">{t("Resilience · three layers")}</span>
+        <span className="layer-head-scope">{t("node, then key, then model")}</span>
       </div>
 
       <h3 className="layer-title">
-        One dead key never costs a <em>whole chain</em>.
+        {t("One dead key never costs a")} <em>{t("whole chain")}</em>.
       </h3>
 
       <LayerRow
@@ -83,19 +88,19 @@ export function Resilience() {
       >
         <span className="layer-node is-hub">
           <b>cokey-best</b>
-          <small>the alias clients call</small>
+          <small>{t("the alias clients call")}</small>
         </span>
         <Rail />
         <div className="layer-stack">
           <span className="layer-key is-bad">
             <i aria-hidden="true" />
-            node 1 · groq
-            <em>set aside</em>
+            {t("node 1 · groq")}
+            <em>{t("set aside")}</em>
           </span>
           <span className="layer-key is-ok">
             <i aria-hidden="true" />
-            node 2 · openrouter
-            <em>next</em>
+            {t("node 2 · openrouter")}
+            <em>{t("next")}</em>
           </span>
         </div>
       </LayerRow>
@@ -112,25 +117,27 @@ export function Resilience() {
         ]}
       >
         <span className="layer-node is-hub">
-          <b>node 1</b>
-          <small>3 keys bound</small>
+          <b>{t("node 1")}</b>
+          <small>
+            3 {t("keys bound")}
+          </small>
         </span>
         <Rail />
         <div className="layer-stack">
           <span className="layer-key is-bad">
             <i aria-hidden="true" />
             key-1
-            <em>cooling</em>
+            <em>{t("cooling")}</em>
           </span>
           <span className="layer-key is-ok">
             <i aria-hidden="true" />
             key-2
-            <em>serving</em>
+            <em>{t("serving")}</em>
           </span>
           <span className="layer-key is-ok">
             <i aria-hidden="true" />
             key-3
-            <em>ready</em>
+            <em>{t("ready")}</em>
           </span>
         </div>
       </LayerRow>
@@ -148,30 +155,32 @@ export function Resilience() {
       >
         <span className="layer-node is-hub">
           <b>key-1</b>
-          <small>proven</small>
+          <small>{t("proven")}</small>
         </span>
         <Rail />
         <div className="layer-stack">
           <span className="layer-key is-ok">
             <i aria-hidden="true" />
             model-a
-            <em>offered</em>
+            <em>{t("offered")}</em>
           </span>
           <span className="layer-key is-locked">
             <i aria-hidden="true" />
             model-b
-            <em>not offered</em>
+            <em>{t("not offered")}</em>
           </span>
           <span className="layer-key is-ok">
             <i aria-hidden="true" />
             model-c
-            <em>offered</em>
+            <em>{t("offered")}</em>
           </span>
         </div>
       </LayerRow>
 
       <p className="layer-footer mono">
-        key 429 → cooldown · rejected key → rotate · node 5xx → fallback · context too large → stop
+        {t(
+          "key 429 → cooldown · rejected key → rotate · node 5xx → fallback · context too large → stop",
+        )}
       </p>
     </section>
   );

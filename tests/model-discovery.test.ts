@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   RETAIN_MISSING_MS,
+  eligibleModels,
   isTrustworthyListing,
   normaliseModelIds,
   reconcileModels,
@@ -41,6 +42,24 @@ describe("isTrustworthyListing", () => {
 
   it("accepts any non-empty listing", () => {
     expect(isTrustworthyListing(["a"])).toBe(true);
+  });
+});
+
+describe("eligibleModels", () => {
+  const listing = [
+    { id: "free-a", free: true },
+    { id: "unknown-b" },
+    { id: "paid-c", free: false },
+  ];
+
+  it("keeps every listing when the provider is not free-models-only", () => {
+    expect(eligibleModels(listing, undefined)).toEqual(listing);
+    expect(eligibleModels(listing, false)).toEqual(listing);
+  });
+
+  it("drops only entries explicitly priced when the provider is free-models-only", () => {
+    // A model with no pricing signal is kept — this never fabricates "paid".
+    expect(eligibleModels(listing, true)).toEqual([listing[0], listing[1]]);
   });
 });
 

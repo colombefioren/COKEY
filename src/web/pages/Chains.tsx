@@ -6,6 +6,7 @@ import { Pagination } from "../components/Pagination.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 import { useRoute } from "../router.js";
+import { useLang } from "../lang.js";
 import { Keys } from "./Keys.js";
 
 const CHAINS_PER_PAGE = 10;
@@ -28,6 +29,7 @@ export function Chains({
   providers: ProviderStatus[];
 }) {
   const { route, navigate } = useRoute();
+  const { t } = useLang();
   const tab = route.section === "keys" ? "keys" : "nodes";
 
   return (
@@ -39,7 +41,7 @@ export function Chains({
           aria-selected={tab === "nodes"}
           onClick={() => navigate("/chains")}
         >
-          Nodes
+          {t("Nodes")}
         </button>
         <button
           type="button"
@@ -47,7 +49,7 @@ export function Chains({
           aria-selected={tab === "keys"}
           onClick={() => navigate("/chains/keys")}
         >
-          Keys
+          {t("Keys")}
         </button>
       </div>
 
@@ -62,6 +64,7 @@ export function Chains({
 
 function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const toast = useToast();
+  const { t } = useLang();
   const [chains, setChains] = useState<ChainView[]>([]);
   const [alias, setAlias] = useState("");
   const [description, setDescription] = useState("");
@@ -98,7 +101,7 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
   async function createChain() {
     const name = alias.trim();
     if (!name) {
-      toast.err("Give the chain an alias, for example cokey-best");
+      toast.err(t("Give the chain an alias, for example cokey-best"));
       return;
     }
     setBusy(true);
@@ -106,7 +109,7 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
       await api.createChain({ alias: name, description: description.trim() || undefined });
       setAlias("");
       setDescription("");
-      toast.ok(`Created ${name}`);
+      toast.ok(`${t("Created")} ${name}`);
       await load();
       onChanged();
     } catch (error) {
@@ -118,10 +121,10 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
 
   return (
     <>
-      <Panel title="New chain">
+      <Panel title={t("New chain")}>
         <div className="row wrap">
           <div style={{ flex: "1 1 240px" }}>
-            <label htmlFor="chain-alias">Alias · the model id clients send</label>
+            <label htmlFor="chain-alias">{t("Alias · the model id clients send")}</label>
             <input
               id="chain-alias"
               value={alias}
@@ -133,7 +136,7 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
             />
           </div>
           <div style={{ flex: "2 1 320px" }}>
-            <label htmlFor="chain-description">Description · optional</label>
+            <label htmlFor="chain-description">{t("Description · optional")}</label>
             <input
               id="chain-description"
               value={description}
@@ -146,23 +149,27 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
             disabled={busy}
             style={{ alignSelf: "flex-end" }}
           >
-            {busy ? "Creating…" : "Create chain"}
+            {busy ? t("Creating…") : t("Create chain")}
           </button>
         </div>
         <div className="small faint" style={{ marginTop: 8 }}>
-          Tried top to bottom. Reorder by dragging, <code>Alt+↑</code> / <code>Alt+↓</code>, or the
-          arrows.
+          {t("Tried top to bottom. Reorder by dragging,")} <code>Alt+↑</code> / <code>Alt+↓</code>,{" "}
+          {t("or the arrows.")}
         </div>
       </Panel>
 
-      <Panel title={`Chains (${chains.length})`}>
+      <Panel title={`${t("Chains")} (${chains.length})`}>
         <div className="row" style={{ marginBottom: 12, gap: 14 }}>
-          <span className="small faint">{totals.nodes} nodes</span>
-          <span className="small faint">{totals.keys} keys</span>
+          <span className="small faint">
+            {totals.nodes} {t("nodes")}
+          </span>
+          <span className="small faint">
+            {totals.keys} {t("keys")}
+          </span>
         </div>
 
         {chains.length === 0 ? (
-          <Empty>No chains yet.</Empty>
+          <Empty>{t("No chains yet.")}</Empty>
         ) : (
           visible.map((chain) => (
             <ChainCard

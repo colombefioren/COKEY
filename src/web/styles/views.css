@@ -30,41 +30,10 @@
   grid-template-columns: auto 1fr;
   gap: 6px 16px;
   padding: 20px 22px;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 24px 22px 26px 21px;
+  border: none;
+  border-radius: 20px;
   background: var(--surface);
-  box-shadow:
-    1px 1px 0 0 var(--border),
-    var(--shadow);
-}
-/* A short rule of the layer's own tint along the top edge, so the three layers
-   read as three deliberate defences rather than three identical cards. */
-.layer::before {
-  content: "";
-  position: absolute;
-  left: 22px;
-  right: 22px;
-  top: -1.5px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--tint-line, var(--border-strong)), transparent 70%);
-}
-/* Graded out of the tint rather than filled with it: light across the card
-   instead of a coloured rectangle. */
-.layer.tint-1 {
-  --tint-line: var(--tint-1-line);
-  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-1));
-  border-color: var(--tint-1-line);
-}
-.layer.tint-2 {
-  --tint-line: var(--tint-2-line);
-  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-2));
-  border-color: var(--tint-2-line);
-}
-.layer.tint-3 {
-  --tint-line: var(--tint-3-line);
-  background: linear-gradient(155deg, var(--surface) 30%, var(--tint-3));
-  border-color: var(--tint-3-line);
+  box-shadow: var(--shadow-lift);
 }
 
 .layer-badge {
@@ -91,8 +60,9 @@
   background: var(--violet);
   color: var(--violet-ink);
   font-family: var(--font-display);
-  font-size: 12px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
   box-shadow: 0 0 0 2px var(--surface);
 }
 
@@ -105,7 +75,8 @@
 
 .layer-head-kicker {
   font-family: var(--font-display);
-  font-size: 13px;
+  font-style: italic;
+  font-size: 15px;
   color: var(--violet-strong);
 }
 
@@ -122,11 +93,8 @@
   margin: 2px 0 4px;
 }
 .layer-title em {
-  font-style: normal;
+  font-style: italic;
   color: var(--violet-strong);
-  background: var(--violet-soft);
-  padding: 0 4px;
-  border-radius: 4px;
 }
 
 .layer-kicker {
@@ -228,33 +196,32 @@
   color: var(--faint);
   font-size: 10.5px;
 }
-.layer-key.is-ok {
-  border-color: var(--sage-line);
-  background: var(--sage-soft);
-  color: var(--sage);
-}
+/* State lives on the glyph and the word after it, not on the whole chip's
+   fill — three chips side by side used to read as three different colours
+   of card; now the card is always the same plain white. */
 .layer-key.is-ok i {
+  color: var(--sage);
   clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
   animation: glyph-breathe 2.8s ease-in-out infinite;
 }
-.layer-key.is-bad {
-  border-color: var(--rose-line);
-  background: var(--rose-soft);
-  color: var(--rose);
+.layer-key.is-ok em {
+  color: var(--sage);
 }
 .layer-key.is-bad i {
+  color: var(--rose);
   clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
 }
-.layer-key.is-locked {
-  border-color: var(--peach-line);
-  background: var(--peach-soft);
-  color: var(--peach);
-  opacity: 0.9;
+.layer-key.is-bad em {
+  color: var(--rose);
 }
 .layer-key.is-locked i {
+  color: var(--peach);
   border-radius: 50%;
   border: 1.5px solid currentColor;
   background: none;
+}
+.layer-key.is-locked em {
+  color: var(--peach);
 }
 
 .layer-footer {
@@ -436,7 +403,26 @@
  */
 
 .flow {
+  display: flex;
+  flex-direction: column;
   gap: 16px;
+}
+.flow-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.flow-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.flow-meta {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 /*
@@ -444,7 +430,16 @@
  * looking at is never a comparison between two tints of the same pink.
  */
 .flow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   padding: 6px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
   transition:
     border-color 0.2s ease,
     color 0.2s ease,
@@ -452,28 +447,42 @@
     transform 0.2s var(--ease),
     box-shadow 0.2s ease;
 }
-.flow-pill:hover {
+.flow-pill:hover:not(:disabled) {
   border-color: var(--violet-line);
   color: var(--text);
+  background: var(--surface-2);
   transform: translateY(-1px);
 }
 .flow-pill.active {
   border-color: transparent;
   color: var(--violet-ink);
-  background: linear-gradient(140deg, var(--mark-2), var(--mark-3));
+  background: var(--violet);
   box-shadow: var(--shadow);
+}
+.flow-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+  transition: background 0.2s ease;
 }
 .flow-pill.active .flow-pill-dot {
   background: rgba(255, 255, 255, 0.9);
+}
+.flow-pill.live .flow-pill-dot {
+  background: var(--sage);
+  animation: flow-blink 1.6s ease-in-out infinite;
 }
 /* A selected chain that is also serving right now keeps its live mark: the
    route being live is the more urgent fact than the route being selected. */
 .flow-pill.active.live .flow-pill-dot {
   background: var(--sage-line);
+  animation: none;
 }
 .flow-pill-count {
   color: inherit;
   opacity: 0.7;
+  font-size: 10px;
 }
 
 /* The state of the route, as one quiet capsule rather than three loud badges. */
@@ -526,9 +535,48 @@
   box-shadow: var(--shadow);
 }
 
-/* Room for the hover lift, the hub's drawn ring and the sweep flags. */
-.flow-scroll {
-  padding: 26px 6px 28px;
+/*
+ * The graph surface itself: an absolutely-positioned canvas the client node,
+ * the hub and every fallback sit on, with the bezier paths drawn underneath
+ * them. Fixed coordinates do not reflow, so on a narrow screen the surface
+ * scrolls sideways instead of collapsing into an unreadable stack.
+ */
+.flow-graph {
+  position: relative;
+  min-width: 840px;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.flow-lines {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/*
+ * One inked line per hop, not a dashed rule and not a comet: the route is a
+ * path a request actually walks, so it is drawn as a path. The line that was
+ * just used brightens; every line a request did not take fades instead of
+ * disappearing, so the shape of the whole chain stays legible.
+ */
+.flow-path {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  transition:
+    stroke 0.25s ease,
+    stroke-width 0.25s ease,
+    opacity 0.25s ease;
+}
+.flow-path.live {
+  stroke: var(--sage);
+  stroke-width: 3px;
+}
+.flow-path.dead {
+  stroke-dasharray: 2 7;
+  opacity: 0.45;
 }
 
 /*
@@ -536,316 +584,282 @@
  *
  * Four unequal corner radii is the cheapest way to make a rectangle look cut
  * out rather than rendered: four equal radii is a spreadsheet cell, four
- * uneven ones read as a pebble.
+ * uneven ones read as a pebble. Every node now sits at an absolute point on
+ * the graph — the coordinates come from the component, the size from here.
  */
 .flow-node {
-  gap: 5px;
-  padding: 15px 18px;
-  border-radius: 20px 23px 19px 24px;
-  border: 2px solid var(--border-strong);
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  border: none;
   background: var(--surface);
-  box-shadow:
-    1.5px 2px 0 0 var(--border),
-    var(--shadow);
+  box-shadow: var(--shadow-lift);
+  z-index: 1;
   animation-delay: calc(var(--flow-index, 0) * 80ms);
 }
+.flow-node-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* Long model ids stay on one line, ellipsised, rather than growing the card
+   past its slot in the graph — the full id is still in the title attribute. */
+.flow-entry .flow-node-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .flow-node-kicker {
-  font-size: 9.5px;
-  font-weight: 650;
-  letter-spacing: 0.2em;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--faint);
+  color: var(--muted);
 }
 .flow-node-title {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 650;
-  line-height: 1.35;
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.25;
   color: var(--text);
   overflow-wrap: anywhere;
 }
 .flow-node-sub {
   display: block;
-  font-size: 11px;
-  color: var(--faint);
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
 }
 
-/* The entrance: the request arrives from outside, so it is the edge of the
-   picture rather than another decision inside it. */
-.flow-endpoint {
-  min-width: 132px;
-  border-radius: 18px 22px 20px 25px;
-  border-color: var(--border);
-  background: linear-gradient(150deg, var(--surface), var(--surface-3));
-  box-shadow: var(--shadow);
+/* The entrance: the request arrives from outside, so it carries the one tape
+   accent in this whole diagram — everything downstream of it is a routing
+   decision COKEY made, this is the only node the user's own client owns. */
+.flow-client {
+  left: 0;
+  width: 220px;
 }
-
-/* The exit: the answer going back. Dashed, because nothing is decided here. */
-.flow-cap {
-  min-width: 94px;
-  justify-items: center;
-  text-align: center;
-  border-radius: 22px 18px 24px 20px;
-  border: 2px dashed var(--sage-line);
-  background: var(--sage-soft);
-  box-shadow: none;
-}
-.flow-cap .flow-node-kicker {
-  color: var(--sage);
+.flow-tape {
+  position: absolute;
+  top: -8px;
+  left: 26px;
+  width: 52px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(244, 130, 180, 0.24);
+  transform: rotate(-3deg);
+  pointer-events: none;
+  z-index: 2;
 }
 
 /*
- * The hub is the one stop drawn as an orb rather than a card — everything else
- * here is a point along the way; this is the thing they are all routed through,
- * so it should look like the centre of something. The ring around it is redrawn
- * forever and never quite closes, the way a doodled circle does not.
+ * The hub is the one stop drawn as a solid circle rather than a card —
+ * everything else here is a point along the way; this is the thing they are
+ * all routed through, so it reads as the centre of something. Solid pink, no
+ * gradient: the brand colour standing for itself rather than fading into it.
  */
 .flow-hub {
-  min-width: 150px;
-  gap: 8px;
-  padding: 6px 14px;
-}
-.flow-hub::after {
-  content: none;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+  text-align: center;
+  border: none;
+  background: var(--violet);
+  box-shadow: 0 20px 44px -18px rgba(217, 87, 142, 0.55);
+  z-index: 2;
 }
 .flow-hub .flow-node-title {
-  font-size: 13px;
-  letter-spacing: 0.02em;
+  font-size: 21px;
+  color: var(--violet-ink);
 }
 .flow-hub .flow-node-kicker {
-  color: var(--violet);
-  opacity: 0.7;
-}
-.flow-hub-orb {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 66px;
-  height: 66px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 34% 26%, rgba(255, 255, 255, 0.95), transparent 62%),
-    linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
-  box-shadow:
-    inset 0 0 0 2px var(--violet-line),
-    0 0 0 6px rgba(255, 255, 255, 0.72),
-    var(--shadow-lift);
-  animation: hub-pulse 3.6s ease-in-out infinite;
-}
-.flow-hub-ring {
-  position: absolute;
-  inset: -10px;
-  border-radius: 50%;
-  border: 1.5px dashed var(--violet-line);
-  animation: scribble-wobble 12s ease-in-out infinite;
-  pointer-events: none;
-}
-@keyframes hub-pulse {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
+  color: rgba(255, 255, 255, 0.75);
 }
 
-/*
- * The stop number, as a hand-cut tab: a circle whose radius is four different
- * numbers, sitting on the brand wash. It marks order without shouting a digit
- * out of a solid brand-coloured badge.
- */
+/* The stop number, a plain circle on the brand wash — no hand-cut corners,
+   the minimal editorial page does not want a sketchy note here. */
 .flow-stop {
   flex: none;
   display: grid;
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  border-radius: 50%;
   font-family: var(--font-display);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--mark-3);
-  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
-  box-shadow: inset 0 0 0 1.5px var(--violet-line);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--violet-strong);
+  background: var(--violet-soft);
 }
 .flow-entry {
-  min-width: 188px;
+  width: 220px;
+  border: 1px solid transparent;
 }
 .flow-entry.live {
-  border-color: var(--sage);
-  background: linear-gradient(150deg, var(--surface), var(--sage-soft));
+  border-color: var(--sage-line);
   box-shadow:
-    1.5px 2px 0 0 var(--sage-line),
-    var(--shadow-lift);
+    0 1px 2px rgba(58, 44, 51, 0.04),
+    0 26px 50px -22px rgba(127, 174, 149, 0.4);
 }
 .flow-entry.dead {
-  filter: saturate(0.55);
+  opacity: 0.55;
 }
 
-/* The sweep verdict, pinned to the node's shoulder so the card never resizes. */
+/*
+ * A node whose key is being probed during a chain sweep: a hand-drawn circle
+ * being continuously scribbled around it, the way you'd circle an answer
+ * while double-checking it — not a mechanical spinner rotating in place.
+ */
+.flow-entry.sweep-testing {
+  border-color: var(--violet-line);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+.flow-entry.sweep-testing::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2.5px dashed var(--violet);
+  border-radius: inherit;
+  animation: scribble-wobble 1.7s ease-in-out infinite;
+  pointer-events: none;
+}
+.flow-entry.sweep-ok {
+  border-color: var(--sage-line);
+}
+.flow-entry.sweep-fail {
+  border-color: var(--rose-line);
+}
+.flow-entry.sweep-current {
+  box-shadow:
+    0 0 0 2px var(--sage),
+    0 0 0 5px var(--sage-soft);
+}
+
+/* The placeholder shown when a chain has no fallback nodes yet. Dashed,
+   because nothing has been decided here. */
+.flow-empty {
+  width: 220px;
+  border: 1.5px dashed var(--border-strong);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+/* The verdict — sweep result, or just the node's role in the order — pinned
+   to the card's shoulder so the card itself never resizes to fit it. */
 .flow-node-flag {
   position: absolute;
   top: -11px;
-  right: 14px;
-  padding: 2px 10px;
+  right: 16px;
+  padding: 4px 11px;
   border-radius: 999px;
-  background: linear-gradient(140deg, var(--mark-2), var(--mark-3));
+  background: var(--violet);
   color: var(--violet-ink);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
+  font-size: 10px;
+  font-weight: 600;
   box-shadow: var(--shadow);
 }
-
-/*
- * One inked rail rather than a dashed rule: a warm gradient line with a fainter
- * second stroke below it, the same trick the cards use to look drawn — two
- * lines that do not quite trace each other.
- */
-.flow-link {
-  width: 58px;
+.flow-node-flag.live {
+  background: var(--sage);
 }
-.flow-rail {
-  left: 2px;
-  right: 2px;
-  top: 50%;
-  height: 3px;
-  margin-top: -2px;
-  border-top: 0;
-  border-radius: 3px;
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 55%, var(--mark-3));
-  opacity: 0.42;
-  transition: opacity 0.25s ease;
+.flow-node-flag.skip {
+  background: var(--surface-3);
+  color: var(--muted);
+  box-shadow: none;
 }
-.flow-rail::after {
-  content: "";
-  position: absolute;
-  left: 3px;
-  right: 3px;
-  top: 6px;
-  height: 1.5px;
-  border-radius: 2px;
-  background: var(--border-strong);
-  opacity: 0.75;
-}
-.flow-link.live .flow-rail {
-  opacity: 1;
-  border-top-color: transparent;
-}
-.flow-link.dead .flow-rail {
-  opacity: 0.18;
+.flow-node-flag.first {
+  background: var(--text);
 }
 
-/* The token as a comet, so the diagram reads as a request moving through the
-   chain rather than a dot blinking on each hop. */
-.flow-pulse {
-  width: 12px;
-  height: 12px;
-  margin-top: -6px;
-  border-radius: 50%;
-  background: linear-gradient(140deg, var(--mark-1), var(--mark-3));
-  box-shadow:
-    0 0 0 4px rgba(255, 255, 255, 0.9),
-    0 0 16px 2px var(--mark-2);
-}
-.flow-pulse::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  width: 28px;
-  height: 5px;
-  margin-top: -2.5px;
-  border-radius: 999px;
-  background: linear-gradient(270deg, var(--mark-1), transparent);
-  opacity: 0.7;
-}
-.flow-link.live .flow-pulse {
-  background: linear-gradient(140deg, var(--mark-1), var(--mark-3));
-}
-
-/*
- * A bound key as a capsule carrying the same five silhouettes the status pills
- * use. Twelve keys in a row then answer the question the row is actually being
- * asked — twelve states — instead of showing twelve identical squares that all
- * look the same size from a chair.
- */
+/* A bound key as a plain coloured dot. Colour alone is enough here because
+   the tooltip carries the exact status and the legend underneath carries
+   the colour key — a row of them should read as calm dots, not icons. */
 .flow-keys {
-  gap: 5px;
-  margin-top: 2px;
-  min-height: 15px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+  min-height: 20px;
 }
 .flow-keys-empty {
   font-size: 11px;
   color: var(--rose);
 }
 .flow-key {
-  width: 15px;
-  height: 15px;
-  border-radius: 5px;
-}
-.flow-key::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 9px;
-  height: 9px;
-  margin: -4.5px 0 0 -4.5px;
-  background: currentColor;
-}
-.flow-key.healthy {
-  color: var(--sage);
-  background: var(--sage-soft);
-  border-color: var(--sage-line);
-}
-.flow-key.healthy::before {
-  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
-}
-.flow-key.cooldown {
-  color: var(--peach);
-  background: var(--peach-soft);
-  border-color: var(--peach-line);
-}
-.flow-key.cooldown::before {
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background: none;
-  box-shadow: inset 3px 0 0 0 currentColor;
-}
-.flow-key.invalid {
-  color: var(--rose);
-  background: var(--rose-soft);
-  border-color: var(--rose-line);
-}
-.flow-key.invalid::before {
-  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
-}
-.flow-key.disabled {
-  color: var(--faint);
+  border: none;
   background: var(--surface-3);
 }
-.flow-key.disabled::before {
-  clip-path: polygon(0% 40%, 100% 40%, 100% 60%, 0% 60%);
+.flow-key.healthy {
+  background: var(--sage);
+}
+.flow-key.cooldown {
+  background: var(--peach);
+}
+.flow-key.invalid {
+  background: var(--rose);
+}
+.flow-key.disabled {
+  background: var(--faint);
 }
 .flow-key.unverified {
-  color: var(--sky);
-  background: var(--sky-soft);
-  border-color: var(--sky-line);
+  background: var(--sky);
 }
-.flow-key.unverified::before {
+.flow-key.active {
+  transform: scale(1.15);
+}
+.flow-key-ring {
+  position: absolute;
+  inset: -4px;
   border-radius: 50%;
-  border: 1.5px dashed currentColor;
-  background: none;
+  border: 2px solid var(--sage);
+  animation: flow-blink 1.3s ease-in-out infinite;
 }
 
 .flow-legend {
-  gap: 7px;
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.flow-legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.flow-legend-dot.healthy {
+  background: var(--sage);
+}
+.flow-legend-dot.cooldown {
+  background: var(--peach);
+}
+.flow-legend-dot.invalid {
+  background: var(--rose);
 }
 .flow-legend-note {
-  font-size: 11px;
-  color: var(--faint);
+  font-size: 12px;
+  color: var(--muted);
 }
 .flow-legend-note.ok {
   color: var(--sage);
@@ -866,20 +880,22 @@
   gap: 9px;
   padding: 6px 13px 6px 11px;
   border: 1px solid var(--border-strong);
-  background: linear-gradient(140deg, var(--surface), var(--surface-2));
+  background: var(--surface);
   font-size: 11.5px;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease;
 }
-.live-chip:hover {
+.live-chip:hover:not(:disabled) {
   border-color: var(--violet-line);
-  box-shadow: var(--shadow);
+  background: var(--surface-2);
+  box-shadow: none;
 }
 .live-model {
   font-family: var(--font-display);
-  font-size: 12.5px;
-  font-weight: 650;
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 400;
 }
 .live-dot {
   font-size: 8px;
@@ -887,7 +903,7 @@
 }
 .live-chip.active {
   border-color: var(--sage-line);
-  background: linear-gradient(140deg, var(--surface), var(--sage-soft));
+  background: var(--sage-soft);
 }
 .live-count {
   padding: 1px 8px;
@@ -906,9 +922,9 @@
   max-height: none;
   overflow: visible;
   padding: 14px;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 22px;
-  background: linear-gradient(180deg, var(--surface-2), var(--surface));
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
   box-shadow: var(--shadow-pop);
 }
 .live-list {
@@ -938,23 +954,11 @@
 .hero {
   position: relative;
   padding: 28px;
-  border-radius: 26px 23px 27px 22px;
-  border: 1.5px solid var(--violet-line);
-  background:
-    radial-gradient(520px 280px at 100% 0%, var(--pink-soft), transparent 66%),
-    linear-gradient(120deg, var(--violet-soft), var(--surface) 58%, var(--bloom-3));
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
-}
-.hero::before {
-  content: "";
-  position: absolute;
-  left: 28px;
-  right: 28px;
-  top: 0;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-2) 55%, var(--mark-3));
 }
 .hero h2 {
   font-size: 26px;
@@ -969,10 +973,11 @@
 .steps-list > li::before {
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
   font-family: var(--font-display);
-  font-size: 11.5px;
-  font-weight: 700;
-  color: var(--mark-3);
-  background: linear-gradient(150deg, var(--pink-soft), var(--violet-soft));
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--violet-strong);
+  background: var(--violet-soft);
   border: 0;
   box-shadow: inset 0 0 0 1.5px var(--violet-line);
 }
@@ -997,8 +1002,9 @@
 }
 .recipe-name {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 650;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
 }
 /* The open/closed mark as a chip, so it reads as a control rather than as a
    stray character at the end of the row. */
@@ -1037,8 +1043,9 @@
 }
 .terms section h3 {
   font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
   color: var(--violet-strong);
 }
 .terms section div {
@@ -1052,27 +1059,17 @@
   position: relative;
   gap: 6px;
   padding: 28px;
-  border: 1.5px solid var(--violet-line);
-  border-radius: 26px 23px 27px 22px;
-  background:
-    radial-gradient(460px 240px at 0% 100%, var(--pink-soft), transparent 68%),
-    linear-gradient(135deg, var(--violet-soft), var(--surface) 62%, var(--bloom-3));
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
-}
-.closing::after {
-  content: "";
-  position: absolute;
-  left: 28px;
-  right: 28px;
-  bottom: 0;
-  height: 3px;
-  border-radius: 3px 3px 0 0;
-  background: linear-gradient(90deg, var(--mark-3), var(--mark-2) 55%, var(--mark-1));
 }
 .closing strong {
   font-family: var(--font-display);
-  letter-spacing: 0.06em;
-  font-size: 18px;
+  font-style: italic;
+  letter-spacing: 0.02em;
+  font-size: 21px;
   color: var(--violet-strong);
 }
 .closing span {
@@ -1099,7 +1096,7 @@
   box-shadow: inset 0 1px 2px rgba(43, 26, 47, 0.07);
 }
 .swe-fill {
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-3));
+  background: var(--text);
 }
 
 /* Verdict headings are names, not micro-labels: display face, sentence case,
@@ -1107,8 +1104,9 @@
 .provider-section-title {
   gap: 9px;
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 400;
   letter-spacing: 0.005em;
   text-transform: none;
   color: var(--text);
@@ -1117,12 +1115,12 @@
   width: 9px;
   height: 9px;
   border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
-  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 .provider-section:nth-of-type(2) .provider-section-title::before,
 .provider-section:nth-of-type(3) .provider-section-title::before,
 .provider-section:nth-of-type(4) .provider-section-title::before {
-  background: linear-gradient(150deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 
 .provider-card .dossier {
@@ -1153,9 +1151,9 @@
 }
 
 .model-list-item {
-  border: 1.5px solid var(--border);
-  border-radius: 12px 14px 11px 15px;
-  background: linear-gradient(160deg, var(--surface-2), var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
 }
 
 .stack-chip {
@@ -1178,6 +1176,7 @@
 }
 .layers-panel .layer-head-kicker {
   font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 400;
 }

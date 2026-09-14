@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import type { CredentialRate, CredentialStatus } from "../types.js";
 import { Window, type WindowHue } from "./Window.js";
+import { useLang } from "../lang.js";
 
 /** Coloured status indicator for a credential. */
 export function StatusDot({ status, title }: { status: CredentialStatus; title?: string }) {
@@ -33,7 +34,8 @@ const STATUS_WORD: Record<CredentialStatus, string> = {
  * their column or legend.
  */
 export function StatusPill({ status, compact }: { status: CredentialStatus; compact?: boolean }) {
-  const word = STATUS_WORD[status];
+  const { t } = useLang();
+  const word = t(STATUS_WORD[status]);
   return (
     <span
       className={`status-pill ${status}${compact ? " compact" : ""}`}
@@ -111,7 +113,7 @@ export function ConfirmModal({
   message,
   onConfirm,
   onClose,
-  actionLabel = "Delete",
+  actionLabel,
   danger = true,
 }: {
   title: string;
@@ -121,15 +123,16 @@ export function ConfirmModal({
   actionLabel?: string;
   danger?: boolean;
 }) {
+  const { t } = useLang();
   return (
     <Modal title={title} onClose={onClose}>
       <p style={{ margin: 0 }}>{message}</p>
       <div className="modal-actions">
         <button className="ghost" onClick={onClose}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button className={danger ? "danger" : "secondary"} onClick={onConfirm}>
-          {actionLabel}
+          {actionLabel ?? t("Delete")}
         </button>
       </div>
     </Modal>
@@ -159,6 +162,7 @@ export function PromptModal({
   placeholder?: string;
   type?: "text" | "password";
 }) {
+  const { t } = useLang();
   const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
@@ -184,9 +188,9 @@ export function PromptModal({
       />
       <div className="modal-actions">
         <button className="ghost" onClick={onClose}>
-          Cancel
+          {t("Cancel")}
         </button>
-        <button onClick={() => onSubmit(value.trim())}>OK</button>
+        <button onClick={() => onSubmit(value.trim())}>{t("OK")}</button>
       </div>
     </Modal>
   );
@@ -271,13 +275,14 @@ export function Sparkline({ buckets, title }: { buckets: number[]; title?: strin
  * same provider apart.
  */
 export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: boolean }) {
+  const { t } = useLang();
   if (!rate || rate.lastRequestAt === undefined) {
-    return <span className="faint small">idle</span>;
+    return <span className="faint small">{t("idle")}</span>;
   }
 
   const title =
-    `${rate.requestsPerMinute} req in the last minute · ${rate.requestsLast5Minutes} in the last 5 min` +
-    (rate.recentlyRateLimited ? " · rate limited recently" : "");
+    `${rate.requestsPerMinute} ${t("req in the last minute")} · ${rate.requestsLast5Minutes} ${t("in the last 5 min")}` +
+    (rate.recentlyRateLimited ? ` · ${t("rate limited recently")}` : "");
 
   return (
     <span className={`rate ${rate.recentlyRateLimited ? "limited" : ""}`} title={title}>
@@ -296,6 +301,7 @@ export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: 
 export function QuotaLabel({
   quota,
   quotaErrors,
+  status,
 }: {
   quota?: {
     available: boolean;
@@ -304,22 +310,27 @@ export function QuotaLabel({
     requestsPerMinute?: number;
   };
   quotaErrors?: number;
+  status?: string;
 }) {
-  if (quotaErrors && quotaErrors > 0) {
+  const { t } = useLang();
+  // quotaErrors is a lifetime counter, so it stays > 0 long after a key has
+  // recovered - only read it while the credential is still actually cooling
+  // down, or a key that failed once would show "exhausted" forever.
+  if (status === "cooldown" && quotaErrors && quotaErrors > 0) {
     return (
-      <span className="badge bad" title={`${quotaErrors} quota exhaustion(s) observed`}>
-        exhausted
+      <span className="badge bad" title={`${quotaErrors} ${t("quota exhaustion(s) observed")}`}>
+        {t("exhausted")}
       </span>
     );
   }
-  if (!quota || !quota.available) return <span className="faint">Quota: Unknown</span>;
+  if (!quota || !quota.available) return <span className="faint">{t("Quota: Unknown")}</span>;
 
   const parts: string[] = [];
   if (typeof quota.requestsRemaining === "number")
-    parts.push(`${quota.requestsRemaining} req left`);
+    parts.push(`${quota.requestsRemaining} ${t("req left")}`);
   if (typeof quota.tokensRemaining === "number")
-    parts.push(`${formatNumber(quota.tokensRemaining)} tok left`);
+    parts.push(`${formatNumber(quota.tokensRemaining)} ${t("tok left")}`);
   if (typeof quota.requestsPerMinute === "number") parts.push(`${quota.requestsPerMinute} RPM`);
-  if (parts.length === 0) return <span className="faint">Quota: Unknown</span>;
+  if (parts.length === 0) return <span className="faint">{t("Quota: Unknown")}</span>;
   return <span className="muted">{parts.join(" · ")}</span>;
 }

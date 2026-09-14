@@ -185,39 +185,17 @@
   gap: 10px;
 }
 
+/* One colour signal per notice — the severity badge — not three: the card
+   itself stays a plain white rectangle so a stack of them reads as calm
+   text with one accent, not a row of differently-tinted panels. */
 .guidance-item {
   position: relative;
   display: grid;
   gap: 8px;
-  padding: 13px 15px 13px 17px;
-  border-radius: 16px 18px 15px 17px;
-  border: 1.5px solid var(--note-line);
-  background: linear-gradient(150deg, var(--surface) 42%, var(--note-bg));
-}
-.guidance-item::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 13px;
-  bottom: 13px;
-  width: 3px;
-  border-radius: 0 3px 3px 0;
-  background: var(--note-ink);
-}
-.guidance-item.critical {
-  --note-line: var(--rose-line);
-  --note-bg: var(--rose-soft);
-  --note-ink: var(--rose);
-}
-.guidance-item.warn {
-  --note-line: var(--peach-line);
-  --note-bg: var(--peach-soft);
-  --note-ink: var(--peach);
-}
-.guidance-item.info {
-  --note-line: var(--sky-line);
-  --note-bg: var(--sky-soft);
-  --note-ink: var(--sky);
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
 }
 
 .guidance-head {
@@ -228,8 +206,9 @@
 }
 .guidance-title {
   font-family: var(--font-display);
-  font-size: 13.5px;
-  font-weight: 650;
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
   color: var(--text);
 }
 .guidance-detail {
@@ -287,33 +266,18 @@
 
 .modal {
   position: relative;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 26px;
+  border: none;
+  border-radius: 22px;
   padding: 24px 26px;
-  background:
-    radial-gradient(520px 300px at 100% 0%, var(--violet-soft), transparent 62%), var(--surface);
+  background: var(--surface);
   box-shadow: var(--shadow-pop);
   animation: modal-in 0.34s var(--ease) both;
 }
 
-/* A hairline of the brand ramp along the top edge, so a dialog is branded by
-   one drawn detail rather than by a coloured header block. */
-.modal::before {
-  content: "";
-  position: absolute;
-  left: 26px;
-  right: 26px;
-  top: -1.5px;
-  height: 3px;
-  border-radius: 0 0 3px 3px;
-  background: linear-gradient(90deg, var(--mark-1), var(--mark-2), var(--mark-3));
-  opacity: 0.9;
-}
-
 .modal h3 {
   font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 21px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 
@@ -365,8 +329,8 @@
 
 .login-card h1 {
   font-family: var(--font-display);
-  font-size: 23px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 400;
   letter-spacing: 0.01em;
 }
 
@@ -483,14 +447,13 @@
  */
 .nudger {
   position: relative;
-  border: 1.5px solid var(--violet-line);
-  border-radius: 22px 20px 24px 19px;
+  border: none;
+  border-radius: 20px;
   padding: 18px 20px 18px 22px;
   display: grid;
   gap: 10px;
-  background:
-    radial-gradient(420px 220px at 0% 0%, var(--pink-soft), transparent 68%),
-    linear-gradient(150deg, var(--surface), var(--violet-soft));
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
   overflow: hidden;
 }
 .nudger::before {
@@ -501,7 +464,7 @@
   bottom: 18px;
   width: 4px;
   border-radius: 0 4px 4px 0;
-  background: linear-gradient(180deg, var(--mark-1), var(--mark-3));
+  background: var(--violet);
 }
 .nudger h3 {
   margin: 0;
@@ -596,8 +559,9 @@
 }
 .statusbar .status-cell strong {
   font-family: var(--font-display);
-  font-size: 13px;
-  font-weight: 700;
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 400;
 }
 .statusbar .live-flag {
   display: inline-flex;
@@ -688,17 +652,4 @@ a:focus-visible,
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--faint);
-}
-
-/* ---- ambient wash --------------------------------------------------------- */
-
-/* The two drifting blooms behind the whole app, on the new ramp: pink on one
-   side, lilac on the other, both far too faint to compete with a table. */
-.starfield::before {
-  opacity: 0.3;
-  background: radial-gradient(closest-side, var(--pink-soft), transparent 70%);
-}
-.starfield::after {
-  opacity: 0.26;
-  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
 }

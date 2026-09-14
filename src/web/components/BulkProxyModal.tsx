@@ -3,6 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ProxyPoolResponse } from "../types.js";
 import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
+import { useLang } from "../lang.js";
 
 /**
  * Paste a vendor's whole endpoint list at once.
@@ -20,6 +21,7 @@ export function BulkProxyModal({
   onChanged: (data: ProxyPoolResponse) => void;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -39,14 +41,14 @@ export function BulkProxyModal({
       if (result.added === 0) {
         toast.err(
           result.skipped === 0
-            ? "Nothing to add"
-            : `No new exits — ${result.skipped} skipped (duplicate or invalid)`,
+            ? t("Nothing to add")
+            : `${t("No new exits —")} ${result.skipped} ${t("skipped (duplicate or invalid)")}`,
         );
       } else {
         toast.ok(
           result.skipped === 0
-            ? `Added ${result.added} exit${result.added === 1 ? "" : "s"}`
-            : `Added ${result.added}, skipped ${result.skipped}`,
+            ? `${t("Added")} ${result.added} ${result.added === 1 ? t("exit") : t("exits")}`
+            : `${t("Added")} ${result.added}, ${t("skipped")} ${result.skipped}`,
         );
       }
       onClose();
@@ -59,13 +61,15 @@ export function BulkProxyModal({
 
   return (
     <Modal
-      title="Bulk add egress proxies"
-      subtitle="One proxy per line. Credentials stay on the server; only host:port is ever shown."
+      title={t("Bulk add egress proxies")}
+      subtitle={t(
+        "One proxy per line. Credentials stay on the server; only host:port is ever shown.",
+      )}
       onClose={onClose}
       wide
     >
       <div className="field">
-        <label htmlFor="bulk-proxies">Proxy URLs</label>
+        <label htmlFor="bulk-proxies">{t("Proxy URLs")}</label>
         <textarea
           id="bulk-proxies"
           value={text}
@@ -76,8 +80,8 @@ export function BulkProxyModal({
         />
         <span className="small faint">
           {lines.length === 0
-            ? "Paste one proxy per line."
-            : `${lines.length} line${lines.length === 1 ? "" : "s"} pasted.`}
+            ? t("Paste one proxy per line.")
+            : `${lines.length} ${lines.length === 1 ? t("line") : t("lines")} ${t("pasted.")}`}
         </span>
       </div>
 
@@ -85,10 +89,10 @@ export function BulkProxyModal({
 
       <div className="modal-actions">
         <button className="secondary" onClick={onClose} disabled={busy}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button onClick={() => void submit()} disabled={busy || lines.length === 0}>
-          {busy ? "Adding…" : "Add proxies"}
+          {busy ? t("Adding…") : t("Add proxies")}
         </button>
       </div>
     </Modal>

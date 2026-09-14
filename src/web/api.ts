@@ -3,7 +3,6 @@ import type {
   CatalogProviderRow,
   ChainView,
   ConnectResult,
-  ContentStatusResponse,
   GuidanceResponse,
   ModelDiscoveryReport,
   ModelProbeResult,
@@ -17,7 +16,6 @@ import type {
   ProviderStatus,
   ProxyPoolBulkResponse,
   ProxyPoolCheckResponse,
-  ProviderDossierResponse,
   ProxyPoolResponse,
   PublicCredential,
   RankingsResponse,
@@ -25,7 +23,6 @@ import type {
   Settings,
   Stats,
   StatusResponse,
-  TermsResponse,
   UsageView,
   ValidationResult,
 } from "./types.js";
@@ -107,21 +104,11 @@ export const api = {
 
   /** Skill, rate-limit and combined ranking boards, with their sources. */
   rankings: () => request<RankingsResponse>("GET", "/api/catalog/rankings"),
-
-  // ---- curated content ------------------------------------------------------
-
-  /** Where the curated content came from, and what failed to parse. */
-  contentStatus: () => request<ContentStatusResponse>("GET", "/api/content/status"),
-  /** The terms document, in reading order. */
-  contentTerms: () => request<TermsResponse>("GET", "/api/content/terms"),
-  /** Force a re-read of the content directory. Reports whether anything changed. */
-  reloadContent: () =>
-    request<ContentStatusResponse & { changed: boolean }>("POST", "/api/content/reload"),
-  /** One provider's dossier, for a detail panel opened later. */
-  providerDossier: (providerId: string) =>
-    request<ProviderDossierResponse>(
-      "GET",
-      `/api/content/providers/${encodeURIComponent(providerId)}`,
+  /** Fetch the published ranking bundle and replace the boards with it. */
+  refreshRankings: () =>
+    request<{ changed: boolean; rankings?: RankingsResponse; message?: string }>(
+      "POST",
+      "/api/catalog/rankings/refresh",
     ),
 
   /** Send a real hello through one working key. The play button. */

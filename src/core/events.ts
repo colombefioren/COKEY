@@ -23,7 +23,7 @@ export type CokeyEventType =
   | "credential.updated"
   | "chain.updated"
   | "models.updated"
-  /** The curated content repository was reloaded from disk. */
+  /** A published ranking bundle was fetched successfully. */
   | "content.updated";
 
 export type CokeyEventLevel = "info" | "success" | "warn" | "error";

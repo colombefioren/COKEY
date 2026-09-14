@@ -1,4 +1,5 @@
 import { CREATOR, REPO_URL } from "../links.js";
+import { useLang } from "../lang.js";
 
 /**
  * Where to reach the person who built this.
@@ -28,31 +29,32 @@ function ContactCard({
 }
 
 export function ContactGrid() {
+  const { t } = useLang();
   return (
     <div className="contact-grid">
       <ContactCard
         label="GitHub"
         value={`@${CREATOR.name}`}
         href={CREATOR.github}
-        hint="Issues, pull requests and the source"
+        hint={t("Issues, pull requests and the source")}
       />
       <ContactCard
         label="LinkedIn"
         value={CREATOR.name}
         href={CREATOR.linkedin}
-        hint="Work and updates"
+        hint={t("Work and updates")}
       />
       <ContactCard
         label="Facebook"
         value="colombe.fioren"
         href={CREATOR.facebook}
-        hint="Say hello"
+        hint={t("Say hello")}
       />
       <ContactCard
-        label="Repository"
+        label={t("Repository")}
         value="colombefioren/COKEY"
         href={REPO_URL}
-        hint="Open source, MIT licensed"
+        hint={t("Open source, MIT licensed")}
       />
     </div>
   );
