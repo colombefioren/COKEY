@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { TOUR_STEPS } from "../tour-steps.js";
-import { MOBILE_QUERY } from "./Sidebar.js";
 import { useLang } from "../lang.js";
 
 /** Persisted once the tour is skipped or finished, so it never auto-opens again. */
@@ -15,36 +14,40 @@ interface SpotRect {
 
 /** Loose margin around the real element, so the spotlight has room to breathe. */
 const SPOT_PADDING = 8;
-/** How long the sidebar drawer's own slide takes, in responsive.css. */
-const DRAWER_TRANSITION_MS = 320;
+/** A route change re-renders the new page synchronously, but give it one frame
+ * before measuring so layout has actually settled. */
+const ROUTE_SETTLE_MS = 50;
 
 function measureTarget(target: string | undefined): SpotRect | null {
   if (!target) return null;
   const el = document.querySelector(`[data-tour="${target}"]`);
   if (!el) return null;
+  el.scrollIntoView({ block: "center", behavior: "instant" as ScrollBehavior });
   const box = el.getBoundingClientRect();
   return { top: box.top, left: box.left, width: box.width, height: box.height };
 }
 
 /**
- * The onboarding tour: a dark scrim with one rectangular window cut into it
- * around the current step's target, a callout card, and a hand-drawn arrow
- * joining the two.
- *
- * Every step but the first and last targets a real, always-mounted piece of
- * chrome via a `data-tour` attribute, found fresh on every step change and on
- * resize - there is no cached layout to go stale. A step whose target lives in
- * the sidebar briefly opens the mobile drawer if it is currently a hidden
- * off-canvas panel, and waits out its slide transition before measuring, so
- * the spotlight is never drawn over a rail that has not finished sliding in.
+ * The onboarding tour: a real walk through every page, not a tooltip parade
+ * over the sidebar. A step whose data names a `route` navigates there first -
+ * the tour is the one place in the app that drives the router on the user's
+ * behalf - and only measures its spotlight once that page has actually
+ * mounted, so the highlight is never drawn against the page that used to be
+ * there. Steps with no target (the welcome and closing cards) render as a
+ * plain centred card over whatever page is already open.
  */
 export function Tour({
   open,
   onClose,
+  currentPath,
+  navigate,
   onRequestNavOpen,
 }: {
   open: boolean;
   onClose: () => void;
+  /** The router's current path, so a step can tell whether it still needs to navigate. */
+  currentPath: string;
+  navigate: (path: string) => void;
   onRequestNavOpen: (open: boolean) => void;
 }) {
   const { t } = useLang();
@@ -56,25 +59,29 @@ export function Tour({
     if (open) setStepIndex(0);
   }, [open]);
 
+  // A mobile drawer left open from before the tour started would otherwise
+  // float over every page the tour visits; none of the tour's own targets
+  // live inside it, so it only ever needs to be closed, never opened.
   useEffect(() => {
-    if (!open) return;
-    const isMobile = window.matchMedia(MOBILE_QUERY).matches;
-    const needsDrawer = isMobile && !!step?.target?.startsWith("nav-");
-    if (isMobile) onRequestNavOpen(needsDrawer);
+    if (open) onRequestNavOpen(false);
+  }, [open, onRequestNavOpen]);
 
-    const measure = () => setRect(measureTarget(step?.target));
-    const timer = window.setTimeout(measure, needsDrawer ? DRAWER_TRANSITION_MS : 20);
+  useEffect(() => {
+    if (!open || !step) return;
+
+    if (step.route && currentPath !== step.route) {
+      navigate(step.route);
+      return;
+    }
+
+    const measure = () => setRect(measureTarget(step.target));
+    const timer = window.setTimeout(measure, ROUTE_SETTLE_MS);
     window.addEventListener("resize", measure);
     return () => {
       window.clearTimeout(timer);
       window.removeEventListener("resize", measure);
     };
-  }, [open, step, onRequestNavOpen]);
-
-  useEffect(() => {
-    if (!open) return;
-    return () => onRequestNavOpen(false);
-  }, [open, onRequestNavOpen]);
+  }, [open, step, currentPath, navigate]);
 
   const finish = useCallback(() => {
     window.localStorage.setItem(TOUR_SEEN_KEY, "1");
@@ -94,14 +101,16 @@ export function Tour({
 
   const isLast = stepIndex === TOUR_STEPS.length - 1;
   const isFirst = stepIndex === 0;
-  const spot = rect
-    ? {
-        top: rect.top - SPOT_PADDING,
-        left: rect.left - SPOT_PADDING,
-        width: rect.width + SPOT_PADDING * 2,
-        height: rect.height + SPOT_PADDING * 2,
-      }
-    : null;
+  const onRightRoute = !step.route || step.route === currentPath;
+  const spot =
+    rect && onRightRoute
+      ? {
+          top: rect.top - SPOT_PADDING,
+          left: rect.left - SPOT_PADDING,
+          width: rect.width + SPOT_PADDING * 2,
+          height: rect.height + SPOT_PADDING * 2,
+        }
+      : null;
 
   return (
     <div className="tour-scrim" role="dialog" aria-modal="true" aria-label={t("Guided tour")}>
@@ -211,12 +220,6 @@ function cardPosition(
   return { top: Math.min(spot.top + spot.height + 22, window.innerHeight - 200), left };
 }
 
-/**
- * Both arrows share one shape: a gently curved shaft ending exactly where the
- * chevron's two wings meet, so the head reads as the tip of the stroke rather
- * than a separate decoration glued on nearby. `strokeLinejoin="round"` keeps
- * the meeting point soft, like a mark drawn in one unhurried motion.
- */
 function TourArrowLeft() {
   return (
     <svg

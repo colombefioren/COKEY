@@ -63,7 +63,7 @@ export function ApiKeys({ refreshKey, onChanged }: { refreshKey: number; onChang
     <>
       <Panel title={t("New API key")}>
         <div className="row wrap">
-          <div style={{ flex: "1 1 320px" }}>
+          <div style={{ flex: "1 1 320px" }} data-tour="apikey-name-field">
             <label htmlFor="api-key-name">{t("Name")}</label>
             <input
               id="api-key-name"

@@ -174,7 +174,11 @@ export function EgressPoolPanel({
 
   return (
     <Panel
-      title={`${t("Egress pool")} (${entries.length})`}
+      title={
+        <span data-tour="proxies-panel">
+          {t("Egress pool")} ({entries.length})
+        </span>
+      }
       actions={
         <div className="row" style={{ gap: 8 }}>
           <label

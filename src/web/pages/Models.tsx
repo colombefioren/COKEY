@@ -531,6 +531,7 @@ function Catalog({
           </label>
           <input
             className="search"
+            data-tour="models-search"
             placeholder={t("Search model, use or provider")}
             value={query}
             onChange={(event) => {

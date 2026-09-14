@@ -1,18 +1,23 @@
 /**
  * The onboarding tour's script.
  *
- * Every step but the first and last points at a real, always-mounted piece of
- * chrome (a `data-tour` attribute on a sidebar row or a topbar control), so the
- * tour works from any page without navigating the app out from under itself.
- * `placement` is fixed per step rather than computed from viewport space,
- * because this app's chrome is fixed too: the sidebar is always the left rail
- * and the topbar is always the top strip, so there is nothing to flip.
+ * Steps that name a `route` have the tour navigate there first, so most of
+ * this walk is the real, live page - not a tooltip pasted over a screenshot
+ * of it. A step's `target` is a `data-tour` attribute on a real, always-
+ * rendered element of that page (a search box, a named field, a panel
+ * title) - never something that only exists once a modal is opened, since
+ * the tour does not drive anything but navigation on the user's behalf.
+ * `placement` is fixed per step rather than computed from viewport space:
+ * every target here sits in a predictable part of its page's layout, so
+ * there is nothing to flip.
  */
 
 export type TourPlacement = "right" | "bottom" | "left" | "top" | "center";
 
 export interface TourStep {
   id: string;
+  /** Route to navigate to before this step, when it differs from the current one. */
+  route?: string;
   /** `data-tour` selector to spotlight. Omitted for the welcome/closing cards. */
   target?: string;
   placement: TourPlacement;
@@ -25,49 +30,86 @@ export const TOUR_STEPS: TourStep[] = [
     id: "welcome",
     placement: "center",
     title: "Welcome to COKEY",
-    body: "A quick, skippable tour of where everything lives. Next takes you through it, Skip drops you straight in - either way, click the compass in the topbar to see this again.",
+    body: "A real walk through every page, not just a tooltip over the sidebar - Next moves the app itself, Skip drops you straight in. Click the compass in the topbar to replay this any time.",
   },
   {
     id: "dashboard",
-    target: "nav-dashboard",
-    placement: "right",
+    route: "/dashboard",
+    target: "dashboard-tabs",
+    placement: "bottom",
     title: "Dashboard",
-    body: "A live overview: chains, keys and connected providers, and the resilience layer that caught your last failure, if any did.",
-  },
-  {
-    id: "chains",
-    target: "nav-chains",
-    placement: "right",
-    title: "Chains",
-    body: "Build a chain here: one node per provider and model, with the keys each node may use, in the order you want them tried.",
+    body: "Three tabs: Live route draws the request as it is walked right now, Resilience names which of the three containment layers caught your last failure, and Activity is the gateway's own health.",
   },
   {
     id: "providers",
-    target: "nav-providers",
-    placement: "right",
+    route: "/providers",
+    target: "providers-search",
+    placement: "bottom",
     title: "Providers",
-    body: "Paste a free API key from any provider - COKEY verifies it inline before it can join a chain.",
+    body: "Click any provider's card - not just the Connect button - to see its full dossier, jurisdiction and free-tier limit before you paste a key. COKEY verifies a key the moment you save it.",
+  },
+  {
+    id: "chains-alias",
+    route: "/chains",
+    target: "chain-alias-field",
+    placement: "bottom",
+    title: "A chain's name IS the model id",
+    body: "Whatever you type here - say cokey-best - is exactly what your client should request as \"model\". COKEY resolves that alias to a node, a model and a key on every single request, and moves to the next one the moment any of those runs out.",
+  },
+  {
+    id: "no-chain-needed",
+    route: "/chains",
+    target: "v1-models-link",
+    placement: "bottom",
+    title: "Don't want a chain? You don't need one",
+    body: "A chain is for fallback across several keys or providers. If you only ever use one key, skip building a chain entirely: connect the provider and call its real model id directly. Open this link any time to see every model your connected keys can currently serve.",
   },
   {
     id: "models",
-    target: "nav-models",
-    placement: "right",
+    route: "/models",
+    target: "models-search",
+    placement: "bottom",
     title: "Models",
-    body: "Browse the curated free-model catalog, test any model with one real request, and check the rankings boards.",
+    body: "Every curated free model, searchable by name, use or provider. A model greyed out just means none of your connected keys can reach it yet - the play button on any row sends one real request and only turns green on an actual 200.",
   },
   {
     id: "usage",
-    target: "nav-usage",
-    placement: "right",
+    route: "/usage",
+    target: "usage-panel",
+    placement: "bottom",
     title: "Usage",
-    body: "Per-key throughput and request history, so two keys of the same provider are never indistinguishable.",
+    body: "Exactly which node, key and exit IP is serving right now, per-key throughput, and your full local request history - nothing here is estimated.",
+  },
+  {
+    id: "api-keys",
+    route: "/api-keys",
+    target: "apikey-name-field",
+    placement: "bottom",
+    title: "API keys",
+    body: "Optional: create a named key here only if you want your own clients to authenticate against COKEY itself. Most setups just use a placeholder value - COKEY only checks it if a gateway key actually exists.",
+  },
+  {
+    id: "settings",
+    route: "/settings",
+    target: "settings-port-field",
+    placement: "bottom",
+    title: "Settings",
+    body: "The gateway's port and host binding live here, along with the fallback policy that decides how a cooldown or a retry behaves across every chain.",
+  },
+  {
+    id: "proxies",
+    route: "/proxies",
+    target: "proxies-panel",
+    placement: "bottom",
+    title: "Proxies",
+    body: "Add exits here to turn on the automatic egress pool - off by default - so two keys of the same provider never share an exit IP. One key, one pool, one exit.",
   },
   {
     id: "live-status",
     target: "live-status",
     placement: "bottom",
     title: "The live route",
-    body: "This chip names the node, the key and the exit IP serving your last request, live - click it for the full routing feed.",
+    body: "This chip names the node, the key and the exit IP serving your last request, live - click it for the full routing feed, from anywhere in the app.",
   },
   {
     id: "notifications",
@@ -81,12 +123,12 @@ export const TOUR_STEPS: TourStep[] = [
     target: "guide-button",
     placement: "bottom",
     title: "Come back any time",
-    body: "This compass replays the tour whenever you want it - COKEY won't show it again on its own once you've seen it.",
+    body: "This compass replays the whole tour whenever you want it - COKEY won't show it again on its own once you've seen it.",
   },
   {
     id: "closing",
     placement: "center",
-    title: "That's everything",
-    body: "Go connect a free key and build your first chain. Terms and About, in the sidebar, are where bug reports and provider tips live.",
+    title: "That's every page",
+    body: "Connect a free key, then either chain it for fallback or use its model id directly - both are first-class here. Terms and About, in the sidebar, are where bug reports and provider tips live.",
   },
 ];

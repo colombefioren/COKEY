@@ -100,7 +100,7 @@ function ServingNow({
   const now = view?.now;
 
   return (
-    <Panel title={t("Serving now")}>
+    <Panel title={<span data-tour="usage-panel">{t("Serving now")}</span>}>
       {!now ? (
         <Empty>{t("Loading…")}</Empty>
       ) : now.active ? (

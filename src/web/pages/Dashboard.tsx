@@ -87,7 +87,7 @@ export function Dashboard({
        */}
       {nudgeBlock}
 
-      <div className="tabs tabs-inline">
+      <div className="tabs tabs-inline" data-tour="dashboard-tabs">
         {TABS.map((item) => (
           <button
             key={item.id}

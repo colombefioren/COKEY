@@ -313,6 +313,7 @@ function Shell() {
             target="_blank"
             rel="noreferrer"
             className="topbar-link mono"
+            data-tour="v1-models-link"
             title={t("The public model list, as any OpenAI client would see it")}
           >
             /v1/models
@@ -320,7 +321,13 @@ function Shell() {
         </header>
 
         <Insights />
-        <Tour open={tourOpen} onClose={() => setTourOpen(false)} onRequestNavOpen={setNavOpen} />
+        <Tour
+          open={tourOpen}
+          onClose={() => setTourOpen(false)}
+          currentPath={route.path}
+          navigate={navigate}
+          onRequestNavOpen={setNavOpen}
+        />
 
         {/*
          * Keyed on the route so each page remounts: the windows pop in on a real

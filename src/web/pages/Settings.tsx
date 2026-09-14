@@ -136,7 +136,7 @@ export function Settings({
       >
         <div className="grid cols-2">
           <div>
-            <div className="field">
+            <div className="field" data-tour="settings-port-field">
               <label htmlFor="setting-port">{t("Port")}</label>
               <input
                 id="setting-port"

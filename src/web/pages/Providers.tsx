@@ -148,6 +148,7 @@ export function Providers({
             </label>
             <input
               className="search"
+              data-tour="providers-search"
               value={query}
               placeholder={t("Search providers")}
               onChange={(event) => {

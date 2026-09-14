@@ -123,7 +123,7 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
     <>
       <Panel title={t("New chain")}>
         <div className="row wrap">
-          <div style={{ flex: "1 1 240px" }}>
+          <div style={{ flex: "1 1 240px" }} data-tour="chain-alias-field">
             <label htmlFor="chain-alias">{t("Alias · the model id clients send")}</label>
             <input
               id="chain-alias"
