@@ -219,7 +219,10 @@ function TourCard({
       {placement === "bottom" ? <TourArrowUp /> : null}
 
       <div className="tour-eyebrow">
-        {stepNumber} {t("of")} {stepCount}
+        <span>
+          {stepNumber} {t("of")} {stepCount}
+        </span>
+        <span className="tour-hint">{t("Enter ↵ for next")}</span>
       </div>
       {isFirst ? (
         <CokeyLogo height={26} className="tour-logo" />

@@ -1168,30 +1168,44 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   Skip: "Passer",
   Back: "Retour",
   Next: "Suivant",
+  "Enter ↵ for next": "Entrée ↵ pour continuer",
   "Welcome to COKEY": "Bienvenue sur COKEY",
-  "A quick, skippable tour of where everything lives. Next takes you through it, Skip drops you straight in - either way, click the compass in the topbar to see this again.":
-    "Une visite rapide, que vous pouvez passer, de tout ce qu'il y a à savoir. Suivant vous guide, Passer vous laisse explorer directement - dans les deux cas, la boussole dans la barre du haut la relance à tout moment.",
-  "A live overview: chains, keys and connected providers, and the resilience layer that caught your last failure, if any did.":
-    "Une vue en direct : chaînes, clés et fournisseurs connectés, et la couche de résilience qui a intercepté votre dernier échec, s'il y en a eu un.",
-  "Build a chain here: one node per provider and model, with the keys each node may use, in the order you want them tried.":
-    "Construisez une chaîne ici : un nœud par fournisseur et modèle, avec les clés que chaque nœud peut utiliser, dans l'ordre où vous voulez qu'elles soient essayées.",
-  "Paste a free API key from any provider - COKEY verifies it inline before it can join a chain.":
-    "Collez une clé API gratuite de n'importe quel fournisseur - COKEY la vérifie sur-le-champ avant qu'elle ne puisse rejoindre une chaîne.",
-  "Browse the curated free-model catalog, test any model with one real request, and check the rankings boards.":
-    "Parcourez le catalogue de modèles gratuits, testez n'importe quel modèle avec une vraie requête, et consultez les classements.",
-  "Per-key throughput and request history, so two keys of the same provider are never indistinguishable.":
-    "Débit par clé et historique des requêtes, pour que deux clés d'un même fournisseur ne soient jamais indissociables.",
+  "We're going to guide you through every page. Press Enter or click Next to move on, Skip drops you straight in. Replay this any time from the compass in the topbar.":
+    "Nous allons vous guider à travers chaque page. Appuyez sur Entrée ou cliquez sur Suivant pour avancer, Passer vous laisse explorer directement. Rejouez cette visite à tout moment depuis la boussole dans la barre du haut.",
+  Dashboard: "Tableau de bord",
+  Settings: "Paramètres",
+  Proxies: "Proxys",
+  "Three tabs: Live route draws the request as it is walked right now, Resilience names which of the three containment layers caught your last failure, and Activity is the gateway's own health.":
+    "Trois onglets : Route en direct dessine la requête telle qu'elle est traitée en ce moment, Résilience nomme laquelle des trois couches de confinement a intercepté votre dernier échec, et Activité est la santé de la passerelle elle-même.",
+  "Click any provider's card - not just the Connect button - to see its full dossier, jurisdiction and free-tier limit before you paste a key. COKEY verifies a key the moment you save it.":
+    "Cliquez sur la carte d'un fournisseur - pas seulement sur le bouton Connecter - pour voir son dossier complet, sa juridiction et sa limite de palier gratuit avant de coller une clé. COKEY vérifie une clé dès que vous l'enregistrez.",
+  "A chain's name IS the model id": "Le nom d'une chaîne EST l'id du modèle",
+  'Whatever you type here - say cokey-best - is exactly what your client should request as "model". COKEY resolves that alias to a node, a model and a key on every single request, and moves to the next one the moment any of those runs out.':
+    'Ce que vous tapez ici - disons cokey-best - est exactement ce que votre client doit demander comme "model". COKEY résout cet alias en un nœud, un modèle et une clé à chaque requête, et passe au suivant dès que l\'un d\'eux est épuisé.',
+  "Don't want a chain? You don't need one": "Pas envie d'une chaîne ? Vous n'en avez pas besoin",
+  "A chain is for fallback across several keys or providers. If you only ever use one key, skip building a chain entirely: connect the provider and call its real model id directly. Open this link any time to see every model your connected keys can currently serve.":
+    "Une chaîne sert au repli entre plusieurs clés ou fournisseurs. Si vous n'utilisez qu'une seule clé, ne construisez pas de chaîne du tout : connectez le fournisseur et appelez directement son véritable id de modèle. Ouvrez ce lien à tout moment pour voir tous les modèles que vos clés connectées peuvent servir actuellement.",
+  "Every curated free model, searchable by name, use or provider. A model greyed out just means none of your connected keys can reach it yet - the play button on any row sends one real request and only turns green on an actual 200.":
+    "Chaque modèle gratuit sélectionné, cherchable par nom, usage ou fournisseur. Un modèle grisé signifie simplement qu'aucune de vos clés connectées ne peut encore l'atteindre - le bouton de lecture sur chaque ligne envoie une vraie requête et ne devient vert que sur un vrai 200.",
+  "Exactly which node, key and exit IP is serving right now, per-key throughput, and your full local request history - nothing here is estimated.":
+    "Exactement quel nœud, quelle clé et quelle IP de sortie sert en ce moment, le débit par clé, et votre historique complet des requêtes en local - rien ici n'est estimé.",
+  "Optional: create a named key here only if you want your own clients to authenticate against COKEY itself. Most setups just use a placeholder value - COKEY only checks it if a gateway key actually exists.":
+    "Optionnel : créez une clé nommée ici seulement si vous voulez que vos propres clients s'authentifient auprès de COKEY lui-même. La plupart des configurations utilisent juste une valeur de remplissage - COKEY ne la vérifie que si une clé de passerelle existe réellement.",
+  "The gateway's port and host binding live here, along with the fallback policy that decides how a cooldown or a retry behaves across every chain.":
+    "Le port et l'adresse d'écoute de la passerelle se trouvent ici, ainsi que la politique de repli qui décide du comportement d'un temps de repos ou d'une nouvelle tentative sur toutes les chaînes.",
+  "Add exits here to turn on the automatic egress pool - off by default - so two keys of the same provider never share an exit IP. One key, one pool, one exit.":
+    "Ajoutez des sorties ici pour activer le pool de sortie automatique - désactivé par défaut - afin que deux clés d'un même fournisseur ne partagent jamais la même IP de sortie. Une clé, un pool, une sortie.",
   "The live route": "La route en direct",
-  "This chip names the node, the key and the exit IP serving your last request, live - click it for the full routing feed.":
-    "Cette puce nomme le nœud, la clé et l'IP de sortie qui servent votre dernière requête, en direct - cliquez dessus pour le flux de routage complet.",
+  "This chip names the node, the key and the exit IP serving your last request, live - click it for the full routing feed, from anywhere in the app.":
+    "Cette puce nomme le nœud, la clé et l'IP de sortie qui servent votre dernière requête, en direct - cliquez dessus pour le flux de routage complet, depuis n'importe où dans l'application.",
   "A key cooling down, a model going unavailable, a proxy dying - anything that needs a look lands here.":
     "Une clé qui refroidit, un modèle qui devient indisponible, un proxy qui meurt - tout ce qui mérite un coup d'œil atterrit ici.",
   "Come back any time": "Revenez quand vous voulez",
-  "This compass replays the tour whenever you want it - COKEY won't show it again on its own once you've seen it.":
-    "Cette boussole rejoue la visite quand vous le souhaitez - COKEY ne la montrera plus de lui-même une fois que vous l'aurez vue.",
-  "That's everything": "C'est tout",
-  "Go connect a free key and build your first chain. Terms and About, in the sidebar, are where bug reports and provider tips live.":
-    "Allez connecter une clé gratuite et construire votre première chaîne. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
+  "This compass replays the whole tour whenever you want it - COKEY won't show it again on its own once you've seen it.":
+    "Cette boussole rejoue toute la visite quand vous le souhaitez - COKEY ne la montrera plus de lui-même une fois que vous l'aurez vue.",
+  "You're all set": "Vous êtes prêt",
+  "Connect a free key, then either chain it for fallback or use its model id directly - both are first-class here. Terms and About, in the sidebar, are where bug reports and provider tips live.":
+    "Connectez une clé gratuite, puis chaînez-la pour le repli ou utilisez directement son id de modèle - les deux sont traités à égalité ici. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
 
   // ---- Provider card free-tier chip ------------------------------------------------
   "This provider does not publish its free-tier limits.":
@@ -1563,39 +1577,4 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "L'importation de proxys gratuits du pool d'égress automatique récupère sa liste depuis",
   "a community-maintained list refreshed continuously, no key and no quota.":
     "une liste maintenue par la communauté, actualisée en continu, sans clé ni quota.",
-
-  // ---- Onboarding tour, page-by-page rewrite ------------------------------------------
-  Dashboard: "Tableau de bord",
-  Settings: "Paramètres",
-  Proxies: "Proxys",
-  "A real walk through every page, not just a tooltip over the sidebar - Next moves the app itself, Skip drops you straight in. Click the compass in the topbar to replay this any time.":
-    "Une vraie visite de chaque page, pas seulement des info-bulles sur la barre latérale - Suivant fait bouger l'application elle-même, Passer vous laisse explorer directement. La boussole dans la barre du haut relance cette visite à tout moment.",
-  "Three tabs: Live route draws the request as it is walked right now, Resilience names which of the three containment layers caught your last failure, and Activity is the gateway's own health.":
-    "Trois onglets : Route en direct dessine la requête au fur et à mesure qu'elle est parcourue, Résilience nomme laquelle des trois couches de confinement a intercepté votre dernier échec, et Activité est la santé de la passerelle elle-même.",
-  "Click any provider's card - not just the Connect button - to see its full dossier, jurisdiction and free-tier limit before you paste a key. COKEY verifies a key the moment you save it.":
-    "Cliquez sur la carte de n'importe quel fournisseur - pas seulement sur le bouton Connecter - pour voir son dossier complet, sa juridiction et sa limite de palier gratuit avant de coller une clé. COKEY vérifie une clé dès que vous l'enregistrez.",
-  "A chain's name IS the model id": "Le nom d'une chaîne EST l'identifiant du modèle",
-  'Whatever you type here - say cokey-best - is exactly what your client should request as "model". COKEY resolves that alias to a node, a model and a key on every single request, and moves to the next one the moment any of those runs out.':
-    "Ce que vous tapez ici - disons cokey-best - est exactement ce que votre client doit demander comme « model ». COKEY résout cet alias vers un nœud, un modèle et une clé à chaque requête, et passe au suivant dès que l'un d'eux s'épuise.",
-  "Don't want a chain? You don't need one": "Pas envie d'une chaîne ? Vous n'en avez pas besoin",
-  "A chain is for fallback across several keys or providers. If you only ever use one key, skip building a chain entirely: connect the provider and call its real model id directly. Open this link any time to see every model your connected keys can currently serve.":
-    "Une chaîne sert au repli entre plusieurs clés ou fournisseurs. Si vous n'utilisez qu'une seule clé, ne construisez pas de chaîne du tout : connectez le fournisseur et appelez directement son véritable identifiant de modèle. Ouvrez ce lien à tout moment pour voir tous les modèles que vos clés connectées peuvent servir actuellement.",
-  "Every curated free model, searchable by name, use or provider. A model greyed out just means none of your connected keys can reach it yet - the play button on any row sends one real request and only turns green on an actual 200.":
-    "Chaque modèle gratuit sélectionné, cherchable par nom, usage ou fournisseur. Un modèle grisé signifie simplement qu'aucune de vos clés connectées ne peut encore l'atteindre - le bouton lecture sur n'importe quelle ligne envoie une vraie requête et ne devient vert que sur un vrai 200.",
-  "Exactly which node, key and exit IP is serving right now, per-key throughput, and your full local request history - nothing here is estimated.":
-    "Exactement quel nœud, quelle clé et quelle IP de sortie sert en ce moment, le débit par clé, et tout votre historique local de requêtes - rien ici n'est estimé.",
-  "Optional: create a named key here only if you want your own clients to authenticate against COKEY itself. Most setups just use a placeholder value - COKEY only checks it if a gateway key actually exists.":
-    "Optionnel : créez une clé nommée ici seulement si vous voulez que vos propres clients s'authentifient auprès de COKEY lui-même. La plupart des configurations utilisent juste une valeur de substitution - COKEY ne la vérifie que si une clé de passerelle existe réellement.",
-  "The gateway's port and host binding live here, along with the fallback policy that decides how a cooldown or a retry behaves across every chain.":
-    "Le port de la passerelle et la liaison d'hôte se trouvent ici, avec la politique de repli qui décide du comportement d'un refroidissement ou d'une nouvelle tentative pour chaque chaîne.",
-  "Add exits here to turn on the automatic egress pool - off by default - so two keys of the same provider never share an exit IP. One key, one pool, one exit.":
-    "Ajoutez des sorties ici pour activer le pool d'égress automatique - désactivé par défaut - pour que deux clés d'un même fournisseur ne partagent jamais une IP de sortie. Une clé, un pool, une sortie.",
-  "That's every page": "Voilà toutes les pages",
-  "Connect a free key, then either chain it for fallback or use its model id directly - both are first-class here. Terms and About, in the sidebar, are where bug reports and provider tips live.":
-    "Connectez une clé gratuite, puis chaînez-la pour le repli ou utilisez directement son identifiant de modèle - les deux sont pleinement supportés ici. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
-
-  // ---- Tour guide, simplified intro ---------------------------------------------------
-  "Tour guide": "Guide de visite",
-  "Press Enter or click Next to move to the next step. Skip drops you straight in. Replay this any time from the compass in the topbar.":
-    "Appuyez sur Entrée ou cliquez sur Suivant pour passer à l'étape suivante. Passer vous laisse explorer directement. Relancez cette visite à tout moment depuis la boussole dans la barre du haut.",
 };

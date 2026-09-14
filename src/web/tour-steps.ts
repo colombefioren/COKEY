@@ -29,8 +29,8 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "welcome",
     placement: "center",
-    title: "Tour guide",
-    body: "Press Enter or click Next to move to the next step. Skip drops you straight in. Replay this any time from the compass in the topbar.",
+    title: "Welcome to COKEY",
+    body: "We're going to guide you through every page. Press Enter or click Next to move on, Skip drops you straight in. Replay this any time from the compass in the topbar.",
   },
   {
     id: "dashboard",
@@ -128,7 +128,7 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "closing",
     placement: "center",
-    title: "That's every page",
+    title: "You're all set",
     body: "Connect a free key, then either chain it for fallback or use its model id directly - both are first-class here. Terms and About, in the sidebar, are where bug reports and provider tips live.",
   },
 ];
