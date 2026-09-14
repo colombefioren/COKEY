@@ -1822,6 +1822,80 @@ tbody tr:hover td:first-child {
   background: linear-gradient(160deg, var(--surface-2), var(--surface-3));
 }
 
+/*
+ * A tooltip drawn in the brand's own voice, not the browser's grey box: see
+ * the `Tooltip` component for why an icon-only button needed one at all.
+ */
+.tooltip-anchor {
+  display: inline-flex;
+}
+.tooltip-bubble {
+  position: fixed;
+  z-index: 80;
+  pointer-events: none;
+  background: linear-gradient(140deg, var(--violet), var(--violet-strong));
+  color: var(--violet-ink);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  padding: 5px 11px;
+  border-radius: 999px;
+  box-shadow: var(--shadow-pop);
+  white-space: nowrap;
+}
+.tooltip-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: var(--violet-strong);
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 1px;
+}
+.tooltip-bubble.top {
+  animation: tooltip-pop-top 0.22s var(--ease);
+  transform: translate(-50%, calc(-100% - 9px));
+}
+.tooltip-bubble.top::after {
+  bottom: -3px;
+}
+.tooltip-bubble.bottom {
+  animation: tooltip-pop-bottom 0.22s var(--ease);
+  transform: translate(-50%, 9px);
+}
+.tooltip-bubble.bottom::after {
+  top: -3px;
+}
+@keyframes tooltip-pop-top {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% + 2px)) scale(0.6);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 13px)) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, calc(-100% - 9px)) scale(1);
+  }
+}
+@keyframes tooltip-pop-bottom {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, 2px) scale(0.6);
+  }
+  65% {
+    opacity: 1;
+    transform: translate(-50%, 13px) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 9px) scale(1);
+  }
+}
+
 .hint-box {
   position: relative;
   border: 1px solid var(--border);

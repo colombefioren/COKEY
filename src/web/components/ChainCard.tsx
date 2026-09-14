@@ -3,7 +3,7 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ChainView } from "../types.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
 import { AddEntryModal } from "./AddEntryModal.js";
-import { ConfirmModal } from "./Primitives.js";
+import { ConfirmModal, Tooltip } from "./Primitives.js";
 import { EditEntryModal } from "./EditEntryModal.js";
 import { ViewEntryModal } from "./ViewEntryModal.js";
 import { useToast } from "./Toast.js";
@@ -304,26 +304,42 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
 
             {/* Right: action buttons */}
             <div className="entry-actions">
-              <button
-                className="ghost"
-                title={t("View details")}
-                onClick={() => setViewingEntry(entry)}
-              >
-                👁
-              </button>
-              <button className="ghost" title={t("Edit")} onClick={() => setEditingEntry(entry)}>
-                ✎
-              </button>
-              <button className="ghost" title={t("Duplicate")} onClick={() => void duplicate(entry)}>
-                ⧉
-              </button>
-              <button
-                className="ghost"
-                title={entry.enabled ? t("Disable") : t("Enable")}
-                onClick={() => void toggleEntry(entry)}
-              >
-                {entry.enabled ? "⊘" : "✓"}
-              </button>
+              <Tooltip label={t("View details")}>
+                <button
+                  className="ghost"
+                  aria-label={t("View details")}
+                  onClick={() => setViewingEntry(entry)}
+                >
+                  👁
+                </button>
+              </Tooltip>
+              <Tooltip label={t("Edit")}>
+                <button
+                  className="ghost"
+                  aria-label={t("Edit")}
+                  onClick={() => setEditingEntry(entry)}
+                >
+                  ✎
+                </button>
+              </Tooltip>
+              <Tooltip label={t("Duplicate")}>
+                <button
+                  className="ghost"
+                  aria-label={t("Duplicate")}
+                  onClick={() => void duplicate(entry)}
+                >
+                  ⧉
+                </button>
+              </Tooltip>
+              <Tooltip label={entry.enabled ? t("Disable") : t("Enable")}>
+                <button
+                  className="ghost"
+                  aria-label={entry.enabled ? t("Disable") : t("Enable")}
+                  onClick={() => void toggleEntry(entry)}
+                >
+                  {entry.enabled ? "⊘" : "✓"}
+                </button>
+              </Tooltip>
               <button
                 className="danger"
                 style={{ fontSize: 12 }}

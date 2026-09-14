@@ -538,3 +538,64 @@ export function Select({
     </>
   );
 }
+
+/**
+ * A tooltip that reads as a spoken word, not an OS hint box.
+ *
+ * A native `title` attribute answers "what is this" with the browser's own
+ * plain grey rectangle, on its own timer, in its own font — the one part of
+ * an icon-only button the app's own theme never reached. This draws a small
+ * pill in the brand's own pink-to-violet instead, with a tail pointing at
+ * whatever it is labelling and a soft pop-in so it reads as part of the
+ * interface rather than a system aside.
+ *
+ * Positioned in a portal against the trigger's real screen coordinates so it
+ * is never clipped by a scrolling list or a card's own `overflow`.
+ */
+export function Tooltip({
+  label,
+  children,
+  side = "top",
+}: {
+  label: string;
+  children: ReactNode;
+  side?: "top" | "bottom";
+}) {
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const anchorRef = useRef<HTMLSpanElement>(null);
+
+  const show = () => {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    setPos({
+      top: side === "top" ? rect.top : rect.bottom,
+      left: rect.left + rect.width / 2,
+    });
+  };
+  const hide = () => setPos(null);
+
+  return (
+    <span
+      ref={anchorRef}
+      className="tooltip-anchor"
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      onFocus={show}
+      onBlur={hide}
+    >
+      {children}
+      {pos
+        ? createPortal(
+            <span
+              className={`tooltip-bubble ${side}`}
+              role="tooltip"
+              style={{ top: pos.top, left: pos.left }}
+            >
+              {label}
+            </span>,
+            document.body,
+          )
+        : null}
+    </span>
+  );
+}
