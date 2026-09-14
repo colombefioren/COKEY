@@ -305,7 +305,7 @@ function ProviderDossierCard({
         ) : null}
       </div>
 
-      <div className="sub clamp-2">{dossier.summary}</div>
+      <div className="sub clamp-2">{t(dossier.summary)}</div>
 
       {/*
        * The number that actually decides whether this provider is worth a
@@ -324,7 +324,7 @@ function ProviderDossierCard({
         }
       >
         <IconZap size={12} />
-        <span>{dossier.freeTierSummary ?? row.freeTier.summary}</span>
+        <span>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</span>
       </div>
 
       {/*
@@ -368,7 +368,7 @@ function ProviderDossierCard({
       {open ? (
         <Modal
           title={row.displayName}
-          subtitle={`${dossier.operator} · ${dossier.origin}`}
+          subtitle={`${dossier.operator} · ${t(dossier.origin)}`}
           onClose={() => setOpen(false)}
           wide
         >
@@ -380,7 +380,7 @@ function ProviderDossierCard({
             <div>
               <dt>{t("Free tier")}</dt>
               {/* The dossier's own one-liner wins when it has one. */}
-              <dd>{dossier.freeTierSummary ?? row.freeTier.summary}</dd>
+              <dd>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</dd>
             </div>
             <div>
               <dt>{t("Credential")}</dt>
@@ -397,10 +397,10 @@ function ProviderDossierCard({
           </dl>
 
           <p className="small faint" style={{ marginTop: 0 }}>
-            {dossier.verdictReason}
+            {t(dossier.verdictReason)}
           </p>
-          {dossier.notes ? <p className="small faint">{dossier.notes}</p> : null}
-          {row.notes ? <p className="small faint">{row.notes}</p> : null}
+          {dossier.notes ? <p className="small faint">{t(dossier.notes)}</p> : null}
+          {row.notes ? <p className="small faint">{t(row.notes)}</p> : null}
 
           {/*
            * The dossier's model list carries what a name alone cannot: context

@@ -578,7 +578,7 @@ function Catalog({
               <header>
                 <span className={`dot ${provider.available ? "healthy" : "unverified"}`} />
                 <strong>{provider.displayName}</strong>
-                <span className="small faint">{provider.freeTier.summary}</span>
+                <span className="small faint">{t(provider.freeTier.summary)}</span>
                 <span className="spacer" />
 
                 {/* What the provider actually returned, versus what the catalog claims. */}

@@ -129,7 +129,7 @@ export function ConnectProviderModal({
         <IconSparkle size={18} />
         <div>
           <div className="freetier-eyebrow">{t("Free tier")}</div>
-          <div className="freetier-summary">{provider.freeTier.summary}</div>
+          <div className="freetier-summary">{t(provider.freeTier.summary)}</div>
           {provider.freeTier.quotaSource === "unknown" ? (
             <div className="freetier-caveat">
               {t("Not published by the provider - treat this as unverified.")}

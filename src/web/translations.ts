@@ -1208,4 +1208,263 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   // ---- Insights card kickers --------------------------------------------------------
   "Fun fact": "Anecdote",
   Insight: "Astuce",
+
+  // ---- Provider dossier origins ------------------------------------------------------
+  Canada: "Canada",
+  China: "Chine",
+  France: "France",
+  Germany: "Allemagne",
+  "self-hosted": "auto-hébergé",
+  Singapore: "Singapour",
+  undisclosed: "non divulgué",
+  "United States": "États-Unis",
+  "United States / France": "États-Unis / France",
+
+  // ---- Provider dossier summaries ----------------------------------------------------
+  "A coding-agent extension that also exposes an OpenAI-compatible gateway. Much of its free catalogue mirrors OpenRouter's.":
+    "Une extension d'agent de codage qui expose aussi une passerelle compatible OpenAI. Une grande partie de son catalogue gratuit reflète celui d'OpenRouter.",
+  "A community free hub with a daily request and token allowance.":
+    "Un hub gratuit communautaire avec un quota quotidien de requêtes et de jetons.",
+  "A free hub advertising a large daily request and token allowance.":
+    "Un hub gratuit annonçant un large quota quotidien de requêtes et de jetons.",
+  "A free hub advertising a large daily token allowance across third-party model families.":
+    "Un hub gratuit annonçant un large quota quotidien de jetons sur plusieurs familles de modèles tiers.",
+  "A free hub advertising a modest request-per-day allowance.":
+    "Un hub gratuit annonçant un quota modeste de requêtes par jour.",
+  "A free hub advertising a very large daily request and token allowance.":
+    "Un hub gratuit annonçant un très large quota quotidien de requêtes et de jetons.",
+  "A free hub advertising a very small request-per-day allowance.":
+    "Un hub gratuit annonçant un très petit quota de requêtes par jour.",
+  "A free hub advertising flagship coding models with a credit-based daily allowance.":
+    "Un hub gratuit annonçant des modèles de codage phares avec un quota quotidien basé sur des crédits.",
+  "A free hub advertising unlimited requests behind a low per-minute cap.":
+    "Un hub gratuit annonçant des requêtes illimitées derrière un faible plafond par minute.",
+  "A free hub fronting several open-weight models.":
+    "Un hub gratuit donnant accès à plusieurs modèles à poids ouverts.",
+  "A free hub gated behind manual account review.":
+    "Un hub gratuit conditionné à une vérification manuelle du compte.",
+  "A free hub inside the crowded re-export tier.":
+    "Un hub gratuit dans le palier encombré des re-exportateurs.",
+  "A free hub offering one model at roughly fifteen requests per day.":
+    "Un hub gratuit proposant un seul modèle à environ quinze requêtes par jour.",
+  "A free hub serving open-weight models with advertised daily token limits.":
+    "Un hub gratuit servant des modèles à poids ouverts avec des limites quotidiennes de jetons annoncées.",
+  "A free hub serving open-weight models with tight limits.":
+    "Un hub gratuit servant des modèles à poids ouverts avec des limites serrées.",
+  "A free hub that does not publish its quotas.":
+    "Un hub gratuit qui ne publie pas ses quotas.",
+  "A free hub that does not reliably honour structured output.":
+    "Un hub gratuit qui ne respecte pas de façon fiable la sortie structurée.",
+  "A free hub whose catalogue mirrors the OpenRouter free pool.":
+    "Un hub gratuit dont le catalogue reflète le pool gratuit d'OpenRouter.",
+  "A free hub whose model list closely mirrors OpenRouter's free pool rather than a distinct backend.":
+    "Un hub gratuit dont la liste de modèles reflète de près le pool gratuit d'OpenRouter plutôt qu'un backend distinct.",
+  "A free hub with a long model list but a weekly dollar credit cap rather than a request allowance.":
+    "Un hub gratuit avec une longue liste de modèles mais un plafond hebdomadaire en crédits plutôt qu'un quota de requêtes.",
+  "A free hub with a mixed catalogue of open-weight models.":
+    "Un hub gratuit avec un catalogue mixte de modèles à poids ouverts.",
+  "A free hub with a permanently-free model tier alongside a BYOK path.":
+    "Un hub gratuit avec un palier de modèles gratuits en permanence, en plus d'une voie BYOK (apportez votre propre clé).",
+  "A free hub with a single-digit requests-per-day style cap and slow models.":
+    "Un hub gratuit avec un plafond de requêtes par jour à un seul chiffre et des modèles lents.",
+  "A free hub with an unspecified allowance.": "Un hub gratuit avec un quota non précisé.",
+  "A gateway curated for coding agents rather than general chat, with a long-context contributor tier.":
+    "Une passerelle organisée pour les agents de codage plutôt que le chat général, avec un palier contributeur à long contexte.",
+  "A light router that re-exports the common free catalogue.":
+    "Un routeur léger qui re-exporte le catalogue gratuit commun.",
+  "A national open-source model family (Southeast Asian Languages in One Network) built for the region's languages.":
+    "Une famille de modèles open source nationale (Southeast Asian Languages in One Network) conçue pour les langues de la région.",
+  "A router across many upstreams. Its `:free` catalogue is the reference list that most other 'free hubs' copy verbatim.":
+    "Un routeur à travers de nombreux fournisseurs. Son catalogue `:free` est la liste de référence que la plupart des autres « hubs gratuits » copient mot pour mot.",
+  "A router with a per-model daily request allowance on its free tier.":
+    "Un routeur avec un quota quotidien de requêtes par modèle sur son palier gratuit.",
+  "A router with two models, one of which answers with double-digit latency.":
+    "Un routeur avec deux modèles, dont l'un répond avec une latence à deux chiffres.",
+  "A small broker reachable only after phone verification.":
+    "Un petit courtier accessible seulement après vérification par téléphone.",
+  "A small pooled-inference hub.": "Un petit hub d'inférence mutualisée.",
+  "A small router advertising free access to vendor models that the vendor does not wholesale to resellers.":
+    "Un petit routeur annonçant un accès gratuit à des modèles d'éditeurs que l'éditeur ne revend pas en gros à des revendeurs.",
+  "An endpoint you added yourself. COKEY validates it against the SSRF guard and treats it like any other provider.":
+    "Un point de terminaison que vous avez ajouté vous-même. COKEY le valide contre la protection SSRF et le traite comme n'importe quel autre fournisseur.",
+  "An observability-first router. Its free pool re-exports the same models as the other aggregators.":
+    "Un routeur axé sur l'observabilité. Son pool gratuit re-exporte les mêmes modèles que les autres agrégateurs.",
+  "Chinese frontier lab behind the GLM family. Publishes open weights and runs an OpenAI-compatible endpoint.":
+    "Laboratoire chinois de pointe derrière la famille GLM. Publie des poids ouverts et exploite un point de terminaison compatible OpenAI.",
+  "Custom LPU silicon built for token throughput rather than general-purpose GPUs. Serves open-weight models with the lowest first-token latency on this list.":
+    "Silicium LPU sur mesure conçu pour le débit de jetons plutôt que des GPU polyvalents. Sert des modèles à poids ouverts avec la latence du premier jeton la plus faible de cette liste.",
+  "Enterprise-focused lab with a strong retrieval and tool-calling line. The free trial keys are metered and expire.":
+    "Laboratoire orienté entreprise avec une gamme solide en recherche documentaire et appel d'outils. Les clés d'essai gratuites sont limitées et expirent.",
+  "European frontier lab. Its dedicated code family (Codestral, Devstral) is trained for completion and agentic editing rather than general chat.":
+    "Laboratoire européen de pointe. Sa famille de code dédiée (Codestral, Devstral) est entraînée pour la complétion et l'édition agentique plutôt que le chat général.",
+  "Google's frontier line. The flash tier is fast and cheap and carries a very large context window.":
+    "La gamme de pointe de Google. Le palier flash est rapide, peu coûteux et dispose d'une très large fenêtre de contexte.",
+  "Inference Providers proxy dozens of backends behind one key. The free monthly credit is deliberately tiny.":
+    "Inference Providers fait transiter des dizaines de backends derrière une seule clé. Le crédit mensuel gratuit est volontairement minuscule.",
+  "Lab training models specifically for agentic software engineering rather than general chat.":
+    "Laboratoire entraînant des modèles spécifiquement pour l'ingénierie logicielle agentique plutôt que le chat général.",
+  "Local model runner that also offers a hosted cloud tier. The local path costs nothing and leaks nothing.":
+    "Exécuteur de modèles local qui propose aussi un palier cloud hébergé. La voie locale ne coûte rien et ne fuite rien.",
+  "NIM hosts open-weight models on NVIDIA's own infrastructure. Limits are applied per model, so twelve models means twelve separate allowances.":
+    "NIM héberge des modèles à poids ouverts sur l'infrastructure propre de NVIDIA. Les limites s'appliquent par modèle, donc douze modèles signifient douze quotas distincts.",
+  "No dossier yet for this provider. Add one in the catalog when you learn who runs it.":
+    "Pas encore de dossier pour ce fournisseur. Ajoutez-en un dans le catalogue quand vous saurez qui l'exploite.",
+  "The Intern series (Shusheng) from Shanghai AI Laboratory, released as open weights and served through its own hub.":
+    "La série Intern (Shusheng) du Shanghai AI Laboratory, publiée en poids ouverts et servie via son propre hub.",
+  "Wafer-scale chips serving open-weight models at very high token rates. Free tier is generous in throughput but strict on concurrency.":
+    "Des puces à l'échelle d'une plaquette entière servant des modèles à poids ouverts à des débits de jetons très élevés. Le palier gratuit est généreux en débit mais strict sur la concurrence.",
+  "Workers AI runs open models on Cloudflare's edge network, so requests terminate close to you. The free allowance is the largest per-day ceiling here.":
+    "Workers AI exécute des modèles ouverts sur le réseau de périphérie de Cloudflare, si bien que les requêtes se terminent près de vous. Le quota gratuit est le plus grand plafond quotidien de cette liste.",
+
+  // ---- Provider dossier verdict reasons ----------------------------------------------
+  "50 requests per day is a demo, not a pool.": "Cinquante requêtes par jour, c'est une démo, pas un pool.",
+  "An undocumented operator cannot be recommended or ruled out.":
+    "Un opérateur non documenté ne peut être ni recommandé ni écarté.",
+  "Best coding pedigree on this list when you do not need high volume.":
+    "Meilleur pedigree de codage de cette liste quand vous n'avez pas besoin d'un fort volume.",
+  "Convenient if you already use the extension, otherwise redundant with OpenRouter.":
+    "Pratique si vous utilisez déjà l'extension, sinon redondant avec OpenRouter.",
+  "Curated for exactly this workload, and the free contributor tier is real.":
+    "Conçu exactement pour cette charge de travail, et le palier contributeur gratuit est réel.",
+  "Decent volume on paper; verify the ceiling before you lean on it.":
+    "Volume correct sur le papier ; vérifiez le plafond avant de vous y fier.",
+  "Enormous request ceiling and near-zero network latency; the AI Gateway adds observability.":
+    "Plafond de requêtes énorme et latence réseau quasi nulle ; l'AI Gateway ajoute de l'observabilité.",
+  "Excellent speed, smaller daily allowance than Groq or Cloudflare.":
+    "Excellente vitesse, quota quotidien plus faible que Groq ou Cloudflare.",
+  "Fine as a fallback; not a distinct source of models.":
+    "Correct en secours ; pas une source de modèles distincte.",
+  "GLM models code well and the open weights make the claims checkable.":
+    "Les modèles GLM codent bien et les poids ouverts rendent les affirmations vérifiables.",
+  "Genuinely open and well documented, but not a coding model.":
+    "Vraiment ouvert et bien documenté, mais ce n'est pas un modèle de codage.",
+  "Genuinely useful for breadth, but the free pool is shared and congested.":
+    "Vraiment utile pour la diversité, mais le pool gratuit est partagé et congestionné.",
+  "Good model coverage, but the operator is not publicly identified.":
+    "Bonne couverture de modèles, mais l'opérateur n'est pas identifié publiquement.",
+  "Highest usable daily volume with sub-300ms responses makes it the natural first entry.":
+    "Le plus grand volume quotidien utilisable avec des réponses sous 300 ms en fait le premier nœud naturel.",
+  "Huge context helps on large repositories, though the free tier is not code-specialised.":
+    "Un contexte immense aide sur les gros dépôts, même si le palier gratuit n'est pas spécialisé en code.",
+  "If a reseller sells frontier weights for free, the name is almost certainly not the model.":
+    "Si un revendeur vend gratuitement des poids de pointe, le nom n'est presque certainement pas le modèle.",
+  "Impressive list, single-use budget: treat it as a novelty.":
+    "Liste impressionnante, budget à usage unique : à traiter comme une curiosité.",
+  "Indistinguishable from the other re-exports; keep one, not five.":
+    "Indissociable des autres re-exportateurs ; n'en gardez qu'un, pas cinq.",
+  "Little public information and no published quotas.":
+    "Peu d'informations publiques et aucun quota publié.",
+  "Low ceiling compared with the major hubs.": "Plafond bas comparé aux grands hubs.",
+  "Manual approval, tiny catalogue: the friction costs more than the access.":
+    "Approbation manuelle, catalogue minuscule : la friction coûte plus cher que l'accès.",
+  "No published operator and no verifiable quota source.":
+    "Aucun opérateur publié et aucune source de quota vérifiable.",
+  "No published quotas, so capacity cannot be planned.":
+    "Aucun quota publié, donc la capacité ne peut pas être planifiée.",
+  "One model, fifteen requests, better equivalents elsewhere.":
+    "Un modèle, quinze requêtes, de meilleurs équivalents ailleurs.",
+  "Phone verification for three models that are all available elsewhere.":
+    "Vérification par téléphone pour trois modèles tous disponibles ailleurs.",
+  "Re-export tier: no independent capacity behind it.":
+    "Palier de re-exportation : aucune capacité indépendante derrière.",
+  "Reasonable fallback volume, unclear operator.": "Volume de secours raisonnable, opérateur flou.",
+  "Same structured-output problem as LLM.Kiwi, with no unique models.":
+    "Même problème de sortie structurée que LLM.Kiwi, sans modèles uniques.",
+  "Schema failures break tool calling, which is the whole point of an agent.":
+    "Les échecs de schéma cassent l'appel d'outils, qui est tout l'intérêt d'un agent.",
+  "Small allowance, unverified operator.": "Petit quota, opérateur non vérifié.",
+  "Small allowances and no published operator.": "Petits quotas et aucun opérateur publié.",
+  "Small catalogue and no published operator.": "Petit catalogue et aucun opérateur publié.",
+  "Solid tool calling, but trial keys are time-boxed rather than self-replenishing.":
+    "Appel d'outils solide, mais les clés d'essai sont limitées dans le temps plutôt qu'auto-renouvelables.",
+  "Straight from the source, and the code models are purpose-built rather than re-tuned.":
+    "Directement de la source, et les modèles de code sont conçus sur mesure plutôt que réajustés.",
+  "Strong models, but the endpoint is slow and the free allowance is opaque.":
+    "Modèles solides, mais le point de terminaison est lent et le quota gratuit est opaque.",
+  "Structurally a re-export, so it fails when OpenRouter's pool is congested.":
+    "Structurellement un re-exportateur, donc ça échoue quand le pool d'OpenRouter est congestionné.",
+  "Ten requests per model per day is too thin to build on.":
+    "Dix requêtes par modèle et par jour, c'est trop peu pour s'appuyer dessus.",
+  "The local daemon is the honest unlimited option; the cloud tier resets weekly.":
+    "Le démon local est l'option honnêtement illimitée ; le palier cloud se réinitialise chaque semaine.",
+  "The same model is faster and freer on Groq or Cloudflare.":
+    "Le même modèle est plus rapide et plus libre sur Groq ou Cloudflare.",
+  "Tight per-minute limits and an unverified operator.": "Limites par minute serrées et opérateur non vérifié.",
+  "Too thin and too slow to route real work through.": "Trop peu et trop lent pour y faire transiter du vrai travail.",
+  "Unlimited in name, rate-shaped in practice.": "Illimité de nom, limité en débit dans les faits.",
+  "Unspecified limits and no operator disclosure.": "Limites non précisées et aucune divulgation d'opérateur.",
+  "Useful batch capacity; treat the advertised volume as unverified until your dashboard agrees.":
+    "Capacité de traitement par lots utile ; considérez le volume annoncé comme non vérifié jusqu'à confirmation par votre tableau de bord.",
+  "Wide model coverage and no token cap, but per-model RPM is modest.":
+    "Large couverture de modèles et aucun plafond de jetons, mais le RPM par modèle est modeste.",
+  "Widest model list here, but the credit cap is exhausted in a handful of calls.":
+    "La plus large liste de modèles ici, mais le plafond de crédits s'épuise en une poignée d'appels.",
+  "Worth keeping as volume, once your own dashboard confirms the numbers.":
+    "Vaut la peine d'être gardé pour le volume, une fois que votre propre tableau de bord confirme les chiffres.",
+  "Your own endpoint: quotas and jurisdiction are whatever you configured.":
+    "Votre propre point de terminaison : quotas et juridiction sont ceux que vous avez configurés.",
+
+  // ---- Provider dossier notes ---------------------------------------------------------
+  "Hosted in Russia; some free models are region-sensitive.":
+    "Hébergé en Russie ; certains modèles gratuits sont sensibles à la région.",
+  "Imported from the legacy catalog without a dossier. Needs an editor.":
+    "Importé de l'ancien catalogue sans dossier. Nécessite une relecture éditoriale.",
+  "New accounts may go through manual review.": "Les nouveaux comptes peuvent passer par une vérification manuelle.",
+  "Rate limit is generous but the key is your own upstream key (BYOK).":
+    "La limite de débit est généreuse mais la clé est votre propre clé en amont (BYOK).",
+  "Requires both an API token and the Cloudflare account id.":
+    "Nécessite à la fois un jeton API et l'identifiant de compte Cloudflare.",
+  "Requires phone verification before free monthly tokens unlock.":
+    "Nécessite une vérification par téléphone avant le déblocage des jetons mensuels gratuits.",
+  "Weekly credit cap; not suitable as a chain's first entry.":
+    "Plafond de crédits hebdomadaire ; ne convient pas comme premier nœud d'une chaîne.",
+
+  // ---- Provider free-tier quota prose (numbers/units left as-is; prose translated) ---
+  "$0.10 of monthly inference credits": "0,10 $ de crédits d'inférence par mois",
+  "$20 of credits per day": "20 $ de crédits par jour",
+  "5-hour session · weekly reset": "Session de 5 heures · réinitialisation hebdomadaire",
+  "5–20 RPM · 20–500 RPD · varies per model": "5–20 RPM · 20–500 RPD · varie selon le modèle",
+  "~2–30 RPM · 50,000 TPM shared pool": "~2–30 RPM · 50 000 TPM en pool partagé",
+  "40 RPM per model · uncapped TPD": "40 RPM par modèle · TPD illimité",
+  "Free 'on the house' models": "Modèles gratuits « maison »",
+  "Free DeepSeek models · ~1 request per 5 minutes": "Modèles DeepSeek gratuits · ~1 requête toutes les 5 minutes",
+  "Free community-hosted models": "Modèles gratuits hébergés par la communauté",
+  "Free laguna-s-2.1 · DeepSeek models paid": "laguna-s-2.1 gratuit · modèles DeepSeek payants",
+  "Free models · limits unspecified": "Modèles gratuits · limites non précisées",
+  "Free models · no published rate limit": "Modèles gratuits · aucune limite de débit publiée",
+  "Free tier with rate limits": "Palier gratuit avec limites de débit",
+  "Free tier · limited capacity, stability not guaranteed":
+    "Palier gratuit · capacité limitée, stabilité non garantie",
+  "Free tier, limits unspecified": "Palier gratuit, limites non précisées",
+  "Paid model · works with a funded key": "Modèle payant · fonctionne avec une clé approvisionnée",
+  "Selected free models": "Modèles gratuits sélectionnés",
+  "Selected free models · others intermittently unavailable":
+    "Modèles gratuits sélectionnés · les autres sont indisponibles par intermittence",
+  "Uncapped requests for :free models": "Requêtes illimitées pour les modèles :free",
+  "Uncapped TPD · 1 concurrent": "TPD illimité · 1 simultané",
+  "Unlimited requests · 10 RPM": "Requêtes illimitées · 10 RPM",
+
+  // ---- Provider catalog notes (src/catalog/providers.ts) -----------------------------
+  "Alibaba's official inference API with canonical DeepSeek model names. All four DeepSeek models verified. Requires an Alibaba Cloud account bound to the ModelScope token before requests work. Paid per-token.":
+    "API d'inférence officielle d'Alibaba avec les noms de modèles DeepSeek canoniques. Les quatre modèles DeepSeek sont vérifiés. Nécessite un compte Alibaba Cloud lié au jeton ModelScope avant que les requêtes fonctionnent. Payant au jeton.",
+  "DeepSeek-R1-0528-Qwen3-8B and qwen3.8-27b verified. deepseek/deepseek-chat-v3.1 is advertised in /models but returns model_not_found (no available channel) and is intentionally not listed.":
+    "DeepSeek-R1-0528-Qwen3-8B et qwen3.8-27b vérifiés. deepseek/deepseek-chat-v3.1 est annoncé dans /models mais renvoie model_not_found (aucun canal disponible) et n'est volontairement pas listé.",
+  "deepseek-v4-flash and grok-4.6 verified free. glm-5.3-flash is advertised free but had no serving channel (get_channel_failed) at test time.":
+    "deepseek-v4-flash et grok-4.6 vérifiés gratuits. glm-5.3-flash est annoncé gratuit mais n'avait aucun canal de service (get_channel_failed) au moment du test.",
+  "deepseek-v4-flash-free responds without an observed per-request cap. deepseek-v4-pro-free consistently resets the connection and is intentionally not listed.":
+    "deepseek-v4-flash-free répond sans plafond par requête observé. deepseek-v4-pro-free réinitialise systématiquement la connexion et n'est volontairement pas listé.",
+  "Free models run on shared compute: capacity is limited and service stability/concurrency are not guaranteed.":
+    "Les modèles gratuits tournent sur du calcul partagé : la capacité est limitée et la stabilité/simultanéité du service n'est pas garantie.",
+  "Marked paid (per-token pricing, model metadata free:false) but verified serving fine with a funded key. Stability is experimental.":
+    "Marqué payant (tarification au jeton, métadonnées de modèle free:false) mais vérifié fonctionnel avec une clé approvisionnée. Stabilité expérimentale.",
+  "NVIDIA NIM replaced depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model). The free tier's ToS scopes usage to evaluation/prototyping, not production.":
+    "NVIDIA NIM a remplacé les crédits d'essai épuisables par une limite de débit récurrente par compte (40 RPM par défaut, varie selon le modèle). Les conditions d'utilisation du palier gratuit limitent l'usage à l'évaluation/prototypage, pas à la production.",
+  "Only these three :free models verified working. minimax-m2.7-free, gpt-oss-20b-free, kimi-for-coding-free, and mimo-v2-flash-free were no_available_channel at test time, and laguna-s-2.1-free returned an HTTP 429 — model availability on the free tier is intermittent.":
+    "Seuls ces trois modèles :free ont été vérifiés fonctionnels. minimax-m2.7-free, gpt-oss-20b-free, kimi-for-coding-free et mimo-v2-flash-free étaient en no_available_channel au moment du test, et laguna-s-2.1-free a renvoyé un HTTP 429 — la disponibilité des modèles sur le palier gratuit est intermittente.",
+  "Rate-limited to roughly one request every 5 minutes per key (measured, not published). Fine for one-off tests, too slow for real chains.":
+    "Limité à environ une requête toutes les 5 minutes par clé (mesuré, non publié). Correct pour des tests ponctuels, trop lent pour de vraies chaînes.",
+  "Requires a Telegram account bound and a required group joined before the API unlocks. laguna-s-2.1 is free and verified; deepseek-v4-flash and deepseek-v4-pro need paid credits.":
+    "Nécessite un compte Telegram lié et l'adhésion à un groupe obligatoire avant que l'API se débloque. laguna-s-2.1 est gratuit et vérifié ; deepseek-v4-flash et deepseek-v4-pro nécessitent des crédits payants.",
+  "Requires email verification before requests start working. On free tier the same caveat applies: shared, capacity-limited compute.":
+    "Nécessite une vérification par e-mail avant que les requêtes fonctionnent. Sur le palier gratuit, la même réserve s'applique : calcul partagé à capacité limitée.",
 };
