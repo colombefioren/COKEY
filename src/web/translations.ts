@@ -1217,7 +1217,7 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "Non publié par le fournisseur - à considérer comme non vérifié.",
 
   // ---- Login form ------------------------------------------------------------------
-  "By continuing you agree to the": "En continuant, vous acceptez les",
+  "By continuing you agree to the terms.": "En continuant, vous acceptez les conditions.",
 
   // ---- Insights card kickers --------------------------------------------------------
   "Fun fact": "Anecdote",

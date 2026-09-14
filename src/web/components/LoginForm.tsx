@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { api, ApiError } from "../api.js";
-import { href } from "../router.js";
 import { CokeyLogo } from "./Logo.js";
 import { useLang } from "../lang.js";
 
@@ -74,13 +73,7 @@ export function LoginForm({ onLogin }: { onLogin: () => void }) {
           </button>
         </form>
 
-        <p className="small faint login-terms">
-          {t("By continuing you agree to the")}{" "}
-          <a href={href("/terms")} target="_blank" rel="noreferrer">
-            {t("Terms")}
-          </a>
-          .
-        </p>
+        <p className="small faint login-terms">{t("By continuing you agree to the terms.")}</p>
       </div>
     </div>
   );

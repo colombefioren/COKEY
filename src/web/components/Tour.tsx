@@ -103,22 +103,35 @@ export function Tour({
     };
     measure();
 
-    // The target can still move after this first, synchronous pass: a
-    // self-hosted font finishing its swap-in reflows any text sized against
-    // it (including copy above the target), and the very next paint can
-    // land the target a few pixels from where it was just measured. One
-    // rAF re-measure catches that same-frame settling; `fonts.ready`
-    // catches the swap itself whenever it lands.
-    const raf = requestAnimationFrame(measure);
-    let cancelled = false;
-    void document.fonts?.ready?.then(() => {
-      if (!cancelled) measure();
+    // The target can keep moving well after this first pass: a page whose
+    // panel title includes a fetched count (`Egress pool (69)`) renders once
+    // with no count and again once the request resolves, a self-hosted font
+    // swapping in reflows whatever text sits above the target, images finish
+    // loading, and so on - there is no single moment "layout has settled" is
+    // guaranteed. A MutationObserver on the whole page re-measures on every
+    // one of those, for as long as this step is showing, which is the only
+    // way to be right regardless of *why* something moved rather than
+    // guessing which specific cause to wait for.
+    let queued = false;
+    const remeasure = () => {
+      if (queued) return;
+      queued = true;
+      requestAnimationFrame(() => {
+        queued = false;
+        measure();
+      });
+    };
+    const observer = new MutationObserver(remeasure);
+    observer.observe(document.body, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      characterData: true,
     });
 
     window.addEventListener("resize", measure);
     return () => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
+      observer.disconnect();
       window.removeEventListener("resize", measure);
     };
   }, [open, step, currentPath, navigate]);
