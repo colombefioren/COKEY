@@ -14,9 +14,11 @@ import { Insights } from "./components/Insights.js";
 import { KineticText } from "./components/KineticText.js";
 import { Sidebar, type NavItem } from "./components/Sidebar.js";
 import { StatusBar } from "./components/StatusBar.js";
+import { Tour, TOUR_SEEN_KEY } from "./components/Tour.js";
 import {
   IconActivity,
   IconBook,
+  IconCompass,
   IconGauge,
   IconGrid,
   IconKey,
@@ -89,11 +91,23 @@ function Shell() {
     () => window.localStorage.getItem(NAV_COLLAPSED_KEY) === "1",
   );
   const [navOpen, setNavOpen] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
   const { lang, toggleLang, t } = useLang();
 
   // The gateway always requires a session cookie, so the first authenticated
   // call decides whether to render the login form.
   const [authed, setAuthed] = useState<boolean | null>(null);
+
+  // First authenticated paint, and only if this browser has never finished or
+  // skipped the tour before. A short delay lets the shell settle - the tour's
+  // own spotlight measurement is already resilient to a late layout, but there
+  // is no reason to race it.
+  useEffect(() => {
+    if (authed !== true) return;
+    if (window.localStorage.getItem(TOUR_SEEN_KEY) === "1") return;
+    const timer = window.setTimeout(() => setTourOpen(true), 700);
+    return () => window.clearTimeout(timer);
+  }, [authed]);
 
   const probe = useCallback(async () => {
     try {
@@ -281,6 +295,17 @@ function Shell() {
             <span className={lang === "en" ? "active" : undefined}>EN</span>
             <span className={lang === "fr" ? "active" : undefined}>FR</span>
           </button>
+          <button
+            type="button"
+            className="guide-toggle"
+            data-tour="guide-button"
+            onClick={() => setTourOpen(true)}
+            aria-label={t("Replay the guided tour")}
+            title={t("Replay the guided tour")}
+          >
+            <IconCompass size={17} />
+            <span className="guide-label">{t("Guide")}</span>
+          </button>
           <NotificationsBell refreshKey={refreshKey} onChanged={bump} />
           <LiveStatus />
           <a
@@ -295,6 +320,7 @@ function Shell() {
         </header>
 
         <Insights />
+        <Tour open={tourOpen} onClose={() => setTourOpen(false)} onRequestNavOpen={setNavOpen} />
 
         {/*
          * Keyed on the route so each page remounts: the windows pop in on a real

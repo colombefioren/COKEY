@@ -379,6 +379,102 @@
   margin-bottom: 18px;
 }
 
+/* ---- onboarding tour -------------------------------------------------------- */
+
+/*
+ * A darker scrim than a modal's - this is meant to hold the eye rather than
+ * merely separate a card from the page behind it - with one rectangular
+ * window punched into it via a spotlight element whose own box-shadow fills
+ * everything *outside* itself. That trick keeps the cutout a real DOM box
+ * (so it can transition smoothly between steps) instead of an SVG mask.
+ */
+.tour-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: color-mix(in srgb, var(--text) 20%, transparent);
+  animation: scrim-in 0.24s ease both;
+}
+
+.tour-spot {
+  position: fixed;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px color-mix(in srgb, var(--text) 68%, black 15%);
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+  transition:
+    top 0.32s var(--ease),
+    left 0.32s var(--ease),
+    width 0.32s var(--ease),
+    height 0.32s var(--ease);
+  pointer-events: none;
+}
+
+.tour-card {
+  position: fixed;
+  width: min(300px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--violet-line);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: modal-in 0.3s var(--ease) both;
+}
+
+.tour-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 4px;
+}
+
+.tour-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  margin: 0 0 6px;
+}
+
+.tour-body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.tour-actions button {
+  padding: 7px 13px;
+  font-size: 12.5px;
+}
+
+/*
+ * A hand-drawn arrow, not a geometric one: a single wobbly stroke with an
+ * open, slightly overshot arrowhead, sketched the way someone would circle
+ * something on a screenshot. It is a decoration, not a precise pointer, so
+ * the exact path only has to read as "this way," not line up to the pixel.
+ */
+.tour-arrow {
+  position: absolute;
+  color: var(--violet);
+}
+.tour-arrow-left {
+  left: -44px;
+  top: 6px;
+}
+.tour-arrow-up {
+  top: -42px;
+  left: 50%;
+  margin-left: -17px;
+}
+
 /* ---- login ---------------------------------------------------------------- */
 
 .login {

@@ -115,7 +115,7 @@ export function NotificationsBell({
   ).length;
 
   return (
-    <div className="notif-bell" ref={rootRef}>
+    <div className="notif-bell" ref={rootRef} data-tour="notif-bell">
       <button
         type="button"
         className={`notif-trigger${count > 0 ? " has-alerts" : ""}`}

@@ -6,7 +6,7 @@ import { SIDEBAR_TEXT, type Lang } from "../i18n.js";
 import { useLang } from "../lang.js";
 
 /** Must match the sidebar-becomes-a-drawer breakpoint in responsive.css. */
-const MOBILE_QUERY = "(max-width: 860px)";
+export const MOBILE_QUERY = "(max-width: 860px)";
 
 export interface NavItem {
   path: string;
@@ -159,6 +159,7 @@ export function Sidebar({
               ref={isActive ? activeRef : undefined}
               className={`nav-item${isActive ? " active" : ""}`}
               href={href(item.path)}
+              data-tour={`nav-${item.path.replace(/^\//, "").replace(/\//g, "-")}`}
               title={item.hint}
               aria-label={collapsed ? item.label : undefined}
               aria-current={isActive ? "page" : undefined}

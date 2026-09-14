@@ -1162,4 +1162,36 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "Vous testez beaucoup de clés à la suite ? Certains fournisseurs comptent les appels de vérification dans le même quota que le trafic réel - mieux vaut étaler un peu si vous en aurez besoin bientôt.",
   "Checking every model in a row can eat into a provider's daily quota faster than real usage would. Consider testing just the ones you're about to chain.":
     "Vérifier tous les modèles à la suite peut entamer le quota journalier d'un fournisseur plus vite qu'un usage réel. Testez plutôt seulement ceux que vous allez chaîner.",
+
+  // ---- Onboarding tour -------------------------------------------------------------
+  Guide: "Guide",
+  "Replay the guided tour": "Rejouer le guide",
+  "Guided tour": "Visite guidée",
+  Skip: "Passer",
+  Back: "Retour",
+  Next: "Suivant",
+  "Welcome to COKEY": "Bienvenue sur COKEY",
+  "A quick, skippable tour of where everything lives. Next takes you through it, Skip drops you straight in - either way, click the compass in the topbar to see this again.":
+    "Une visite rapide, que vous pouvez passer, de tout ce qu'il y a à savoir. Suivant vous guide, Passer vous laisse explorer directement - dans les deux cas, la boussole dans la barre du haut la relance à tout moment.",
+  "A live overview: chains, keys and connected providers, and the resilience layer that caught your last failure, if any did.":
+    "Une vue en direct : chaînes, clés et fournisseurs connectés, et la couche de résilience qui a intercepté votre dernier échec, s'il y en a eu un.",
+  "Build a chain here: one node per provider and model, with the keys each node may use, in the order you want them tried.":
+    "Construisez une chaîne ici : un nœud par fournisseur et modèle, avec les clés que chaque nœud peut utiliser, dans l'ordre où vous voulez qu'elles soient essayées.",
+  "Paste a free API key from any provider - COKEY verifies it inline before it can join a chain.":
+    "Collez une clé API gratuite de n'importe quel fournisseur - COKEY la vérifie sur-le-champ avant qu'elle ne puisse rejoindre une chaîne.",
+  "Browse the curated free-model catalog, test any model with one real request, and check the rankings boards.":
+    "Parcourez le catalogue de modèles gratuits, testez n'importe quel modèle avec une vraie requête, et consultez les classements.",
+  "Per-key throughput and request history, so two keys of the same provider are never indistinguishable.":
+    "Débit par clé et historique des requêtes, pour que deux clés d'un même fournisseur ne soient jamais indissociables.",
+  "The live route": "La route en direct",
+  "This chip names the node, the key and the exit IP serving your last request, live - click it for the full routing feed.":
+    "Cette puce nomme le nœud, la clé et l'IP de sortie qui servent votre dernière requête, en direct - cliquez dessus pour le flux de routage complet.",
+  "A key cooling down, a model going unavailable, a proxy dying - anything that needs a look lands here.":
+    "Une clé qui refroidit, un modèle qui devient indisponible, un proxy qui meurt - tout ce qui mérite un coup d'œil atterrit ici.",
+  "Come back any time": "Revenez quand vous voulez",
+  "This compass replays the tour whenever you want it - COKEY won't show it again on its own once you've seen it.":
+    "Cette boussole rejoue la visite quand vous le souhaitez - COKEY ne la montrera plus de lui-même une fois que vous l'aurez vue.",
+  "That's everything": "C'est tout",
+  "Go connect a free key and build your first chain. Terms and About, in the sidebar, are where bug reports and provider tips live.":
+    "Allez connecter une clé gratuite et construire votre première chaîne. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
 };

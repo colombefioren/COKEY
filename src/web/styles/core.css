@@ -712,6 +712,28 @@ h3 {
   box-shadow: var(--shadow);
 }
 
+/* The tour's topbar entry point: always there, so "how do I see that again"
+   has one obvious answer. Icon-only on a narrow screen, per responsive.css. */
+.guide-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.guide-toggle:hover:not(:disabled) {
+  color: var(--violet);
+  border-color: var(--violet-line);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
 /* ---- notifications --------------------------------------------------------
  * "Needs attention", as a bell reachable from every screen instead of a
  * fixture on the Dashboard.

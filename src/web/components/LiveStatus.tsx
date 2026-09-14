@@ -138,7 +138,7 @@ export function LiveStatus() {
   const key = route?.credentialDescription ?? "—";
 
   return (
-    <div className="live">
+    <div className="live" data-tour="live-status">
       <button
         type="button"
         className={`live-chip ${route?.active ? "active" : "idle"}`}
