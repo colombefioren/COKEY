@@ -526,6 +526,19 @@
   border-radius: 14px;
 }
 
+/* Picked before the first login, because the guided tour that greets it reads
+   in whichever language is current at that moment. */
+.login-lang-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.login-terms {
+  margin: 16px 0 0;
+  text-align: center;
+}
+
 /* ---- dialog interiors ----------------------------------------------------- */
 
 /*

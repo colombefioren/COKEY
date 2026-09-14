@@ -1201,4 +1201,7 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   // ---- Connect-provider modal free-tier banner ------------------------------------
   "Not published by the provider - treat this as unverified.":
     "Non publié par le fournisseur - à considérer comme non vérifié.",
+
+  // ---- Login form ------------------------------------------------------------------
+  "By continuing you agree to the": "En continuant, vous acceptez les",
 };
