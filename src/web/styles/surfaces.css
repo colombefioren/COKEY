@@ -335,6 +335,12 @@
  * dirt, and it is the single most visible "this was a default" tell in any UI.
  */
 .overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 20px;
   background: color-mix(in srgb, var(--text) 42%, transparent);
   backdrop-filter: blur(6px) saturate(120%);
   animation: scrim-in 0.24s ease both;
@@ -342,6 +348,9 @@
 
 .modal {
   position: relative;
+  width: min(560px, 100%);
+  max-height: 86vh;
+  overflow: auto;
   border: none;
   border-radius: 22px;
   padding: 24px 26px;
@@ -350,7 +359,19 @@
   animation: modal-in 0.34s var(--ease) both;
 }
 
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 .modal h3 {
+  margin: 0 0 4px;
   font-family: var(--font-display);
   font-size: 21px;
   font-weight: 400;
@@ -361,6 +382,13 @@
   color: var(--muted);
   font-size: 12px;
   margin-bottom: 18px;
+}
+
+.modal .modal-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 18px;
 }
 
 /* ---- onboarding tour -------------------------------------------------------- */
@@ -515,6 +543,10 @@
 /* ---- login ---------------------------------------------------------------- */
 
 .login {
+  display: grid;
+  place-items: center;
+  height: 100vh;
+  padding: 20px;
   position: relative;
   overflow: hidden;
 }
@@ -544,22 +576,45 @@
 .login-card {
   position: relative;
   z-index: 1;
+  width: min(400px, 92vw);
   border: 1.5px solid var(--border-strong);
   border-radius: 30px;
   padding: 36px 32px;
   background: var(--surface-glass);
   backdrop-filter: blur(16px) saturate(140%);
   box-shadow: var(--shadow-pop);
+  animation: modal-in 0.5s var(--ease) both;
+}
+
+.login-card .login-mark {
+  display: block;
+  margin: 0 auto 14px;
+  color: var(--violet);
 }
 
 .login-card h1 {
+  margin: 0 0 8px;
   font-family: var(--font-display);
   font-size: 28px;
   font-weight: 400;
   letter-spacing: 0.01em;
 }
 
+.login-card .subtitle {
+  color: var(--muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+
+.login-card form {
+  display: grid;
+  gap: 10px;
+}
+
 .login-card input[type="password"] {
+  font-size: 14px;
+  padding: 11px 13px;
+  font-family: var(--mono);
   border-radius: 14px;
 }
 
@@ -787,15 +842,21 @@
  * ignored forever.
  */
 .statusbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
   gap: 14px;
   margin-top: 20px;
   padding: 11px 16px;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: linear-gradient(160deg, var(--surface), var(--surface-2));
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  color: var(--muted);
   font-size: 11.5px;
 }
 .statusbar .status-cell strong {
+  color: var(--text);
   font-family: var(--font-display);
   font-style: italic;
   font-size: 15px;
@@ -809,6 +870,7 @@
   border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--surface);
+  color: var(--faint);
   font-variant-numeric: tabular-nums;
 }
 /* The dot is drawn here and nowhere else: it is the one thing on this bar that
@@ -824,6 +886,8 @@
 .statusbar .live-flag.on {
   border-color: var(--sage-line);
   background: var(--sage-soft);
+  color: var(--sage);
+  font-weight: 600;
 }
 .statusbar .live-flag.on::before {
   border-color: var(--sage);
@@ -887,7 +951,11 @@ a:focus-visible,
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--faint);
+  background-clip: content-box;
 }
