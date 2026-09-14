@@ -34,7 +34,7 @@ export function AddCredentialModal({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ValidationResult | undefined>();
   const [error, setError] = useState<string | undefined>();
-  const [useProxy, setUseProxy] = useState(true);
+  const [useProxy, setUseProxy] = useState(false);
   const [agreed, setAgreed] = useState(false);
 
   const needsAccountId = entry.provider?.credentialFields.includes("accountId") ?? false;
@@ -265,6 +265,15 @@ export function AddCredentialModal({
               )}
             </span>
           </label>
+
+          {entry.provider?.signupUrl ? (
+            <div className="hint-box" style={{ marginTop: 14 }}>
+              {t("Need a key?")}{" "}
+              <a href={entry.provider.signupUrl} target="_blank" rel="noreferrer">
+                {t("Open")} {entry.provider.displayName} ↗
+              </a>
+            </div>
+          ) : null}
 
           {busy ? (
             <div className="verify pending">

@@ -29,7 +29,7 @@ export function ConnectProviderModal({
   const [description, setDescription] = useState("");
   const [secret, setSecret] = useState("");
   const [accountId, setAccountId] = useState("");
-  const [useProxy, setUseProxy] = useState(true);
+  const [useProxy, setUseProxy] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<ValidationResult | undefined>();
