@@ -1123,17 +1123,6 @@
   background: var(--violet);
 }
 
-.provider-card .dossier {
-  border-radius: 14px;
-}
-.provider-card .dossier > div {
-  padding: 8px 12px;
-}
-.provider-card .dossier dt {
-  color: var(--muted);
-  font-weight: 650;
-}
-
 .model-provider {
   border: 1.5px solid var(--border);
   border-radius: 18px 20px 16px 19px;

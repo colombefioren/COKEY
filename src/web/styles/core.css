@@ -2412,35 +2412,58 @@ button.play.fail {
   background: var(--rose);
 }
 
+/* The whole card opens the dossier now, not just the Models button inside it. */
+.provider-card.clickable {
+  cursor: pointer;
+}
+.provider-card.clickable:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+}
+
+/*
+ * Four facts about a provider, as a small grid of tiles rather than a striped
+ * settings table - the shape a definition list defaults to reads as a form,
+ * and this is reference material, not something anyone is filling in.
+ */
 .provider-card .dossier {
   display: grid;
-  gap: 0;
-  margin: 12px 0 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 14px 0 12px;
 }
 .provider-card .dossier > div {
-  display: grid;
-  grid-template-columns: 92px minmax(0, 1fr);
-  gap: 10px;
-  padding: 7px 11px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
   background: var(--surface-2);
 }
-.provider-card .dossier > div + div {
-  border-top: 1px solid var(--border);
-}
 .provider-card .dossier dt {
-  color: var(--faint);
+  color: var(--muted);
   font-size: 10.5px;
+  font-weight: 650;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  align-self: center;
 }
 .provider-card .dossier dd {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
+  font-weight: 500;
   color: var(--text);
+  line-height: 1.4;
+}
+/* Free tier earns the same accent as the card's own quota chip - it is the
+   fact most worth a second glance, so it should not read as identical to
+   "type" or "reviewed". */
+.provider-card .dossier > div.dossier-freetier {
+  border-color: var(--sage-line);
+  background: var(--sage-soft);
+}
+.provider-card .dossier > div.dossier-freetier dt {
+  color: var(--sage);
 }
 
 /* The full model list, revealed per provider. */

@@ -282,7 +282,18 @@ function ProviderDossierCard({
   const checkedAt = inventory?.inventoryCheckedAt;
 
   return (
-    <div className="card provider-card">
+    <div
+      className="card provider-card clickable"
+      role="button"
+      tabIndex={0}
+      onClick={() => setOpen(true)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          setOpen(true);
+        }
+      }}
+    >
       <div className="title">
         {row.displayName}
         <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{t(dossier.verdict)}</span>
@@ -339,7 +350,17 @@ function ProviderDossierCard({
             : t("connect a key to check")}
       </div>
 
-      <div className="row" style={{ marginTop: 12, flexWrap: "wrap" }}>
+      {/*
+       * The whole card opens the dossier now, so this row's own clicks must
+       * never bubble up to it - Connect and re-check are different actions
+       * entirely, and even the Models button, which happens to do the same
+       * thing as the card, should not fire it twice.
+       */}
+      <div
+        className="row"
+        style={{ marginTop: 12, flexWrap: "wrap" }}
+        onClick={(event) => event.stopPropagation()}
+      >
         <button onClick={() => onConnect(row)}>{t("Connect")}</button>
         <button className="secondary" type="button" onClick={() => setOpen(true)}>
           {t("Models")} ({row.knownModels.length})
@@ -377,7 +398,7 @@ function ProviderDossierCard({
               <dt>{t("Type")}</dt>
               <dd>{t(KIND_LABEL[dossier.kind])}</dd>
             </div>
-            <div>
+            <div className="dossier-freetier">
               <dt>{t("Free tier")}</dt>
               {/* The dossier's own one-liner wins when it has one. */}
               <dd>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</dd>
