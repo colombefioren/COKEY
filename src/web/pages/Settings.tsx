@@ -154,7 +154,7 @@ export function Settings({
               />
               <div className="small faint" style={{ marginTop: 5 }}>
                 {t(
-                  "Loopback by default. Binding to 0.0.0.0 exposes the gateway to your network - set an auth token first.",
+                  "127.0.0.1 if only programs on this machine ever talk to it. Running COKEY in a container or behind a hosting platform's own proxy needs 0.0.0.0 instead - set an auth token first, since that's what exposes the gateway beyond this machine.",
                 )}
               </div>
             </div>

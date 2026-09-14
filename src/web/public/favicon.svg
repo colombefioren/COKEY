@@ -1,19 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 128" role="img" aria-label="COKEY">
-  <defs>
-    <linearGradient id="ramp" x1="34" y1="24" x2="196" y2="118" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFB3D4" />
-      <stop offset="0.52" stop-color="#B98CF6" />
-      <stop offset="1" stop-color="#6B4BE0" />
-    </linearGradient>
-  </defs>
   <path
     d="M84 50 C75 44 63 43 52 50 C32 62 32 90 52 102 C72 114 96 102 96 76 C96 50 120 38 140 50 C160 62 160 90 140 102 C120 114 96 102 96 76"
     fill="none"
-    stroke="url(#ramp)"
+    stroke="#F482B4"
     stroke-width="14"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
-  <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#FFB3D4" />
-  <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#6B4BE0" opacity="0.85" />
+  <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#F482B4" />
+  <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#F482B4" opacity="0.6" />
 </svg>

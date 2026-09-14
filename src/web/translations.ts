@@ -649,8 +649,8 @@ export const FR: Record<string, string> = {
   "Loading settings…": "Chargement des paramètres…",
   Port: "Port",
   Host: "Hôte",
-  "Loopback by default. Binding to 0.0.0.0 exposes the gateway to your network - set an auth token first.":
-    "Loopback par défaut. Se lier à 0.0.0.0 expose la passerelle à votre réseau - définissez d'abord un jeton d'authentification.",
+  "127.0.0.1 if only programs on this machine ever talk to it. Running COKEY in a container or behind a hosting platform's own proxy needs 0.0.0.0 instead - set an auth token first, since that's what exposes the gateway beyond this machine.":
+    "127.0.0.1 si seuls des programmes sur cette machine lui parlent. Faire tourner COKEY dans un conteneur ou derrière le proxy propre d'une plateforme d'hébergement demande plutôt 0.0.0.0 - définissez d'abord un jeton d'authentification, puisque c'est ce qui expose la passerelle au-delà de cette machine.",
   "Log level": "Niveau de log",
   "Data directory": "Répertoire de données",
   "Admin password": "Mot de passe admin",

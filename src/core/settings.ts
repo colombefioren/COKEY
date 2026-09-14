@@ -179,8 +179,15 @@ export function validateSettings(settings: Settings): Settings {
 export function applyEnvOverrides(settings: Settings, env: NodeJS.ProcessEnv): Settings {
   const next: Settings = { ...settings, fallback: { ...settings.fallback } };
 
-  if (env.COKEY_PORT) {
-    const port = Number(env.COKEY_PORT);
+  // `PORT` is the convention most hosting platforms (Render, Heroku, Fly, …)
+  // inject to say which port a web service must listen on — it is assigned by
+  // the platform, not chosen by whoever deploys, so COKEY has to read it on
+  // its own rather than expect a `COKEY_PORT` someone remembered to set to
+  // match. The COKEY-prefixed variable still wins when both are present, for
+  // a setup that deliberately pins its own port.
+  const portOverride = env.COKEY_PORT ?? env.PORT;
+  if (portOverride) {
+    const port = Number(portOverride);
     if (Number.isInteger(port) && port >= 0 && port <= 65535) next.port = port;
   }
   if (env.COKEY_HOST) next.host = env.COKEY_HOST;

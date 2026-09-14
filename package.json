@@ -1,7 +1,7 @@
 {
   "name": "cokey",
   "version": "0.1.0",
-  "description": "Local LLM credential pool and chain-fallback gateway",
+  "description": "COKEY: an LLM credential pool and chain-fallback gateway",
   "keywords": [
     "llm",
     "gateway",
