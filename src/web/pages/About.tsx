@@ -27,6 +27,9 @@ export function About() {
                 "Pool the free API keys you already have into ordered chains, behind one OpenAI-compatible endpoint. When a key runs out, the next one takes over and the client never notices. It runs on your machine, encrypted at rest, and sends nothing anywhere.",
               )}
             </p>
+            <span className="badge ok" style={{ marginBottom: 12 }}>
+              {t("If it's not free, it's not in COKEY")}
+            </span>
             <div className="about-actions">
               <a className="btn" href={REPO_URL} target="_blank" rel="noreferrer">
                 {t("Source on GitHub")}
