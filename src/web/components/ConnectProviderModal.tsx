@@ -2,6 +2,7 @@ import { useState } from "react";
 import { api } from "../api.js";
 import { href } from "../router.js";
 import type { ProviderStatus, ValidationResult } from "../types.js";
+import { IconSparkle } from "./Icons.js";
 import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
@@ -121,9 +122,22 @@ export function ConnectProviderModal({
   return (
     <Modal
       title={`${t("Connect")} ${provider.displayName}`}
-      subtitle={`${provider.freeTier.summary} · ${t("the key never leaves this machine")}`}
+      subtitle={t("the key never leaves this machine")}
       onClose={onClose}
     >
+      <div className="freetier-banner">
+        <IconSparkle size={18} />
+        <div>
+          <div className="freetier-eyebrow">{t("Free tier")}</div>
+          <div className="freetier-summary">{provider.freeTier.summary}</div>
+          {provider.freeTier.quotaSource === "unknown" ? (
+            <div className="freetier-caveat">
+              {t("Not published by the provider - treat this as unverified.")}
+            </div>
+          ) : null}
+        </div>
+      </div>
+
       <label className="selected-item">
         <input
           type="checkbox"

@@ -1197,4 +1197,8 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "This provider does not publish its free-tier limits.":
     "Ce fournisseur ne publie pas ses limites de palier gratuit.",
   "Published by the provider.": "Publié par le fournisseur.",
+
+  // ---- Connect-provider modal free-tier banner ------------------------------------
+  "Not published by the provider - treat this as unverified.":
+    "Non publié par le fournisseur - à considérer comme non vérifié.",
 };

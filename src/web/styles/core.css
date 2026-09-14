@@ -1970,6 +1970,48 @@ tbody tr:hover td:first-child {
   line-height: 1.7;
 }
 
+/*
+ * The connect-provider modal's free-tier callout. A plain sentence in the
+ * subtitle read as boilerplate the moment there was a second sentence next to
+ * it - this is the one number in the whole dialog that actually decides
+ * whether to keep going, so it gets its own bordered, gradient-lit block
+ * instead of sharing a line with "the key never leaves this machine."
+ */
+.freetier-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+  border: 1px solid var(--violet-line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--violet-soft), var(--surface) 70%);
+  color: var(--violet-strong);
+}
+.freetier-banner svg {
+  flex: none;
+  margin-top: 2px;
+}
+.freetier-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+.freetier-summary {
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.freetier-caveat {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 400;
+}
+
 code {
   font-family: var(--mono);
   background: var(--surface-3);
