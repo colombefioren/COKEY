@@ -291,7 +291,7 @@ export class Cokey {
 
     this.rankingsUrl =
       env.COKEY_RANKINGS_URL ??
-      "https://raw.githubusercontent.com/colombefioren/COKEY--RANKINGS/main/content/rankings.json";
+      "https://raw.githubusercontent.com/colombefioren/COKEY--BUNDLE/main/content/rankings.json";
 
     // A pool supplied through the environment is seeded once; the UI can add,
     // disable and remove entries afterwards without touching the database by
