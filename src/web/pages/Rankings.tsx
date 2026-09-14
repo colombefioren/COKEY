@@ -194,7 +194,9 @@ function SkillBoard({ data }: { data: RankingsResponse }) {
                                   style={{ width: `${Math.min(100, entry.sweScore)}%` }}
                                 />
                               </span>
-                              <span className="mono small">{entry.sweScore.toFixed(1)}%</span>
+                              <span className="mono small swe-percent">
+                                {entry.sweScore.toFixed(1)}%
+                              </span>
                             </span>
                           ) : (
                             <span className="small faint">—</span>
