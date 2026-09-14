@@ -44,8 +44,8 @@ export function ConnectProviderModal({
     if (!hasFields) {
       setError(
         needsAccountId
-          ? t("Description, key and account id are required")
-          : t("Description and key are both required"),
+          ? t("Name, key and account id are required")
+          : t("Name and key are both required"),
       );
       return;
     }
@@ -70,8 +70,8 @@ export function ConnectProviderModal({
     if (!hasFields) {
       setError(
         needsAccountId
-          ? t("Description, key and account id are required")
-          : t("Description and key are both required"),
+          ? t("Name, key and account id are required")
+          : t("Name and key are both required"),
       );
       return;
     }
@@ -137,10 +137,11 @@ export function ConnectProviderModal({
       </label>
 
       <div className="field">
-        <label htmlFor="connect-description">{t("Description")}</label>
+        <label htmlFor="connect-description">{t("Name")}</label>
         <input
           id="connect-description"
           value={description}
+          maxLength={120}
           placeholder={t("Main account, Personal backup, Second account…")}
           onChange={(event) => setDescription(event.target.value)}
         />

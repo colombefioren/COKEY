@@ -219,7 +219,6 @@ export const FR: Record<string, string> = {
     "Pas encore de clé. Connectez un fournisseur et COKEY vérifie la clé avant de la stocker.",
   key: "clé",
   State: "État",
-  Description: "Description",
   Key: "Clé",
   Rate: "Débit",
   Egress: "Sortie",
@@ -260,9 +259,7 @@ export const FR: Record<string, string> = {
   Providers: "Fournisseurs",
 
   // ---- ConnectProviderModal / AddCredentialModal -------------------------------
-  "Description, key and account id are required":
-    "Description, clé et id de compte sont requis",
-  "Description and key are both required": "Description et clé sont toutes deux requises",
+  "Name, key and account id are required": "Nom, clé et id de compte sont requis",
   "Agree to the Terms before saving a key": "Acceptez les Conditions avant d'enregistrer une clé",
   models: "modèles",
   retired: "retiré(s)",

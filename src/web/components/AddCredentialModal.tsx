@@ -207,6 +207,7 @@ export function AddCredentialModal({
             <input
               id="credential-description"
               value={description}
+              maxLength={120}
               placeholder={t("Main account")}
               onChange={(event) => setDescription(event.target.value)}
             />
