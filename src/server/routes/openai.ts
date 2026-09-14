@@ -9,6 +9,7 @@ import {
 } from "../../core/router/engine.js";
 import { ChatCompletionSchema } from "../../core/validation/schemas.js";
 import { pipeStream, prependStream } from "../streaming/sse.js";
+import { createStreamUsageSniffer } from "../../core/providers/transform.js";
 import {
   COKEY_PROVIDER_NAME,
   chainStateMessage,
@@ -136,11 +137,17 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         fallback: result.fallback,
       });
 
-      await pipeStream(reply, stream, {
-        onChunk: () => {
-          /* chunk-level hooks reserved for metrics */
-        },
-      });
+      const sniffer = createStreamUsageSniffer();
+      await pipeStream(reply, stream, { onChunk: sniffer.onChunk });
+
+      const usage = sniffer.usage();
+      let streamedInputTokens = 0;
+      let streamedOutputTokens = 0;
+      if (usage && (usage.inputTokens || usage.outputTokens)) {
+        cokey.credentials.recordTokens(result.credentialId, usage);
+        streamedInputTokens = usage.inputTokens ?? 0;
+        streamedOutputTokens = usage.outputTokens ?? 0;
+      }
 
       cokey.history.record({
         chainAlias: result.chainAlias,
@@ -156,6 +163,8 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         fallbackReason: result.fallbackReason,
         attempts: result.attempts.length,
         stream: true,
+        inputTokens: streamedInputTokens,
+        outputTokens: streamedOutputTokens,
       });
       return reply;
     }

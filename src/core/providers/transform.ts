@@ -1,4 +1,5 @@
 import type { TokenUsage } from "./adapter.js";
+import { openAiUsage } from "./openai-compatible.js";
 
 /**
  * Builders for OpenAI-shaped payloads.
@@ -124,6 +125,50 @@ export function mapFinishReason(reason: string | undefined | null): string {
     return "content_filter";
   }
   return "stop";
+}
+
+/**
+ * Watches the bytes of an SSE response as they are piped to the client and
+ * captures the token usage carried by the last `data:` frame that has one.
+ *
+ * Every adapter with a custom `transformStream` attaches `usage` to its final
+ * chunk (see `openAiChunk` above), and an already-OpenAI-compatible upstream
+ * does the same once asked with `stream_options.include_usage`. Either way
+ * the wire shape landing here is identical, so this is the one place that
+ * needs to understand it - not each call site.
+ */
+export function createStreamUsageSniffer(): {
+  onChunk: (chunk: Uint8Array) => void;
+  usage: () => TokenUsage | undefined;
+} {
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let found: TokenUsage | undefined;
+
+  return {
+    onChunk(chunk: Uint8Array) {
+      buffer += decoder.decode(chunk, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(payload);
+        } catch {
+          continue;
+        }
+
+        const usage = openAiUsage(parsed);
+        if (usage.inputTokens || usage.outputTokens) found = usage;
+      }
+    },
+    usage: () => found,
+  };
 }
 
 /** Content may arrive as a string or as an array of typed parts. */
