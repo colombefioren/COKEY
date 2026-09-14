@@ -848,10 +848,10 @@ itself, so a fresh clone is useful with zero setup and nothing to check out alon
 
 The ranking boards are the one exception: free-tier availability drifts faster than a release
 cycle, so the Rankings screen has a **"check for updates"** button that fetches one published
-JSON bundle and replaces the boards with it — nothing else. It is never fetched automatically,
-never on a timer, never on startup; the compiled boards keep serving until that button is
-clicked and succeeds. The published bundle lives at
-[`colombefioren/COKEY--RANKINGS`](https://github.com/colombefioren/COKEY--RANKINGS) as a single
+JSON bundle and replaces the boards (and the dashboard's Insights fun facts) with it — nothing
+else. It is never fetched automatically, never on a timer, never on startup; the compiled boards
+keep serving until that button is clicked and succeeds. The published bundle lives at
+[`colombefioren/COKEY--BUNDLE`](https://github.com/colombefioren/COKEY--BUNDLE) as a single
 `content/rankings.json` file — edit it, commit, push, and the button picks it up for everyone.
 See [Updating the rankings](#updating-the-rankings) below for its exact shape.
 
@@ -860,8 +860,8 @@ See [Updating the rankings](#updating-the-rankings) below for its exact shape.
 ### Updating the rankings
 
 The published bundle is one JSON file:
-[`content/rankings.json`](https://github.com/colombefioren/COKEY--RANKINGS/blob/main/content/rankings.json)
-in the `COKEY--RANKINGS` repository. It has no build step and no schema tooling — edit the file
+[`content/rankings.json`](https://github.com/colombefioren/COKEY--BUNDLE/blob/main/content/rankings.json)
+in the `COKEY--BUNDLE` repository. It has no build step and no schema tooling — edit the file
 directly, in place, and commit it.
 
 Its shape mirrors `RankingsView` in `src/catalog/rankings.ts` exactly:
@@ -885,13 +885,16 @@ Its shape mirrors `RankingsView` in `src/catalog/rankings.ts` exactly:
   "dropList": [{ "provider": "…", "reason": "…" }],
   "bottomLine": "…",
   "disclaimer": "…",
-  "sources": [{ "label": "…", "url": "https://…" }]
+  "sources": [{ "label": "…", "url": "https://…" }],
+  "funFacts": ["…", "…"]
 }
 ```
 
+`funFacts` is optional — short strings shown one at a time in the dashboard's Insights corner.
+
 To publish an update:
 
-1. Edit `content/rankings.json` in the `COKEY--RANKINGS` repository.
+1. Edit `content/rankings.json` in the `COKEY--BUNDLE` repository.
 2. Commit and push to `main`.
 3. In COKEY, open **Models → Rankings** and click **check for updates**.
 
