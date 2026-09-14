@@ -366,34 +366,34 @@
 /* ---- onboarding tour -------------------------------------------------------- */
 
 /*
- * A darker scrim than a modal's - this is meant to hold the eye rather than
- * merely separate a card from the page behind it - with one rectangular
- * window punched into it via a spotlight element whose own box-shadow fills
- * everything *outside* itself. That trick keeps the cutout a real DOM box
- * (so it can transition smoothly between steps) instead of an SVG mask.
+ * The scrim starts after the sidebar (its `left` is set inline, from a live
+ * measurement of the sidebar's own edge) and clips its own overflow, so the
+ * spotlight's 9999px box-shadow trick never bleeds past that edge - the
+ * sidebar stays fully lit through the whole tour, which is the one place a
+ * person can always tell which page they are on.
  *
- * The scrim itself carries the darkening only when there is no spot to do it
- * instead (the welcome and closing cards, which target nothing): give the
- * scrim its own background *and* keep the spot's box-shadow and the two
- * stack, so the "highlighted" element ends up exactly as dark as everywhere
- * else - a bordered hole, not a spotlight. With a spot present, the spot's
- * own box-shadow is the only thing that darkens the page, which is what
- * actually leaves its own rectangle undimmed.
+ * One darkness, used consistently: the same tint whether or not a spot is
+ * present, and the spot's own cutout is the only thing that ever goes back
+ * to full brightness. Deliberately not very dark - this only has to hold the
+ * eye on the card, not black out the app.
  */
 .tour-scrim {
   position: fixed;
-  inset: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
   z-index: 100;
+  overflow: hidden;
   animation: scrim-in 0.24s ease both;
 }
 .tour-scrim.no-spot {
-  background: color-mix(in srgb, black 62%, var(--text) 10%);
+  background: color-mix(in srgb, black 45%, var(--text) 10%);
 }
 
 .tour-spot {
-  position: fixed;
+  position: absolute;
   border-radius: 14px;
-  box-shadow: 0 0 0 9999px color-mix(in srgb, var(--text) 68%, black 15%);
+  box-shadow: 0 0 0 9999px color-mix(in srgb, black 45%, var(--text) 10%);
   outline: 2px solid var(--violet);
   outline-offset: 2px;
   transition:
@@ -439,6 +439,13 @@
   font-size: 19px;
   font-weight: 400;
   margin: 0 0 6px;
+}
+
+/* The welcome card shows the real mark instead of a typed "COKEY". */
+.tour-logo {
+  display: block;
+  color: var(--violet-strong);
+  margin: 2px 0 10px;
 }
 
 .tour-body {

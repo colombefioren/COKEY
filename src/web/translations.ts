@@ -1593,4 +1593,9 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "That's every page": "Voilà toutes les pages",
   "Connect a free key, then either chain it for fallback or use its model id directly - both are first-class here. Terms and About, in the sidebar, are where bug reports and provider tips live.":
     "Connectez une clé gratuite, puis chaînez-la pour le repli ou utilisez directement son identifiant de modèle - les deux sont pleinement supportés ici. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
+
+  // ---- Tour guide, simplified intro ---------------------------------------------------
+  "Tour guide": "Guide de visite",
+  "Press Enter or click Next to move to the next step. Skip drops you straight in. Replay this any time from the compass in the topbar.":
+    "Appuyez sur Entrée ou cliquez sur Suivant pour passer à l'étape suivante. Passer vous laisse explorer directement. Relancez cette visite à tout moment depuis la boussole dans la barre du haut.",
 };

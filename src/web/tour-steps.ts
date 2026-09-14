@@ -29,8 +29,8 @@ export const TOUR_STEPS: TourStep[] = [
   {
     id: "welcome",
     placement: "center",
-    title: "Welcome to COKEY",
-    body: "A real walk through every page, not just a tooltip over the sidebar - Next moves the app itself, Skip drops you straight in. Click the compass in the topbar to replay this any time.",
+    title: "Tour guide",
+    body: "Press Enter or click Next to move to the next step. Skip drops you straight in. Replay this any time from the compass in the topbar.",
   },
   {
     id: "dashboard",

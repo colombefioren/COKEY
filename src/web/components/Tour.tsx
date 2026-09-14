@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type CSSProperties } from "react";
 import { TOUR_STEPS } from "../tour-steps.js";
+import { CokeyLogo } from "./Logo.js";
 import { useLang } from "../lang.js";
 
 /** Persisted once the tour is skipped or finished, so it never auto-opens again. */
@@ -27,6 +28,16 @@ function measureTarget(target: string | undefined): SpotRect | null {
   return { top: box.top, left: box.left, width: box.width, height: box.height };
 }
 
+/** How far the sidebar's own right edge sits from the left of the screen, so
+ * the scrim can start after it and leave it fully lit - `0` once it is off
+ * canvas (a closed mobile drawer) or not found at all. */
+function measureSidebarEdge(): number {
+  const el = document.querySelector<HTMLElement>(".sidebar");
+  if (!el) return 0;
+  const right = el.getBoundingClientRect().right;
+  return right > 0 ? right : 0;
+}
+
 /**
  * The onboarding tour: a real walk through every page, not a tooltip parade
  * over the sidebar. A step whose data names a `route` navigates there first -
@@ -34,7 +45,8 @@ function measureTarget(target: string | undefined): SpotRect | null {
  * behalf - and only measures its spotlight once that page has actually
  * mounted, so the highlight is never drawn against the page that used to be
  * there. Steps with no target (the welcome and closing cards) render as a
- * plain centred card over whatever page is already open.
+ * plain centred card over whatever page is already open. The sidebar itself
+ * is never dimmed, so which page is current stays visible throughout.
  */
 export function Tour({
   open,
@@ -53,6 +65,7 @@ export function Tour({
   const { t } = useLang();
   const [stepIndex, setStepIndex] = useState(0);
   const [rect, setRect] = useState<SpotRect | null>(null);
+  const [sidebarEdge, setSidebarEdge] = useState(0);
   const step = TOUR_STEPS[stepIndex];
 
   useEffect(() => {
@@ -69,12 +82,22 @@ export function Tour({
   useEffect(() => {
     if (!open || !step) return;
 
+    // Invalidate the previous target immediately, before anything else: a
+    // step change (whether or not it needs a new route) must never keep
+    // showing yesterday's rectangle while this effect works out the new one,
+    // since that stale box briefly satisfies "on the right route" once
+    // navigation lands and gets drawn in a meaningless place and size.
+    setRect(null);
+
     if (step.route && currentPath !== step.route) {
       navigate(step.route);
       return;
     }
 
-    const measure = () => setRect(measureTarget(step.target));
+    const measure = () => {
+      setRect(measureTarget(step.target));
+      setSidebarEdge(measureSidebarEdge());
+    };
     const timer = window.setTimeout(measure, ROUTE_SETTLE_MS);
     window.addEventListener("resize", measure);
     return () => {
@@ -88,18 +111,27 @@ export function Tour({
     onClose();
   }, [onClose]);
 
+  const isLast = stepIndex === TOUR_STEPS.length - 1;
+  const advance = useCallback(() => {
+    setStepIndex((i) => (i >= TOUR_STEPS.length - 1 ? i : i + 1));
+  }, []);
+
   useEffect(() => {
     if (!open) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") finish();
+      else if (event.key === "Enter") {
+        event.preventDefault();
+        if (isLast) finish();
+        else advance();
+      }
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, finish]);
+  }, [open, finish, advance, isLast]);
 
   if (!open || !step) return null;
 
-  const isLast = stepIndex === TOUR_STEPS.length - 1;
   const isFirst = stepIndex === 0;
   const onRightRoute = !step.route || step.route === currentPath;
   const spot =
@@ -118,11 +150,24 @@ export function Tour({
       role="dialog"
       aria-modal="true"
       aria-label={t("Guided tour")}
+      style={{ left: sidebarEdge }}
     >
+      {/*
+       * Positioned `absolute` against the scrim, not `fixed` against the
+       * viewport like the card below: the scrim clips its own overflow so the
+       * spot's 9999px box-shadow never bleeds past its left edge onto the
+       * sidebar, and clipping only ever applies to a descendant whose
+       * containing block is the clipped box itself.
+       */}
       {spot ? (
         <div
           className="tour-spot"
-          style={{ top: spot.top, left: spot.left, width: spot.width, height: spot.height }}
+          style={{
+            top: spot.top,
+            left: spot.left - sidebarEdge,
+            width: spot.width,
+            height: spot.height,
+          }}
         />
       ) : null}
 
@@ -135,7 +180,7 @@ export function Tour({
         isFirst={isFirst}
         isLast={isLast}
         onBack={() => setStepIndex((i) => Math.max(0, i - 1))}
-        onNext={() => (isLast ? finish() : setStepIndex((i) => i + 1))}
+        onNext={() => (isLast ? finish() : advance())}
         onSkip={finish}
       />
     </div>
@@ -176,7 +221,11 @@ function TourCard({
       <div className="tour-eyebrow">
         {stepNumber} {t("of")} {stepCount}
       </div>
-      <h3 className="tour-title">{step.title}</h3>
+      {isFirst ? (
+        <CokeyLogo height={26} className="tour-logo" />
+      ) : (
+        <h3 className="tour-title">{step.title}</h3>
+      )}
       <p className="tour-body">{step.body}</p>
 
       <div className="tour-actions">
@@ -197,7 +246,11 @@ function TourCard({
   );
 }
 
-/** Fixed-position pixel coordinates for the card, clamped to stay on screen. */
+/**
+ * Fixed-position pixel coordinates for the card, clamped to stay on screen.
+ * `spot` and the resulting `left` here are already relative to the scrim's
+ * own origin (which starts after the sidebar), not the full viewport.
+ */
 function cardPosition(
   spot: SpotRect | null,
   placement: "right" | "bottom" | "left" | "top" | "center",
