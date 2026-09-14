@@ -185,10 +185,6 @@ export function Insights() {
   return (
     <div className="insights" aria-live="polite">
       <div key={card.id} className={`insight-card ${card.kind}`}>
-        <span className="insight-glyph" aria-hidden="true">
-          {card.kind === "fact" ? "✨" : "💡"}
-        </span>
-        <span className="insight-text">{card.text}</span>
         <button
           type="button"
           className="insight-close"
@@ -198,6 +194,8 @@ export function Insights() {
         >
           ×
         </button>
+        <span className="insight-kicker">{card.kind === "fact" ? t("Fun fact") : t("Insight")}</span>
+        <p className="insight-text">{card.text}</p>
       </div>
     </div>
   );

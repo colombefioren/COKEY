@@ -1204,4 +1204,8 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
 
   // ---- Login form ------------------------------------------------------------------
   "By continuing you agree to the": "En continuant, vous acceptez les",
+
+  // ---- Insights card kickers --------------------------------------------------------
+  "Fun fact": "Anecdote",
+  Insight: "Astuce",
 };

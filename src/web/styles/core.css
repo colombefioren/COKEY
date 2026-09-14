@@ -1985,7 +1985,7 @@ tbody tr:hover td:first-child {
   padding: 14px 16px;
   border: 1px solid var(--violet-line);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--violet-soft), var(--surface) 70%);
+  background: var(--violet-soft);
   color: var(--violet-strong);
 }
 .freetier-banner svg {
