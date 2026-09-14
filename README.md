@@ -414,10 +414,12 @@ cokey entries                # every node across all chains
 cokey providers              # catalog + free tier + connection state
 cokey models [provider]      # curated free models, marking usable providers
 cokey keys                   # credential inventory with per-key rate and egress
+cokey keys create <name>     # a management API key clients authenticate with
 cokey keys test <id>         # re-verify one credential
 cokey requests               # local request history
 cokey stats                  # aggregate usage
 cokey config                 # open the web UI
+cokey endpoints              # list custom OpenAI-compatible endpoints
 cokey export [file]          # portable config (never secrets)
 cokey import <file>          # import config
 cokey credentials <file>     # create credentials declared in a file
