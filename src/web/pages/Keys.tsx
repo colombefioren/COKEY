@@ -244,7 +244,7 @@ export function Keys({
                   <thead>
                     <tr>
                       <th>{t("State")}</th>
-                      <th>{t("Description")}</th>
+                      <th>{t("Name")}</th>
                       <th>{t("Key")}</th>
                       <th>{t("Rate")}</th>
                       <th>{t("Egress")}</th>
