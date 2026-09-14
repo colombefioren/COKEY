@@ -102,8 +102,25 @@ export function Tour({
       setSidebarEdge(measureSidebarEdge());
     };
     measure();
+
+    // The target can still move after this first, synchronous pass: a
+    // self-hosted font finishing its swap-in reflows any text sized against
+    // it (including copy above the target), and the very next paint can
+    // land the target a few pixels from where it was just measured. One
+    // rAF re-measure catches that same-frame settling; `fonts.ready`
+    // catches the swap itself whenever it lands.
+    const raf = requestAnimationFrame(measure);
+    let cancelled = false;
+    void document.fonts?.ready?.then(() => {
+      if (!cancelled) measure();
+    });
+
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
   }, [open, step, currentPath, navigate]);
 
   const finish = useCallback(() => {
@@ -251,8 +268,9 @@ function TourCard({
 
 /**
  * Fixed-position pixel coordinates for the card, clamped to stay on screen.
- * `spot` and the resulting `left` here are already relative to the scrim's
- * own origin (which starts after the sidebar), not the full viewport.
+ * `spot` here is viewport-relative, matching `.tour-card`'s own
+ * `position: fixed` - unlike `.tour-spot`, which is `position: absolute`
+ * against the scrim and needs the sidebar offset subtracted separately.
  */
 function cardPosition(
   spot: SpotRect | null,
