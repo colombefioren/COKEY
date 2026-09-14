@@ -231,7 +231,20 @@ export function Modal({
   }, [onClose]);
 
   return createPortal(
-    <div className="overlay" onClick={onClose} role="presentation">
+    <div
+      className="overlay"
+      // React bubbles a portal's events through the *React* tree, not the DOM
+      // tree it's actually mounted into - a modal rendered from inside some
+      // clickable card (the provider dossier, say) sits under that card in
+      // the fiber tree regardless of `createPortal`, so without stopping it
+      // here this click would keep bubbling to the card's own handler and
+      // immediately reopen what it just closed.
+      onClick={(event) => {
+        event.stopPropagation();
+        onClose();
+      }}
+      role="presentation"
+    >
       <div
         className="modal"
         style={wide ? { width: "min(820px, 100%)" } : undefined}
