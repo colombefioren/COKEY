@@ -1,3 +1,4 @@
+import { createHash, timingSafeEqual } from "node:crypto";
 import type { SettingsRepo } from "./db/settings.repo.js";
 import {
   DEFAULT_FALLBACK_POLICY,
@@ -92,7 +93,13 @@ export class SettingsService {
   }
 
   verifyPassword(candidate: string): boolean {
-    return candidate.length > 0 && candidate === this.password();
+    if (candidate.length === 0) return false;
+    // Compared as fixed-length digests, not the raw strings: timingSafeEqual
+    // throws on a length mismatch, and a wrong-length guess is exactly the
+    // kind of early-exit a timing check exists to close off.
+    const expected = createHash("sha256").update(this.password()).digest();
+    const actual = createHash("sha256").update(candidate).digest();
+    return timingSafeEqual(actual, expected);
   }
 
   /**
