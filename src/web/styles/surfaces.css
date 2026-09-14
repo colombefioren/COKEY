@@ -413,6 +413,11 @@
   background: var(--surface);
   box-shadow: var(--shadow-pop);
   animation: modal-in 0.3s var(--ease) both;
+  /* The card is never remounted between steps, only repositioned - this is
+     what makes moving to the next target read as a glide instead of a snap. */
+  transition:
+    top 0.32s var(--ease),
+    left 0.32s var(--ease);
 }
 /*
  * The centred (no-target) steps position themselves with an inline
