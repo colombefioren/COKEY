@@ -1253,7 +1253,6 @@ button.ghost[aria-current="page"],
 }
 
 input,
-select,
 textarea {
   width: 100%;
   padding: 9px 11px;
@@ -1272,30 +1271,142 @@ textarea::placeholder {
   color: var(--faint);
 }
 input:hover,
-select:hover,
 textarea:hover {
   border-color: var(--violet-line);
 }
 input:focus,
-select:focus,
 textarea:focus {
   outline: none;
   border-color: var(--violet);
   box-shadow: 0 0 0 3px var(--violet-soft);
 }
-select {
-  appearance: none;
-  background-image:
-    linear-gradient(45deg, transparent 50%, var(--faint) 50%),
-    linear-gradient(135deg, var(--faint) 50%, transparent 50%);
-  background-position:
-    calc(100% - 16px) calc(50% - 2px),
-    calc(100% - 11px) calc(50% - 2px);
-  background-size:
-    5px 5px,
-    5px 5px;
-  background-repeat: no-repeat;
-  padding-right: 30px;
+
+/*
+ * A dropdown COKEY actually draws (see the `Select` component), because a
+ * native <select>'s open list is the one form control a browser never lets a
+ * page style — every other control here could be made to match the theme,
+ * and this was the one that couldn't.
+ */
+.select-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 12px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: 11px;
+  font: inherit;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+.select-trigger:hover:not(:disabled) {
+  border-color: var(--violet-line);
+}
+.select-trigger:focus-visible,
+.select-trigger[aria-expanded="true"] {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+.select-trigger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.select-value {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.select-trigger svg {
+  flex-shrink: 0;
+  color: var(--faint);
+  transition: transform 0.2s var(--ease);
+}
+.select-trigger svg.flip {
+  transform: rotate(180deg);
+}
+
+.select-panel {
+  z-index: 60;
+  max-height: 264px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  box-shadow: var(--shadow-pop);
+  padding: 6px;
+  transform-origin: top center;
+  animation: select-pop-down 0.16s var(--ease);
+}
+.select-panel.up {
+  transform-origin: bottom center;
+  animation-name: select-pop-up;
+}
+@keyframes select-pop-down {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+@keyframes select-pop-up {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+.select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--text);
+}
+.select-option.active {
+  background: var(--violet-soft);
+}
+.select-option.selected {
+  font-weight: 600;
+  color: var(--violet-strong);
+}
+.select-option.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.select-option-check {
+  width: 14px;
+  height: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--violet-strong);
+  flex-shrink: 0;
+}
+.select-option-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 input[type="checkbox"] {
   appearance: none;
@@ -1639,10 +1750,11 @@ label {
   gap: 6px;
   margin: 0;
 }
-.pager-size select {
+.pager-size .select-trigger {
   width: auto;
-  padding: 4px 26px 4px 9px;
+  padding: 4px 8px;
   font-size: 12px;
+  gap: 4px;
 }
 .pager-nav {
   display: flex;

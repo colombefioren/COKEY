@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ProviderStatus } from "../types.js";
-import { Modal } from "./Primitives.js";
+import { Modal, Select } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
@@ -128,14 +128,14 @@ export function EditEntryModal({
 
       <div className="field">
         <label htmlFor="entry-edit-strategy">{t("Routing strategy")}</label>
-        <select
+        <Select
           id="entry-edit-strategy"
           value={strategy}
-          onChange={(event) => setStrategy(event.target.value as "sequential" | "round-robin")}
+          onChange={(value) => setStrategy(value as "sequential" | "round-robin")}
         >
           <option value="sequential">{t("Sequential: use the keys in order")}</option>
           <option value="round-robin">{t("Round robin: rotate the keys")}</option>
-        </select>
+        </Select>
       </div>
 
       {error ? <div className="verify err">{error}</div> : null}

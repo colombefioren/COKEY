@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ChainView, ProviderStatus, PublicCredential } from "../types.js";
-import { Modal } from "./Primitives.js";
+import { Modal, Select } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
@@ -124,12 +124,12 @@ export function AddEntryModal({
     >
       <div className="field">
         <label htmlFor="entry-provider">{t("Provider")}</label>
-        <select
+        <Select
           id="entry-provider"
           value={providerId}
-          onChange={(event) => {
-            const next = providers.find((p) => p.id === event.target.value);
-            setProviderId(event.target.value);
+          onChange={(value) => {
+            const next = providers.find((p) => p.id === value);
+            setProviderId(value);
             setModel(next?.knownModels[0] ?? "");
           }}
         >
@@ -141,24 +141,19 @@ export function AddEntryModal({
                 : t("not connected")}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="field">
         <label htmlFor="entry-model">{t("Model")}</label>
         <div className="row">
-          <select
-            id="entry-model"
-            value={model}
-            onChange={(event) => setModel(event.target.value)}
-            style={{ flex: 1 }}
-          >
+          <Select id="entry-model" value={model} onChange={setModel} style={{ flex: 1 }}>
             {(provider?.knownModels ?? []).map((knownModel) => (
               <option key={knownModel} value={knownModel}>
                 {knownModel}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             className="secondary"
             type="button"
