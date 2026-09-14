@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
-import { Empty } from "./Primitives.js";
+import { Empty, Tooltip } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 import { useLang } from "../lang.js";
 
@@ -310,7 +310,7 @@ function EntryNode({
     description, the legend underneath carries the colour key. */
 function KeyChip({ credential, active }: { credential: PublicCredential; active: boolean }) {
   const { t } = useLang();
-  const title = `${credential.description} (${credential.status})${
+  const label = `${t("Key")}: ${credential.description} (${credential.status})${
     credential.proxy.auto
       ? ` · ${t("auto egress")}`
       : credential.proxy.configured
@@ -318,8 +318,10 @@ function KeyChip({ credential, active }: { credential: PublicCredential; active:
         : ""
   }`;
   return (
-    <span className={`flow-key ${credential.status}${active ? " active" : ""}`} title={title}>
-      {active ? <span className="flow-key-ring" aria-hidden="true" /> : null}
-    </span>
+    <Tooltip label={label}>
+      <span className={`flow-key ${credential.status}${active ? " active" : ""}`}>
+        {active ? <span className="flow-key-ring" aria-hidden="true" /> : null}
+      </span>
+    </Tooltip>
   );
 }
