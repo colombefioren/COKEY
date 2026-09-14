@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ProviderCatalogEntry, Settings as SettingsModel } from "../types.js";
-import { ConfirmModal, Empty, Panel } from "../components/Primitives.js";
+import { ConfirmModal, Empty, Panel, Select } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 import { useLang } from "../lang.js";
 
@@ -160,18 +160,18 @@ export function Settings({
             </div>
             <div className="field">
               <label htmlFor="setting-log">{t("Log level")}</label>
-              <select
+              <Select
                 id="setting-log"
                 value={draft.logLevel}
-                onChange={(event) =>
-                  setDraft({ ...draft, logLevel: event.target.value as SettingsModel["logLevel"] })
+                onChange={(value) =>
+                  setDraft({ ...draft, logLevel: value as SettingsModel["logLevel"] })
                 }
               >
                 <option value="debug">debug</option>
                 <option value="info">info</option>
                 <option value="warn">warn</option>
                 <option value="error">error</option>
-              </select>
+              </Select>
             </div>
           </div>
 

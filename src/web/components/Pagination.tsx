@@ -1,5 +1,6 @@
 import type { PageParams } from "../types.js";
 import { useLang } from "../lang.js";
+import { Select } from "./Primitives.js";
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
@@ -40,19 +41,19 @@ export function Pagination({
 
       <span className="spacer" />
 
-      <label className="pager-size">
+      <div className="pager-size">
         <span className="faint small">{t("per page")}</span>
-        <select
-          value={pageSize}
-          onChange={(event) => onChange({ page: 1, pageSize: Number(event.target.value) })}
+        <Select
+          value={String(pageSize)}
+          onChange={(value) => onChange({ page: 1, pageSize: Number(value) })}
         >
           {PAGE_SIZES.map((size) => (
             <option key={size} value={size}>
               {size}
             </option>
           ))}
-        </select>
-      </label>
+        </Select>
+      </div>
 
       <div className="pager-nav">
         <button

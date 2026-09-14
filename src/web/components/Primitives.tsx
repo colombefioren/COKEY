@@ -1,8 +1,20 @@
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  Children,
+  isValidElement,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type OptionHTMLAttributes,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import type { CredentialRate, CredentialStatus } from "../types.js";
 import { Window, type WindowHue } from "./Window.js";
 import { useLang } from "../lang.js";
+import { IconCheck, IconChevron } from "./Icons.js";
 
 /** Coloured status indicator for a credential. */
 export function StatusDot({ status, title }: { status: CredentialStatus; title?: string }) {
@@ -333,4 +345,196 @@ export function QuotaLabel({
   if (typeof quota.requestsPerMinute === "number") parts.push(`${quota.requestsPerMinute} RPM`);
   if (parts.length === 0) return <span className="faint">{t("Quota: Unknown")}</span>;
   return <span className="muted">{parts.join(" · ")}</span>;
+}
+
+/**
+ * A dropdown COKEY actually draws, instead of a native `<select>`.
+ *
+ * The closed control can be styled all day; the open list a browser draws for
+ * a native select cannot be touched at all, which is what made every dropdown
+ * in the app look like it belonged to a different program. This renders its
+ * own floating panel in a portal (so a modal's `overflow: hidden` never clips
+ * it), positioned against the trigger's real screen coordinates and flipped
+ * upward when there is more room above than below.
+ *
+ * The API deliberately mirrors a native select — pass `<option>` children,
+ * read `value`, get a new value back — so swapping one in is a tag rename,
+ * not a rewrite of the surrounding form.
+ */
+export function Select({
+  id,
+  value,
+  onChange,
+  disabled,
+  style,
+  className,
+  children,
+}: {
+  id?: string;
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
+  style?: CSSProperties;
+  className?: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const [highlight, setHighlight] = useState(0);
+  const [geometry, setGeometry] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    openUp: boolean;
+  } | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  const options = useMemo(() => {
+    return Children.toArray(children)
+      .filter(isValidElement)
+      .map((element) => {
+        const props = element.props as OptionHTMLAttributes<HTMLOptionElement>;
+        return {
+          value: String(props.value ?? ""),
+          label: props.children,
+          disabled: props.disabled,
+        };
+      });
+  }, [children]);
+
+  const selectedIndex = options.findIndex((option) => option.value === value);
+  const selected = options[selectedIndex];
+
+  const openMenu = () => {
+    if (disabled) return;
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const openUp = spaceBelow < 260 && rect.top > spaceBelow;
+    setGeometry({
+      top: openUp ? rect.top : rect.bottom,
+      left: rect.left,
+      width: rect.width,
+      openUp,
+    });
+    setHighlight(selectedIndex >= 0 ? selectedIndex : 0);
+    setOpen(true);
+  };
+
+  useEffect(() => {
+    if (!open) return;
+
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+    // A dropdown that stays open under the content it should be layering
+    // above defeats the point of a portal; scrolling anywhere else closes it
+    // rather than tracking a stale position.
+    const onScroll = (event: Event) => {
+      if (panelRef.current?.contains(event.target as Node)) return;
+      setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        setOpen(false);
+        triggerRef.current?.focus();
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
+        setHighlight((current) => Math.min(options.length - 1, current + 1));
+      } else if (event.key === "ArrowUp") {
+        event.preventDefault();
+        setHighlight((current) => Math.max(0, current - 1));
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        const option = options[highlight];
+        if (option && !option.disabled) {
+          onChange(option.value);
+          setOpen(false);
+          triggerRef.current?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("scroll", onScroll, true);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("scroll", onScroll, true);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, options, highlight, onChange]);
+
+  // Keep the highlighted row in view as arrow keys move past the fold.
+  useLayoutEffect(() => {
+    if (!open) return;
+    const row = panelRef.current?.querySelector(`[data-index="${highlight}"]`);
+    row?.scrollIntoView({ block: "nearest" });
+  }, [open, highlight]);
+
+  return (
+    <>
+      <button
+        ref={triggerRef}
+        type="button"
+        id={id}
+        className={`select-trigger${className ? ` ${className}` : ""}`}
+        style={style}
+        disabled={disabled}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        onClick={() => (open ? setOpen(false) : openMenu())}
+      >
+        <span className="select-value">{selected?.label ?? value}</span>
+        <IconChevron className={open ? "flip" : undefined} size={13} />
+      </button>
+
+      {open && geometry
+        ? createPortal(
+            <div
+              ref={panelRef}
+              className={`select-panel${geometry.openUp ? " up" : ""}`}
+              role="listbox"
+              style={{
+                position: "fixed",
+                left: geometry.left,
+                width: geometry.width,
+                ...(geometry.openUp
+                  ? { bottom: window.innerHeight - geometry.top }
+                  : { top: geometry.top }),
+              }}
+            >
+              {options.map((option, index) => (
+                <div
+                  key={option.value}
+                  data-index={index}
+                  role="option"
+                  aria-selected={option.value === value}
+                  aria-disabled={option.disabled}
+                  className={`select-option${index === highlight ? " active" : ""}${
+                    option.value === value ? " selected" : ""
+                  }${option.disabled ? " disabled" : ""}`}
+                  onMouseEnter={() => setHighlight(index)}
+                  onClick={() => {
+                    if (option.disabled) return;
+                    onChange(option.value);
+                    setOpen(false);
+                    triggerRef.current?.focus();
+                  }}
+                >
+                  <span className="select-option-check">
+                    {option.value === value ? <IconCheck size={12} /> : null}
+                  </span>
+                  <span className="select-option-label">{option.label}</span>
+                </div>
+              ))}
+            </div>,
+            document.body,
+          )
+        : null}
+    </>
+  );
 }

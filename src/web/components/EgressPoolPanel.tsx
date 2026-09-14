@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ProxyPoolResponse, Settings as SettingsModel } from "../types.js";
-import { Empty, Panel } from "./Primitives.js";
+import { Empty, Panel, Select } from "./Primitives.js";
 import { Pagination } from "./Pagination.js";
 import { BulkProxyModal } from "./BulkProxyModal.js";
 import { useToast } from "./Toast.js";
@@ -218,18 +218,16 @@ export function EgressPoolPanel({
 
         <div className="field" style={{ marginBottom: 12 }}>
           <label htmlFor="auto-proxy-strategy">{t("Assignment strategy")}</label>
-          <select
+          <Select
             id="auto-proxy-strategy"
             value={settings.autoProxyStrategy}
-            onChange={(event) =>
-              void setStrategy(event.target.value as SettingsModel["autoProxyStrategy"])
-            }
+            onChange={(value) => void setStrategy(value as SettingsModel["autoProxyStrategy"])}
           >
             <option value="per-provider">
               {t("Stable per provider (keys stay on the same exit)")}
             </option>
             <option value="round-robin">{t("Rotate by provider order")}</option>
-          </select>
+          </Select>
         </div>
       </div>
 

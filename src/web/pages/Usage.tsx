@@ -6,6 +6,7 @@ import {
   ConfirmModal,
   Empty,
   Panel,
+  Select,
   Stat,
   StatusDot,
   formatDuration,
@@ -492,10 +493,10 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
         title={`${t("Request history")} (${total})`}
         actions={
           <div className="row" style={{ gap: 8 }}>
-            <select
+            <Select
               value={outcome}
-              onChange={(event) => {
-                setOutcome(event.target.value);
+              onChange={(value) => {
+                setOutcome(value);
                 setPage(1);
               }}
               style={{ width: 130 }}
@@ -503,7 +504,7 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
               <option value="">{t("All outcomes")}</option>
               <option value="success">{t("Succeeded")}</option>
               <option value="error">{t("Failed")}</option>
-            </select>
+            </Select>
             <input
               className="search"
               placeholder={t("Search chain, model or key")}

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
 import { href } from "../router.js";
 import type { ChainEntryView, PublicCredential, ValidationResult } from "../types.js";
-import { Modal } from "./Primitives.js";
+import { Modal, Select } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
@@ -167,17 +167,13 @@ export function AddCredentialModal({
         <>
           <div className="field">
             <label htmlFor="existing-credential">{t("Credential")}</label>
-            <select
-              id="existing-credential"
-              value={selectedId}
-              onChange={(event) => setSelectedId(event.target.value)}
-            >
+            <Select id="existing-credential" value={selectedId} onChange={setSelectedId}>
               {candidates.map((credential) => (
                 <option key={credential.id} value={credential.id}>
                   {credential.description} · {credential.maskedSecret} · {credential.status}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
           <div className="modal-actions">
             <button className="secondary" onClick={onClose} disabled={busy}>
