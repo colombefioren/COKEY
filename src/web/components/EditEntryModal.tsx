@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { api, ApiError } from "../api.js";
-import type { ChainEntryView, ProviderStatus } from "../types.js";
-import { Modal, Select } from "./Primitives.js";
+import type { ChainEntryView, ProviderStatus, PublicCredential } from "../types.js";
+import { AddCredentialModal } from "./AddCredentialModal.js";
+import { ConfirmModal, Modal, RateLabel, Select, StatusDot } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
@@ -33,6 +34,12 @@ export function EditEntryModal({
   const [strategy, setStrategy] = useState(entry.routingStrategy);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const [testingCredId, setTestingCredId] = useState<string | null>(null);
+  const [testResults, setTestResults] = useState<
+    Record<string, { ok: boolean; latencyMs?: number; message?: string }>
+  >({});
+  const [addingCredential, setAddingCredential] = useState(false);
+  const [removingCredential, setRemovingCredential] = useState<PublicCredential | null>(null);
 
   useEffect(() => {
     void (async () => {
@@ -83,6 +90,33 @@ export function EditEntryModal({
       setError(err instanceof ApiError ? err.message : String(err));
     } finally {
       setBusy(false);
+    }
+  }
+
+  async function testCredential(credential: PublicCredential) {
+    setTestingCredId(credential.id);
+    try {
+      const result = await api.testCredential(credential.id);
+      setTestResults((prev) => ({ ...prev, [credential.id]: result }));
+      if (!result.ok) {
+        toast.err(`${credential.description}: ${result.classification} — ${result.message ?? ""}`);
+      }
+    } catch (err) {
+      toast.err(err instanceof ApiError ? err.message : String(err));
+    } finally {
+      setTestingCredId(null);
+    }
+  }
+
+  async function removeCredential(credential: PublicCredential) {
+    try {
+      await api.removeEntryCredential(entry.id, credential.id);
+      toast.ok(t("Credential removed"));
+      setRemovingCredential(null);
+      onChanged();
+      onClose();
+    } catch (err) {
+      toast.err(err instanceof ApiError ? err.message : String(err));
     }
   }
 
@@ -138,6 +172,100 @@ export function EditEntryModal({
         </Select>
       </div>
 
+      <div className="field">
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 6,
+          }}
+        >
+          <label style={{ marginBottom: 0 }}>
+            {t("Keys")} ({entry.credentials.length})
+          </label>
+          <button
+            className="secondary"
+            style={{ padding: "4px 8px", fontSize: 12 }}
+            onClick={() => setAddingCredential(true)}
+          >
+            + {t("Add key")}
+          </button>
+        </div>
+
+        {entry.credentials.length === 0 ? (
+          <p className="small faint" style={{ margin: 0 }}>
+            {t("No credentials linked to this entry.")}
+          </p>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {entry.credentials.map((credential) => {
+              const testResult = testResults[credential.id];
+              const isPassed = testResult?.ok;
+              const hasTested = testResult !== undefined;
+
+              return (
+                <div
+                  key={credential.id}
+                  style={{
+                    padding: 10,
+                    border: "1px solid var(--border)",
+                    borderRadius: 6,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                    fontSize: 13,
+                  }}
+                >
+                  <StatusDot status={credential.status} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div className="mono" style={{ fontWeight: 500 }}>
+                      {credential.description}
+                    </div>
+                    <div className="mono small faint">{credential.maskedSecret}</div>
+                  </div>
+
+                  <RateLabel rate={credential.rate} compact />
+
+                  {hasTested && (
+                    <span
+                      className="badge"
+                      style={{
+                        backgroundColor: isPassed ? "var(--ok-bg)" : "var(--bad-bg)",
+                        color: isPassed ? "var(--ok)" : "var(--bad)",
+                        fontSize: 11,
+                        padding: "3px 6px",
+                      }}
+                    >
+                      {isPassed ? `✓ ${testResult.latencyMs}ms` : `✗ ${t("failed")}`}
+                    </span>
+                  )}
+
+                  <button
+                    className="ghost"
+                    style={{ padding: "2px 4px", fontSize: 12 }}
+                    onClick={() => void testCredential(credential)}
+                    disabled={testingCredId === credential.id}
+                    title={testingCredId === credential.id ? t("Testing...") : t("Test this credential")}
+                  >
+                    {testingCredId === credential.id ? "⟳" : "↻"}
+                  </button>
+
+                  <button
+                    className="ghost danger"
+                    style={{ padding: "2px 4px", fontSize: 12 }}
+                    onClick={() => setRemovingCredential(credential)}
+                    title={t("Remove credential")}
+                  >
+                    ✕
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
       {error ? <div className="verify err">{error}</div> : null}
 
       <div className="modal-actions">
@@ -148,6 +276,24 @@ export function EditEntryModal({
           {busy ? t("Saving…") : t("Save")}
         </button>
       </div>
+
+      {addingCredential ? (
+        <AddCredentialModal
+          entry={entry}
+          onClose={() => setAddingCredential(false)}
+          onChanged={() => onChanged()}
+        />
+      ) : null}
+
+      {removingCredential ? (
+        <ConfirmModal
+          title={t("Remove credential")}
+          message={`${t("Remove")} ${removingCredential.description}?`}
+          onConfirm={() => void removeCredential(removingCredential)}
+          onClose={() => setRemovingCredential(null)}
+          actionLabel={t("Remove")}
+        />
+      ) : null}
     </Modal>
   );
 }
