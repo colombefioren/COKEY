@@ -33,8 +33,21 @@ export interface UsageRollupRow {
   latency_ms_sum: number;
 }
 
+/** How often `insert()` prunes, in number of inserts. Pruning runs a
+ * `DELETE ... ORDER BY ... LIMIT` scan that only matters once the table is
+ * already near its cap, so paying for it on every single proxied request
+ * would tax the hot path for no benefit between prunes. */
+const PRUNE_EVERY = 50;
+
+/** How many days of `usage_daily` rollups to retain. The dashboard's own
+ * rollup query never looks back further than 29 days, so this is already
+ * generous headroom rather than a tight cutoff. */
+const USAGE_DAILY_RETENTION_DAYS = 90;
+
 /** Local, bounded request history powering the observability view. */
 export class RequestsRepo {
+  private insertsSincePrune = 0;
+
   constructor(
     private readonly db: DatabaseClient,
     private readonly maxRows = 500,
@@ -73,7 +86,13 @@ export class RequestsRepo {
       );
 
     this.rollup(input, inputTokens, outputTokens);
-    this.prune();
+
+    this.insertsSincePrune += 1;
+    if (this.insertsSincePrune >= PRUNE_EVERY) {
+      this.insertsSincePrune = 0;
+      this.prune();
+      this.pruneUsageDaily();
+    }
   }
 
   /** Fold one request into the per-day/per-key/per-model rollup. */
@@ -139,5 +158,13 @@ export class RequestsRepo {
          )`,
       )
       .run(this.maxRows);
+  }
+
+  /** Drop rollup rows older than the retention window - unlike `request_log`,
+   * this table is only ever appended to via upserts, so it grows forever
+   * without this. */
+  pruneUsageDaily(retainDays = USAGE_DAILY_RETENTION_DAYS): void {
+    const cutoff = new Date(Date.now() - retainDays * 86_400_000).toISOString().slice(0, 10);
+    this.db.db.prepare(`DELETE FROM usage_daily WHERE day < ?`).run(cutoff);
   }
 }
