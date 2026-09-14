@@ -1,0 +1,91 @@
+name: Publish to npm
+
+on:
+  push:
+    branches: [prod]
+  release:
+    types: [published]
+
+concurrency:
+  group: npm-publish-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    name: Publish package and tag the release
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Read package version
+        id: pkg
+        run: echo "version=$(node -p "require('./package.json').version")" >> "${GITHUB_OUTPUT}"
+
+      # `secrets` cannot be read from an `if` expression, so the presence of
+      # the token is detected in a step and the result published as an output
+      # that later steps can branch on - same pattern as docker-publish.yml.
+      - name: Detect npm credentials
+        id: creds
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${NPM_TOKEN:-}" ]]; then
+            echo "available=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "available=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Explain how to enable publishing
+        if: steps.creds.outputs.available != 'true'
+        run: |
+          echo "::notice::Add an NPM_TOKEN repository secret (an automation token from 'npm token create --type=automation') to publish to npm."
+
+      - name: Check whether this version is already published
+        if: steps.creds.outputs.available == 'true'
+        id: exists
+        run: |
+          set -euo pipefail
+          if npm view "cokey@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1; then
+            echo "published=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "published=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Publish to npm
+        if: steps.creds.outputs.available == 'true' && steps.exists.outputs.published != 'true'
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Tag the release
+        if: steps.exists.outputs.published != 'true'
+        run: |
+          set -euo pipefail
+          TAG="v${{ steps.pkg.outputs.version }}"
+          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
+            echo "::notice::${TAG} already exists, skipping."
+            exit 0
+          fi
+          git tag "${TAG}"
+          git push origin "${TAG}"
