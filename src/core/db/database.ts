@@ -155,6 +155,83 @@ export const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS idx_api_keys_hash ON api_keys(key_hash);
     `,
   },
+  {
+    version: 7,
+    name: "proxy_pool_and_entry_labels",
+    sql: `
+      -- The automatic egress pool. Entries are real proxy URLs; the gateway
+      -- decides which credential leaves through which one.
+      CREATE TABLE IF NOT EXISTS proxy_pool (
+        id         TEXT PRIMARY KEY,
+        url        TEXT NOT NULL UNIQUE,
+        label      TEXT NOT NULL,
+        enabled    INTEGER NOT NULL DEFAULT 1,
+        created_at INTEGER NOT NULL
+      );
+
+      -- 1 when the proxy on this row was chosen by the pool rather than by the
+      -- user. A manual proxy stays manual forever, even after a pool change.
+      ALTER TABLE credentials ADD COLUMN proxy_auto INTEGER NOT NULL DEFAULT 0;
+
+      -- User-chosen display name for a chain node, so a client can show
+      -- "DeepSeek V4 Pro (xKiro)" instead of the raw upstream model id.
+      ALTER TABLE chain_entries ADD COLUMN label TEXT;
+
+      CREATE INDEX IF NOT EXISTS idx_credentials_proxy ON credentials(proxy_url);
+    `,
+  },
+  {
+    version: 8,
+    name: "provider_model_inventory",
+    sql: `
+      -- What each provider actually returned the last time we asked.
+      --
+      -- The shipped catalog is curated by hand and is the right default, but it
+      -- cannot know that a provider quietly retired a model this morning. This
+      -- table is the observed truth: one row per (provider, model).
+      --
+      -- A model that stops being returned is marked unavailable rather than
+      -- deleted, so it keeps its history, and a model that comes back can be
+      -- reported as restored instead of appearing from nowhere. Rows are only
+      -- dropped once they have been missing long enough to be considered gone
+      -- for good (see ModelDiscovery.retainMissingMs).
+      CREATE TABLE IF NOT EXISTS provider_models (
+        provider_id  TEXT NOT NULL,
+        model        TEXT NOT NULL,
+        curated      INTEGER NOT NULL DEFAULT 0,
+        available    INTEGER NOT NULL DEFAULT 1,
+        first_seen   INTEGER NOT NULL,
+        last_seen    INTEGER NOT NULL,
+        last_checked INTEGER NOT NULL,
+        PRIMARY KEY (provider_id, model)
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_provider_models_available
+        ON provider_models(provider_id, available);
+    `,
+  },
+  {
+    version: 9,
+    name: "model_probes",
+    sql: `
+      -- One row per play-button probe: did this model answer through this key,
+      -- and how long did it take. This is what the "My models" ranking is built
+      -- from — a model's own answered-when-asked record, not a curated tier.
+      CREATE TABLE IF NOT EXISTS model_probes (
+        id             TEXT PRIMARY KEY,
+        provider_id    TEXT NOT NULL,
+        model          TEXT NOT NULL,
+        credential_id  TEXT,
+        ok             INTEGER NOT NULL,
+        classification TEXT NOT NULL,
+        latency_ms     INTEGER NOT NULL,
+        checked_at     INTEGER NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_model_probes_model
+        ON model_probes(provider_id, model, checked_at);
+    `,
+  },
 ];
 
 /**
@@ -242,6 +319,7 @@ export interface CredentialRow {
   account_id: string | null;
   secret_encrypted: string;
   proxy_url: string | null;
+  proxy_auto: number;
   description: string;
   status: string;
   created_at: number;
@@ -267,6 +345,8 @@ export interface ChainEntryRow {
   chain_id: string;
   provider_id: string;
   model: string;
+  /** Optional user-chosen display name. Falls back to the model id. */
+  label: string | null;
   base_url: string;
   credential_ids: string;
   enabled: number;
@@ -315,4 +395,27 @@ export interface ApiKeyRow {
   created_at: number;
   last_used_at: number | null;
   enabled: number;
+}
+
+export interface ProviderModelRow {
+  provider_id: string;
+  model: string;
+  /** 1 when the shipped catalog also lists this model. */
+  curated: number;
+  /** 1 when the provider returned it on the most recent check. */
+  available: number;
+  first_seen: number;
+  last_seen: number;
+  last_checked: number;
+}
+
+export interface ModelProbeRow {
+  id: string;
+  provider_id: string;
+  model: string;
+  credential_id: string | null;
+  ok: number;
+  classification: string;
+  latency_ms: number;
+  checked_at: number;
 }

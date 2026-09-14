@@ -13,7 +13,10 @@
  */
 
 export class MiniYamlError extends Error {
-  constructor(message: string, readonly line?: number) {
+  constructor(
+    message: string,
+    readonly line?: number,
+  ) {
     super(line === undefined ? message : `${message} (line ${line})`);
     this.name = "MiniYamlError";
   }
@@ -59,11 +62,7 @@ function stripComment(line: string): string {
   return line;
 }
 
-function parseBlock(
-  lines: SourceLine[],
-  start: number,
-  indent: number,
-): [unknown, number] {
+function parseBlock(lines: SourceLine[], start: number, indent: number): [unknown, number] {
   const first = lines[start];
   if (!first) throw new MiniYamlError("Unexpected end of file");
   if (first.content.startsWith("- ") || first.content === "-") {

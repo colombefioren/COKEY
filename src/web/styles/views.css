@@ -1,0 +1,1171 @@
+/*
+ * View-specific surfaces.
+ *
+ * Everything here is tied to one screen or one diagram: the resilience layers,
+ * the ranking boards, and the about/contact cards. Tokens only, so both themes
+ * come along for free.
+ */
+
+/* ---- resilience ----------------------------------------------------------- */
+
+/*
+ * `Resilience` renders a hand-rolled `section.panel`, not a `Window`, so it
+ * owns its own vertical rhythm: without this, the header, the three layer
+ * cards and the footer note all ran together in one unbroken block, since
+ * `section.panel` is plain flow, not a grid.
+ */
+.layers-panel {
+  display: grid;
+  gap: 16px;
+}
+
+/*
+ * Each layer is its own sticker: a pastel tint, a big icon-and-number badge,
+ * and a headline set in the display face. Three layers in a row read as three
+ * different, deliberate defences rather than three rows of a settings table.
+ */
+.layer {
+  position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 6px 16px;
+  padding: 20px 22px;
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+}
+
+.layer-badge {
+  position: relative;
+  grid-row: 1 / 3;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--violet);
+  box-shadow: inset 0 0 0 2px var(--border-strong);
+}
+.layer-number {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--violet);
+  color: var(--violet-ink);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
+  box-shadow: 0 0 0 2px var(--surface);
+}
+
+.layer-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.layer-head-kicker {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  color: var(--violet-strong);
+}
+
+.layer-head-scope {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.layer-title {
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  color: var(--text);
+  margin: 2px 0 4px;
+}
+.layer-title em {
+  font-style: italic;
+  color: var(--violet-strong);
+}
+
+.layer-kicker {
+  display: block;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.layer-copy {
+  font-size: 12.5px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.layer-copy h4 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+.layer-copy p {
+  margin: 0;
+}
+
+.layer-track {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.layer-rail {
+  flex: none;
+  width: 28px;
+  height: 2px;
+  background: repeating-linear-gradient(90deg, var(--border-strong) 0 6px, transparent 6px 10px);
+}
+
+.layer-notes {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.layer-node {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 7px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  font-size: 12px;
+  color: var(--text);
+}
+.layer-node b {
+  font-family: var(--mono);
+}
+.layer-node small {
+  color: var(--faint);
+  font-size: 10.5px;
+}
+
+.layer-stack {
+  flex: 1 1 auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.layer-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1.5px solid var(--border-strong);
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+/* The same three silhouettes the status pills use, so a state learned in the
+   keys table is recognised here without a second legend. */
+.layer-key i {
+  width: 9px;
+  height: 9px;
+  background: currentColor;
+  flex: none;
+}
+.layer-key em {
+  font-style: normal;
+  color: var(--faint);
+  font-size: 10.5px;
+}
+/* State lives on the glyph and the word after it, not on the whole chip's
+   fill — three chips side by side used to read as three different colours
+   of card; now the card is always the same plain white. */
+.layer-key.is-ok i {
+  color: var(--sage);
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+  animation: glyph-breathe 2.8s ease-in-out infinite;
+}
+.layer-key.is-ok em {
+  color: var(--sage);
+}
+.layer-key.is-bad i {
+  color: var(--rose);
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
+}
+.layer-key.is-bad em {
+  color: var(--rose);
+}
+.layer-key.is-locked i {
+  color: var(--peach);
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: none;
+}
+.layer-key.is-locked em {
+  color: var(--peach);
+}
+
+.layer-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  margin-top: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-3);
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+/* ---- ranking boards ------------------------------------------------------- */
+
+.swe-score {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.swe-bar {
+  flex: 1;
+  min-width: 46px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.swe-fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--rose), var(--violet));
+  transition: width 0.5s var(--ease);
+}
+
+.source-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.source-list a {
+  color: var(--violet);
+}
+
+/* ---- about, chips and contact -------------------------------------------- */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--violet-line);
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease;
+}
+.btn:hover {
+  text-decoration: none;
+  border-color: var(--violet);
+}
+.btn.secondary {
+  background: var(--surface);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.about-hero {
+  display: flex;
+  gap: 22px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.about-logo {
+  color: var(--violet);
+}
+.about-copy {
+  flex: 1 1 380px;
+  display: grid;
+  gap: 10px;
+}
+.about-copy h2 {
+  margin: 0;
+  font-size: 19px;
+  letter-spacing: 0.01em;
+}
+.about-copy p {
+  margin: 0;
+  max-width: 74ch;
+}
+.about-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.stack-chip {
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+.stack-chip.alt {
+  border-color: var(--violet-line);
+  color: var(--violet-strong);
+  background: var(--violet-soft);
+}
+
+.contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+}
+.contact-card {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  transition:
+    transform 0.18s var(--ease),
+    border-color 0.18s ease;
+}
+.contact-card:hover {
+  text-decoration: none;
+  border-color: var(--violet-line);
+  transform: translateY(-2px);
+}
+.contact-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--faint);
+}
+.contact-value {
+  color: var(--violet-strong);
+  font-size: 13px;
+}
+.contact-hint {
+  font-size: 11.5px;
+  color: var(--faint);
+}
+
+/* ---- live route ----------------------------------------------------------- */
+/*
+ * The route diagram, redrawn.
+ *
+ * This sheet is imported after core.css, so everything here supersedes the
+ * first-generation flow styles: the old node cards, the dashed connector and
+ * the square key marks are all replaced rather than added to. Tokens only, so
+ * the palette still carries it.
+ *
+ * The shape of the thing: one inked rail across the whole journey, every stop
+ * a pebble with four unequal corner radii, the hub the single orb, and a comet
+ * with a fading tail travelling between them. A routing decision is a sequence;
+ * the picture of it should look like a path, not a row of boxes.
+ */
+
+.flow {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.flow-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.flow-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.flow-meta {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+/*
+ * A chain tab. Exactly one shape on this row is filled, so which route you are
+ * looking at is never a comparison between two tints of the same pink.
+ */
+.flow-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    color 0.2s ease,
+    background 0.2s ease,
+    transform 0.2s var(--ease),
+    box-shadow 0.2s ease;
+}
+.flow-pill:hover:not(:disabled) {
+  border-color: var(--violet-line);
+  color: var(--text);
+  background: var(--surface-2);
+  transform: translateY(-1px);
+}
+.flow-pill.active {
+  border-color: transparent;
+  color: var(--violet-ink);
+  background: var(--violet);
+  box-shadow: var(--shadow);
+}
+.flow-pill-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--faint);
+  transition: background 0.2s ease;
+}
+.flow-pill.active .flow-pill-dot {
+  background: rgba(255, 255, 255, 0.9);
+}
+.flow-pill.live .flow-pill-dot {
+  background: var(--sage);
+  animation: flow-blink 1.6s ease-in-out infinite;
+}
+/* A selected chain that is also serving right now keeps its live mark: the
+   route being live is the more urgent fact than the route being selected. */
+.flow-pill.active.live .flow-pill-dot {
+  background: var(--sage-line);
+  animation: none;
+}
+.flow-pill-count {
+  color: inherit;
+  opacity: 0.7;
+  font-size: 10px;
+}
+
+/* The state of the route, as one quiet capsule rather than three loud badges. */
+.flow-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.flow-state i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--faint);
+}
+.flow-state.live {
+  border-color: var(--sage-line);
+  background: var(--sage-soft);
+  color: var(--sage);
+  font-weight: 600;
+}
+.flow-state.live i {
+  background: var(--sage);
+  animation: flow-blink 1.4s ease-in-out infinite;
+}
+.flow-state.warn {
+  border-color: var(--peach-line);
+  background: var(--peach-soft);
+  color: var(--peach);
+}
+
+.flow-sweep {
+  padding: 7px 15px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1.5px solid var(--violet-line);
+  color: var(--violet-strong);
+  font-size: 12px;
+  font-weight: 600;
+}
+.flow-sweep:hover:not(:disabled) {
+  background: var(--violet-soft);
+  box-shadow: var(--shadow);
+}
+
+/*
+ * The graph surface itself: an absolutely-positioned canvas the client node,
+ * the hub and every fallback sit on, with the bezier paths drawn underneath
+ * them. Fixed coordinates do not reflow, so on a narrow screen the surface
+ * scrolls sideways instead of collapsing into an unreadable stack.
+ */
+.flow-graph {
+  position: relative;
+  min-width: 840px;
+  overflow-x: auto;
+  overflow-y: visible;
+}
+.flow-lines {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/*
+ * One inked line per hop, not a dashed rule and not a comet: the route is a
+ * path a request actually walks, so it is drawn as a path. The line that was
+ * just used brightens; every line a request did not take fades instead of
+ * disappearing, so the shape of the whole chain stays legible.
+ */
+.flow-path {
+  fill: none;
+  stroke: var(--border-strong);
+  stroke-width: 2.5px;
+  stroke-linecap: round;
+  transition:
+    stroke 0.25s ease,
+    stroke-width 0.25s ease,
+    opacity 0.25s ease;
+}
+.flow-path.live {
+  stroke: var(--sage);
+  stroke-width: 3px;
+}
+.flow-path.dead {
+  stroke-dasharray: 2 7;
+  opacity: 0.45;
+}
+
+/*
+ * A stop on the journey.
+ *
+ * Four unequal corner radii is the cheapest way to make a rectangle look cut
+ * out rather than rendered: four equal radii is a spreadsheet cell, four
+ * uneven ones read as a pebble. Every node now sits at an absolute point on
+ * the graph — the coordinates come from the component, the size from here.
+ */
+.flow-node {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px 22px;
+  border-radius: 20px;
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  z-index: 1;
+  animation-delay: calc(var(--flow-index, 0) * 80ms);
+}
+.flow-node-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+/* Long model ids stay on one line, ellipsised, rather than growing the card
+   past its slot in the graph — the full id is still in the title attribute. */
+.flow-entry .flow-node-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.flow-node-kicker {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.flow-node-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 22px;
+  line-height: 1.25;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.flow-node-sub {
+  display: block;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* The entrance: the request arrives from outside, so it carries the one tape
+   accent in this whole diagram — everything downstream of it is a routing
+   decision COKEY made, this is the only node the user's own client owns. */
+.flow-client {
+  left: 0;
+  width: 220px;
+}
+.flow-tape {
+  position: absolute;
+  top: -8px;
+  left: 26px;
+  width: 52px;
+  height: 18px;
+  border-radius: 2px;
+  background: rgba(244, 130, 180, 0.24);
+  transform: rotate(-3deg);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/*
+ * The hub is the one stop drawn as a solid circle rather than a card —
+ * everything else here is a point along the way; this is the thing they are
+ * all routed through, so it reads as the centre of something. Solid pink, no
+ * gradient: the brand colour standing for itself rather than fading into it.
+ */
+.flow-hub {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 18px;
+  text-align: center;
+  border: none;
+  background: var(--violet);
+  box-shadow: 0 20px 44px -18px rgba(217, 87, 142, 0.55);
+  z-index: 2;
+}
+.flow-hub .flow-node-title {
+  font-size: 21px;
+  color: var(--violet-ink);
+}
+.flow-hub .flow-node-kicker {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* The stop number, a plain circle on the brand wash — no hand-cut corners,
+   the minimal editorial page does not want a sketchy note here. */
+.flow-stop {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  color: var(--violet-strong);
+  background: var(--violet-soft);
+}
+.flow-entry {
+  width: 220px;
+  border: 1px solid transparent;
+}
+.flow-entry.live {
+  border-color: var(--sage-line);
+  box-shadow:
+    0 1px 2px rgba(58, 44, 51, 0.04),
+    0 26px 50px -22px rgba(127, 174, 149, 0.4);
+}
+.flow-entry.dead {
+  opacity: 0.55;
+}
+
+/*
+ * A node whose key is being probed during a chain sweep: a hand-drawn circle
+ * being continuously scribbled around it, the way you'd circle an answer
+ * while double-checking it — not a mechanical spinner rotating in place.
+ */
+.flow-entry.sweep-testing {
+  border-color: var(--violet-line);
+  box-shadow: 0 0 0 3px var(--violet-soft);
+}
+.flow-entry.sweep-testing::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border: 2.5px dashed var(--violet);
+  border-radius: inherit;
+  animation: scribble-wobble 1.7s ease-in-out infinite;
+  pointer-events: none;
+}
+.flow-entry.sweep-ok {
+  border-color: var(--sage-line);
+}
+.flow-entry.sweep-fail {
+  border-color: var(--rose-line);
+}
+.flow-entry.sweep-current {
+  box-shadow:
+    0 0 0 2px var(--sage),
+    0 0 0 5px var(--sage-soft);
+}
+
+/* The placeholder shown when a chain has no fallback nodes yet. Dashed,
+   because nothing has been decided here. */
+.flow-empty {
+  width: 220px;
+  border: 1.5px dashed var(--border-strong);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+/* The verdict — sweep result, or just the node's role in the order — pinned
+   to the card's shoulder so the card itself never resizes to fit it. */
+.flow-node-flag {
+  position: absolute;
+  top: -11px;
+  right: 16px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--violet);
+  color: var(--violet-ink);
+  font-size: 10px;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+}
+.flow-node-flag.live {
+  background: var(--sage);
+}
+.flow-node-flag.skip {
+  background: var(--surface-3);
+  color: var(--muted);
+  box-shadow: none;
+}
+.flow-node-flag.first {
+  background: var(--text);
+}
+
+/* A bound key as a plain coloured dot. Colour alone is enough here because
+   the tooltip carries the exact status and the legend underneath carries
+   the colour key — a row of them should read as calm dots, not icons. */
+.flow-keys {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 4px;
+  min-height: 20px;
+}
+.flow-keys-empty {
+  font-size: 11px;
+  color: var(--rose);
+}
+.flow-key {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: var(--surface-3);
+}
+.flow-key.healthy {
+  background: var(--sage);
+}
+.flow-key.cooldown {
+  background: var(--peach);
+}
+.flow-key.invalid {
+  background: var(--rose);
+}
+.flow-key.disabled {
+  background: var(--faint);
+}
+.flow-key.unverified {
+  background: var(--sky);
+}
+.flow-key.active {
+  transform: scale(1.15);
+}
+.flow-key-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--sage);
+  animation: flow-blink 1.3s ease-in-out infinite;
+}
+
+.flow-legend {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 4px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+}
+.flow-legend-dot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+.flow-legend-dot.healthy {
+  background: var(--sage);
+}
+.flow-legend-dot.cooldown {
+  background: var(--peach);
+}
+.flow-legend-dot.invalid {
+  background: var(--rose);
+}
+.flow-legend-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.flow-legend-note.ok {
+  color: var(--sage);
+  font-weight: 600;
+}
+
+/* ---- live route readout --------------------------------------------------- */
+/*
+ * The topbar chip and its feed.
+ *
+ * The chip has to hold three facts in one pill: which model, which key, whether
+ * traffic is moving. So the model is set in the display face at reading size,
+ * the key recedes behind it, and the state is a single breathing dot on the
+ * leading edge — not three badges fighting over the same line.
+ */
+.live-chip {
+  max-width: 460px;
+  gap: 9px;
+  padding: 6px 13px 6px 11px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  font-size: 11.5px;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.live-chip:hover:not(:disabled) {
+  border-color: var(--violet-line);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+.live-model {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 14px;
+  font-weight: 400;
+}
+.live-dot {
+  font-size: 8px;
+  line-height: 1;
+}
+.live-chip.active {
+  border-color: var(--sage-line);
+  background: var(--sage-soft);
+}
+.live-count {
+  padding: 1px 8px;
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  font-weight: 650;
+}
+
+/*
+ * The feed, as a tray. Same reasoning as the notices dropdown: the rows scroll
+ * inside a rounded holder rather than against a hard clip, which is what keeps
+ * a long routing feed from looking broken the moment it moves.
+ */
+.live-panel {
+  width: min(482px, 88vw);
+  max-height: none;
+  overflow: visible;
+  padding: 14px;
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+}
+.live-list {
+  max-height: 300px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 2px;
+}
+.live-item {
+  grid-template-columns: 66px 84px minmax(0, 1fr);
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+.live-time {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- tutorial and terms --------------------------------------------------- */
+/*
+ * The two reading screens.
+ *
+ * Both are mostly text, so the work is in the few things that are not: one
+ * poster at the top of the tutorial and one at the bottom of the terms, with
+ * everything between them kept quiet enough that the words carry it.
+ */
+
+.hero {
+  position: relative;
+  padding: 28px;
+  border-radius: 20px;
+  border: none;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+.hero h2 {
+  font-size: 26px;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+}
+.hero p {
+  font-size: 13.5px;
+}
+
+/* The same hand-cut tab the route diagram and the chain nodes use. */
+.steps-list > li::before {
+  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--violet-strong);
+  background: var(--violet-soft);
+  border: 0;
+  box-shadow: inset 0 0 0 1.5px var(--violet-line);
+}
+
+.recipe {
+  border: 1.5px solid var(--border);
+  border-radius: 18px 20px 16px 19px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.recipe.open {
+  border-color: var(--violet-line);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.recipe-head {
+  gap: 10px;
+  padding: 14px 16px;
+}
+.recipe-head:hover:not(:disabled) {
+  background: var(--violet-soft);
+}
+.recipe-name {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
+}
+/* The open/closed mark as a chip, so it reads as a control rather than as a
+   stray character at the end of the row. */
+.recipe-toggle {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+  font-size: 14px;
+}
+.recipe-body {
+  padding: 0 16px 18px;
+}
+
+.code-block {
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface-3);
+}
+.code-head {
+  padding: 7px 12px;
+}
+.code-block pre {
+  padding: 14px;
+}
+.code-block code {
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.terms {
+  gap: 18px;
+}
+.terms section h3 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--violet-strong);
+}
+.terms section div {
+  font-size: 13px;
+  line-height: 1.78;
+}
+
+/* The sign-off, as the mirror of the tutorial's hero: the other end of the same
+   ramp, so the two documents feel like a pair. */
+.closing {
+  position: relative;
+  gap: 6px;
+  padding: 28px;
+  border: none;
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+.closing strong {
+  font-family: var(--font-display);
+  font-style: italic;
+  letter-spacing: 0.02em;
+  font-size: 21px;
+  color: var(--violet-strong);
+}
+.closing span {
+  font-size: 12.5px;
+}
+
+/* ---- boards, cards and chips ---------------------------------------------- */
+/*
+ * The surfaces that are really just lists.
+ *
+ * The work here is making one row legible at a glance: a bar that reads as a
+ * measurement, a heading that reads as a name, a chip that reads as something
+ * you could pick up.
+ */
+
+.swe-score {
+  gap: 9px;
+}
+.swe-bar {
+  height: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--surface-3);
+  box-shadow: inset 0 1px 2px rgba(43, 26, 47, 0.07);
+}
+.swe-fill {
+  background: var(--text);
+}
+
+/* Verdict headings are names, not micro-labels: display face, sentence case,
+   with the same hand-cut tab the rest of the app uses. */
+.provider-section-title {
+  gap: 9px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 400;
+  letter-spacing: 0.005em;
+  text-transform: none;
+  color: var(--text);
+}
+.provider-section-title::before {
+  width: 9px;
+  height: 9px;
+  border-radius: 52% 48% 46% 54% / 48% 54% 46% 52%;
+  background: var(--violet);
+}
+.provider-section:nth-of-type(2) .provider-section-title::before,
+.provider-section:nth-of-type(3) .provider-section-title::before,
+.provider-section:nth-of-type(4) .provider-section-title::before {
+  background: var(--violet);
+}
+
+.model-provider {
+  border: 1.5px solid var(--border);
+  border-radius: 18px 20px 16px 19px;
+  background: linear-gradient(165deg, var(--surface-2), var(--surface));
+}
+
+.model-chip {
+  border: 1.5px solid var(--border);
+  border-radius: 14px 16px 13px 17px;
+  background: var(--surface);
+}
+.model-chip:hover {
+  border-color: var(--violet-line);
+  box-shadow: var(--shadow);
+}
+
+.model-list-item {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.stack-chip {
+  border: 1.5px solid var(--border-strong);
+  background: linear-gradient(150deg, var(--surface), var(--surface-3));
+  font-weight: 550;
+}
+.stack-chip.alt {
+  border-color: var(--violet-line);
+  background: linear-gradient(150deg, var(--surface), var(--violet-soft));
+}
+
+.about-logo {
+  display: flex;
+}
+
+/* The resilience panel's own heading, in the same voice as a window title. */
+.layers-panel .layer-head {
+  align-items: baseline;
+}
+.layers-panel .layer-head-kicker {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 17px;
+  font-weight: 400;
+}

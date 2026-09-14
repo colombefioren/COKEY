@@ -3,9 +3,12 @@ import { api, ApiError } from "../api.js";
 import type { ChainEntryView, ChainView } from "../types.js";
 import { AddCredentialModal } from "./AddCredentialModal.js";
 import { AddEntryModal } from "./AddEntryModal.js";
+import { ConfirmModal, Tooltip } from "./Primitives.js";
 import { EditEntryModal } from "./EditEntryModal.js";
 import { ViewEntryModal } from "./ViewEntryModal.js";
 import { useToast } from "./Toast.js";
+import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
+import { useLang } from "../lang.js";
 
 /**
  * One chain: a user-ordered list of provider+model entries.
@@ -15,6 +18,7 @@ import { useToast } from "./Toast.js";
  */
 export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: () => void }) {
   const toast = useToast();
+  const { t } = useLang();
   const [entries, setEntries] = useState<ChainEntryView[]>(chain.entries);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [renaming, setRenaming] = useState(false);
@@ -23,6 +27,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   const [credentialTarget, setCredentialTarget] = useState<ChainEntryView | null>(null);
   const [editingEntry, setEditingEntry] = useState<ChainEntryView | null>(null);
   const [viewingEntry, setViewingEntry] = useState<ChainEntryView | null>(null);
+  const [removingEntry, setRemovingEntry] = useState<ChainEntryView | null>(null);
+  const [deletingChain, setDeletingChain] = useState(false);
+  const sweep = useChainRefresh(chain, onChanged);
 
   useEffect(() => {
     setEntries(chain.entries);
@@ -90,6 +97,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function toggleEntry(entry: ChainEntryView) {
     try {
       await api.updateEntry(entry.id, { enabled: !entry.enabled });
+      setEntries((prev) =>
+        prev.map((e) => (e.id === entry.id ? { ...e, enabled: !entry.enabled } : e)),
+      );
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -99,7 +109,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   async function duplicate(entry: ChainEntryView) {
     try {
       await api.duplicateEntry(entry.id);
-      toast.ok("Entry duplicated");
+      toast.ok(t("Entry duplicated"));
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -107,9 +117,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   }
 
   async function removeEntry(entry: ChainEntryView) {
-    if (!confirm(`Remove ${entry.providerId}/${entry.model} from ${chain.alias}?`)) return;
     try {
       await api.deleteEntry(entry.id);
+      setEntries((prev) => prev.filter((e) => e.id !== entry.id));
+      setRemovingEntry(null);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -124,7 +135,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
     }
     try {
       await api.updateChain(chain.id, { alias: next });
-      toast.ok(`Renamed to ${next}`);
+      toast.ok(`${t("Renamed to")} ${next}`);
       setRenaming(false);
       onChanged();
     } catch (error) {
@@ -142,10 +153,10 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   }
 
   async function deleteChain() {
-    if (!confirm(`Delete chain ${chain.alias} and all of its entries?`)) return;
     try {
       await api.deleteChain(chain.id);
-      toast.ok(`Deleted ${chain.alias}`);
+      toast.ok(`${t("Deleted")} ${chain.alias}`);
+      setDeletingChain(false);
       onChanged();
     } catch (error) {
       toast.err(error instanceof ApiError ? error.message : String(error));
@@ -168,9 +179,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               style={{ width: 220 }}
               autoFocus
             />
-            <button onClick={() => void saveAlias()}>Save</button>
+            <button onClick={() => void saveAlias()}>{t("Save")}</button>
             <button className="secondary" onClick={() => setRenaming(false)}>
-              Cancel
+              {t("Cancel")}
             </button>
           </>
         ) : (
@@ -179,28 +190,41 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <span className="mono small faint" style={{ marginLeft: 8 }}>
               ID: {chain.id.slice(0, 8)}
             </span>
-            {chain.enabled ? null : <span className="badge warn">disabled</span>}
+            {chain.enabled ? null : <span className="badge warn">{t("disabled")}</span>}
             <span className="small faint">
-              {entries.length} {entries.length === 1 ? "entry" : "entries"} · model id for clients
+              {entries.length} {entries.length === 1 ? t("entry") : t("entries")} ·{" "}
+              {t("model id for clients")}
             </span>
           </>
         )}
         <span className="spacer" />
-        <button className="ghost" onClick={() => setRenaming(true)} title="Rename">
-          rename
+        <button
+          className="ghost"
+          onClick={() => void sweep.refresh()}
+          disabled={sweep.busy}
+          title={
+            sweep.busy
+              ? t("Testing nodes…")
+              : t("Test every node and go to the first that answers")
+          }
+        >
+          {sweep.busy ? t("testing…") : `⟳ ${t("refresh")}`}
+        </button>
+        <button className="ghost" onClick={() => setRenaming(true)} title={t("Rename")}>
+          {t("rename")}
         </button>
         <button className="ghost" onClick={() => void toggleChain()}>
-          {chain.enabled ? "disable" : "enable"}
+          {chain.enabled ? t("disable") : t("enable")}
         </button>
-        <button className="danger" onClick={() => void deleteChain()}>
-          delete
+        <button className="danger" onClick={() => setDeletingChain(true)}>
+          {t("delete")}
         </button>
       </div>
 
       <div className="entries">
         {entries.length === 0 ? (
           <div className="drop-hint">
-            No entries yet. Add a provider and model to start building the fallback order.
+            {t("No entries yet. Add a provider and model to start building the fallback order.")}
           </div>
         ) : null}
 
@@ -209,6 +233,8 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             key={entry.id}
             className={`entry-node ${draggingId === entry.id ? "dragging" : ""} ${
               entry.enabled ? "" : "disabled"
+            }${sweep.states[entry.id] && sweep.states[entry.id] !== "idle" ? ` sweep-${sweep.states[entry.id]}` : ""}${
+              sweep.winnerId === entry.id ? " sweep-current" : ""
             }`}
             draggable
             tabIndex={0}
@@ -226,14 +252,22 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                 move(entry.id, 1);
               }
             }}
-            title="Drag to reorder, or Alt+↑ / Alt+↓"
+            title={t("Drag to reorder, or Alt+↑ / Alt+↓")}
           >
             {/* Left: reorder buttons */}
             <div className="entry-reorder">
-              <button className="ghost" title="Move up (Alt+↑)" onClick={() => move(entry.id, -1)}>
+              <button
+                className="ghost"
+                title={t("Move up (Alt+↑)")}
+                onClick={() => move(entry.id, -1)}
+              >
                 ▲
               </button>
-              <button className="ghost" title="Move down (Alt+↓)" onClick={() => move(entry.id, 1)}>
+              <button
+                className="ghost"
+                title={t("Move down (Alt+↓)")}
+                onClick={() => move(entry.id, 1)}
+              >
                 ▼
               </button>
             </div>
@@ -242,42 +276,76 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
               <button
-                className="model-name mono"
-                title="View details"
+                className="model-name"
+                title={t("View details")}
                 onClick={() => setViewingEntry(entry)}
               >
-                {entry.model}
+                {entry.label ?? entry.model}
               </button>
-              <span className="small faint" title={`Provider: ${entry.providerId}`}>
+              {entry.label ? <span className="small faint mono">{entry.model}</span> : null}
+              <span className="small faint" title={`${t("Provider")}: ${entry.providerId}`}>
                 {entry.providerId}
               </span>
-              {!entry.enabled && <span className="badge warn">disabled</span>}
+              {entry.credentials.length > 0 ? (
+                <span className="badge neutral" title={t("Keys bound to this node")}>
+                  {entry.healthyCount}/{entry.credentials.length} {t("keys")}
+                </span>
+              ) : (
+                <span className="badge bad">{t("no keys")}</span>
+              )}
+              {sweepStateBadge(sweep.states[entry.id], sweep.winnerId === entry.id, t)}
+              {entry.credentials.some((credential) => credential.proxy.auto) ? (
+                <span className="badge neutral" title={t("Automatic egress pool is assigning exits")}>
+                  {t("auto proxy")}
+                </span>
+              ) : null}
+              {!entry.enabled && <span className="badge warn">{t("disabled")}</span>}
             </div>
 
             {/* Right: action buttons */}
             <div className="entry-actions">
-              <button className="ghost" title="View details" onClick={() => setViewingEntry(entry)}>
-                👁
-              </button>
-              <button className="ghost" title="Edit" onClick={() => setEditingEntry(entry)}>
-                ✎
-              </button>
-              <button className="ghost" title="Duplicate" onClick={() => void duplicate(entry)}>
-                ⧉
-              </button>
-              <button
-                className="ghost"
-                title={entry.enabled ? "Disable" : "Enable"}
-                onClick={() => void toggleEntry(entry)}
-              >
-                {entry.enabled ? "⊘" : "✓"}
-              </button>
+              <Tooltip label={t("View details")}>
+                <button
+                  className="ghost"
+                  aria-label={t("View details")}
+                  onClick={() => setViewingEntry(entry)}
+                >
+                  👁
+                </button>
+              </Tooltip>
+              <Tooltip label={t("Edit")}>
+                <button
+                  className="ghost"
+                  aria-label={t("Edit")}
+                  onClick={() => setEditingEntry(entry)}
+                >
+                  ✎
+                </button>
+              </Tooltip>
+              <Tooltip label={t("Duplicate")}>
+                <button
+                  className="ghost"
+                  aria-label={t("Duplicate")}
+                  onClick={() => void duplicate(entry)}
+                >
+                  ⧉
+                </button>
+              </Tooltip>
+              <Tooltip label={entry.enabled ? t("Disable") : t("Enable")}>
+                <button
+                  className="ghost"
+                  aria-label={entry.enabled ? t("Disable") : t("Enable")}
+                  onClick={() => void toggleEntry(entry)}
+                >
+                  {entry.enabled ? "⊘" : "✓"}
+                </button>
+              </Tooltip>
               <button
                 className="danger"
                 style={{ fontSize: 12 }}
-                onClick={() => void removeEntry(entry)}
+                onClick={() => setRemovingEntry(entry)}
               >
-                remove
+                {t("remove")}
               </button>
             </div>
           </div>
@@ -286,11 +354,12 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
 
       <div className="entry-add-row">
         <button className="secondary" onClick={() => setAddingEntry(true)}>
-          + Add entry
+          + {t("Add entry")}
         </button>
         <span className="small faint">
-          Nodes run top to bottom. Drag or Alt+↑ / Alt+↓ to reorder; click a model to view, edit, or
-          test its keys.
+          {t(
+            "Nodes run top to bottom. Drag or Alt+↑ / Alt+↓ to reorder; click a model to view, edit, or test its keys.",
+          )}
         </span>
       </div>
 
@@ -333,6 +402,62 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           }}
         />
       ) : null}
+
+      {removingEntry ? (
+        <ConfirmModal
+          title={t("Remove entry")}
+          message={`${t("Remove")} ${removingEntry.providerId}/${removingEntry.model} ${t("from")} ${chain.alias}?`}
+          onConfirm={() => void removeEntry(removingEntry)}
+          onClose={() => setRemovingEntry(null)}
+          actionLabel={t("Remove")}
+        />
+      ) : null}
+
+      {deletingChain ? (
+        <ConfirmModal
+          title={t("Delete chain")}
+          message={`${t("Delete chain")} ${chain.alias} ${t("and all of its entries?")}`}
+          onConfirm={() => void deleteChain()}
+          onClose={() => setDeletingChain(false)}
+          actionLabel={t("Delete")}
+        />
+      ) : null}
     </div>
   );
+}
+
+function sweepStateBadge(
+  state: RefreshState | undefined,
+  current: boolean,
+  t: (text: string) => string,
+) {
+  if (current) {
+    return (
+      <span className="badge ok" title={t("first node that answered OK")}>
+        ← {t("current")}
+      </span>
+    );
+  }
+  if (state === "testing") {
+    return (
+      <span className="badge neutral" title={t("Testing this node's key")}>
+        {t("testing…")}
+      </span>
+    );
+  }
+  if (state === "ok") {
+    return (
+      <span className="badge ok" title={t("Answered OK")}>
+        {t("ok")}
+      </span>
+    );
+  }
+  if (state === "fail") {
+    return (
+      <span className="badge bad" title={t("Failed")}>
+        {t("fail")}
+      </span>
+    );
+  }
+  return null;
 }

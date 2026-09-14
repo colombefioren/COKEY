@@ -1,0 +1,11 @@
+node_modules
+dist
+.cokey
+.git
+.github
+tests
+coverage
+*.log
+.env
+.env.*
+!.env.example

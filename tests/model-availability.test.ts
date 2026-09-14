@@ -1,7 +1,20 @@
 import { describe, expect, it } from "vitest";
-import { MODELS_BY_PROVIDER } from "../src/catalog/models.js";
+import { MODELS_BY_PROVIDER, modelsForProvider } from "../src/catalog/models.js";
 import { PROVIDER_CATALOG, findProvider } from "../src/catalog/providers.js";
-import { modelAvailability } from "../src/core/models/availability.js";
+import { modelAvailability, staleCuratedModels } from "../src/core/models/availability.js";
+import type { ProviderModelRecord } from "../src/core/db/provider-models.repo.js";
+
+function observed(model: string, available = true): ProviderModelRecord {
+  return {
+    providerId: "groq",
+    model,
+    curated: true,
+    available,
+    firstSeen: 1,
+    lastSeen: 2,
+    lastChecked: 2,
+  };
+}
 
 function catalogFor(...ids: string[]) {
   return ids.map((id) => {
@@ -72,5 +85,64 @@ describe("modelAvailability", () => {
       expect(provider.baseUrl).toMatch(/^https?:\/\//);
       expect(provider.credentialFields).toContain("secret");
     }
+  });
+});
+
+describe("staleCuratedModels", () => {
+  it("says nothing when the provider has never been checked", () => {
+    // "Never asked" and "asked and gone" are different answers. Conflating them
+    // would mark an entire catalog retired the first time a provider is seen.
+    expect(staleCuratedModels(["a", "b"], [])).toEqual([]);
+  });
+
+  it("returns the curated models with no observed row", () => {
+    expect(staleCuratedModels(["a", "b", "c"], [observed("a"), observed("b")])).toEqual(["c"]);
+  });
+
+  it("returns the curated models observed as unavailable", () => {
+    expect(staleCuratedModels(["a", "b"], [observed("a"), observed("b", false)])).toEqual(["b"]);
+  });
+});
+
+describe("modelAvailability with an observed inventory", () => {
+  it("hides a curated model the provider stopped returning", () => {
+    const curated = modelsForProvider("groq");
+    const retired = curated[1]!;
+
+    // The provider returned everything except the second model.
+    const inventory = new Map([
+      ["groq", curated.map((spec) => observed(spec.id, spec.id !== retired.id))],
+    ]);
+
+    const views = modelAvailability(catalogFor("groq"), new Map(), new Map(), inventory);
+    const groq = views.find((view) => view.providerId === "groq")!;
+
+    expect(groq.models.map((model) => model.id)).not.toContain(retired.id);
+    expect(groq.staleModels).toEqual([retired.id]);
+    expect(groq.counts.curated).toBe(curated.length);
+    expect(groq.counts.live).toBe(curated.length - 1);
+    expect(groq.inventoryCheckedAt).toBe(2);
+  });
+
+  it("lists a model the provider serves that the catalog never annotated", () => {
+    const inventory = new Map([["groq", [observed("groq/brand-new-9000")]]]);
+
+    const views = modelAvailability(catalogFor("groq"), new Map(), new Map(), inventory);
+    const groq = views.find((view) => view.providerId === "groq")!;
+
+    const discovered = groq.models.find((model) => model.id === "groq/brand-new-9000")!;
+    expect(discovered).toBeDefined();
+    expect(discovered.curated).toBe(false);
+    expect(discovered.live).toBe(true);
+    expect(groq.counts.discovered).toBe(1);
+    // Everything else in the curated list was not observed, so it is stale.
+    expect(groq.staleModels.length).toBe(modelsForProvider("groq").length);
+  });
+
+  it("still refuses to make a model selectable without a verified key", () => {
+    const inventory = new Map([["groq", [observed("groq/brand-new-9000")]]]);
+    const views = modelAvailability(catalogFor("groq"), new Map(), new Map(), inventory);
+    const groq = views.find((view) => view.providerId === "groq")!;
+    expect(groq.models.every((model) => !model.selectable)).toBe(true);
   });
 });

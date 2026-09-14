@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api.js";
 import type { ChainView, ProviderStatus, PublicCredential } from "../types.js";
-import { Modal } from "./Primitives.js";
+import { Modal, Select } from "./Primitives.js";
 import { useToast } from "./Toast.js";
+import { useLang } from "../lang.js";
 
 /**
  * Append an entry to an existing chain.
@@ -20,10 +21,12 @@ export function AddEntryModal({
   onChanged: () => void;
 }) {
   const toast = useToast();
+  const { t } = useLang();
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [credentials, setCredentials] = useState<PublicCredential[]>([]);
   const [providerId, setProviderId] = useState("");
   const [model, setModel] = useState("");
+  const [label, setLabel] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -31,8 +34,8 @@ export function AddEntryModal({
   useEffect(() => {
     void (async () => {
       const [providerList, credentialList] = await Promise.all([
-        api.providers(),
-        api.credentials(),
+        api.allProviders(),
+        api.allCredentials(),
       ]);
       setProviders(providerList);
       setCredentials(credentialList);
@@ -67,19 +70,24 @@ export function AddEntryModal({
 
   async function submit() {
     if (!providerId || !model) {
-      setError("Pick a provider and a model");
+      setError(t("Pick a provider and a model"));
       return;
     }
     if (selected.length === 0) {
-      setError("Select at least one credential, or connect a key for this provider first");
+      setError(t("Select at least one credential, or connect a key for this provider first"));
       return;
     }
 
     setBusy(true);
     setError(undefined);
     try {
-      await api.addEntry(chain.id, { providerId, model, credentialIds: selected });
-      toast.ok(`Added ${providerId}/${model} to ${chain.alias}`);
+      await api.addEntry(chain.id, {
+        providerId,
+        model,
+        label: label.trim() || undefined,
+        credentialIds: selected,
+      });
+      toast.ok(`${t("Added")} ${label.trim() || `${providerId}/${model}`} ${t("to")} ${chain.alias}`);
       onChanged();
       onClose();
     } catch (err) {
@@ -95,7 +103,8 @@ export function AddEntryModal({
     setError(undefined);
     try {
       const result = await api.testCredential(selected[0]!);
-      if (result.ok) toast.ok(`${providerId}/${model}: operational in ${result.latencyMs ?? 0}ms`);
+      if (result.ok)
+        toast.ok(`${providerId}/${model}: ${t("operational in")} ${result.latencyMs ?? 0}ms`);
       else toast.err(`${providerId}/${model}: ${result.classification} — ${result.message ?? ""}`);
     } catch (err) {
       toast.err(err instanceof ApiError ? err.message : String(err));
@@ -106,67 +115,79 @@ export function AddEntryModal({
 
   return (
     <Modal
-      title={`Add entry to ${chain.alias}`}
-      subtitle="Entries run top to bottom; every credential of an entry is exhausted before the next entry."
+      title={`${t("Add entry to")} ${chain.alias}`}
+      subtitle={t(
+        "Entries run top to bottom; every credential of an entry is exhausted before the next entry.",
+      )}
       onClose={onClose}
       wide
     >
       <div className="field">
-        <label htmlFor="entry-provider">Provider</label>
-        <select
+        <label htmlFor="entry-provider">{t("Provider")}</label>
+        <Select
           id="entry-provider"
           value={providerId}
-          onChange={(event) => {
-            const next = providers.find((p) => p.id === event.target.value);
-            setProviderId(event.target.value);
+          onChange={(value) => {
+            const next = providers.find((p) => p.id === value);
+            setProviderId(value);
             setModel(next?.knownModels[0] ?? "");
           }}
         >
           {providers.map((option) => (
             <option key={option.id} value={option.id}>
-              {option.displayName} {option.freeTier.advertised ? "(free)" : ""} ·{" "}
-              {option.connected ? `${option.credentialCount} keys` : "not connected"}
+              {option.displayName} {option.freeTier.advertised ? `(${t("free")})` : ""} ·{" "}
+              {option.connected
+                ? `${option.credentialCount} ${t("keys")}`
+                : t("not connected")}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       <div className="field">
-        <label htmlFor="entry-model">Model</label>
+        <label htmlFor="entry-model">{t("Model")}</label>
         <div className="row">
-          <select
-            id="entry-model"
-            value={model}
-            onChange={(event) => setModel(event.target.value)}
-            style={{ flex: 1 }}
-          >
+          <Select id="entry-model" value={model} onChange={setModel} style={{ flex: 1 }}>
             {(provider?.knownModels ?? []).map((knownModel) => (
               <option key={knownModel} value={knownModel}>
                 {knownModel}
               </option>
             ))}
-          </select>
+          </Select>
           <button
             className="secondary"
             type="button"
             onClick={() => void testSelected()}
             disabled={busy || !model || selected.length === 0}
-            title="Probe this model with a selected key"
+            title={t("Probe this model with a selected key")}
           >
-            test
+            {t("test")}
           </button>
         </div>
         <span className="small faint">
-          Only {provider?.displayName ?? providerId} models are listed.
+          {t("Only")} {provider?.displayName ?? providerId} {t("models are listed.")}
         </span>
       </div>
 
       <div className="field">
-        <label>Credentials</label>
+        <label htmlFor="entry-label">{t("Display name (optional)")}</label>
+        <input
+          id="entry-label"
+          value={label}
+          maxLength={120}
+          placeholder={`${model} ${t("on")} ${provider?.displayName ?? providerId}`}
+          onChange={(event) => setLabel(event.target.value)}
+        />
+        <span className="small faint">
+          {t("This is the name COKEY shows for the node. It is never generated for you.")}
+        </span>
+      </div>
+
+      <div className="field">
+        <label>{t("Credentials")}</label>
         {providerCredentials.length === 0 ? (
           <div className="hint-box">
-            No credentials for {provider?.displayName ?? providerId} yet. Connect one from the
-            Providers tab first — COKEY will not create an entry with an unverified key.
+            {t("No credentials for")} {provider?.displayName ?? providerId} {t("yet. Connect one from the Providers tab first — COKEY will not create an entry with an unverified key.")}
           </div>
         ) : (
           <div className="selected-list">
@@ -192,10 +213,10 @@ export function AddEntryModal({
 
       <div className="modal-actions">
         <button className="secondary" onClick={onClose} disabled={busy}>
-          Cancel
+          {t("Cancel")}
         </button>
         <button onClick={() => void submit()} disabled={busy || providerCredentials.length === 0}>
-          {busy ? "Adding…" : "Add entry"}
+          {busy ? t("Adding…") : t("Add entry")}
         </button>
       </div>
     </Modal>

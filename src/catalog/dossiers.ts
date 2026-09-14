@@ -1,0 +1,785 @@
+/**
+ * Provider dossiers.
+ *
+ * The catalog tells COKEY where a provider lives; a dossier tells a person
+ * whether they want to depend on it. Two things matter and are almost never
+ * written down in one place:
+ *
+ *   1. Who runs it and from where, because that decides the jurisdiction your
+ *      prompts travel to.
+ *   2. Whether the free tier is infrastructure or a novelty, because a $0.25
+ *      weekly credit cap is not a fallback, it is a demo.
+ *
+ * `origin` is only filled in when the operator is publicly identifiable.
+ * Everything else says `undisclosed` rather than guessing a country from a
+ * domain name.
+ */
+
+export type ProviderKind = "lab" | "inference-cloud" | "aggregator" | "gateway" | "local";
+
+export type ProviderVerdict =
+  /** Dependable enough to be a chain's first entry. */
+  | "recommended"
+  /** Works, keep it as a fallback. */
+  | "usable"
+  /** Real, but rate-limited or credit-capped past the point of usefulness. */
+  | "limited"
+  /** Structural trap: re-exports, broken schemas, or unreachable. */
+  | "avoid";
+
+export interface ProviderDossier {
+  /** Company, lab or project operating the endpoint. */
+  operator: string;
+  /** Country or region the operator is based in, when it is public. */
+  origin: string;
+  kind: ProviderKind;
+  /** One or two sentences: what this actually is. */
+  summary: string;
+  verdict: ProviderVerdict;
+  /** Why that verdict, in one line. */
+  verdictReason: string;
+  /** Public source for the operator/origin claim, when one exists. */
+  sourceUrl?: string;
+  /** ISO date this dossier was last checked against reality. */
+  reviewedAt?: string;
+  /** One-line free-tier summary, when it differs from the catalog's own. */
+  freeTierSummary?: string;
+  /** A caveat worth keeping next to the verdict. */
+  notes?: string;
+}
+
+const DOSSIERS: Record<string, ProviderDossier> = {
+  agnes: {
+    operator: "Agnes AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising a modest request-per-day allowance.",
+    verdict: "limited",
+    verdictReason: "Low ceiling compared with the major hubs.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "20 RPM · 1,000 RPD",
+  },
+  "agnes-ai": {
+    operator: "Agnes AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising a modest request-per-day allowance.",
+    verdict: "limited",
+    verdictReason: "Low ceiling compared with the major hubs.",
+  },
+  ai121628: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free models · no published rate limit",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  aihubmix: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Selected free models · others intermittently unavailable",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  aion: {
+    operator: "AION Labs",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub serving open-weight models with advertised daily token limits.",
+    verdict: "limited",
+    verdictReason: "Tight per-minute limits and an unverified operator.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "15 RPM · 20,000 TPD",
+  },
+  "aion-labs": {
+    operator: "AION Labs",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub serving open-weight models with advertised daily token limits.",
+    verdict: "limited",
+    verdictReason: "Tight per-minute limits and an unverified operator.",
+  },
+  amdradeon: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Paid model · works with a funded key",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  anyapi: {
+    operator: "AnyAPI AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary:
+      "A free hub whose model list closely mirrors OpenRouter's free pool rather than a distinct backend.",
+    verdict: "limited",
+    verdictReason: "Structurally a re-export, so it fails when OpenRouter's pool is congested.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "100,000 TPD",
+  },
+  auriko: {
+    operator: "Auriko",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub with a permanently-free model tier alongside a BYOK path.",
+    verdict: "limited",
+    verdictReason: "Small catalogue and no published operator.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "500 RPM · BYOK",
+    notes: "Rate limit is generous but the key is your own upstream key (BYOK).",
+  },
+  bazaarlink: {
+    operator: "BazaarLink",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising a very small request-per-day allowance.",
+    verdict: "limited",
+    verdictReason: "50 requests per day is a demo, not a pool.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10 RPM · 50 RPD",
+  },
+  cerebras: {
+    operator: "Cerebras Systems",
+    origin: "United States",
+    kind: "inference-cloud",
+    summary:
+      "Wafer-scale chips serving open-weight models at very high token rates. Free tier is generous in throughput but strict on concurrency.",
+    verdict: "usable",
+    verdictReason: "Excellent speed, smaller daily allowance than Groq or Cloudflare.",
+    sourceUrl: "https://www.cerebras.ai/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free tier with rate limits",
+  },
+  cloudflare: {
+    operator: "Cloudflare, Inc.",
+    origin: "United States",
+    kind: "inference-cloud",
+    summary:
+      "Workers AI runs open models on Cloudflare's edge network, so requests terminate close to you. The free allowance is the largest per-day ceiling here.",
+    verdict: "recommended",
+    verdictReason:
+      "Enormous request ceiling and near-zero network latency; the AI Gateway adds observability.",
+    sourceUrl: "https://developers.cloudflare.com/workers-ai/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10,000 RPD shared across all models",
+    notes: "Requires both an API token and the Cloudflare account id.",
+  },
+  cohere: {
+    operator: "Cohere Inc.",
+    origin: "Canada",
+    kind: "lab",
+    summary:
+      "Enterprise-focused lab with a strong retrieval and tool-calling line. The free trial keys are metered and expire.",
+    verdict: "usable",
+    verdictReason:
+      "Solid tool calling, but trial keys are time-boxed rather than self-replenishing.",
+    sourceUrl: "https://cohere.com/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "20 RPM · 1,000 calls/month",
+  },
+  electronhub: {
+    operator: "ElectronHub",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary:
+      "A free hub with a long model list but a weekly dollar credit cap rather than a request allowance.",
+    verdict: "limited",
+    verdictReason: "Impressive list, single-use budget: treat it as a novelty.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5 RPM",
+    notes: "Weekly credit cap; not suitable as a chain's first entry.",
+  },
+  evolvex: {
+    operator: "EvolveX",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub that does not publish its quotas.",
+    verdict: "limited",
+    verdictReason: "Unspecified limits and no operator disclosure.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5 RPM · unspecified RPD",
+  },
+  fastrouter: {
+    operator: "FastRouter",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A router with a per-model daily request allowance on its free tier.",
+    verdict: "limited",
+    verdictReason: "Ten requests per model per day is too thin to build on.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10 RPD per model",
+  },
+  fhrouter: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free 'on the house' models",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  freeai: {
+    operator: "Free.ai",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub fronting several open-weight models.",
+    verdict: "limited",
+    verdictReason: "Small allowances and no published operator.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10 RPM · 30,000 TPD",
+  },
+  freeinference: {
+    operator: "FreeInference",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub gated behind manual account review.",
+    verdict: "avoid",
+    verdictReason: "Manual approval, tiny catalogue: the friction costs more than the access.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "$20 of credits per day",
+    notes: "New accounts may go through manual review.",
+  },
+  gemini: {
+    operator: "Google DeepMind",
+    origin: "United States",
+    kind: "lab",
+    summary:
+      "Google's frontier line. The flash tier is fast and cheap and carries a very large context window.",
+    verdict: "usable",
+    verdictReason:
+      "Huge context helps on large repositories, though the free tier is not code-specialised.",
+    sourceUrl: "https://ai.google.dev/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5–20 RPM · 20–500 RPD · varies per model",
+  },
+  gonka: {
+    operator: "Gonka Broker",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A small broker reachable only after phone verification.",
+    verdict: "avoid",
+    verdictReason: "Phone verification for three models that are all available elsewhere.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "6 RPM",
+    notes: "Requires phone verification before free monthly tokens unlock.",
+  },
+  "gonka-broker": {
+    operator: "Gonka Broker",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A small broker reachable only after phone verification.",
+    verdict: "avoid",
+    verdictReason: "Phone verification for three models that are all available elsewhere.",
+  },
+  groq: {
+    operator: "Groq, Inc.",
+    origin: "United States",
+    kind: "inference-cloud",
+    summary:
+      "Custom LPU silicon built for token throughput rather than general-purpose GPUs. Serves open-weight models with the lowest first-token latency on this list.",
+    verdict: "recommended",
+    verdictReason:
+      "Highest usable daily volume with sub-300ms responses makes it the natural first entry.",
+    sourceUrl: "https://groq.com/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "30 RPM · 14,400 RPD · 18,000 TPM",
+  },
+  helixmind: {
+    operator: "HelixMind",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub with a mixed catalogue of open-weight models.",
+    verdict: "limited",
+    verdictReason: "No published operator and no verifiable quota source.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "3 RPM · 50 RPD",
+  },
+  huggingface: {
+    operator: "Hugging Face, Inc.",
+    origin: "United States / France",
+    kind: "aggregator",
+    summary:
+      "Inference Providers proxy dozens of backends behind one key. The free monthly credit is deliberately tiny.",
+    verdict: "limited",
+    verdictReason: "Widest model list here, but the credit cap is exhausted in a handful of calls.",
+    sourceUrl: "https://huggingface.co/docs/inference-providers",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "$0.10 of monthly inference credits",
+  },
+  "intern-ai": {
+    operator: "Shanghai AI Laboratory",
+    origin: "China",
+    kind: "lab",
+    summary:
+      "The Intern series (Shusheng) from Shanghai AI Laboratory, released as open weights and served through its own hub.",
+    verdict: "limited",
+    verdictReason: "Strong models, but the endpoint is slow and the free allowance is opaque.",
+    sourceUrl: "https://github.com/InternLM",
+  },
+  internai: {
+    operator: "Shanghai AI Laboratory",
+    origin: "China",
+    kind: "lab",
+    summary:
+      "The Intern series (Shusheng) from Shanghai AI Laboratory, released as open weights and served through its own hub.",
+    verdict: "limited",
+    verdictReason: "Strong models, but the endpoint is slow and the free allowance is opaque.",
+    sourceUrl: "https://github.com/InternLM",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "90M tokens/month",
+  },
+  kilo: {
+    operator: "Kilo Code",
+    origin: "United States",
+    kind: "gateway",
+    summary:
+      "A coding-agent extension that also exposes an OpenAI-compatible gateway. Much of its free catalogue mirrors OpenRouter's.",
+    verdict: "usable",
+    verdictReason:
+      "Convenient if you already use the extension, otherwise redundant with OpenRouter.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5 RPM · 200 RPD",
+  },
+  literouter: {
+    operator: "LiteRouter",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A light router that re-exports the common free catalogue.",
+    verdict: "avoid",
+    verdictReason: "Same structured-output problem as LLM.Kiwi, with no unique models.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Uncapped requests for :free models",
+  },
+  "llm-kiwi": {
+    operator: "LLM.Kiwi",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub that does not reliably honour structured output.",
+    verdict: "avoid",
+    verdictReason: "Schema failures break tool calling, which is the whole point of an agent.",
+  },
+  llm7: {
+    operator: "LLM7.IO",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A community free hub with a daily request and token allowance.",
+    verdict: "usable",
+    verdictReason: "Reasonable fallback volume, unclear operator.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "40 RPM",
+  },
+  llmkiwi: {
+    operator: "LLM.Kiwi",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub that does not reliably honour structured output.",
+    verdict: "avoid",
+    verdictReason: "Schema failures break tool calling, which is the whole point of an agent.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "40 RPH",
+  },
+  meganova: {
+    operator: "MegaNova",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub inside the crowded re-export tier.",
+    verdict: "limited",
+    verdictReason: "Indistinguishable from the other re-exports; keep one, not five.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "60 RPM · 550 RPD",
+  },
+  mistral: {
+    operator: "Mistral AI",
+    origin: "France",
+    kind: "lab",
+    summary:
+      "European frontier lab. Its dedicated code family (Codestral, Devstral) is trained for completion and agentic editing rather than general chat.",
+    verdict: "recommended",
+    verdictReason:
+      "Straight from the source, and the code models are purpose-built rather than re-tuned.",
+    sourceUrl: "https://mistral.ai/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "~2–30 RPM · 50,000 TPM shared pool",
+  },
+  mixlayer: {
+    operator: "Mixlayer",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub serving open-weight models with tight limits.",
+    verdict: "limited",
+    verdictReason: "Small allowance, unverified operator.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "20 RPM",
+  },
+  naga: {
+    operator: "Naga AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub whose catalogue mirrors the OpenRouter free pool.",
+    verdict: "limited",
+    verdictReason: "Re-export tier: no independent capacity behind it.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10 RPM · 100 RPD",
+  },
+  nararouter: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free laguna-s-2.1 · DeepSeek models paid",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  nvidia: {
+    operator: "NVIDIA Corporation",
+    origin: "United States",
+    kind: "inference-cloud",
+    summary:
+      "NIM hosts open-weight models on NVIDIA's own infrastructure. Limits are applied per model, so twelve models means twelve separate allowances.",
+    verdict: "usable",
+    verdictReason: "Wide model coverage and no token cap, but per-model RPM is modest.",
+    sourceUrl: "https://build.nvidia.com/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "40 RPM per model · uncapped TPD",
+  },
+  odirouter: {
+    operator: "Odirouter",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary:
+      "A small router advertising free access to vendor models that the vendor does not wholesale to resellers.",
+    verdict: "avoid",
+    verdictReason:
+      "If a reseller sells frontier weights for free, the name is almost certainly not the model.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5 RPM · 50 RPD",
+    notes: "Hosted in Russia; some free models are region-sensitive.",
+  },
+  ollama: {
+    operator: "Ollama, Inc.",
+    origin: "United States",
+    kind: "local",
+    summary:
+      "Local model runner that also offers a hosted cloud tier. The local path costs nothing and leaks nothing.",
+    verdict: "usable",
+    verdictReason: "The local daemon is the honest unlimited option; the cloud tier resets weekly.",
+    sourceUrl: "https://ollama.com/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5-hour session · weekly reset",
+  },
+  "opencode-zen": {
+    operator: "OpenCode / SST",
+    origin: "United States",
+    kind: "gateway",
+    summary:
+      "A gateway curated for coding agents rather than general chat, with a long-context contributor tier.",
+    verdict: "recommended",
+    verdictReason: "Curated for exactly this workload, and the free contributor tier is real.",
+    sourceUrl: "https://opencode.ai/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "30 RPM · 500 RPD · 1M TPD",
+  },
+  openrouter: {
+    operator: "OpenRouter, Inc.",
+    origin: "United States",
+    kind: "aggregator",
+    summary:
+      "A router across many upstreams. Its `:free` catalogue is the reference list that most other 'free hubs' copy verbatim.",
+    verdict: "usable",
+    verdictReason: "Genuinely useful for breadth, but the free pool is shared and congested.",
+    sourceUrl: "https://openrouter.ai/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "20 RPM · 50 RPD",
+  },
+  orcarouter: {
+    operator: "Orcarouter",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub with an unspecified allowance.",
+    verdict: "limited",
+    verdictReason: "No published quotas, so capacity cannot be planned.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free tier, limits unspecified",
+  },
+  poixe: {
+    operator: "Poixe AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising a very large daily request and token allowance.",
+    verdict: "usable",
+    verdictReason: "Worth keeping as volume, once your own dashboard confirms the numbers.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10,000 RPD · 10M TPD",
+  },
+  pollinations: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free community-hosted models",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  pooled: {
+    operator: "Pooled AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A small pooled-inference hub.",
+    verdict: "limited",
+    verdictReason: "Little public information and no published quotas.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "1M TPD",
+  },
+  "pooled-ai": {
+    operator: "Pooled AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A small pooled-inference hub.",
+    verdict: "limited",
+    verdictReason: "Little public information and no published quotas.",
+  },
+  poolside: {
+    operator: "Poolside",
+    origin: "United States",
+    kind: "lab",
+    summary:
+      "Lab training models specifically for agentic software engineering rather than general chat.",
+    verdict: "recommended",
+    verdictReason: "Best coding pedigree on this list when you do not need high volume.",
+    sourceUrl: "https://poolside.ai/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "20 RPM · 200 RPD · 1M TPD",
+  },
+  qzz: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free DeepSeek models · ~1 request per 5 minutes",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  requesty: {
+    operator: "Requesty",
+    origin: "Germany",
+    kind: "aggregator",
+    summary:
+      "An observability-first router. Its free pool re-exports the same models as the other aggregators.",
+    verdict: "usable",
+    verdictReason: "Fine as a fallback; not a distinct source of models.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "200 RPD",
+  },
+  routeway: {
+    operator: "Routeway AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A router with two models, one of which answers with double-digit latency.",
+    verdict: "avoid",
+    verdictReason: "The same model is faster and freer on Groq or Cloudflare.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5 RPM",
+  },
+  "sea-lion": {
+    operator: "AI Singapore",
+    origin: "Singapore",
+    kind: "lab",
+    summary:
+      "A national open-source model family (Southeast Asian Languages in One Network) built for the region's languages.",
+    verdict: "limited",
+    verdictReason: "Genuinely open and well documented, but not a coding model.",
+    sourceUrl: "https://sea-lion.ai/about/",
+  },
+  sealion: {
+    operator: "AI Singapore",
+    origin: "Singapore",
+    kind: "lab",
+    summary:
+      "A national open-source model family (Southeast Asian Languages in One Network) built for the region's languages.",
+    verdict: "limited",
+    verdictReason: "Genuinely open and well documented, but not a coding model.",
+    sourceUrl: "https://sea-lion.ai/about/",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10 RPM",
+  },
+  tokenharbor: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free models · limits unspecified",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  tokenreply: {
+    operator: "TokenReply",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub with a single-digit requests-per-day style cap and slow models.",
+    verdict: "avoid",
+    verdictReason: "Too thin and too slow to route real work through.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "3 RPM",
+  },
+  tokenrouter: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Free tier · limited capacity, stability not guaranteed",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  voidai: {
+    operator: "Void AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising flagship coding models with a credit-based daily allowance.",
+    verdict: "usable",
+    verdictReason: "Good model coverage, but the operator is not publicly identified.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "100 RPM · 125,000 daily credits",
+  },
+  wusrouter: {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Selected free models",
+    notes: "Imported from the legacy catalog without a dossier. Needs an editor.",
+  },
+  xkiro: {
+    operator: "xKiro AI",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary:
+      "A free hub advertising a large daily token allowance across third-party model families.",
+    verdict: "usable",
+    verdictReason:
+      "Useful batch capacity; treat the advertised volume as unverified until your dashboard agrees.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "5M TPD · free models only",
+  },
+  yolo: {
+    operator: "Yolo-Auto",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub offering one model at roughly fifteen requests per day.",
+    verdict: "avoid",
+    verdictReason: "One model, fifteen requests, better equivalents elsewhere.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "15 RPD",
+  },
+  "yolo-auto": {
+    operator: "Yolo-Auto",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub offering one model at roughly fifteen requests per day.",
+    verdict: "avoid",
+    verdictReason: "One model, fifteen requests, better equivalents elsewhere.",
+  },
+  zai: {
+    operator: "Z.ai (formerly Zhipu AI)",
+    origin: "China",
+    kind: "lab",
+    summary:
+      "Chinese frontier lab behind the GLM family. Publishes open weights and runs an OpenAI-compatible endpoint.",
+    verdict: "recommended",
+    verdictReason: "GLM models code well and the open weights make the claims checkable.",
+    sourceUrl: "https://en.wikipedia.org/wiki/Z.ai",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Uncapped TPD · 1 concurrent",
+  },
+  zydit: {
+    operator: "Zydit",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising unlimited requests behind a low per-minute cap.",
+    verdict: "limited",
+    verdictReason: "Unlimited in name, rate-shaped in practice.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "Unlimited requests · 10 RPM",
+  },
+  zylo: {
+    operator: "Zylo API",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "A free hub advertising a large daily request and token allowance.",
+    verdict: "usable",
+    verdictReason: "Decent volume on paper; verify the ceiling before you lean on it.",
+    reviewedAt: "2026-09-13",
+    freeTierSummary: "10 RPM · 7,200 RPD · 200,000 TPD",
+  },
+};
+
+/** Dossier for a provider, or a neutral one for custom endpoints. */
+export function providerDossier(providerId: string): ProviderDossier {
+  const found = DOSSIERS[providerId];
+  if (found) return found;
+
+  if (providerId.startsWith("custom:")) {
+    return {
+      operator: "You",
+      origin: "self-hosted",
+      kind: "gateway",
+      summary:
+        "An endpoint you added yourself. COKEY validates it against the SSRF guard and treats it like any other provider.",
+      verdict: "usable",
+      verdictReason: "Your own endpoint: quotas and jurisdiction are whatever you configured.",
+    };
+  }
+
+  return {
+    operator: "Not publicly disclosed",
+    origin: "undisclosed",
+    kind: "aggregator",
+    summary: "No dossier yet for this provider. Add one in the catalog when you learn who runs it.",
+    verdict: "limited",
+    verdictReason: "An undocumented operator cannot be recommended or ruled out.",
+  };
+}
+
+export function providerDossiers(): Record<string, ProviderDossier> {
+  return DOSSIERS;
+}
+
+/** Providers worth wiring up first, best first. */
+export const PREFERRED_PROVIDERS = [
+  "groq",
+  "cloudflare",
+  "opencode-zen",
+  "poolside",
+  "voidai",
+  "mistral",
+  "xkiro",
+  "nvidia",
+  "cerebras",
+  "zai",
+] as const;

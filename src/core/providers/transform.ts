@@ -4,7 +4,7 @@ import type { TokenUsage } from "./adapter.js";
  * Builders for OpenAI-shaped payloads.
  *
  * The adapters whose upstream wire format differs use these so that every
- * client of COKEY — regardless of which provider actually served the request —
+ * client of COKEY - regardless of which provider actually served the request -
  * sees exactly one response shape.
  */
 
@@ -60,7 +60,11 @@ export function openAiCompletion(options: CompletionOptions): Record<string, unk
     created: options.created,
     model: options.model,
     choices: [{ index: 0, message, finish_reason: options.finishReason }],
-    usage: openAiUsagePayload(options.usage) ?? { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
+    usage: openAiUsagePayload(options.usage) ?? {
+      prompt_tokens: 0,
+      completion_tokens: 0,
+      total_tokens: 0,
+    },
   };
 }
 
@@ -94,7 +98,11 @@ export function openAiChunk(options: ChunkOptions): Record<string, unknown> {
 export function mapFinishReason(reason: string | undefined | null): string {
   if (!reason) return "stop";
   const normalized = reason.toLowerCase();
-  if (normalized === "max_tokens" || normalized === "length" || normalized === "max_output_tokens") {
+  if (
+    normalized === "max_tokens" ||
+    normalized === "length" ||
+    normalized === "max_output_tokens"
+  ) {
     return "length";
   }
   if (

@@ -6,6 +6,8 @@ export interface InsertCredentialInput {
   accountId?: string;
   secretEncrypted: string;
   proxyUrl?: string;
+  /** 1 when the pool picked this proxy, 0 when the user set it. */
+  proxyAuto?: number;
   description: string;
   status: string;
   createdAt: number;
@@ -19,6 +21,7 @@ export interface CredentialPatch {
   accountId?: string | null;
   secretEncrypted?: string;
   proxyUrl?: string | null;
+  proxyAuto?: number;
   description?: string;
   status?: string;
   updatedAt?: number;
@@ -34,6 +37,7 @@ const COLUMNS: Record<keyof CredentialPatch, string> = {
   accountId: "account_id",
   secretEncrypted: "secret_encrypted",
   proxyUrl: "proxy_url",
+  proxyAuto: "proxy_auto",
   description: "description",
   status: "status",
   updatedAt: "updated_at",
@@ -51,9 +55,9 @@ export class CredentialsRepo {
     this.db.db
       .prepare(
         `INSERT INTO credentials
-           (id, provider_id, account_id, secret_encrypted, proxy_url, description, status,
+           (id, provider_id, account_id, secret_encrypted, proxy_url, proxy_auto, description, status,
             created_at, updated_at, usage, consecutive_failures)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`,
       )
       .run(
         input.id,
@@ -61,6 +65,7 @@ export class CredentialsRepo {
         input.accountId ?? null,
         input.secretEncrypted,
         input.proxyUrl ?? null,
+        input.proxyAuto ?? 0,
         input.description,
         input.status,
         input.createdAt,
@@ -71,8 +76,7 @@ export class CredentialsRepo {
 
   get(id: string): CredentialRow | undefined {
     return this.db.db.prepare(`SELECT * FROM credentials WHERE id = ?`).get(id) as
-      | CredentialRow
-      | undefined;
+      CredentialRow | undefined;
   }
 
   list(providerId?: string): CredentialRow[] {
@@ -116,7 +120,8 @@ export class CredentialsRepo {
   }
 
   deleteByProvider(providerId: string): number {
-    return this.db.db.prepare(`DELETE FROM credentials WHERE provider_id = ?`).run(providerId).changes;
+    return this.db.db.prepare(`DELETE FROM credentials WHERE provider_id = ?`).run(providerId)
+      .changes;
   }
 
   countsByProvider(): Array<{ provider_id: string; total: number; healthy: number }> {

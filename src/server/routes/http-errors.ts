@@ -31,7 +31,9 @@ export function errorPayload(error: unknown): Record<string, unknown> {
   if (error instanceof ZodError) {
     return {
       error: {
-        message: error.issues.map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`).join("; "),
+        message: error.issues
+          .map((issue) => `${issue.path.join(".") || "body"}: ${issue.message}`)
+          .join("; "),
         type: "validation_error",
         issues: error.issues,
       },

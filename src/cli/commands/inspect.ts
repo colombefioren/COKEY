@@ -16,42 +16,49 @@ import {
 
 /** Read-only inspection commands. */
 export function registerInspectCommands(cli: CAC): void {
-  defineCommand(cli, "providers", "List catalog providers and free tier status", async (_args, context) => {
-    await withCokey(context, (cokey) => {
-      const statuses = cokey.providerStatuses();
-      const { free, other } = divideFreeProviders(statuses);
+  defineCommand(
+    cli,
+    "providers",
+    "List catalog providers and free tier status",
+    async (_args, context) => {
+      await withCokey(context, (cokey) => {
+        const statuses = cokey.providerStatuses();
+        const { free, other } = divideFreeProviders(statuses);
 
-      emit(context, statuses, () => {
-        console.log(bold(`★ Free providers (${free.length})`));
-        for (const provider of free) {
-          const state = provider.connected
-            ? green(`${provider.credentialCount} key${provider.credentialCount === 1 ? "" : "s"}`)
-            : dim("not connected");
-          console.log(
-            `  ${cyan(provider.id.padEnd(16))} ${provider.displayName.padEnd(24)} ` +
-              `${dim(provider.freeTier.summary.padEnd(38))} ${state}`,
-          );
-        }
-
-        if (other.length > 0) {
-          console.log("");
-          console.log(bold(`Other supported providers (${other.length})`));
-          for (const provider of other) {
-            console.log(`  ${provider.id.padEnd(16)} ${provider.displayName}`);
+        emit(context, statuses, () => {
+          console.log(bold(`★ Free providers (${free.length})`));
+          for (const provider of free) {
+            const state = provider.connected
+              ? green(`${provider.credentialCount} key${provider.credentialCount === 1 ? "" : "s"}`)
+              : dim("not connected");
+            console.log(
+              `  ${cyan(provider.id.padEnd(16))} ${provider.displayName.padEnd(24)} ` +
+                `${dim(provider.freeTier.summary.padEnd(38))} ${state}`,
+            );
           }
-        }
 
-        const custom = cokey.listCustomEndpoints();
-        if (custom.length > 0) {
-          console.log("");
-          console.log(bold(`Custom endpoints (${custom.length})`));
-          for (const endpoint of custom) {
-            console.log(`  ${endpoint.id.padEnd(24)} ${endpoint.displayName} ${dim(endpoint.baseUrl)}`);
+          if (other.length > 0) {
+            console.log("");
+            console.log(bold(`Other supported providers (${other.length})`));
+            for (const provider of other) {
+              console.log(`  ${provider.id.padEnd(16)} ${provider.displayName}`);
+            }
           }
-        }
+
+          const custom = cokey.listCustomEndpoints();
+          if (custom.length > 0) {
+            console.log("");
+            console.log(bold(`Custom endpoints (${custom.length})`));
+            for (const endpoint of custom) {
+              console.log(
+                `  ${endpoint.id.padEnd(24)} ${endpoint.displayName} ${dim(endpoint.baseUrl)}`,
+              );
+            }
+          }
+        });
       });
-    });
-  });
+    },
+  );
 
   defineCommand(
     cli,
@@ -61,9 +68,7 @@ export function registerInspectCommands(cli: CAC): void {
       const filter = args[0];
 
       await withCokey(context, (cokey) => {
-        const views = cokey.modelCatalog().filter(
-          (view) => !filter || view.providerId === filter,
-        );
+        const views = cokey.modelCatalog().filter((view) => !filter || view.providerId === filter);
 
         emit(context, views, () => {
           if (views.length === 0) {
@@ -131,7 +136,9 @@ export function registerInspectCommands(cli: CAC): void {
 
           emit(context, { validation, status: after.status }, () => {
             const verdict = validation.ok
-              ? green(`✓ verified · ${before.providerId} accepted the key · ${validation.latencyMs ?? 0}ms`)
+              ? green(
+                  `✓ verified · ${before.providerId} accepted the key · ${validation.latencyMs ?? 0}ms`,
+                )
               : red(`✗ ${validation.classification} · ${validation.message ?? "rejected"}`);
             console.log(`${before.description}: ${verdict}`);
             console.log(dim(`status is now ${after.status}`));
@@ -152,7 +159,9 @@ export function registerInspectCommands(cli: CAC): void {
         emit(context, credentials, () => {
           if (credentials.length === 0) {
             console.log(
-              dim("No credentials yet. Connect a provider from the UI or `cokey credentials <file>`."),
+              dim(
+                "No credentials yet. Connect a provider from the UI or `cokey credentials <file>`.",
+              ),
             );
             return;
           }
@@ -176,18 +185,7 @@ export function registerInspectCommands(cli: CAC): void {
 
           console.log(
             table(
-              [
-                "STATE",
-                "PROVIDER",
-                "DESCRIPTION",
-                "KEY",
-                "USAGE",
-                "OK",
-                "RATE",
-                "",
-                "EGRESS",
-                "",
-              ],
+              ["STATE", "PROVIDER", "DESCRIPTION", "KEY", "USAGE", "OK", "RATE", "", "EGRESS", ""],
               rows,
             ),
           );
@@ -196,7 +194,9 @@ export function registerInspectCommands(cli: CAC): void {
             dim(`RATE is this key's own observed requests per minute, not a provider quota.`),
           );
           console.log(
-            dim(`Quota is shown per credential in the UI; "unknown" means the provider reports none.`),
+            dim(
+              `Quota is shown per credential in the UI; "unknown" means the provider reports none.`,
+            ),
           );
         });
       });
@@ -228,7 +228,9 @@ export function registerInspectCommands(cli: CAC): void {
             entry.fallback ? yellow(entry.fallbackReason ?? "fallback") : "",
             entry.stream ? "stream" : "",
           ]);
-          console.log(table(["TIME", "CHAIN", "MODEL", "CREDENTIAL", "", "LATENCY", "FALLBACK", ""], rows));
+          console.log(
+            table(["TIME", "CHAIN", "MODEL", "CREDENTIAL", "", "LATENCY", "FALLBACK", ""], rows),
+          );
           console.log("");
           console.log(
             dim(

@@ -4,7 +4,8 @@ import type { Cokey } from "../../core/cokey.js";
 import { UpdateSettingsSchema } from "../../core/validation/schemas.js";
 import { InvalidSettingError } from "../../core/settings.js";
 import { exportConfig } from "../../core/config/export-import.js";
-import { streamEvents } from "../streaming/events.js";
+import { parseTopics, streamEvents } from "../streaming/events.js";
+import { matchesQuery, paginate, parsePageQuery } from "../pagination.js";
 import { withErrors } from "./http-errors.js";
 
 /** Reporting, configuration and health endpoints. */
@@ -40,9 +41,18 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  /** Server-sent events for live routing feedback. */
+  /**
+   * Server-sent events for live routing feedback.
+   *
+   * `?topics=credentials,models,chains` narrows the stream to the events that
+   * mean stored data changed, which is what a page uses to know it should
+   * refetch. With no `topics` the full routing narration is streamed, which is
+   * what the live-route chip wants. Both are one endpoint because they are one
+   * bus and one connection per client either way.
+   */
   app.get("/api/events", async (request, reply) => {
-    await streamEvents(reply, cokey.events);
+    const topics = parseTopics((request.query as { topics?: unknown } | undefined)?.topics);
+    await streamEvents(reply, cokey.events, topics);
     return reply;
   });
 
@@ -52,15 +62,35 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     withErrors(() => cokey.usageView()),
   );
 
+  /**
+   * Request history, paginated and filterable.
+   *
+   * `page`/`pageSize` is the supported interface. `limit` still works for older
+   * callers and is read as a page size, and `pageSize=0` returns everything for
+   * the CLI and the export path.
+   */
   app.get(
     "/api/requests",
     withErrors((request) => {
-      const query = request.query as { limit?: string };
-      const limit = query.limit ? Number(query.limit) : 100;
-      return {
-        data: cokey.history.list(Number.isFinite(limit) ? limit : 100),
-        stats: cokey.history.stats(),
-      };
+      const query = request.query as { outcome?: string; providerId?: string };
+      const page = parsePageQuery(request.query, { pageSize: 25 });
+
+      // The full history is fetched once and paginated in memory, so the pager
+      // always reports a total that matches the filters the user applied.
+      const rows = cokey.history.list(cokey.history.count()).filter((entry) => {
+        if (query.outcome && entry.outcome !== query.outcome) return false;
+        if (query.providerId && entry.providerId !== query.providerId) return false;
+        return matchesQuery(
+          page.query,
+          entry.chainAlias,
+          entry.model,
+          entry.providerId,
+          entry.credentialDescription,
+          entry.classification,
+        );
+      });
+
+      return { ...paginate(rows, page), stats: cokey.history.stats() };
     }),
   );
 
@@ -178,6 +208,9 @@ function publicSettings(cokey: Cokey): Record<string, unknown> {
     showFreeProviderNudger: settings.showFreeProviderNudger,
     freeProviderTarget: settings.freeProviderTarget,
     allowPrivateEndpoints: settings.allowPrivateEndpoints,
+    autoProxy: settings.autoProxy,
+    autoProxyStrategy: settings.autoProxyStrategy,
+    proxyPoolSize: cokey.proxyPool.size(),
     fallback: settings.fallback,
     passwordLocked: cokey.passwordLocked(),
   };

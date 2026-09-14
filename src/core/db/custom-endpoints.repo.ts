@@ -40,8 +40,7 @@ export class CustomEndpointsRepo {
 
   get(id: string): CustomEndpointRow | undefined {
     return this.db.db.prepare(`SELECT * FROM custom_endpoints WHERE id = ?`).get(id) as
-      | CustomEndpointRow
-      | undefined;
+      CustomEndpointRow | undefined;
   }
 
   list(): CustomEndpointRow[] {

@@ -67,3 +67,32 @@ export function endWithError(reply: FastifyReply, status: number, payload: unkno
   reply.raw.writeHead(status, { "content-type": "application/json" });
   reply.raw.end(JSON.stringify(payload));
 }
+
+/**
+ * Return a stream that emits `prefix` first, then every chunk of `body`.
+ *
+ * Used to prepend a synthetic SSE event (e.g. a chain-state notice) before the
+ * upstream bytes, without buffering the whole upstream stream.
+ */
+export function prependStream(
+  prefix: Uint8Array,
+  body: ReadableStream<Uint8Array>,
+): ReadableStream<Uint8Array> {
+  let sentPrefix = false;
+  const reader = body.getReader();
+  return new ReadableStream<Uint8Array>({
+    async pull(controller) {
+      if (!sentPrefix) {
+        sentPrefix = true;
+        controller.enqueue(prefix);
+        return;
+      }
+      const { done, value } = await reader.read();
+      if (done) controller.close();
+      else if (value) controller.enqueue(value);
+    },
+    cancel(reason) {
+      return reader.cancel(reason);
+    },
+  });
+}

@@ -62,7 +62,11 @@ export function storeKeyInKeychain(key: Buffer): boolean {
   try {
     const tool = keychainStoreCommand();
     if (!tool) return false;
-    execFileSync(tool.cmd, tool.args, { input: hex, stdio: ["pipe", "ignore", "ignore"], timeout: 3000 });
+    execFileSync(tool.cmd, tool.args, {
+      input: hex,
+      stdio: ["pipe", "ignore", "ignore"],
+      timeout: 3000,
+    });
     return true;
   } catch {
     return false;
@@ -87,9 +91,15 @@ function readKeychain(): Buffer | undefined {
 function keychainLookupCommand(): { cmd: string; args: string[] } | undefined {
   switch (process.platform) {
     case "linux":
-      return { cmd: "secret-tool", args: ["lookup", "service", KEYCHAIN_SERVICE, "account", KEYCHAIN_ACCOUNT] };
+      return {
+        cmd: "secret-tool",
+        args: ["lookup", "service", KEYCHAIN_SERVICE, "account", KEYCHAIN_ACCOUNT],
+      };
     case "darwin":
-      return { cmd: "security", args: ["find-generic-password", "-s", KEYCHAIN_SERVICE, "-a", KEYCHAIN_ACCOUNT, "-w"] };
+      return {
+        cmd: "security",
+        args: ["find-generic-password", "-s", KEYCHAIN_SERVICE, "-a", KEYCHAIN_ACCOUNT, "-w"],
+      };
     case "win32":
       return {
         cmd: "powershell",
@@ -109,7 +119,15 @@ function keychainStoreCommand(): { cmd: string; args: string[] } | undefined {
     case "linux":
       return {
         cmd: "secret-tool",
-        args: ["store", "--label", "COKEY master key", "service", KEYCHAIN_SERVICE, "account", KEYCHAIN_ACCOUNT],
+        args: [
+          "store",
+          "--label",
+          "COKEY master key",
+          "service",
+          KEYCHAIN_SERVICE,
+          "account",
+          KEYCHAIN_ACCOUNT,
+        ],
       };
     case "darwin":
       return {

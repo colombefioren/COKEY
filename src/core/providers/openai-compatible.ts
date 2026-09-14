@@ -64,7 +64,11 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   ): ProviderRequest {
     const base = this.resolveBaseUrl(entry, credential);
     const headers = this.chatHeaders(credential);
-    const body = JSON.stringify({ ...request, model: entry.model, stream: request.stream === true });
+    const body = JSON.stringify({
+      ...request,
+      model: entry.model,
+      stream: request.stream === true,
+    });
 
     return {
       url: this.chatUrl(base, credential),
@@ -97,15 +101,18 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     return openAiUsage(body);
   }
 
-  async listModels(credential: Credential): Promise<ModelInfo[]> {
+  async listModels(credential: Credential, options?: { timeoutMs?: number }): Promise<ModelInfo[]> {
     const base = this.modelsUrl(credential);
-    const result = await performRequest({
-      url: this.withAuthQuery(base, credential),
-      method: "GET",
-      headers: this.buildHeaders(credential),
-      stream: false,
-      proxyUrl: credential.proxyUrl,
-    });
+    const result = await performRequest(
+      {
+        url: this.withAuthQuery(base, credential),
+        method: "GET",
+        headers: this.buildHeaders(credential),
+        stream: false,
+        proxyUrl: credential.proxyUrl,
+      },
+      { timeoutMs: options?.timeoutMs },
+    );
 
     if (!result.ok) throw new Error(result.error.message);
 
@@ -116,18 +123,76 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   /**
    * Prove a credential works.
    *
-   * Prefers the catalog's declared strategy: a one-token chat ping for providers
-   * that validate per-model, otherwise a model listing. When the live model list
-   * is returned it is handed back so the UI can show reality rather than the
-   * curated seed.
+   * Always prefers a real inference call over a model listing, because
+   * GET /models succeeds even when the key's quota is fully depleted.
+   * Falls back to the models endpoint only when no model id is available.
    */
   async validateCredential(credential: Credential): Promise<ValidationResult> {
     const started = Date.now();
 
+    // 1. Catalog-declared chat verification model (e.g. cloudflare, groq).
     if (this.catalog.verification.method === "chat" && this.catalog.verification.model) {
       return this.validateViaChat(credential, this.catalog.verification.model, started);
     }
+
+    // 2. Even when the catalog says "models", exercise a real chat request
+    //    using a known model — so quota exhaustion is detected — but only one
+    //    this provider still actually serves. The curated list is a hand-
+    //    written default that drifts as free tiers churn their model lineup,
+    //    and blindly chatting with `knownModels[0]` meant a retired model made
+    //    every key look invalid even though the key itself was fine.
+    if (this.catalog.knownModels.length > 0) {
+      const model = await this.pickVerificationModel(credential);
+      return this.validateViaChat(credential, model, started);
+    }
+
+    // 3. Last resort: just prove the key authenticates.
     return this.validateViaModels(credential, started);
+  }
+
+  /**
+   * The curated model to verify with, preferring one this key can currently
+   * see and actually use for free. Lists live models first; among the
+   * curated ids still served, one the listing itself marks free (an
+   * `access_tier` of `"free"`, or zeroed `pricing`) wins over any other,
+   * because several aggregators mix metered models into the same `/models`
+   * response their free ones come from — a curated id can still be "in the
+   * listing" while requiring a deposited balance to chat with, which made
+   * verification report a perfectly good key as failing on a bill it was
+   * never meant to pay. A `:free`-suffixed id is the fallback signal for a
+   * listing that carries no such field at all. When no curated id survives,
+   * the same preference applies to whatever the provider does list, so
+   * verification never chats with a name the provider has already retired
+   * nor one it never intended to give away. A listing failure (network, or a
+   * provider that cannot list at all) falls back to the curated guess
+   * unchanged — the chat probe right after this still reports the real
+   * failure either way.
+   */
+  protected async pickVerificationModel(credential: Credential): Promise<string> {
+    const fallback = this.catalog.knownModels[0]!;
+    try {
+      const live = await this.listModels(credential);
+      const liveById = new Map(live.map((entry) => [entry.id, entry]));
+      const isFree = (id: string) => liveById.get(id)?.free ?? id.endsWith(":free");
+      const stillCurated = this.catalog.knownModels.filter((id) => liveById.has(id));
+      const liveIds = live.map((entry) => entry.id);
+      return (
+        // A curated id the listing itself vouches for as free: the best case,
+        // since it is both hand-picked and provably costs nothing.
+        stillCurated.find(isFree) ??
+        // Any live model at all that is provably free beats a curated one
+        // whose price is simply unknown to the listing — a curated id that
+        // still appears is not proof it did not start being billed.
+        liveIds.find(isFree) ??
+        // Nothing on this provider could be confirmed free; fall back to the
+        // curated guess, then to whatever is live at all.
+        stillCurated[0] ??
+        liveIds[0] ??
+        fallback
+      );
+    } catch {
+      return fallback;
+    }
   }
 
   protected async validateViaChat(
@@ -163,7 +228,10 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     };
   }
 
-  protected async validateViaModels(credential: Credential, started: number): Promise<ValidationResult> {
+  protected async validateViaModels(
+    credential: Credential,
+    started: number,
+  ): Promise<ValidationResult> {
     const result = await performRequest({
       url: this.withAuthQuery(this.modelsUrl(credential), credential),
       method: "GET",
@@ -208,7 +276,9 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   protected modelsUrl(credential: Credential): string {
-    const base = this.catalog.baseUrl.replace(/\{account_id\}/, credential.accountId ?? "").replace(/\/+$/, "");
+    const base = this.catalog.baseUrl
+      .replace(/\{account_id\}/, credential.accountId ?? "")
+      .replace(/\/+$/, "");
     return `${base}/models`;
   }
 
@@ -231,6 +301,26 @@ export function openAiUsage(body: unknown): TokenUsage {
   return { inputTokens: input, outputTokens: output };
 }
 
+/**
+ * Whether a listed model's own entry says it costs nothing.
+ *
+ * Two shapes cover the aggregators that bother to say: an explicit
+ * `access_tier` of `"free"`, or a `pricing` block whose input and output
+ * rates are both zero. Anything else — no such field, a non-zero rate, a
+ * tier of "paid"/"premium" — is left `undefined` rather than guessed at.
+ */
+function isFreeListing(item: Record<string, unknown>): boolean | undefined {
+  const tier = item.access_tier;
+  if (typeof tier === "string") return tier.toLowerCase() === "free";
+  const pricing = item.pricing;
+  if (pricing && typeof pricing === "object") {
+    const input = num((pricing as { input?: unknown }).input);
+    const output = num((pricing as { output?: unknown }).output);
+    if (input !== undefined && output !== undefined) return input === 0 && output === 0;
+  }
+  return undefined;
+}
+
 export function parseModelList(body: unknown, providerId: string): ModelInfo[] {
   if (!body || typeof body !== "object") return [];
   const data = (body as { data?: unknown }).data;
@@ -241,7 +331,9 @@ export function parseModelList(body: unknown, providerId: string): ModelInfo[] {
       out.push({ id: item, providerId });
     } else if (item && typeof item === "object") {
       const id = (item as { id?: unknown }).id ?? (item as { name?: unknown }).name;
-      if (typeof id === "string") out.push({ id, providerId });
+      if (typeof id === "string") {
+        out.push({ id, providerId, free: isFreeListing(item as Record<string, unknown>) });
+      }
     }
   }
   return out;

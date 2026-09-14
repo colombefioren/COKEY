@@ -1,4 +1,10 @@
-import { createCipheriv, createDecipheriv, createHash, randomBytes, timingSafeEqual } from "node:crypto";
+import {
+  createCipheriv,
+  createDecipheriv,
+  createHash,
+  randomBytes,
+  timingSafeEqual,
+} from "node:crypto";
 import { resolveMasterKey, type MasterKeyKind, type ResolveOptions } from "./keyring.js";
 
 const ALGORITHM = "aes-256-gcm";
@@ -39,7 +45,9 @@ export class SecretVault {
   }
 
   decrypt(payload: string): string {
-    const body = payload.startsWith(PAYLOAD_PREFIX) ? payload.slice(PAYLOAD_PREFIX.length) : payload;
+    const body = payload.startsWith(PAYLOAD_PREFIX)
+      ? payload.slice(PAYLOAD_PREFIX.length)
+      : payload;
     const buf = Buffer.from(body, "base64");
 
     if (buf.length < IV_LENGTH + TAG_LENGTH) {

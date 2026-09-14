@@ -47,12 +47,23 @@ export {
   ChainNotFoundError,
   ChainDisabledError,
 } from "./core/router/engine.js";
-export type { AttemptLog, RouteResult, RouterOptions } from "./core/router/engine.js";
+export type {
+  AttemptLog,
+  RouteErrorInfo,
+  RouteResult,
+  RouterOptions,
+} from "./core/router/engine.js";
 
 // Managers
 export { CredentialManager, CredentialNotFoundError } from "./core/credentials/manager.js";
 export { CredentialSelector } from "./core/credentials/selector.js";
-export { ChainManager, ChainNotFoundError as ChainLookupError, DuplicateAliasError, InvalidAliasError, validateAlias } from "./core/chains/manager.js";
+export {
+  ChainManager,
+  ChainNotFoundError as ChainLookupError,
+  DuplicateAliasError,
+  InvalidAliasError,
+  validateAlias,
+} from "./core/chains/manager.js";
 
 // Classification and policy primitives
 export {
@@ -63,7 +74,11 @@ export {
   isRequestScoped,
   isRetryable,
 } from "./core/errors/classify.js";
-export { CooldownManager, DEFAULT_COOLDOWN_POLICY, parseRetryAfter } from "./core/credentials/cooldown.js";
+export {
+  CooldownManager,
+  DEFAULT_COOLDOWN_POLICY,
+  parseRetryAfter,
+} from "./core/credentials/cooldown.js";
 export type { CooldownPolicy } from "./core/credentials/cooldown.js";
 export { parseQuota, parseResetValue } from "./core/quota/parse.js";
 export { maskAccountId, maskSecret } from "./core/credentials/masking.js";
@@ -90,8 +105,17 @@ export {
   importConfig,
   importFromFile,
 } from "./core/config/export-import.js";
-export type { CokeyExport, ExportedChain, ExportedEntry, ImportSummary } from "./core/config/export-import.js";
-export { applyCredentialFile, loadCredentialFile, CredentialFileSchema } from "./core/config/credentials-file.js";
+export type {
+  CokeyExport,
+  ExportedChain,
+  ExportedEntry,
+  ImportSummary,
+} from "./core/config/export-import.js";
+export {
+  applyCredentialFile,
+  loadCredentialFile,
+  CredentialFileSchema,
+} from "./core/config/credentials-file.js";
 export { parseMiniYaml, MiniYamlError } from "./core/config/mini-yaml.js";
 
 // Provider catalog
@@ -104,18 +128,28 @@ export {
   searchProviders,
   isFreeProvider,
 } from "./catalog/providers.js";
-export {
-  MODELS_BY_PROVIDER,
-  MODEL_CATALOG_SIZE,
-  modelsForProvider,
-} from "./catalog/models.js";
+export { MODELS_BY_PROVIDER, MODEL_CATALOG_SIZE, modelsForProvider } from "./catalog/models.js";
 export type { ModelSpec } from "./catalog/models.js";
 export { modelAvailability } from "./core/models/availability.js";
 export type { ModelCatalogView, SelectableModel } from "./core/models/availability.js";
-export { ProviderRegistry, createAdapter, customEndpointToCatalogEntry } from "./core/providers/registry.js";
+export {
+  ProviderRegistry,
+  createAdapter,
+  customEndpointToCatalogEntry,
+} from "./core/providers/registry.js";
 export { OpenAICompatibleAdapter } from "./core/providers/openai-compatible.js";
-export type { ProviderCatalogEntry, ProviderStatus, ApiStyle, AuthScheme } from "./catalog/types.js";
-export type { ProviderAdapter, ProviderRequest, SendResult, TransformContext } from "./core/providers/adapter.js";
+export type {
+  ProviderCatalogEntry,
+  ProviderStatus,
+  ApiStyle,
+  AuthScheme,
+} from "./catalog/types.js";
+export type {
+  ProviderAdapter,
+  ProviderRequest,
+  SendResult,
+  TransformContext,
+} from "./core/providers/adapter.js";
 
 // Egress proxies and live routing feedback
 export {
@@ -126,7 +160,13 @@ export {
 } from "./core/providers/proxy.js";
 export type { ParsedProxy, ProxyDispatcher, ProxyProtocol } from "./core/providers/proxy.js";
 export { EventBus } from "./core/events.js";
-export type { CokeyEvent, CokeyEventInput, CokeyEventType, CokeyEventLevel, EventListener } from "./core/events.js";
+export type {
+  CokeyEvent,
+  CokeyEventInput,
+  CokeyEventType,
+  CokeyEventLevel,
+  EventListener,
+} from "./core/events.js";
 export { RateTracker } from "./core/credentials/rate.js";
 
 // Logging
@@ -134,7 +174,12 @@ export { Logger, silentLogger } from "./core/logger.js";
 export type { LoggerSink } from "./core/logger.js";
 
 // Domain types
-export { emptyUsage, unknownQuota, defaultSettings, DEFAULT_FALLBACK_POLICY } from "./core/types.js";
+export {
+  emptyUsage,
+  unknownQuota,
+  defaultSettings,
+  DEFAULT_FALLBACK_POLICY,
+} from "./core/types.js";
 export type {
   Chain,
   ChainEntry,

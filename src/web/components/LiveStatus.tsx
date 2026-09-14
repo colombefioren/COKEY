@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { api, timeAgo } from "../api.js";
 import type { CokeyEvent, LiveRouteSnapshot } from "../types.js";
 import { useToast } from "./Toast.js";
+import { useLang } from "../lang.js";
 
 /** Keep the notification feed bounded; the router is chatty by nature. */
 const MAX_EVENTS = 40;
@@ -19,6 +20,7 @@ const MAX_EVENTS = 40;
  */
 export function LiveStatus() {
   const toast = useToast();
+  const { t } = useLang();
   const [route, setRoute] = useState<LiveRouteSnapshot | null>(null);
   const [events, setEvents] = useState<CokeyEvent[]>([]);
   const [open, setOpen] = useState(false);
@@ -105,11 +107,13 @@ export function LiveStatus() {
       if (event.type === "route.switch") {
         const changedModel =
           event.previous?.model !== undefined && event.previous.model !== event.model;
-        const label = changedModel ? "Model changed" : "Key changed";
+        const label = changedModel ? t("Model changed") : t("Key changed");
         const from = event.previous?.credentialDescription
           ? `${event.previous.providerId ?? "?"}/${event.previous.model ?? "?"} · ${event.previous.credentialDescription}`
           : undefined;
-        toast.info(`${label} → ${event.message.replace(/^Switched:\s*/, "")}${from ? ` (was ${from})` : ""}`);
+        toast.info(
+          `${label} → ${event.message.replace(/^Switched:\s*/, "")}${from ? ` (${t("was")} ${from})` : ""}`,
+        );
       }
 
       if (event.type === "credential.cooldown") toast.info(event.message);
@@ -128,16 +132,20 @@ export function LiveStatus() {
     };
   }, [toast]);
 
-  const model = route?.model ? `${route.providerId ?? "?"}/${route.model}` : "no traffic yet";
+  const model = route?.model
+    ? `${route.providerId ?? "?"}/${route.model}`
+    : t("no traffic yet");
   const key = route?.credentialDescription ?? "—";
 
   return (
-    <div className="live">
+    <div className="live" data-tour="live-status">
       <button
         type="button"
         className={`live-chip ${route?.active ? "active" : "idle"}`}
         onClick={() => setOpen((value) => !value)}
-        title={route?.active ? "A request is being routed right now" : "Last routed request"}
+        title={
+          route?.active ? t("A request is being routed right now") : t("Last routed request")
+        }
       >
         <span className="live-dot" aria-hidden>
           ●
@@ -146,27 +154,33 @@ export function LiveStatus() {
         <span className="live-sep">·</span>
         <span className="live-key">{key}</span>
         {route?.maskedSecret ? <span className="live-mask mono">{route.maskedSecret}</span> : null}
-        {route?.proxyLabel ? <span className="live-proxy mono">via {route.proxyLabel}</span> : null}
-        {route?.fallback ? <span className="badge warn">fallback</span> : null}
-        {route?.lastOutcome === "error" && !route.active ? <span className="badge bad">last error</span> : null}
+        {route?.proxyLabel ? (
+          <span className="live-proxy mono">
+            {t("via")} {route.proxyLabel}
+          </span>
+        ) : null}
+        {route?.fallback ? <span className="badge warn">{t("fallback")}</span> : null}
+        {route?.lastOutcome === "error" && !route.active ? (
+          <span className="badge bad">{t("last error")}</span>
+        ) : null}
         <span className="live-count">{events.length}</span>
       </button>
 
       {open ? (
         <div className="live-panel">
           <div className="live-panel-head">
-            <strong>Routing feed</strong>
+            <strong>{t("Routing feed")}</strong>
             <span className="spacer" />
             <span className="small faint">
               {route?.active
-                ? `attempt ${route.attempts + 1} in flight`
+                ? `${t("attempt")} ${route.attempts + 1} ${t("in flight")}`
                 : route?.updatedAt
-                  ? `idle · updated ${timeAgo(route.updatedAt)}`
-                  : "idle"}
+                  ? `${t("idle")} · ${t("updated")} ${timeAgo(route.updatedAt)}`
+                  : t("idle")}
             </span>
           </div>
           {events.length === 0 ? (
-            <div className="empty small">No routing activity yet.</div>
+            <div className="empty small">{t("No routing activity yet.")}</div>
           ) : (
             <ul className="live-list">
               {[...events].reverse().map((event) => (

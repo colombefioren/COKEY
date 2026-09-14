@@ -8,17 +8,33 @@ import {
   RequestScopedError,
 } from "../../core/router/engine.js";
 import { ChatCompletionSchema } from "../../core/validation/schemas.js";
-import { pipeStream } from "../streaming/sse.js";
+import { pipeStream, prependStream } from "../streaming/sse.js";
+import {
+  COKEY_PROVIDER_NAME,
+  chainStateMessage,
+  chainStateNotice,
+  errorIdentityHeaders,
+  identityHeaders,
+  withCokeyIdentity,
+  withChainStateNotice,
+} from "../openai/identity.js";
 
 /**
  * The OpenAI-compatible surface.
  *
- * Clients change one thing — their base URL — and everything else keeps
+ * Clients change one thing - their base URL - and everything else keeps
  * working, including streaming. Fallback decisions are exposed in `X-Cokey-*`
  * response headers so a user can always tell which credential actually served
  * a request.
  */
 export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
+  /**
+   * The model list a client sees.
+   *
+   * Everything is owned by COKEY, and each entry carries the chain alias as its
+   * id, so a picker shows one provider and the user's own chain names instead of
+   * whichever vendor happens to sit behind them.
+   */
   app.get("/v1/models", async () => {
     const created = Math.floor(Date.now() / 1000);
     const chains = cokey.chains.listChains();
@@ -28,13 +44,14 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
         id: chain.alias,
         object: "model",
         created: Math.floor(chain.createdAt / 1000),
-        owned_by: "cokey",
+        owned_by: COKEY_PROVIDER_NAME,
         chain: true,
+        description: chain.description,
       })),
       ...cokey
         .listModelIds()
         .filter((id) => !chains.some((chain) => chain.alias === id))
-        .map((id) => ({ id, object: "model", created, owned_by: "cokey" })),
+        .map((id) => ({ id, object: "model", created, owned_by: COKEY_PROVIDER_NAME })),
     ];
 
     return { object: "list", data };
@@ -63,19 +80,16 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
       return sendRouteError(cokey, reply, error, body.model);
     }
 
-    // Transparency headers. These describe routing, never secrets.
-    reply.headers({
-      "x-cokey-chain": result.chainAlias,
-      "x-cokey-entry": `${result.providerId}/${result.entryModel}`,
-      "x-cokey-model": result.entryModel,
-      "x-cokey-credential": result.credentialDescription,
-      "x-cokey-fallback": String(result.fallback),
-      ...(result.fallbackReason ? { "x-cokey-fallback-reason": result.fallbackReason } : {}),
-    });
+    // Transparency headers. These describe routing, never secrets, and
+    // `x-cokey-state` is the plain-language "chain changed state" line a client
+    // can surface as an information toast.
+    reply.headers(identityHeaders(result));
+    cokey.logger.debug("chain state", { state: chainStateMessage(result) });
 
     const adapter = cokey.providers.get(result.providerId);
     const started = Date.now();
     const upstream = result.response;
+    const notice = chainStateNotice(result);
 
     if (wantsStream) {
       if (!upstream.body) {
@@ -102,9 +116,19 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
 
       // Adapters whose upstream format differs translate the stream; the rest
       // (already OpenAI-compatible) are piped through untouched.
-      const stream = adapter.transformStream
+      let stream = adapter.transformStream
         ? adapter.transformStream(upstream.body, result.context)
         : upstream.body;
+
+      // A fallback is visible in the chat itself, not only in headers.
+      if (notice) {
+        const prefix = new TextEncoder().encode(
+          `data: ${JSON.stringify({
+            choices: [{ delta: { role: "assistant", content: notice } }],
+          })}\n\n`,
+        );
+        stream = prependStream(prefix, stream);
+      }
 
       cokey.logger.debug("streaming response", {
         chain: result.chainAlias,
@@ -178,25 +202,52 @@ export function registerOpenAiRoutes(app: FastifyInstance, cokey: Cokey): void {
     const contentType = upstream.headers.get("content-type") ?? "application/json";
 
     if (parsedBody !== undefined && adapter.transformResponse) {
+      const transformed = adapter.transformResponse(parsedBody, result.context);
       return reply
         .code(upstream.status)
         .type("application/json")
-        .send(adapter.transformResponse(parsedBody, result.context));
+        .send(withCokeyIdentity(withChainStateNotice(transformed, notice), result.chainAlias));
     }
 
     if (parsedBody !== undefined) {
-      return reply.code(upstream.status).type(contentType).send(parsedBody);
+      // The upstream model id is replaced by the chain alias so a chat window
+      // shows the user's own chain name. The vendor is still in X-Cokey-Entry.
+      return reply
+        .code(upstream.status)
+        .type(contentType)
+        .send(withCokeyIdentity(withChainStateNotice(parsedBody, notice), result.chainAlias));
     }
 
-    return reply.code(upstream.status).type(contentType).send(text);
+    return reply
+      .code(upstream.status)
+      .type(contentType)
+      .send(notice ? `${notice}\n${text}` : text);
   });
 }
 
 function sendRouteError(cokey: Cokey, reply: FastifyReply, error: unknown, requestedModel: string) {
   if (error instanceof RequestScopedError) {
-    return reply.code(error.providerError.status ?? 400).send({
-      error: { message: error.providerError.message, type: error.classification },
+    const last = error.attempts[error.attempts.length - 1];
+    const origin = "provider";
+    const headers = errorIdentityHeaders({
+      attempts: error.attempts,
+      chainAlias: last?.chainAlias,
+      fallback: error.attempts.length > 0,
     });
+    return reply
+      .code(error.providerError.status ?? 400)
+      .headers(headers)
+      .send({
+        error: {
+          message: last
+            ? `${last.providerId}/${last.model}: ${error.providerError.message}`
+            : error.providerError.message,
+          type: error.classification,
+          origin,
+          attempts: error.attempts,
+          status: error.providerError.status,
+        },
+      });
   }
 
   if (error instanceof AllChainsExhaustedError) {
@@ -216,27 +267,53 @@ function sendRouteError(cokey: Cokey, reply: FastifyReply, error: unknown, reque
       stream: false,
     });
 
-    return reply.code(502).send({
-      error: {
-        message: "All chains exhausted",
-        type: "all_chains_exhausted",
-        attempts: error.attempts.map((attempt) => ({
-          entry: `${attempt.providerId}/${attempt.model}`,
-          credential: attempt.description,
-          classification: attempt.classification,
-          status: attempt.status,
-        })),
-      },
-    });
+    const info = {
+      attempts: error.attempts,
+      chainAlias: error.routeInfo?.chainAlias ?? requestedModel,
+      fallback: error.routeInfo?.fallback ?? error.attempts.length > 0,
+      fallbackReason: error.routeInfo?.fallbackReason,
+    };
+    const origin = info.attempts.length > 0 ? "provider" : "gateway";
+    const last = info.attempts[info.attempts.length - 1];
+    const providers = [...new Set(info.attempts.map((a) => a.providerId))].join(", ");
+    return reply
+      .code(502)
+      .headers(errorIdentityHeaders(info))
+      .send({
+        error: {
+          message: info.attempts.length
+            ? `All chains exhausted: ${providers} did not answer OK`
+            : "All chains exhausted",
+          type: "all_chains_exhausted",
+          origin,
+          ...(last?.providerId ? { provider: last.providerId } : {}),
+          attempts: info.attempts,
+          ...(info.fallbackReason ? { fallbackReason: info.fallbackReason } : {}),
+        },
+      });
   }
 
   if (error instanceof ChainNotFoundError || error instanceof ChainDisabledError) {
-    return reply.code(404).send({
-      error: { message: (error as Error).message, type: "chain_unavailable" },
-    });
+    return reply
+      .code(404)
+      .headers(errorIdentityHeaders({ attempts: [], chainAlias: requestedModel }))
+      .send({
+        error: {
+          message: (error as Error).message,
+          type: "chain_unavailable",
+          origin: "gateway",
+        },
+      });
   }
 
-  return reply.code(500).send({
-    error: { message: (error as Error).message, type: "internal_error" },
-  });
+  return reply
+    .code(500)
+    .headers(errorIdentityHeaders({ attempts: [], chainAlias: requestedModel }))
+    .send({
+      error: {
+        message: (error as Error).message,
+        type: "internal_error",
+        origin: "gateway",
+      },
+    });
 }

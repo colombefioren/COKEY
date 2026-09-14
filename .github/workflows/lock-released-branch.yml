@@ -1,0 +1,41 @@
+name: Lock released branch
+
+on:
+  push:
+    branches: [prod]
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  guard-no-push-after-release:
+    name: guard-no-push-after-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Refuse direct pushes to a released branch
+        run: |
+          set -euo pipefail
+
+          # A released branch only moves through an explicit release commit.
+          # Anything else is a mistake, so fail loudly and cheaply.
+          if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
+            echo "Release published; branch is frozen."
+            exit 0
+          fi
+
+          SUBJECT="$(git log -1 --pretty=%s)"
+          case "${SUBJECT}" in
+            release*|chore\(release\)*) echo "Allowed release commit: ${SUBJECT}";;
+            *)
+              echo "::error::Direct pushes to ${GITHUB_REF_NAME} are locked after release."
+              echo "Open a pull request against the main branch instead."
+              exit 1
+              ;;
+          esac

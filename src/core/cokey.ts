@@ -3,12 +3,16 @@ import { join } from "node:path";
 import { mkdirSync } from "node:fs";
 import { ApiKeyService, type ApiKeyView, type CreatedApiKey } from "./api-keys.js";
 import { ApiKeysRepo } from "./db/api-keys.repo.js";
+import { PROVIDER_ALIASES } from "../catalog/providers.js";
 import type { ProviderCatalogEntry, ProviderStatus } from "../catalog/types.js";
 import { ApiStyleSchema, AuthSchemeSchema } from "./validation/schemas.js";
 import { ChainsRepo } from "./db/chains.repo.js";
 import { CredentialsRepo } from "./db/credentials.repo.js";
 import { CustomEndpointsRepo } from "./db/custom-endpoints.repo.js";
 import { DatabaseClient } from "./db/database.js";
+import { ProviderModelsRepo, type ProviderModelRecord } from "./db/provider-models.repo.js";
+import { ModelProbesRepo } from "./db/model-probes.repo.js";
+import { ProxyPoolRepo } from "./db/proxy-pool.repo.js";
 import { RequestsRepo } from "./db/requests.repo.js";
 import { SettingsRepo } from "./db/settings.repo.js";
 import { ChainManager } from "./chains/manager.js";
@@ -17,26 +21,63 @@ import { CooldownManager } from "./credentials/cooldown.js";
 import { RateTracker } from "./credentials/rate.js";
 import { CredentialSelector } from "./credentials/selector.js";
 import { EventBus, type CokeyEvent } from "./events.js";
+import { providerDossier, type ProviderDossier } from "../catalog/dossiers.js";
+import { compiledRankingsView, type RankingsView } from "../catalog/rankings.js";
+import { fetchRemoteRankings, type RankingsFetchResult } from "./remote-rankings.js";
 import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
-import { modelAvailability, type ModelCatalogView } from "./models/availability.js";
+import { checkProxyUrl, collectHealthy } from "./providers/proxy-health.js";
+import {
+  ProxyPoolService,
+  type ProxyPoolStatus,
+  type ProxyPoolView,
+} from "./providers/proxy-pool.js";
+import { fetchProxiflyFreeList, parseProxiflyList } from "./providers/proxifly.js";
+import {
+  modelAvailability,
+  staleCuratedModels,
+  type ModelCatalogView,
+} from "./models/availability.js";
+import {
+  eligibleModels,
+  isTrustworthyListing,
+  normaliseModelIds,
+  reconcileModels,
+  type ModelDiscoveryReport,
+} from "./models/discovery.js";
+import {
+  deriveGuidance,
+  guidanceSummary,
+  type GuidanceInput,
+  type GuidanceNotice,
+  type GuidanceSeverity,
+} from "./guidance.js";
+import { emptyUsage } from "./types.js";
 import { SecretVault } from "./crypto/secrets.js";
 import { RequestHistory, type HistoryStats } from "./history.js";
 import { Logger } from "./logger.js";
 import { ProviderRegistry } from "./providers/registry.js";
 import { RouterEngine, type RouteResult } from "./router/engine.js";
-import { SettingsService } from "./settings.js";
+import { InvalidSettingError, SettingsService } from "./settings.js";
 import { assertSafeEndpoint } from "./security/ssrf.js";
 import type {
   Chain,
   ChainEntry,
   ChatCompletionRequest,
   Credential,
+  ErrorClassification,
   LogLevel,
+  ModelInfo,
   PublicCredential,
   RoutingStrategy,
   Settings,
   ValidationResult,
 } from "./types.js";
+import {
+  PROBE_MESSAGE,
+  probeEntry,
+  selectProbeCredential,
+  type ModelProbeResult,
+} from "./models/probe.js";
 
 export interface CokeyOptions {
   port?: number;
@@ -74,11 +115,27 @@ export interface ConnectProviderInput {
   accountId?: string;
   /** Optional egress proxy, so this key leaves through its own IP. */
   proxyUrl?: string;
+  /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+  saveAnyway?: boolean;
+  /**
+   * Route the verification probe through the automatic egress pool.
+   * Defaults to true: a probe should reflect what production will do.
+   */
+  useProxy?: boolean;
 }
 
 export interface ConnectProviderResult {
   credential: PublicCredential;
   validation: ValidationResult;
+  /**
+   * What the provider reported serving, once the key was accepted.
+   *
+   * A freshly connected key is the first moment COKEY can ask the provider what
+   * it actually serves, so the answer travels back with the connect response
+   * instead of being something the user has to go and request. Absent when the
+   * key did not verify or the provider could not be asked.
+   */
+  models?: ModelDiscoveryReport;
 }
 
 export interface ChainEntryView extends ChainEntry {
@@ -106,6 +163,20 @@ export interface FreeProviderNudge {
   suggestions: ProviderCatalogEntry[];
 }
 
+/** One usable model, ranked by this user's own probe history. */
+export interface MyModelRanking {
+  providerId: string;
+  displayName: string;
+  model: string;
+  attempts: number;
+  successes: number;
+  /** 0-1. Undefined when never probed. */
+  successRate?: number;
+  avgLatencyMs?: number;
+  lastCheckedAt?: number;
+  lastOk?: boolean;
+}
+
 export class BadCredentialError extends Error {
   constructor(
     message: string,
@@ -119,7 +190,7 @@ export class BadCredentialError extends Error {
 /**
  * The COKEY application.
  *
- * This class owns every long-lived object — database, vault, managers, router —
+ * This class owns every long-lived object - database, vault, managers, router -
  * and is the single entry point used by the HTTP server, the CLI and the public
  * programmatic API. Nothing here knows about HTTP.
  */
@@ -134,8 +205,13 @@ export class Cokey {
   readonly chainsRepo: ChainsRepo;
   readonly requestsRepo: RequestsRepo;
   readonly customEndpointsRepo: CustomEndpointsRepo;
+  readonly providerModelsRepo: ProviderModelsRepo;
+  readonly modelProbesRepo: ModelProbesRepo;
+  readonly proxyPoolRepo: ProxyPoolRepo;
   readonly apiKeysRepo: ApiKeysRepo;
   readonly apiKeys: ApiKeyService;
+  /** Automatic per-credential egress, so one provider's keys do not share an IP. */
+  readonly proxyPool: ProxyPoolService;
 
   readonly settingsService: SettingsService;
   readonly cooldown: CooldownManager;
@@ -145,6 +221,15 @@ export class Cokey {
   readonly selector: CredentialSelector;
   readonly router: RouterEngine;
   readonly history: RequestHistory;
+  /**
+   * Ranking boards fetched from a published bundle, when one has been pulled
+   * successfully. `undefined` means "serve the boards compiled into this
+   * build" — the default, and the only state on a fresh clone with no network
+   * request ever made.
+   */
+  private remoteRankings?: RankingsView;
+  /** Where `refreshRankings()` fetches from. Overridable for a fork or a mirror. */
+  readonly rankingsUrl: string;
   /** Live routing narration: what is running now, and every switch. */
   readonly events = new EventBus();
   /** Locally measured per-credential throughput. */
@@ -169,6 +254,10 @@ export class Cokey {
     this.chainsRepo = new ChainsRepo(this.db);
     this.requestsRepo = new RequestsRepo(this.db);
     this.customEndpointsRepo = new CustomEndpointsRepo(this.db);
+    this.providerModelsRepo = new ProviderModelsRepo(this.db);
+    this.modelProbesRepo = new ModelProbesRepo(this.db);
+    this.proxyPoolRepo = new ProxyPoolRepo(this.db);
+    this.proxyPool = new ProxyPoolService(this.proxyPoolRepo);
     this.apiKeysRepo = new ApiKeysRepo(this.db);
     this.apiKeys = new ApiKeyService(this.apiKeysRepo);
 
@@ -199,6 +288,15 @@ export class Cokey {
     this.providers = new ProviderRegistry(this.customEndpointsRepo.list());
     this.selector = new CredentialSelector(this.credentials, this.cooldown);
     this.history = new RequestHistory(this.requestsRepo);
+
+    this.rankingsUrl =
+      env.COKEY_RANKINGS_URL ??
+      "https://raw.githubusercontent.com/colombefioren/COKEY--BUNDLE/main/content/rankings.json";
+
+    // A pool supplied through the environment is seeded once; the UI can add,
+    // disable and remove entries afterwards without touching the database by
+    // hand.
+    this.proxyPool.addMany(env.COKEY_PROXY_POOL);
     this.router = new RouterEngine(
       this.chains,
       this.credentials,
@@ -221,6 +319,7 @@ export class Cokey {
   start(): void {
     if (this.started) return;
     this.started = true;
+    this.syncProxyAssignments();
 
     // Expire elapsed cooldowns so the UI and router always see fresh state.
     this.sweeper = setInterval(() => {
@@ -249,13 +348,58 @@ export class Cokey {
     this.started = false;
   }
 
+  // ---- catalog reference data -----------------------------------------------
+
+  /** The dossier for a provider, from the catalog compiled into this build. */
+  providerDossier(providerId: string): ProviderDossier {
+    return providerDossier(providerId);
+  }
+
+  /** The ranking boards: a published bundle if one was fetched, else compiled. */
+  rankings(): RankingsView {
+    return this.remoteRankings ?? compiledRankingsView();
+  }
+
+  /**
+   * Fetch and validate the ranking bundle at `rankingsUrl`.
+   *
+   * Only runs when asked — there is no timer and no fetch on startup. A
+   * failure never touches what `rankings()` returns; the previous boards
+   * (published or compiled) keep serving.
+   */
+  async refreshRankings(): Promise<RankingsFetchResult> {
+    const result = await fetchRemoteRankings(this.rankingsUrl);
+    if (result.ok) {
+      this.remoteRankings = result.rankings;
+      this.events.emit({
+        type: "content.updated",
+        level: "success",
+        message: `Rankings updated from ${new URL(this.rankingsUrl).host}`,
+      });
+    }
+    return result;
+  }
+
   // ---- providers ----------------------------------------------------------
 
   /** Catalog entries annotated with the user's connection state. */
   providerStatuses(): ProviderStatus[] {
     const counts = this.credentials.countsByProvider();
     return this.providers.getCatalog().map((entry) => {
-      const count = counts.get(entry.id);
+      // Keys connected under a collapsed id still count for the surviving one.
+      const aliases = [entry.id];
+      for (const [alias, target] of PROVIDER_ALIASES) {
+        if (target === entry.id) aliases.push(alias);
+      }
+      const count = aliases
+        .map((id) => counts.get(id))
+        .reduce<{ total: number; healthy: number } | undefined>((sum, part) => {
+          if (!part) return sum;
+          return {
+            total: (sum?.total ?? 0) + part.total,
+            healthy: (sum?.healthy ?? 0) + part.healthy,
+          };
+        }, undefined);
       return {
         ...entry,
         connected: (count?.total ?? 0) > 0,
@@ -263,6 +407,195 @@ export class Cokey {
         healthyCount: count?.healthy ?? 0,
       };
     });
+  }
+
+  /**
+   * Ask a provider what it currently serves, and reconcile that with what COKEY
+   * believed it served.
+   *
+   * This is the only place the curated catalog meets reality. The catalog is a
+   * hand-written default and is right most of the time; a model listing is right
+   * now. When they disagree the listing wins, because a model the provider has
+   * retired cannot serve a request no matter what a document says.
+   *
+   * Failure is always reported rather than thrown, and never destroys the
+   * inventory already held — see the empty-listing guard below for why.
+   */
+  async refreshProviderModels(
+    providerId: string,
+    options: { credentialId?: string; retainMissingMs?: number; timeoutMs?: number } = {},
+  ): Promise<ModelDiscoveryReport> {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    const displayName = catalog?.displayName ?? providerId;
+    const previous = this.providerModelsRepo.listByProvider(providerId);
+    const checkedAt = Date.now();
+
+    const refuse = (message: string, latencyMs = 0): ModelDiscoveryReport => ({
+      providerId,
+      displayName,
+      ok: false,
+      message,
+      latencyMs,
+      checkedAt,
+      discovered: 0,
+      tracked: previous.length,
+      added: [],
+      restored: [],
+      removed: [],
+      pruned: 0,
+      stale: [],
+      uncurated: [],
+      unchanged: 0,
+    });
+
+    if (!catalog) return refuse(`Unknown provider: ${providerId}`);
+
+    const bound = this.credentials.listByProvider(providerId);
+    if (bound.length === 0) return refuse(`${displayName} has no connected key`);
+
+    const credential = selectProbeCredential(bound, options.credentialId);
+    if (!credential) return refuse(`No usable key for ${displayName}`);
+
+    const started = Date.now();
+    let listing: ModelInfo[];
+    try {
+      listing = await this.providers
+        .get(providerId)
+        .listModels(credential, { timeoutMs: options.timeoutMs });
+    } catch (error) {
+      return refuse(`Could not list models: ${(error as Error).message}`, Date.now() - started);
+    }
+    const latencyMs = Date.now() - started;
+
+    const eligible = eligibleModels(listing, catalog.freeTier.freeModelsOnly);
+    const discovered = normaliseModelIds(eligible.map((model) => model.id));
+
+    if (!isTrustworthyListing(discovered)) {
+      // A 200 with an empty list is not evidence that a provider stopped serving
+      // everything. Storing it would detach every model of this provider from
+      // every chain that uses one, so it is refused and the previous inventory
+      // is left exactly as it was.
+      return refuse(`${displayName} returned no models — inventory left untouched`, latencyMs);
+    }
+
+    const { records, changes } = reconcileModels({
+      providerId,
+      curated: catalog.knownModels,
+      discovered,
+      previous,
+      now: checkedAt,
+      retainMissingMs: options.retainMissingMs,
+    });
+
+    this.providerModelsRepo.replace(providerId, records);
+
+    const report: ModelDiscoveryReport = {
+      providerId,
+      displayName,
+      ok: true,
+      latencyMs,
+      checkedAt,
+      discovered: discovered.length,
+      tracked: records.length,
+      ...changes,
+    };
+
+    // Only a real change is worth interrupting the UI for. A periodic sweep that
+    // found what it expected should be silent.
+    const touched = changes.added.length + changes.restored.length + changes.removed.length;
+    if (touched > 0) {
+      this.events.emit({
+        type: "models.updated",
+        level: changes.removed.length > 0 ? "warn" : "success",
+        message: describeModelChange(displayName, changes),
+        providerId,
+        data: {
+          added: changes.added,
+          restored: changes.restored,
+          removed: changes.removed,
+          stale: changes.stale,
+          uncurated: changes.uncurated,
+          discovered: discovered.length,
+        },
+      });
+    }
+
+    this.logger.debug("model inventory refreshed", {
+      provider: providerId,
+      discovered: discovered.length,
+      added: changes.added.length,
+      removed: changes.removed.length,
+      stale: changes.stale.length,
+      latencyMs,
+    });
+
+    return report;
+  }
+
+  /**
+   * Refresh every provider that has at least one connected key.
+   *
+   * Bounded concurrency, not fully sequential: a handful of these are
+   * third-party endpoints being asked an administrative question, and firing
+   * all of them at once is the behaviour that gets a free tier rate-limited
+   * for reasons that have nothing to do with the user's traffic. But strictly
+   * one-at-a-time meant a single unresponsive provider — a free tier that
+   * hangs rather than errors — held up every provider behind it for the full
+   * completion timeout (120s), which made a "re-check everything" click feel
+   * like it had frozen. A small pool bounds the fan-out, and a much shorter
+   * per-call timeout is enough for a cheap `GET /models`: a provider that
+   * cannot answer that in a few seconds is not one worth waiting two minutes
+   * on when there are others still to check.
+   */
+  async refreshAllProviderModels(
+    options: { retainMissingMs?: number; concurrency?: number } = {},
+  ): Promise<ModelDiscoveryReport[]> {
+    const queue = this.providerStatuses().filter((provider) => provider.credentialCount > 0);
+    const concurrency = Math.max(1, options.concurrency ?? 4);
+    const timeoutMs = 15_000;
+    const reports: ModelDiscoveryReport[] = new Array(queue.length);
+
+    let next = 0;
+    const worker = async () => {
+      for (;;) {
+        const index = next++;
+        if (index >= queue.length) return;
+        reports[index] = await this.refreshProviderModels(queue[index]!.id, {
+          retainMissingMs: options.retainMissingMs,
+          timeoutMs,
+        });
+      }
+    };
+
+    await Promise.all(Array.from({ length: Math.min(concurrency, queue.length) }, worker));
+    return reports;
+  }
+
+  /**
+   * Refresh a provider's inventory in the background.
+   *
+   * Used where the refresh is a bonus rather than the point of the action —
+   * re-verifying an existing key, for instance — so the response is not held up
+   * by a second round trip to the provider.
+   */
+  private scheduleModelDiscovery(providerId: string, credentialId?: string): void {
+    void this.refreshProviderModels(providerId, { credentialId }).catch((error) => {
+      this.logger.warn("model discovery failed", {
+        provider: providerId,
+        message: (error as Error).message,
+      });
+    });
+  }
+
+  /** Observed model inventory, grouped by provider. */
+  private inventoryByProvider(): Map<string, ProviderModelRecord[]> {
+    const map = new Map<string, ProviderModelRecord[]>();
+    for (const record of this.providerModelsRepo.listAll()) {
+      const list = map.get(record.providerId);
+      if (list) list.push(record);
+      else map.set(record.providerId, [record]);
+    }
+    return map;
   }
 
   /**
@@ -287,9 +620,16 @@ export class Cokey {
       secret: input.secret,
       description: input.description,
       proxyUrl: input.proxyUrl,
+      proxyAuto: false,
     });
 
+    // A key only becomes independent of its siblings once it leaves through
+    // its own exit IP, so the pool is re-planned the moment a key appears.
+    this.syncProxyAssignments();
+
     const adapter = this.providers.get(providerId);
+    const exit = this.resolveProbeProxy(credential, input.useProxy !== false);
+    if (exit) credential.proxyUrl = exit;
     const validation = await adapter.validateCredential(credential);
 
     if (validation.ok) {
@@ -312,6 +652,10 @@ export class Cokey {
       // Transient: keep it, but clearly unverified. The caller decides whether
       // to keep it ("Retry" or "Add anyway").
       this.credentials.setStatus(credential.id, "unverified");
+    } else if (input.saveAnyway) {
+      // Explicit override: the user chose to save this key regardless of the
+      // probe verdict. Keep it, clearly marked unverified.
+      this.credentials.setStatus(credential.id, "unverified");
     } else {
       this.credentials.delete(credential.id);
       throw new BadCredentialError(
@@ -327,10 +671,67 @@ export class Cokey {
       latencyMs: validation.latencyMs,
     });
 
+    // A key that just verified is the first moment this provider can be asked
+    // what it really serves. Awaited so the answer can travel back with the
+    // response, but never fatal: a provider that cannot list its models still
+    // has a working key, and the catalog remains the fallback truth.
+    let models: ModelDiscoveryReport | undefined;
+    if (validation.ok) {
+      try {
+        models = await this.refreshProviderModels(providerId, { credentialId: credential.id });
+      } catch (error) {
+        this.logger.warn("model discovery failed", {
+          provider: providerId,
+          message: (error as Error).message,
+        });
+      }
+    }
+
     return {
       credential: this.credentials.toPublic(this.credentials.getOrThrow(credential.id)),
       validation,
+      models,
     };
+  }
+
+  /**
+   * Probe a raw secret without persisting anything.
+   *
+   * Backs the separate "Test" button: the verdict appears in the UI, and the
+   * key is only stored when the user then confirms with "Save". This is the
+   * mirror of `connectProvider` that never writes a row and never throws for a
+   * rejected key - rejection is reported as `ok: false`.
+   */
+  async testProviderSecret(
+    providerId: string,
+    input: { secret: string; accountId?: string; model?: string; useProxy?: boolean },
+  ): Promise<ValidationResult> {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    if (!catalog) throw new Error(`Unknown provider: ${providerId}`);
+
+    // A transient credential drives the same probe paths as a stored row,
+    // without ever touching the vault or the database.
+    const credential: Credential = {
+      id: "probe",
+      providerId,
+      accountId: input.accountId,
+      secret: input.secret,
+      description: "probe",
+      status: "unverified",
+      consecutiveFailures: 0,
+      usage: emptyUsage(),
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    };
+
+    // The probe leaves through the exit this key would get from the pool, so
+    // "Test" reflects what production requests will actually do. An explicit
+    // proxyUrl on the input is honored first.
+    const probeExit = this.resolveProbeProxy(credential, input.useProxy !== false);
+    if (probeExit) credential.proxyUrl = probeExit;
+
+    if (input.model) return this.verifyCredential(providerId, input.model, credential);
+    return this.providers.get(providerId).validateCredential(credential);
   }
 
   /** Re-run verification for a stored credential. */
@@ -349,12 +750,30 @@ export class Cokey {
         credentialId: credential.id,
         credentialDescription: credential.description,
       });
+      // A key that just came back to life may have a provider behind it that
+      // changed its model list while the key was down.
+      this.scheduleModelDiscovery(credential.providerId, credential.id);
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
       this.events.emit({
         type: "credential.invalid",
         level: "error",
         message: `${credential.description} was rejected`,
+        providerId: credential.providerId,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        classification: validation.classification,
+      });
+    } else if (
+      validation.classification === "quota_exhausted" ||
+      validation.classification === "credential_rate_limited"
+    ) {
+      this.credentials.putInCooldown(credential.id);
+      this.credentials.markFailure(credential.id, validation.classification);
+      this.events.emit({
+        type: "credential.cooldown",
+        level: "warn",
+        message: `${credential.description} ${validation.classification === "quota_exhausted" ? "quota exhausted" : "rate limited"} — cooling down`,
         providerId: credential.providerId,
         credentialId: credential.id,
         credentialDescription: credential.description,
@@ -389,11 +808,13 @@ export class Cokey {
       this.credentials.markVerified(credential.id);
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
+      this.credentials.markFailure(credential.id, validation.classification);
     } else if (
       validation.classification === "credential_rate_limited" ||
       validation.classification === "quota_exhausted"
     ) {
       this.credentials.putInCooldown(credential.id);
+      this.credentials.markFailure(credential.id, validation.classification);
     }
 
     return { ...validation, credentialId: credential.id };
@@ -409,7 +830,8 @@ export class Cokey {
     const credential = this.credentials.getOrThrow(credentialId);
     // Validate before persisting so a typo cannot silently disable a key.
     const parsed = parseProxyUrl(proxyUrl);
-    this.credentials.updateProxyUrl(credentialId, parsed ? parsed.href : null);
+    // A hand-set proxy is permanent: the pool must never move this key again.
+    this.credentials.markProxyManual(credentialId, parsed ? parsed.href : null);
 
     this.events.emit({
       type: "credential.updated",
@@ -424,6 +846,489 @@ export class Cokey {
     });
 
     return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
+  }
+
+  // ---- automatic egress pool ----------------------------------------------
+
+  /**
+   * Re-plan every pool-owned credential so same-provider keys never share an
+   * exit IP.
+   *
+   * Called after a key is added or removed and whenever the pool changes. It
+   * is deliberately cheap and idempotent: credentials whose proxy already
+   * matches the plan are left untouched, and hand-set proxies are skipped
+   * entirely.
+   */
+  syncProxyAssignments(): number {
+    if (!this.settings.autoProxy) return 0;
+
+    const poolSize = this.proxyPool.size();
+    if (poolSize === 0) return 0;
+
+    const plan = this.proxyPool.plan(this.credentialRefs(), this.settings.autoProxyStrategy);
+    const byId = new Map(plan.map((entry) => [entry.credentialId, entry]));
+
+    let changed = 0;
+    for (const credential of this.credentials.listAll()) {
+      const target = byId.get(credential.id);
+      if (!target) continue;
+      // Only pool-owned credentials move. `proxyAuto` is false for a key the
+      // user pinned, and for one that has never been assigned.
+      if (credential.proxyUrl && !credential.proxyAuto) continue;
+      if (credential.proxyUrl === target.proxyUrl) continue;
+      this.credentials.setAutoProxyUrl(credential.id, target.proxyUrl);
+      changed += 1;
+    }
+
+    if (changed > 0) {
+      this.events.emit({
+        type: "credential.updated",
+        level: "info",
+        message: `${changed} credential(s) moved to a new egress IP`,
+        data: { changed, poolSize },
+      });
+    }
+    return changed;
+  }
+
+  listProxyPool(): ProxyPoolView[] {
+    return this.proxyPool.view(this.credentialRefs(), this.settings.autoProxyStrategy);
+  }
+
+  proxyPoolStatus(): ProxyPoolStatus {
+    return this.proxyPool.status(
+      this.credentialRefs(),
+      this.settings.autoProxy,
+      this.settings.autoProxyStrategy,
+    );
+  }
+
+  /**
+   * Resolve the exit IP a probe or test request should leave through.
+   *
+   * Mirrors `syncProxyAssignments`, but on a transient credential that has not
+   * been persisted yet: an explicit `proxyUrl` wins, then the pool slot this
+   * key would land on (when the pool is enabled and has entries), otherwise
+   * nothing - meaning the request goes direct. The probe stays direct when the
+   * caller opted out with `useProxy: false`.
+   */
+  private resolveProbeProxy(credential: Credential, useProxy: boolean): string | undefined {
+    if (credential.proxyUrl) return credential.proxyUrl;
+    if (!useProxy || !this.settings.autoProxy) return undefined;
+    if (this.proxyPool.size() === 0) return undefined;
+
+    const [slot] = this.proxyPool.plan(
+      [{ id: credential.id, providerId: credential.providerId }],
+      this.settings.autoProxyStrategy,
+    );
+    return slot?.proxyUrl;
+  }
+
+  /** Add one proxy to the pool and re-plan immediately. */
+  addProxyToPool(url: string): ProxyPoolView[] {
+    this.proxyPool.add(url);
+    this.syncProxyAssignments();
+    return this.listProxyPool();
+  }
+
+  /** Add many proxies from one pasted blob, then re-plan once. */
+  addProxiesToPool(rawList: string): { added: number; skipped: number; entries: ProxyPoolView[] } {
+    const result = this.proxyPool.addMany(rawList);
+    this.syncProxyAssignments();
+    return { ...result, entries: this.listProxyPool() };
+  }
+
+  /**
+   * Fetch Proxifly's free public list and fold it into the egress pool.
+   *
+   * The list is a static CDN-hosted file, so there is no API key involved and
+   * nothing to be charged. `limit` caps how many entries a single click can
+   * add (the file is ~60 KB today). The pool is re-planned afterwards so any
+   * pool-owned credentials land on their new exits immediately.
+   *
+   * By default every candidate is probed first and only working exits are
+   * imported: free lists die fast, and importing 2,400 addresses where only a
+   * handful answer just fills the pool with timeouts. Pass `verify: false` to
+   * go back to importing the whole file untouched.
+   */
+  async addProxiflyFreeList(
+    limit?: number,
+    options: { verify?: boolean; concurrency?: number; timeoutMs?: number } = {},
+  ): Promise<{
+    added: number;
+    skipped: number;
+    checked?: number;
+    alive?: number;
+    dead?: number;
+    entries: ProxyPoolView[];
+    status: ProxyPoolStatus;
+  }> {
+    const raw = await fetchProxiflyFreeList();
+
+    if (options.verify !== false) {
+      // Probe candidates first; only working exits land in the pool. Parse a
+      // wider net than the target so enough live ones can be found, then stop
+      // probing once the cap is reached instead of timing out on every corpse.
+      const target = limit ?? 100;
+      const candidateCap = Math.min(2_000, Math.max(target * 10, 200));
+      const { urls } = parseProxiflyList(raw, candidateCap);
+      const { healthy, checked } = await collectHealthy(urls, {
+        limit: target,
+        concurrency: options.concurrency,
+        timeoutMs: options.timeoutMs,
+      });
+
+      const result = this.proxyPool.addMany(healthy.join("\n"));
+      this.syncProxyAssignments();
+
+      return {
+        added: result.added,
+        skipped: result.skipped,
+        checked,
+        alive: healthy.length,
+        dead: checked - healthy.length,
+        entries: this.listProxyPool(),
+        status: this.proxyPoolStatus(),
+      };
+    }
+
+    const { urls } = parseProxiflyList(raw, limit);
+    if (urls.length === 0) {
+      return {
+        added: 0,
+        skipped: 0,
+        entries: this.listProxyPool(),
+        status: this.proxyPoolStatus(),
+      };
+    }
+
+    const result = this.proxyPool.addMany(urls.join("\n"));
+    this.syncProxyAssignments();
+
+    return {
+      ...result,
+      entries: this.listProxyPool(),
+      status: this.proxyPoolStatus(),
+    };
+  }
+
+  /**
+   * Probe every enabled pool exit and drop the ones that no longer answer.
+   *
+   * Sweeping the pool periodically is the cheapest way to keep it honest: free
+   * proxies open and die on a schedule, and a stale exit just turns valid keys
+   * into timeouts. `prune: false` reports without deleting, so a caller can
+   * preview a sweep before committing to it.
+   */
+  async verifyProxyPool(
+    options: {
+      concurrency?: number;
+      timeoutMs?: number;
+      prune?: boolean;
+    } = {},
+  ): Promise<{
+    checked: number;
+    healthy: number;
+    dead: string[];
+    removed: number;
+    entries: ProxyPoolView[];
+    status: ProxyPoolStatus;
+  }> {
+    const summary = await this.proxyPool.verify(
+      (url) => checkProxyUrl(url, { timeoutMs: options.timeoutMs }),
+      { concurrency: options.concurrency, prune: options.prune ?? true },
+    );
+    this.syncProxyAssignments();
+    return {
+      ...summary,
+      entries: this.listProxyPool(),
+      status: this.proxyPoolStatus(),
+    };
+  }
+
+  removeProxyFromPool(id: string): ProxyPoolView[] {
+    this.proxyPool.remove(id);
+    this.syncProxyAssignments();
+    return this.listProxyPool();
+  }
+
+  /**
+   * Pin a credential to a specific pool entry, or hand it back to the pool.
+   *
+   * The browser only ever sees a pool entry's `host:port` label, never the
+   * proxy's own credentials, so the UI assigns by entry id and the URL is
+   * resolved here on the server. A pinned key is marked manual, which is what
+   * tells `syncProxyAssignments` to leave it alone from now on; passing `null`
+   * clears the pin and immediately re-runs the pool so the key lands on an exit
+   * again.
+   */
+  assignCredentialProxy(credentialId: string, poolId: string | null): PublicCredential {
+    if (poolId === null) {
+      this.setCredentialProxy(credentialId, null);
+      this.syncProxyAssignments();
+      return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
+    }
+
+    const entry = this.proxyPool.find(poolId);
+    if (!entry) throw new InvalidSettingError("No such egress pool entry");
+    if (entry.enabled !== 1) throw new InvalidSettingError("That egress pool entry is disabled");
+
+    return this.setCredentialProxy(credentialId, entry.url);
+  }
+
+  setProxyPoolEnabled(id: string, enabled: boolean): ProxyPoolView[] {
+    this.proxyPool.setEnabled(id, enabled);
+    this.syncProxyAssignments();
+    return this.listProxyPool();
+  }
+
+  private credentialRefs(): Array<{ id: string; providerId: string }> {
+    return this.credentials
+      .listAll()
+      .map((credential) => ({ id: credential.id, providerId: credential.providerId }));
+  }
+
+  // ---- model probe ---------------------------------------------------------
+
+  /**
+   * Prove one provider/model pair works right now, through one real request.
+   *
+   * This is what the catalog's play button calls. A 200 means the model and the
+   * key agree; anything else is returned verbatim so the UI can say why rather
+   * than showing a generic failure.
+   */
+  async probeModel(
+    providerId: string,
+    model: string,
+    credentialId?: string,
+    message: string = PROBE_MESSAGE,
+  ): Promise<ModelProbeResult> {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    if (!catalog) {
+      return {
+        ok: false,
+        providerId,
+        model,
+        latencyMs: 0,
+        classification: "unknown",
+        message: `Unknown provider: ${providerId}`,
+      };
+    }
+
+    const bound = this.credentials.listAll().filter((item) => item.providerId === providerId);
+    if (bound.length === 0) {
+      return {
+        ok: false,
+        providerId,
+        model,
+        latencyMs: 0,
+        classification: "unknown",
+        message: `${catalog.displayName} has no connected key`,
+      };
+    }
+
+    const credential = selectProbeCredential(bound, credentialId);
+    if (!credential) {
+      return {
+        ok: false,
+        providerId,
+        model,
+        latencyMs: 0,
+        classification: "unknown",
+        message: "No usable key for this provider",
+      };
+    }
+
+    const adapter = this.providers.get(providerId);
+    const entry = probeEntry(providerId, model, catalog.baseUrl);
+    const started = Date.now();
+
+    let status: number | undefined;
+    let reply: string | undefined;
+
+    try {
+      const result = await adapter.send(entry, credential, {
+        model,
+        messages: [{ role: "user", content: message }],
+        max_tokens: 16,
+        stream: false,
+      });
+
+      const latencyMs = Date.now() - started;
+
+      if (!result.ok) {
+        const classification = adapter.classifyError(result.error);
+        status = result.error.status;
+        this.recordProbeFailure(credential.id, classification);
+        this.recordModelProbe(providerId, model, credential.id, false, classification, latencyMs);
+        return {
+          ok: false,
+          providerId,
+          model,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          status,
+          latencyMs,
+          classification,
+          message: result.error.message,
+          proxyLabel: proxyLabel(credential.proxyUrl),
+        };
+      }
+
+      status = result.response.status;
+      if (status !== 200) {
+        const classification = adapter.classifyError({ status, message: `HTTP ${status}` });
+        this.recordProbeFailure(credential.id, classification);
+        this.recordModelProbe(providerId, model, credential.id, false, classification, latencyMs);
+        return {
+          ok: false,
+          providerId,
+          model,
+          credentialId: credential.id,
+          credentialDescription: credential.description,
+          status,
+          latencyMs,
+          classification,
+          message: `${catalog.displayName} answered ${status}`,
+          proxyLabel: proxyLabel(credential.proxyUrl),
+        };
+      }
+
+      try {
+        const body = (await result.response.json()) as {
+          choices?: Array<{ message?: { content?: unknown } }>;
+        };
+        const content = body.choices?.[0]?.message?.content;
+        if (typeof content === "string") reply = content.slice(0, 200);
+      } catch {
+        // A 200 with a body we cannot parse is still a working model.
+      }
+
+      this.credentials.markVerified(credential.id);
+      this.events.emit({
+        type: "credential.verified",
+        level: "success",
+        message: `${model} answered through ${credential.description}`,
+        providerId,
+        model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        status,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+        data: { latencyMs, probe: true },
+      });
+      this.recordModelProbe(providerId, model, credential.id, true, "success", latencyMs);
+
+      return {
+        ok: true,
+        providerId,
+        model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        status,
+        latencyMs,
+        classification: "success",
+        reply,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+      };
+    } catch (error) {
+      const latencyMs = Date.now() - started;
+      this.recordModelProbe(providerId, model, credential.id, false, "network_error", latencyMs);
+      return {
+        ok: false,
+        providerId,
+        model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        status,
+        latencyMs,
+        classification: "network_error",
+        message: (error as Error).message,
+        proxyLabel: proxyLabel(credential.proxyUrl),
+      };
+    }
+  }
+
+  private recordProbeFailure(credentialId: string, classification: ErrorClassification): void {
+    if (classification === "credential_invalid") {
+      this.credentials.markInvalid(credentialId);
+    } else if (
+      classification === "credential_rate_limited" ||
+      classification === "quota_exhausted"
+    ) {
+      this.credentials.putInCooldown(credentialId);
+    }
+  }
+
+  /** Log one play-button attempt so "My models" can rank on what actually happened. */
+  private recordModelProbe(
+    providerId: string,
+    model: string,
+    credentialId: string,
+    ok: boolean,
+    classification: string,
+    latencyMs: number,
+  ): void {
+    this.modelProbesRepo.record({
+      providerId,
+      model,
+      credentialId,
+      ok,
+      classification,
+      latencyMs,
+      checkedAt: Date.now(),
+    });
+  }
+
+  /**
+   * The user's own models, ranked by their own probe history.
+   *
+   * Scoped to models the user can actually use right now (their provider has
+   * a healthy key), which is what makes this a *usable* ranking rather than a
+   * curated opinion: a model with a five-star community verdict is worth
+   * nothing here if this user's key cannot reach it. Within that scope, a
+   * model that has answered every time it was asked, quickly, outranks one
+   * that has not — and a model never probed sorts last, clearly marked, since
+   * there is nothing yet to rank it on.
+   */
+  myModelRankings(): MyModelRanking[] {
+    const statsByKey = new Map(
+      this.modelProbesRepo.allStats().map((stats) => [`${stats.providerId} ${stats.model}`, stats]),
+    );
+
+    const rankings: MyModelRanking[] = [];
+    for (const provider of this.modelCatalog()) {
+      if (!provider.available) continue;
+      for (const model of provider.models) {
+        if (!model.selectable) continue;
+        const stats = statsByKey.get(`${provider.providerId} ${model.id}`);
+        rankings.push({
+          providerId: provider.providerId,
+          displayName: provider.displayName,
+          model: model.id,
+          attempts: stats?.attempts ?? 0,
+          successes: stats?.successes ?? 0,
+          successRate: stats?.successRate,
+          avgLatencyMs: stats?.avgLatencyMs,
+          lastCheckedAt: stats?.lastCheckedAt,
+          lastOk: stats?.lastOk,
+        });
+      }
+    }
+
+    // Tested models first — best success rate, then fastest, ties broken by
+    // most recently checked. Untested models keep catalog order at the tail.
+    return rankings.sort((a, b) => {
+      const aTested = a.attempts > 0;
+      const bTested = b.attempts > 0;
+      if (aTested !== bTested) return aTested ? -1 : 1;
+      if (!aTested) return 0;
+      if (b.successRate! !== a.successRate!) return b.successRate! - a.successRate!;
+      const aLatency = a.avgLatencyMs ?? Number.POSITIVE_INFINITY;
+      const bLatency = b.avgLatencyMs ?? Number.POSITIVE_INFINITY;
+      if (aLatency !== bLatency) return aLatency - bLatency;
+      return (b.lastCheckedAt ?? 0) - (a.lastCheckedAt ?? 0);
+    });
   }
 
   /** The live status payload: current route plus recent routing events. */
@@ -448,15 +1353,142 @@ export class Cokey {
    * wish list.
    */
   modelCatalog(): ModelCatalogView[] {
-    const counts = this.credentials.countsByProvider();
+    const counts = new Map<string, { total: number; healthy: number }>();
     const working = new Map<string, string[]>();
+    const inventory = this.inventoryByProvider();
     for (const credential of this.credentials.listAll()) {
-      if (credential.status !== "healthy") continue;
-      const ids = working.get(credential.providerId) ?? [];
-      ids.push(credential.id);
-      working.set(credential.providerId, ids);
+      // Fold a collapsed id onto the entry that survived deduplication, so a
+      // key connected as `aion-labs` still makes `aion` usable.
+      const providerId = PROVIDER_ALIASES.get(credential.providerId) ?? credential.providerId;
+
+      if (credential.status === "healthy") {
+        working.set(providerId, [...(working.get(providerId) ?? []), credential.id]);
+      }
+      const count = counts.get(providerId) ?? { total: 0, healthy: 0 };
+      count.total += 1;
+      if (credential.status === "healthy") count.healthy += 1;
+      counts.set(providerId, count);
     }
-    return modelAvailability(this.providers.getBuiltInCatalog(), counts, working);
+    return modelAvailability(this.providers.getBuiltInCatalog(), counts, working, inventory);
+  }
+
+  /**
+   * The observed model inventory for one provider, curated models annotated.
+   *
+   * Powers the provider detail view: what COKEY believed, what the provider last
+   * said, and which of the two disagrees.
+   */
+  providerModelInventory(providerId: string): {
+    providerId: string;
+    displayName: string;
+    checkedAt?: number;
+    models: ProviderModelRecord[];
+  } {
+    const catalog = this.providers.findCatalogEntry(providerId);
+    return {
+      providerId,
+      displayName: catalog?.displayName ?? providerId,
+      checkedAt: this.providerModelsRepo.lastCheckedAt(providerId),
+      models: this.providerModelsRepo.listByProvider(providerId),
+    };
+  }
+
+  /**
+   * What the user should do next, ordered by how much it matters.
+   *
+   * This method only assembles a snapshot of live state; the judgement about
+   * which conditions are worth interrupting someone for lives in the pure rules
+   * in `guidance.ts`. Keeping the query and the policy apart is what makes the
+   * thresholds testable — and there are a lot of thresholds.
+   */
+  guidance(): {
+    notices: GuidanceNotice[];
+    summary: Record<GuidanceSeverity, number>;
+    checkedAt: number;
+  } {
+    const notices = deriveGuidance(this.guidanceInput());
+    return { notices, summary: guidanceSummary(notices), checkedAt: Date.now() };
+  }
+
+  /** Flatten the gateway's state into the plain shape the guidance rules read. */
+  private guidanceInput(): GuidanceInput {
+    const now = Date.now();
+    const statuses = this.providerStatuses();
+    const displayName = new Map(statuses.map((status) => [status.id, status.displayName]));
+    const inventory = this.inventoryByProvider();
+
+    const providers = statuses.map((status) => {
+      const observed = inventory.get(status.id) ?? [];
+      const curated = this.providers.findCatalogEntry(status.id)?.knownModels ?? [];
+      const stale = staleCuratedModels(curated, observed);
+      return {
+        id: status.id,
+        displayName: status.displayName,
+        connected: status.connected,
+        credentialCount: status.credentialCount,
+        healthyCount: status.healthyCount,
+        inventoryCheckedAt: this.providerModelsRepo.lastCheckedAt(status.id),
+        staleModels: stale,
+        modelCount:
+          curated.length -
+          stale.length +
+          observed.filter((r) => r.available && !curated.includes(r.model)).length,
+      };
+    });
+
+    const credentials = this.credentials.listAll().map((credential) => ({
+      id: credential.id,
+      providerId: credential.providerId,
+      providerName: displayName.get(credential.providerId) ?? credential.providerId,
+      description: credential.description,
+      status: credential.status,
+      cooldownUntil: credential.cooldownUntil,
+      consecutiveFailures: credential.consecutiveFailures,
+      lastVerifiedAt: credential.lastVerifiedAt,
+      proxyAuto: credential.proxyAuto ?? false,
+    }));
+
+    const chains = this.chains.listChains().map((chain) => ({
+      id: chain.id,
+      alias: chain.alias,
+      enabled: chain.enabled,
+      entries: this.chains.listEntries(chain.id).map((entry) => {
+        const bound = this.credentials.listByIds(entry.credentialIds);
+        return {
+          id: entry.id,
+          providerId: entry.providerId,
+          providerName: displayName.get(entry.providerId) ?? entry.providerId,
+          model: entry.model,
+          label: entry.label,
+          enabled: entry.enabled,
+          credentialCount: bound.length,
+          healthyCount: bound.filter((credential) => credential.status === "healthy").length,
+        };
+      }),
+    }));
+
+    const pool = this.proxyPoolStatus();
+    const coverage = this.freeProviderNudge();
+
+    return {
+      now,
+      chains,
+      credentials,
+      providers,
+      egress: {
+        enabled: pool.enabled,
+        poolSize: pool.size,
+        saturatedProviders: pool.saturatedProviders.map((id) => displayName.get(id) ?? id),
+      },
+      coverage: {
+        connectedFree: coverage.connectedFree,
+        target: coverage.target,
+        suggestions: coverage.suggestions.map((entry) => ({
+          id: entry.id,
+          displayName: entry.displayName,
+        })),
+      },
+    };
   }
 
   // ---- chains -------------------------------------------------------------
@@ -575,46 +1607,54 @@ export class Cokey {
     providerId: string,
     model: string,
     credential: Credential,
+    useProxy = true,
   ): Promise<ValidationResult> {
     const catalog = this.providers.findCatalogEntry(providerId);
     const adapter = this.providers.get(providerId);
 
-    if (!catalog || catalog.verification.method !== "chat") {
-      return adapter.validateCredential(credential);
+    // Probe leaves through the exit this key would get in production. The pool
+    // reassignment happens after connect, so it cannot be relied on here.
+    const exit = this.resolveProbeProxy(credential, useProxy);
+    const probeCredential = exit !== undefined ? { ...credential, proxyUrl: exit } : credential;
+
+    // Always try a real chat request against the specific model so that
+    // quota exhaustion and model availability are both tested.
+    if (catalog) {
+      const started = Date.now();
+      const now = Date.now();
+      const probe: ChainEntry = {
+        id: "probe",
+        chainId: "probe",
+        providerId,
+        model,
+        baseUrl: catalog.baseUrl,
+        credentialIds: [],
+        enabled: true,
+        priority: 0,
+        routingStrategy: "sequential",
+        createdAt: now,
+        updatedAt: now,
+      };
+
+      const result = await adapter.send(probe, probeCredential, {
+        model,
+        messages: [{ role: "user", content: "ping" }],
+        max_tokens: 1,
+        stream: false,
+      });
+
+      const latencyMs = Date.now() - started;
+      if (result.ok) return { ok: true, classification: "success", latencyMs };
+
+      return {
+        ok: false,
+        classification: adapter.classifyError(result.error),
+        message: result.error.message,
+        latencyMs,
+      };
     }
 
-    const started = Date.now();
-    const now = Date.now();
-    const probe: ChainEntry = {
-      id: "probe",
-      chainId: "probe",
-      providerId,
-      model,
-      baseUrl: catalog.baseUrl,
-      credentialIds: [],
-      enabled: true,
-      priority: 0,
-      routingStrategy: "sequential",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    const result = await adapter.send(probe, credential, {
-      model,
-      messages: [{ role: "user", content: "ping" }],
-      max_tokens: 1,
-      stream: false,
-    });
-
-    const latencyMs = Date.now() - started;
-    if (result.ok) return { ok: true, classification: "success", latencyMs };
-
-    return {
-      ok: false,
-      classification: adapter.classifyError(result.error),
-      message: result.error.message,
-      latencyMs,
-    };
+    return adapter.validateCredential(probeCredential);
   }
 
   listChains(): ChainView[] {
@@ -698,7 +1738,7 @@ export class Cokey {
    * Usage view: per provider → per key → per model, plus the live route.
    *
    * Token counts come from the per-day rollup; remaining quota comes from the
-   * last provider response (may be absent — never invented). `now` is the route
+   * last provider response (may be absent - never invented). `now` is the route
    * the router is on, so the UI can show which node/sub-key is serving.
    */
   usageView(): {
@@ -886,7 +1926,7 @@ export class Cokey {
   /** The local "incite" check: how many advertised-free providers are connected,
    *  and which ones would widen failover coverage.
    *
-   * Entirely local — there is no telemetry behind this.
+   * Entirely local - there is no telemetry behind this.
    */
   freeProviderNudge(): FreeProviderNudge {
     const counts = this.credentials.countsByProvider();
@@ -935,4 +1975,22 @@ function readEnvSecret(name: string | undefined): string | undefined {
   if (!name) return undefined;
   const value = process.env[name];
   return value && value.trim() ? value.trim() : undefined;
+}
+
+/**
+ * One line describing a model inventory change.
+ *
+ * Written to name the provider first, because the notification appears in a bar
+ * that may be showing a dozen other providers' news, and "3 models added" is
+ * useless without knowing whose.
+ */
+function describeModelChange(
+  displayName: string,
+  changes: { added: string[]; restored: string[]; removed: string[] },
+): string {
+  const parts: string[] = [];
+  if (changes.added.length > 0) parts.push(`${changes.added.length} new`);
+  if (changes.restored.length > 0) parts.push(`${changes.restored.length} back`);
+  if (changes.removed.length > 0) parts.push(`${changes.removed.length} retired`);
+  return `${displayName}: ${parts.join(", ")} model(s)`;
 }

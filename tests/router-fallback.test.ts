@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { RequestScopedError } from "../src/core/router/engine.js";
 import { addCredential, createHarness, StubAdapter, type Harness } from "./helpers/harness.js";
 
 const REQUEST = { model: "best", messages: [{ role: "user", content: "hello" }] };
@@ -92,16 +91,18 @@ describe("router fallback order", () => {
     expect(result.fallback).toBe(true);
   });
 
-  it("stops immediately on a request-scoped error instead of rotating", async () => {
-    // Test C: a context-too-large 400 must not be retried on other keys.
+  it("skips to the next entry on context_too_large instead of halting", async () => {
+    // Test C: a context-too-large 400 on entry 1 must skip to entry 2.
     const key1 = addCredential(h, "groq", "key-1");
-    const key2 = addCredential(h, "groq", "key-2");
+    const e2key = addCredential(h, "openrouter", "e2-key-1");
 
-    const adapter = new StubAdapter(() => ({
+    const groq = new StubAdapter(() => ({
       status: 400,
       body: { error: { message: "This model's maximum context length is 131072 tokens" } },
     }));
-    h.registry.register("groq", adapter);
+    const openrouter = new StubAdapter(() => ({ status: 200 }));
+    h.registry.register("groq", groq);
+    h.registry.register("openrouter", openrouter);
 
     const chain = h.chains.createChain({ alias: "best" });
     h.chains.addEntry({
@@ -109,11 +110,23 @@ describe("router fallback order", () => {
       providerId: "groq",
       model: "qwen/qwen3.8-27b",
       baseUrl: BASE,
-      credentialIds: [key1.id, key2.id],
+      credentialIds: [key1.id],
+    });
+    h.chains.addEntry({
+      chainId: chain.id,
+      providerId: "openrouter",
+      model: "deepseek/deepseek-v4-flash:free",
+      baseUrl: BASE,
+      credentialIds: [e2key.id],
     });
 
-    await expect(h.router.route("best", REQUEST)).rejects.toBeInstanceOf(RequestScopedError);
-    expect(adapter.calls).toHaveLength(1);
+    const result = await h.router.route("best", REQUEST);
+
+    expect(groq.calls).toHaveLength(1);
+    expect(openrouter.calls).toHaveLength(1);
+    expect(result.providerId).toBe("openrouter");
+    expect(result.fallback).toBe(true);
+    expect(result.fallbackReason).toBe("context_too_large");
   });
 
   it("follows the user's order after a reorder", async () => {
@@ -182,7 +195,9 @@ describe("router fallback order", () => {
 describe("live routing feedback", () => {
   it("narrates each key change and leaves a success snapshot", async () => {
     const key1 = addCredential(h, "groq", "key-1");
-    const key2 = addCredential(h, "groq", "key-2", { proxyUrl: "socks5://user:pass@127.0.0.1:1080" });
+    const key2 = addCredential(h, "groq", "key-2", {
+      proxyUrl: "socks5://user:pass@127.0.0.1:1080",
+    });
 
     const adapter = new StubAdapter((credential) =>
       credential.id === key2.id

@@ -33,11 +33,13 @@ export interface CreateCredentialInput {
   /**
    * Optional egress proxy for this key (`socks5://…` or `http://…`).
    *
-   * Set a different proxy per credential to rotate exit IPs alongside keys —
-   * without it, several keys from one provider share an IP and therefore share
+   * Set a different proxy per credential to rotate exit IPs alongside keys.
+   * Without it, several keys from one provider share an IP and therefore share
    * the provider's IP-level limit.
    */
   proxyUrl?: string;
+  /** True when the proxy was chosen by the automatic pool. */
+  proxyAuto?: boolean;
 }
 
 export interface TokenDelta {
@@ -71,6 +73,7 @@ export class CredentialManager {
       accountId: input.accountId,
       secretEncrypted: this.vault.encrypt(input.secret),
       proxyUrl: input.proxyUrl,
+      proxyAuto: input.proxyAuto ? 1 : 0,
       description: input.description,
       status: "unverified",
       createdAt: now,
@@ -121,6 +124,35 @@ export class CredentialManager {
   /** Attach, move or clear the egress proxy of a credential. */
   updateProxyUrl(id: string, proxyUrl: string | null): void {
     this.repo.update(id, { proxyUrl, updatedAt: Date.now() });
+  }
+
+  /**
+   * Record the proxy chosen by the automatic pool.
+   *
+   * `proxy_auto = 1` is what lets a later pool change move this credential to a
+   * different exit while leaving a hand-picked proxy alone.
+   */
+  setAutoProxyUrl(id: string, proxyUrl: string | null): void {
+    this.repo.update(id, {
+      proxyUrl,
+      proxyAuto: proxyUrl ? 1 : 0,
+      updatedAt: Date.now(),
+    });
+  }
+
+  /**
+   * Attach a user-chosen proxy, taking the credential out of the pool.
+   *
+   * The pool only ever rewrites credentials it owns, so pinning a key here is
+   * how a user opts one credential out of automatic egress for good.
+   */
+  markProxyManual(id: string, proxyUrl: string | null): void {
+    this.repo.update(id, { proxyUrl, proxyAuto: 0, updatedAt: Date.now() });
+  }
+
+  /** Credentials whose egress is currently owned by the pool. */
+  listAutoProxy(): Credential[] {
+    return this.listAll().filter((credential) => credential.proxyAuto);
   }
 
   /** Re-encrypt with a rotated secret. */
@@ -227,9 +259,9 @@ export class CredentialManager {
       failedRequests: usage.failedRequests + 1,
       rateLimitErrors:
         usage.rateLimitErrors + (classification === "credential_rate_limited" ? 1 : 0),
+      quotaErrors: usage.quotaErrors + (classification === "quota_exhausted" ? 1 : 0),
       authErrors: usage.authErrors + (classification === "credential_invalid" ? 1 : 0),
-      serverErrors:
-        usage.serverErrors + (classification === "temporary_provider_error" ? 1 : 0),
+      serverErrors: usage.serverErrors + (classification === "temporary_provider_error" ? 1 : 0),
       lastUsedAt: Date.now(),
     };
     this.repo.update(id, {
@@ -307,7 +339,7 @@ export class CredentialManager {
       quota: credential.quota,
       cooldownUntil: credential.cooldownUntil,
       consecutiveFailures: credential.consecutiveFailures,
-      proxy: describeProxy(credential.proxyUrl),
+      proxy: describeProxy(credential.proxyUrl, credential.proxyAuto),
       rate: this.rates.snapshot(credential.id),
     };
   }
@@ -319,6 +351,7 @@ export class CredentialManager {
       accountId: row.account_id ?? undefined,
       secret: this.vault.decrypt(row.secret_encrypted),
       proxyUrl: row.proxy_url ?? undefined,
+      proxyAuto: row.proxy_auto === 1,
       description: row.description,
       status: row.status as CredentialStatus,
       createdAt: row.created_at,
@@ -333,10 +366,10 @@ export class CredentialManager {
 }
 
 /** Proxy state safe to display: never the proxy's own username or password. */
-export function describeProxy(proxyUrl: string | undefined): CredentialProxyInfo {
-  if (!proxyUrl) return { configured: false };
+export function describeProxy(proxyUrl: string | undefined, auto = false): CredentialProxyInfo {
+  if (!proxyUrl) return { configured: false, auto: false };
   const label = proxyLabel(proxyUrl);
-  return label ? { configured: true, label } : { configured: true };
+  return label ? { configured: true, auto, label } : { configured: true, auto };
 }
 
 /** Re-export so callers can build an empty gauge without importing the types. */

@@ -1,16 +1,76 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api, ApiError } from "../api.js";
-import type { ChainView } from "../types.js";
+import type { ChainView, ProviderStatus } from "../types.js";
 import { ChainCard } from "../components/ChainCard.js";
+import { Pagination } from "../components/Pagination.js";
 import { Empty, Panel } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
+import { useRoute } from "../router.js";
+import { useLang } from "../lang.js";
+import { Keys } from "./Keys.js";
 
-export function Chains({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
+const CHAINS_PER_PAGE = 10;
+
+/**
+ * Chains are the whole product, so everything about them lives on one screen:
+ * create, order, and the keys each node can use.
+ *
+ * There is no separate "add chain" page any more. Adding a node reuses the
+ * existing chain, and the Keys tab is the credential inventory filtered to the
+ * chains you actually run.
+ */
+export function Chains({
+  refreshKey,
+  onChanged,
+  providers,
+}: {
+  refreshKey: number;
+  onChanged: () => void;
+  providers: ProviderStatus[];
+}) {
+  const { route, navigate } = useRoute();
+  const { t } = useLang();
+  const tab = route.section === "keys" ? "keys" : "nodes";
+
+  return (
+    <>
+      <div className="tabs tabs-inline">
+        <button
+          type="button"
+          className="tab"
+          aria-selected={tab === "nodes"}
+          onClick={() => navigate("/chains")}
+        >
+          {t("Nodes")}
+        </button>
+        <button
+          type="button"
+          className="tab"
+          aria-selected={tab === "keys"}
+          onClick={() => navigate("/chains/keys")}
+        >
+          {t("Keys")}
+        </button>
+      </div>
+
+      {tab === "keys" ? (
+        <Keys refreshKey={refreshKey} onChanged={onChanged} providers={providers} />
+      ) : (
+        <ChainList refreshKey={refreshKey} onChanged={onChanged} />
+      )}
+    </>
+  );
+}
+
+function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const toast = useToast();
+  const { t } = useLang();
   const [chains, setChains] = useState<ChainView[]>([]);
   const [alias, setAlias] = useState("");
   const [description, setDescription] = useState("");
   const [busy, setBusy] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(CHAINS_PER_PAGE);
 
   const load = useCallback(async () => {
     try {
@@ -24,10 +84,24 @@ export function Chains({ refreshKey, onChanged }: { refreshKey: number; onChange
     void load();
   }, [load, refreshKey]);
 
+  const totalPages = Math.max(1, Math.ceil(chains.length / pageSize));
+  const current = Math.min(page, totalPages);
+  const visible = chains.slice((current - 1) * pageSize, current * pageSize);
+
+  const totals = useMemo(() => {
+    const nodes = chains.reduce((sum, chain) => sum + chain.entries.length, 0);
+    const keys = chains.reduce(
+      (sum, chain) =>
+        sum + chain.entries.reduce((entrySum, entry) => entrySum + entry.credentials.length, 0),
+      0,
+    );
+    return { nodes, keys };
+  }, [chains]);
+
   async function createChain() {
     const name = alias.trim();
     if (!name) {
-      toast.err("Give the chain an alias, e.g. cokey-best");
+      toast.err(t("Give the chain an alias, for example cokey-best"));
       return;
     }
     setBusy(true);
@@ -35,7 +109,7 @@ export function Chains({ refreshKey, onChanged }: { refreshKey: number; onChange
       await api.createChain({ alias: name, description: description.trim() || undefined });
       setAlias("");
       setDescription("");
-      toast.ok(`Created ${name}`);
+      toast.ok(`${t("Created")} ${name}`);
       await load();
       onChanged();
     } catch (error) {
@@ -47,10 +121,10 @@ export function Chains({ refreshKey, onChanged }: { refreshKey: number; onChange
 
   return (
     <>
-      <Panel title="New chain">
+      <Panel title={t("New chain")}>
         <div className="row wrap">
-          <div style={{ flex: "1 1 260px" }}>
-            <label htmlFor="chain-alias">Alias (this is the model id clients send)</label>
+          <div style={{ flex: "1 1 240px" }} data-tour="chain-alias-field">
+            <label htmlFor="chain-alias">{t("Alias · the model id clients send")}</label>
             <input
               id="chain-alias"
               value={alias}
@@ -62,25 +136,42 @@ export function Chains({ refreshKey, onChanged }: { refreshKey: number; onChange
             />
           </div>
           <div style={{ flex: "2 1 320px" }}>
-            <label htmlFor="chain-description">Description (optional)</label>
+            <label htmlFor="chain-description">{t("Description · optional")}</label>
             <input
               id="chain-description"
               value={description}
-              placeholder="Groq primary, OpenRouter failover"
+              placeholder="Groq primary, Cloudflare failover"
               onChange={(event) => setDescription(event.target.value)}
             />
           </div>
-          <button onClick={() => void createChain()} disabled={busy} style={{ alignSelf: "flex-end" }}>
-            {busy ? "Creating…" : "Create chain"}
+          <button
+            onClick={() => void createChain()}
+            disabled={busy}
+            style={{ alignSelf: "flex-end" }}
+          >
+            {busy ? t("Creating…") : t("Create chain")}
           </button>
+        </div>
+        <div className="small faint" style={{ marginTop: 8 }}>
+          {t("Tried top to bottom. Reorder by dragging,")} <code>Alt+↑</code> / <code>Alt+↓</code>,{" "}
+          {t("or the arrows.")}
         </div>
       </Panel>
 
-      <Panel title={`Chains (${chains.length})`}>
+      <Panel title={`${t("Chains")} (${chains.length})`}>
+        <div className="row" style={{ marginBottom: 12, gap: 14 }}>
+          <span className="small faint">
+            {totals.nodes} {t("nodes")}
+          </span>
+          <span className="small faint">
+            {totals.keys} {t("keys")}
+          </span>
+        </div>
+
         {chains.length === 0 ? (
-          <Empty>No chains yet. Create one above, then add provider entries.</Empty>
+          <Empty>{t("No chains yet.")}</Empty>
         ) : (
-          chains.map((chain) => (
+          visible.map((chain) => (
             <ChainCard
               key={chain.id}
               chain={chain}
@@ -91,12 +182,22 @@ export function Chains({ refreshKey, onChanged }: { refreshKey: number; onChange
             />
           ))
         )}
-      </Panel>
 
-      <div className="hint-box">
-        Routing order is yours: an entry only runs after every credential above it has been tried.
-        Drag a row, press <code>Alt+↑</code> / <code>Alt+↓</code>, or use the arrow buttons.
-      </div>
+        <Pagination
+          page={current}
+          totalPages={totalPages}
+          total={chains.length}
+          pageSize={pageSize}
+          noun="chains"
+          onChange={(params) => {
+            if (params.page) setPage(params.page);
+            if (params.pageSize) {
+              setPageSize(params.pageSize);
+              setPage(1);
+            }
+          }}
+        />
+      </Panel>
     </>
   );
 }

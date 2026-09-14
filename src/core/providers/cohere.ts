@@ -85,7 +85,9 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
       model: context.model,
       created: context.created,
       content: readCohereText(message),
-      finishReason: mapFinishReason(typeof record.finish_reason === "string" ? record.finish_reason : undefined),
+      finishReason: mapFinishReason(
+        typeof record.finish_reason === "string" ? record.finish_reason : undefined,
+      ),
       toolCalls: readCohereToolCalls(message),
       usage: this.extractUsage(record),
     });
@@ -98,18 +100,24 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
     return streamFrom(this.translateStream(body, context));
   }
 
-  override async listModels(credential: Credential): Promise<ModelInfo[]> {
+  override async listModels(
+    credential: Credential,
+    options?: { timeoutMs?: number },
+  ): Promise<ModelInfo[]> {
     const base = this.catalog.baseUrl.replace(/\/+$/, "");
-    const result = await performRequest({
-      url: `${base}/models`,
-      method: "GET",
-      headers: {
-        authorization: `Bearer ${credential.secret}`,
-        "user-agent": "cokey/0.1.0",
+    const result = await performRequest(
+      {
+        url: `${base}/models`,
+        method: "GET",
+        headers: {
+          authorization: `Bearer ${credential.secret}`,
+          "user-agent": "cokey/0.1.0",
+        },
+        stream: false,
+        proxyUrl: credential.proxyUrl,
       },
-      stream: false,
-      proxyUrl: credential.proxyUrl,
-    });
+      { timeoutMs: options?.timeoutMs },
+    );
     if (!result.ok) throw new Error(result.error.message);
 
     const body = (await result.response.json()) as { models?: Array<{ name?: string }> };

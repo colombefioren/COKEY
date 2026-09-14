@@ -56,10 +56,25 @@ export class AllChainsExhaustedError extends Error {
   constructor(
     readonly attempts: AttemptLog[],
     readonly lastError?: unknown,
+    readonly routeInfo?: RouteErrorInfo,
   ) {
     super("All chains exhausted");
     this.name = "AllChainsExhaustedError";
   }
+}
+
+/**
+ * Everything needed to narrate a request-level failure to a client.
+ *
+ * Attached to the routing errors the gateway throws, so an error response can
+ * reuse the same `X-Cokey-*` transparency headers that a success does — the
+ * coding tool can read which provider failed the same way it reads which one
+ * succeeded.
+ */
+export interface RouteErrorInfo {
+  chainAlias?: string;
+  fallback: boolean;
+  fallbackReason?: string;
 }
 
 /** A request-shaped failure. Rotation would fail identically, so we stop. */
@@ -67,6 +82,7 @@ export class RequestScopedError extends Error {
   constructor(
     readonly classification: ErrorClassification,
     readonly providerError: ProviderError,
+    readonly attempts: AttemptLog[] = [],
   ) {
     super(providerError.message || classification);
     this.name = "RequestScopedError";
@@ -158,7 +174,7 @@ export class RouterEngine {
     const chain = this.resolveChain(chainAlias);
     const entries = this.chains.listEnabledEntries(chain.id);
 
-    if (entries.length === 0) throw new AllChainsExhaustedError([]);
+    if (entries.length === 0) throw new AllChainsExhaustedError([], undefined, { fallback: false });
 
     const state: RouteState = { attempts: [], fallback: false };
 
@@ -209,7 +225,11 @@ export class RouterEngine {
       data: { attempts: state.attempts.length },
     });
 
-    throw new AllChainsExhaustedError(state.attempts, state.lastError);
+    throw new AllChainsExhaustedError(state.attempts, state.lastError, {
+      chainAlias,
+      fallback: state.fallback,
+      fallbackReason: state.fallbackReason,
+    });
   }
 
   /** Walk every eligible credential of a single entry, in selector order. */
@@ -382,14 +402,18 @@ export class RouterEngine {
           lastClassification: classification,
           attempts: state.attempts.length,
         });
-        throw new RequestScopedError(classification, outcome.error);
+        throw new RequestScopedError(classification, outcome.error, state.attempts);
       }
 
-      if (classification === "model_unavailable") {
+      if (
+        classification === "model_unavailable" ||
+        classification === "context_too_large" ||
+        classification === "invalid_request"
+      ) {
         state.fallback = true;
-        state.fallbackReason ??= "model_unavailable";
-        // The model is wrong for this entry, so its other credentials would
-        // fail the same way: skip straight to the next entry.
+        state.fallbackReason ??= reasonFor(classification);
+        // The model is wrong, unavailable, or can't handle this request:
+        // skip straight to the next entry — a different model may work.
         return policy.entryFallback ? { kind: "next_entry" } : { kind: "stop" };
       }
 
@@ -568,9 +592,7 @@ export class RouterEngine {
       const changedModel = previousRoute.model !== entry.model;
       const changedProvider = previousRoute.providerId !== entry.providerId;
       const parts = [
-        changedProvider || changedModel
-          ? `model → ${entry.providerId}/${entry.model}`
-          : undefined,
+        changedProvider || changedModel ? `model → ${entry.providerId}/${entry.model}` : undefined,
         changedCredential ? `key → ${credential.description}` : undefined,
       ].filter(Boolean);
 
@@ -591,6 +613,28 @@ export class RouterEngine {
           credentialDescription: previousRoute.credentialDescription,
         },
         data: { changedModel, changedCredential, changedProvider },
+      });
+
+      // A second, plainly worded event for clients that want to raise a
+      // notification rather than an error. Editor integrations show this as an
+      // informational toast: the request still succeeds, only the path moved.
+      this.events.emit({
+        type: "chain.state",
+        level: "info",
+        message: `chain changed state: ${chainAlias} on ${entry.providerId}/${entry.model} via ${credential.description}`,
+        chainAlias,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        proxyLabel: proxy,
+        previous: {
+          providerId: previousRoute.providerId,
+          model: previousRoute.model,
+          credentialId: previousRoute.credentialId,
+          credentialDescription: previousRoute.credentialDescription,
+        },
+        data: { changedModel, changedCredential, changedProvider, notify: true },
       });
     }
 
@@ -639,6 +683,12 @@ function reasonFor(classification: ErrorClassification): string {
       return "provider_error";
     case "network_error":
       return "network_error";
+    case "context_too_large":
+      return "context_too_large";
+    case "invalid_request":
+      return "invalid_request";
+    case "model_unavailable":
+      return "model_unavailable";
     default:
       return "provider_error";
   }

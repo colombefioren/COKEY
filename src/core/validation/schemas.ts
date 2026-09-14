@@ -1,7 +1,14 @@
 import { z } from "zod";
 
 /** Enum narrowing used by the application layer. */
-export const ApiStyleSchema = z.enum(["openai", "anthropic", "google", "cohere", "cloudflare", "ollama"]);
+export const ApiStyleSchema = z.enum([
+  "openai",
+  "anthropic",
+  "google",
+  "cohere",
+  "cloudflare",
+  "ollama",
+]);
 export const AuthSchemeSchema = z.enum(["bearer", "x-api-key", "query-param", "custom-header"]);
 export const RoutingStrategySchema = z.enum(["sequential", "round-robin"]);
 export const LogLevelSchema = z.enum(["debug", "info", "warn", "error"]);
@@ -33,6 +40,20 @@ export const ConnectProviderSchema = z.object({
   description: z.string().min(1, "Description is required").max(120),
   accountId: z.string().min(1).max(200).optional(),
   proxyUrl: ProxyUrlSchema.optional(),
+  /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+  saveAnyway: z.boolean().optional(),
+  /** Route the probe through the automatic egress pool. Default true. */
+  useProxy: z.boolean().optional(),
+});
+
+/** Raw key probe. Runs validation against the provider without persisting. */
+export const TestSecretSchema = z.object({
+  secret: z.string().min(1, "API key is required"),
+  accountId: z.string().min(1).max(200).optional(),
+  /** When present, the probe verifies against this exact model. */
+  model: z.string().min(1).optional(),
+  /** Route the probe through the automatic egress pool. Default true. */
+  useProxy: z.boolean().optional(),
 });
 
 export const CreateChainSchema = z.object({
@@ -51,6 +72,8 @@ export const UpdateChainSchema = z
 export const AddEntrySchema = z.object({
   providerId: z.string().min(1),
   model: z.string().min(1),
+  /** Free-form display name chosen by the user. Never auto-generated. */
+  label: z.string().max(120).optional(),
   credentialIds: z.array(z.string().min(1)).min(1, "At least one credential is required"),
   routingStrategy: RoutingStrategySchema.optional(),
   enabled: z.boolean().optional(),
@@ -59,8 +82,58 @@ export const AddEntrySchema = z.object({
 export const UpdateEntrySchema = z
   .object({
     model: z.string().min(1).optional(),
+    /** `null` or an empty string clears the display name. */
+    label: z.string().max(120).nullable().optional(),
     enabled: z.boolean().optional(),
     routingStrategy: RoutingStrategySchema.optional(),
+  })
+  .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
+
+/** A live probe of one model through one working key. */
+export const ProbeModelSchema = z.object({
+  providerId: z.string().min(1),
+  model: z.string().min(1),
+  /** Pin the probe to a specific key; otherwise the healthiest one is used. */
+  credentialId: z.string().min(1).optional(),
+  /** Override the probe text. Defaults to a plain hello. */
+  message: z.string().max(200).optional(),
+});
+
+export const ProxyPoolEntrySchema = z.object({
+  url: ProxyUrlSchema,
+});
+
+export const BulkProxyPoolSchema = z.object({
+  text: z.string().min(1, "Paste at least one proxy URL").max(20_000),
+});
+
+/** Import Proxifly's free list into the pool. */
+export const FetchProxiflySchema = z.object({
+  /** Cap how many proxies one click may import. Omit for the whole list. */
+  limit: z.number().int().min(1).max(2_000).optional(),
+  /** Probe candidates first and keep only working exits. Default true. */
+  verify: z.boolean().optional(),
+  /** Probes in flight at once while verifying. */
+  concurrency: z.number().int().min(1).max(100).optional(),
+  /** Per-probe timeout in ms. */
+  timeoutMs: z.number().int().min(250).max(30_000).optional(),
+});
+
+/** Probe every enabled pool entry and optionally drop the dead ones. */
+export const VerifyProxyPoolSchema = z
+  .object({
+    /** Probes in flight at once. */
+    concurrency: z.number().int().min(1).max(100).optional(),
+    /** Per-probe timeout in ms. */
+    timeoutMs: z.number().int().min(250).max(30_000).optional(),
+    /** Delete entries that fail. Default true. */
+    prune: z.boolean().optional(),
+  })
+  .strict();
+
+export const UpdateProxyPoolSchema = z
+  .object({
+    enabled: z.boolean().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
 
@@ -88,6 +161,12 @@ export const UpdateCredentialSchema = z
     status: z.enum(["healthy", "cooldown", "invalid", "disabled", "unverified"]).optional(),
     /** `null` clears the proxy and returns the key to direct egress. */
     proxyUrl: ProxyUrlSchema.nullable().optional(),
+    /**
+     * Pin this key to a specific egress pool entry by id, or `null` to hand it
+     * back to the automatic pool. Ids are used rather than URLs because the
+     * pool never exposes a proxy's own credentials to the browser.
+     */
+    proxyPoolId: z.string().min(1).nullable().optional(),
   })
   .refine((value) => Object.keys(value).length > 0, { message: "Nothing to update" });
 
@@ -99,6 +178,9 @@ export const UpdateSettingsSchema = z
     showFreeProviderNudger: z.boolean().optional(),
     freeProviderTarget: z.number().int().min(0).max(50).optional(),
     allowPrivateEndpoints: z.boolean().optional(),
+    /** Distribute pool proxies across same-provider keys automatically. */
+    autoProxy: z.boolean().optional(),
+    autoProxyStrategy: z.enum(["per-provider", "round-robin"]).optional(),
     fallback: z
       .object({
         enabled: z.boolean().optional(),
@@ -119,17 +201,19 @@ export const CustomEndpointSchema = z.object({
   models: z.array(z.string().min(1)).default([]),
 });
 
-export const ChatCompletionSchema = z.object({
-  model: z.string().min(1),
-  messages: z
-    .array(
-      z
-        .object({
-          role: z.string().min(1),
-          content: z.unknown().optional(),
-        })
-        .passthrough(),
-    )
-    .min(1, "messages must contain at least one message"),
-  stream: z.boolean().optional(),
-}).passthrough();
+export const ChatCompletionSchema = z
+  .object({
+    model: z.string().min(1),
+    messages: z
+      .array(
+        z
+          .object({
+            role: z.string().min(1),
+            content: z.unknown().optional(),
+          })
+          .passthrough(),
+      )
+      .min(1, "messages must contain at least one message"),
+    stream: z.boolean().optional(),
+  })
+  .passthrough();

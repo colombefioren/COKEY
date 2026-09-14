@@ -1,5 +1,6 @@
 import type { ProviderCatalogEntry } from "./types.js";
 import { modelsForProvider } from "./models.js";
+import { catalogAliases, mergeProviderEntries } from "./dedupe.js";
 
 /**
  * The COKEY provider catalog.
@@ -101,7 +102,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://dash.cloudflare.com/profile/api-tokens",
     docsUrl: "https://developers.cloudflare.com/workers-ai/",
-    freeTier: { advertised: true, summary: "10,000 RPD shared across all models", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "10,000 RPD shared across all models",
+      quotaSource: "provider",
+    },
     knownModels: [
       "@cf/qwen/qwen3.8-27b",
       "@cf/qwen/qwen3-30b-a3b-fp8",
@@ -210,7 +215,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "query-param",
     signupUrl: "https://aistudio.google.com/app/apikey",
     docsUrl: "https://ai.google.dev/gemini-api/docs",
-    freeTier: { advertised: true, summary: "5–20 RPM · 20–500 RPD · varies per model", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "5–20 RPM · 20–500 RPD · varies per model",
+      quotaSource: "provider",
+    },
     knownModels: [
       "models/gemini-2.5-flash",
       "models/gemini-2.5-flash-lite",
@@ -243,7 +252,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://console.groq.com/keys",
     docsUrl: "https://console.groq.com/docs",
-    freeTier: { advertised: true, summary: "30 RPM · 14,400 RPD · 18,000 TPM", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "30 RPM · 14,400 RPD · 18,000 TPM",
+      quotaSource: "provider",
+    },
     knownModels: [
       "qwen/qwen3.8-27b",
       "qwen/qwen3.6-27b",
@@ -276,7 +289,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://huggingface.co/settings/tokens",
     docsUrl: "https://huggingface.co/docs/inference-providers",
-    freeTier: { advertised: true, summary: "$0.10 of monthly inference credits", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "$0.10 of monthly inference credits",
+      quotaSource: "provider",
+    },
     knownModels: [
       "openai/gpt-oss-120b",
       "openai/gpt-oss-20b",
@@ -346,7 +363,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://literouter.com/",
-    freeTier: { advertised: true, summary: "Uncapped requests for :free models", quotaSource: "unknown" },
+    freeTier: {
+      advertised: true,
+      summary: "Uncapped requests for :free models",
+      quotaSource: "unknown",
+    },
     knownModels: [
       "deepseek-v4-flash:free",
       "glm-4.7:free",
@@ -378,7 +399,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://console.mistral.ai/api-keys/",
     docsUrl: "https://docs.mistral.ai/",
-    freeTier: { advertised: true, summary: "~2–30 RPM · 50,000 TPM shared pool", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "~2–30 RPM · 50,000 TPM shared pool",
+      quotaSource: "provider",
+    },
     knownModels: [
       "codestral-latest",
       "codestral-2508",
@@ -427,8 +452,14 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://build.nvidia.com/",
     docsUrl: "https://docs.api.nvidia.com/",
-    freeTier: { advertised: true, summary: "40 RPM per model · uncapped TPD", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "40 RPM · recurring free budget, eval-only ToS",
+      quotaSource: "provider",
+    },
     knownModels: [
+      "deepseek-ai/deepseek-v4-flash-0731",
+      "deepseek-ai/deepseek-v4-pro-0813",
       "meta/llama-3.2-11b-vision-instruct",
       "meta/muse-glimmer-30b",
       "moonshotai/kimi-k3",
@@ -438,6 +469,8 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     ],
     credentialFields: ["secret"],
     verification: { method: "models" },
+    notes:
+      "NVIDIA NIM replaced depleting trial credits with a recurring per-account rate limit (40 RPM default, varies by model). The free tier's ToS scopes usage to evaluation/prototyping, not production.",
   },
   {
     id: "odirouter",
@@ -459,8 +492,18 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://ollama.com/",
     docsUrl: "https://docs.ollama.com/cloud",
-    freeTier: { advertised: true, summary: "5-hour session · weekly reset", quotaSource: "unknown" },
-    knownModels: ["gemma4:31b", "gpt-oss:120b", "gpt-oss:20b", "nemotron-3-nano:30b", "nemotron-3-super"],
+    freeTier: {
+      advertised: true,
+      summary: "5-hour session · weekly reset",
+      quotaSource: "unknown",
+    },
+    knownModels: [
+      "gemma4:31b",
+      "gpt-oss:120b",
+      "gpt-oss:20b",
+      "nemotron-3-nano:30b",
+      "nemotron-3-super",
+    ],
     credentialFields: ["secret"],
     verification: { method: "models" },
   },
@@ -514,7 +557,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://orcarouter.ai/",
-    freeTier: { advertised: true, summary: "Free tier, limits unspecified", quotaSource: "unknown" },
+    freeTier: {
+      advertised: true,
+      summary: "Free tier, limits unspecified",
+      quotaSource: "unknown",
+    },
     knownModels: ["gpt-oss-120b", "qwen3-32b"],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -617,7 +664,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://voidai.app/",
-    freeTier: { advertised: true, summary: "100 RPM · 125,000 daily credits", quotaSource: "unknown" },
+    freeTier: {
+      advertised: true,
+      summary: "100 RPM · 125,000 daily credits",
+      quotaSource: "unknown",
+    },
     knownModels: [
       "gpt-4o-mini",
       "gpt-4.1-mini",
@@ -637,7 +688,12 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://xkiro.com/",
-    freeTier: { advertised: true, summary: "5M TPD · free models only", quotaSource: "unknown" },
+    freeTier: {
+      advertised: true,
+      summary: "5M TPD · free models only",
+      quotaSource: "unknown",
+      freeModelsOnly: true,
+    },
     knownModels: [
       "deepseek/deepseek-v4-flash",
       "qwen/qwen3.8-max:free",
@@ -680,7 +736,13 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     authScheme: "bearer",
     signupUrl: "https://zydit.in/",
     freeTier: { advertised: true, summary: "Unlimited requests · 10 RPM", quotaSource: "unknown" },
-    knownModels: ["big-pickle", "deepseek-r1:latest", "gemma-4-31b", "mimo-v2.5", "nemotron-3-ultra-max"],
+    knownModels: [
+      "big-pickle",
+      "deepseek-r1:latest",
+      "gemma-4-31b",
+      "mimo-v2.5",
+      "nemotron-3-ultra-max",
+    ],
     credentialFields: ["secret"],
     verification: { method: "models" },
   },
@@ -691,10 +753,216 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://zyloai.net/",
-    freeTier: { advertised: true, summary: "10 RPM · 7,200 RPD · 200,000 TPD", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "10 RPM · 7,200 RPD · 200,000 TPD",
+      quotaSource: "provider",
+    },
     knownModels: ["gpt-oss-20b", "minimax-m3", "nemotron-3-ultra", "zylo-flash", "zylo-pro"],
     credentialFields: ["secret"],
     verification: { method: "models" },
+  },
+  {
+    id: "qzz",
+    displayName: "QZZ API",
+    baseUrl: "https://0api.qzz.io/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://qzz.io/",
+    freeTier: {
+      advertised: true,
+      summary: "Free DeepSeek models · ~1 request per 5 minutes",
+      quotaSource: "unknown",
+    },
+    knownModels: [
+      "deepseek-v4-flash",
+      "deepseek-v4-flash-0731",
+      "deepseek-v4-pro",
+      "deepseek-v4-pro-0813",
+    ],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Rate-limited to roughly one request every 5 minutes per key (measured, not published). Fine for one-off tests, too slow for real chains.",
+  },
+  {
+    id: "ai121628",
+    displayName: "AI 121628 Free",
+    baseUrl: "https://ai.121628.xyz/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://ai.121628.xyz/",
+    freeTier: {
+      advertised: true,
+      summary: "Free models · no published rate limit",
+      quotaSource: "unknown",
+    },
+    knownModels: ["deepseek-v4-flash-free"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "deepseek-v4-flash-free responds without an observed per-request cap. deepseek-v4-pro-free consistently resets the connection and is intentionally not listed.",
+  },
+  {
+    id: "tokenrouter",
+    displayName: "TokenRouter",
+    baseUrl: "https://api.tokenrouter.com/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://tokenrouter.com/",
+    freeTier: {
+      advertised: true,
+      summary: "Free tier · limited capacity, stability not guaranteed",
+      quotaSource: "provider",
+    },
+    knownModels: ["z-ai/glm-5.3-free"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Free models run on shared compute: capacity is limited and service stability/concurrency are not guaranteed.",
+  },
+  {
+    id: "tokenharbor",
+    displayName: "TokenHarbor",
+    baseUrl: "https://tokenharbor.ai/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://tokenharbor.ai/dashboard",
+    freeTier: {
+      advertised: true,
+      summary: "Free models · limits unspecified",
+      quotaSource: "unknown",
+    },
+    knownModels: ["deepseek-v4.1-flash:free", "deepseek-v4-flash:free", "mimo-v2.5:free"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Requires email verification before requests start working. On free tier the same caveat applies: shared, capacity-limited compute.",
+  },
+  {
+    id: "nararouter",
+    displayName: "NaraRouter",
+    baseUrl: "https://router.bynara.id/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://bynara.id/settings",
+    freeTier: {
+      advertised: true,
+      summary: "Free laguna-s-2.1 · DeepSeek models paid",
+      quotaSource: "unknown",
+    },
+    knownModels: ["laguna-s-2.1"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Requires a Telegram account bound and a required group joined before the API unlocks. laguna-s-2.1 is free and verified; deepseek-v4-flash and deepseek-v4-pro need paid credits.",
+  },
+  {
+    id: "aihubmix",
+    displayName: "AIHubMix",
+    baseUrl: "https://aihubmix.com/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://aihubmix.com/",
+    freeTier: {
+      advertised: true,
+      summary: "Selected free models · others intermittently unavailable",
+      quotaSource: "unknown",
+    },
+    knownModels: ["coding-minimax-m3-free", "gpt-5.5-free", "coding-glm-4.7-free"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Only these three :free models verified working. minimax-m2.7-free, gpt-oss-20b-free, kimi-for-coding-free, and mimo-v2-flash-free were no_available_channel at test time, and laguna-s-2.1-free returned an HTTP 429 — model availability on the free tier is intermittent.",
+  },
+  {
+    id: "fhrouter",
+    displayName: "FH Router",
+    baseUrl: "https://fhrouter.com/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://fhrouter.com/",
+    freeTier: { advertised: true, summary: "Free 'on the house' models", quotaSource: "unknown" },
+    knownModels: ["deepseek-v4-flash", "grok-4.6"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "deepseek-v4-flash and grok-4.6 verified free. glm-5.3-flash is advertised free but had no serving channel (get_channel_failed) at test time.",
+  },
+  {
+    id: "amdradeon",
+    displayName: "AMD Radeon API",
+    baseUrl: "https://developer.amd.com.cn/radeon/api/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://developer.amd.com.cn/",
+    docsUrl: "https://developer.amd.com.cn/radeon/",
+    freeTier: {
+      advertised: false,
+      summary: "Paid model · works with a funded key",
+      quotaSource: "unknown",
+    },
+    knownModels: ["DeepSeek-V4-Flash"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Marked paid (per-token pricing, model metadata free:false) but verified serving fine with a funded key. Stability is experimental.",
+  },
+  {
+    id: "wusrouter",
+    displayName: "WusRouter",
+    baseUrl: "https://api.wusrouter.com/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://wusrouter.com/",
+    freeTier: { advertised: true, summary: "Selected free models", quotaSource: "unknown" },
+    knownModels: ["DeepSeek-R1-0528-Qwen3-8B", "qwen3.8-27b"],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "DeepSeek-R1-0528-Qwen3-8B and qwen3.8-27b verified. deepseek/deepseek-chat-v3.1 is advertised in /models but returns model_not_found (no available channel) and is intentionally not listed.",
+  },
+  {
+    id: "pollinations",
+    displayName: "Pollinations",
+    baseUrl: "https://gen.pollinations.ai/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://pollinations.ai/",
+    docsUrl: "https://docs.pollinations.ai/",
+    freeTier: { advertised: true, summary: "Free community-hosted models", quotaSource: "unknown" },
+    knownModels: [
+      "community/Catniti/deepseek-r1-free",
+      "community/AkshayCoder48/poolside-laguna-s-2.1:free",
+    ],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      '"community/" models are open endpoints hosted by other users, free but availability depends on the host. These two verified: deepseek-r1-free (routed to tb/deepseek-r1) and poolside-laguna-s-2.1:free (routed to kc/poolside/laguna-s-2.1:free).',
+  },
+  {
+    id: "modelscope",
+    displayName: "ModelScope",
+    baseUrl: "https://api-inference.modelscope.ai/v1",
+    apiStyle: "openai",
+    authScheme: "bearer",
+    signupUrl: "https://modelscope.ai/",
+    docsUrl: "https://www.modelscope.cn/docs",
+    freeTier: {
+      advertised: false,
+      summary: "Paid models · works with a funded key",
+      quotaSource: "unknown",
+    },
+    knownModels: [
+      "deepseek-ai/DeepSeek-V3.1",
+      "deepseek-ai/DeepSeek-V3.2-Exp",
+      "deepseek-ai/DeepSeek-V4-Pro",
+      "deepseek-ai/DeepSeek-V4-Pro-0813",
+    ],
+    credentialFields: ["secret"],
+    verification: { method: "models" },
+    notes:
+      "Alibaba's official inference API with canonical DeepSeek model names. All four DeepSeek models verified. Requires an Alibaba Cloud account bound to the ModelScope token before requests work. Paid per-token.",
   },
 
   // -------------------------------------------------------------------------
@@ -775,7 +1043,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://electronhub.ai",
-    freeTier: { advertised: true, summary: "5 RPM · $0.25 weekly credits", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "5 RPM · $0.25 weekly credits",
+      quotaSource: "provider",
+    },
     knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -829,7 +1101,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://gonkabroker.com/",
-    freeTier: { advertised: true, summary: "6 RPM · ~1M tokens per month", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "6 RPM · ~1M tokens per month",
+      quotaSource: "provider",
+    },
     knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -934,7 +1210,12 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://odirouter.ai",
-    freeTier: { advertised: true, summary: "5 RPM · 50 RPD · free models only", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "5 RPM · 50 RPD · free models only",
+      quotaSource: "provider",
+      freeModelsOnly: true,
+    },
     knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -971,7 +1252,12 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://requesty.ai",
-    freeTier: { advertised: true, summary: "200 RPD · free models only", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "200 RPD · free models only",
+      quotaSource: "provider",
+      freeModelsOnly: true,
+    },
     knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -983,7 +1269,11 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://routeway.ai",
-    freeTier: { advertised: true, summary: "5 RPM · 200 RPD · 300,000 TPD", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "5 RPM · 200 RPD · 300,000 TPD",
+      quotaSource: "provider",
+    },
     knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -1007,7 +1297,12 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
     apiStyle: "openai",
     authScheme: "bearer",
     signupUrl: "https://tokenreply.com",
-    freeTier: { advertised: true, summary: "3 RPM · free models only", quotaSource: "provider" },
+    freeTier: {
+      advertised: true,
+      summary: "3 RPM · free models only",
+      quotaSource: "provider",
+      freeModelsOnly: true,
+    },
     knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
@@ -1037,8 +1332,33 @@ for (const provider of PROVIDER_CATALOG) {
   if (curated.length > 0) provider.knownModels = curated.map((model) => model.id);
 }
 
-/** Catalog index for O(1) lookups. */
-const BY_ID = new Map(PROVIDER_CATALOG.map((p) => [p.id, p]));
+/**
+ * The catalog with duplicates collapsed.
+ *
+ * Consumers must use this rather than `PROVIDER_CATALOG`: the raw list carries
+ * a handful of services listed twice, and reading it directly means a sparse
+ * duplicate silently wins over the curated entry it duplicates.
+ */
+const CANONICAL = mergeProviderEntries(PROVIDER_CATALOG);
+
+/**
+ * Raw ids that were collapsed into a surviving entry, for example
+ * `aion-labs` into `aion`. Stored chains still reference the old id, so it has
+ * to keep resolving.
+ */
+export const PROVIDER_ALIASES: Map<string, string> = catalogAliases(PROVIDER_CATALOG, CANONICAL);
+
+/** Catalog index for O(1) lookups, including deprecated aliases. */
+const BY_ID = new Map(CANONICAL.map((p) => [p.id, p]));
+for (const [alias, target] of PROVIDER_ALIASES) {
+  const entry = BY_ID.get(target);
+  if (entry) BY_ID.set(alias, entry);
+}
+
+/** Deduplicated catalog, one entry per real service. */
+export function providerCatalog(): ProviderCatalogEntry[] {
+  return CANONICAL;
+}
 
 export function findProvider(id: string): ProviderCatalogEntry | undefined {
   return BY_ID.get(id);
@@ -1046,11 +1366,11 @@ export function findProvider(id: string): ProviderCatalogEntry | undefined {
 
 /** Providers that explicitly advertise a free tier. */
 export function freeProviders(): ProviderCatalogEntry[] {
-  return PROVIDER_CATALOG.filter((p) => p.freeTier.advertised);
+  return CANONICAL.filter((p) => p.freeTier.advertised);
 }
 
 export function paidProviders(): ProviderCatalogEntry[] {
-  return PROVIDER_CATALOG.filter((p) => !p.freeTier.advertised);
+  return CANONICAL.filter((p) => !p.freeTier.advertised);
 }
 
 export function isFreeProvider(id: string): boolean {
@@ -1060,8 +1380,8 @@ export function isFreeProvider(id: string): boolean {
 /** Case-insensitive search across id, display name and summary. */
 export function searchProviders(query: string): ProviderCatalogEntry[] {
   const q = query.trim().toLowerCase();
-  if (!q) return [...PROVIDER_CATALOG];
-  return PROVIDER_CATALOG.filter((p) =>
+  if (!q) return [...CANONICAL];
+  return CANONICAL.filter((p) =>
     [p.id, p.displayName, p.freeTier.summary, ...p.knownModels].some((field) =>
       field.toLowerCase().includes(q),
     ),
@@ -1069,5 +1389,5 @@ export function searchProviders(query: string): ProviderCatalogEntry[] {
 }
 
 export function providerIds(): string[] {
-  return PROVIDER_CATALOG.map((p) => p.id);
+  return CANONICAL.map((p) => p.id);
 }

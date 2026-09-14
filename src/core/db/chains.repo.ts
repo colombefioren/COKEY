@@ -21,6 +21,7 @@ export interface InsertEntryInput {
   chainId: string;
   providerId: string;
   model: string;
+  label?: string;
   baseUrl: string;
   credentialIds: string;
   enabled: boolean;
@@ -33,6 +34,7 @@ export interface InsertEntryInput {
 export interface EntryPatch {
   providerId?: string;
   model?: string;
+  label?: string | null;
   baseUrl?: string;
   credentialIds?: string;
   enabled?: number;
@@ -51,6 +53,7 @@ const CHAIN_COLUMNS: Record<keyof ChainPatch, string> = {
 const ENTRY_COLUMNS: Record<keyof EntryPatch, string> = {
   providerId: "provider_id",
   model: "model",
+  label: "label",
   baseUrl: "base_url",
   credentialIds: "credential_ids",
   enabled: "enabled",
@@ -86,14 +89,11 @@ export class ChainsRepo {
 
   getChainByAlias(alias: string): ChainRow | undefined {
     return this.db.db.prepare(`SELECT * FROM chains WHERE alias = ?`).get(alias) as
-      | ChainRow
-      | undefined;
+      ChainRow | undefined;
   }
 
   listChains(): ChainRow[] {
-    return this.db.db
-      .prepare(`SELECT * FROM chains ORDER BY created_at ASC`)
-      .all() as ChainRow[];
+    return this.db.db.prepare(`SELECT * FROM chains ORDER BY created_at ASC`).all() as ChainRow[];
   }
 
   updateChain(id: string, patch: ChainPatch): void {
@@ -110,15 +110,16 @@ export class ChainsRepo {
     this.db.db
       .prepare(
         `INSERT INTO chain_entries
-           (id, chain_id, provider_id, model, base_url, credential_ids, enabled,
+           (id, chain_id, provider_id, model, label, base_url, credential_ids, enabled,
             priority, routing_strategy, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         input.id,
         input.chainId,
         input.providerId,
         input.model,
+        input.label ?? null,
         input.baseUrl,
         input.credentialIds,
         input.enabled ? 1 : 0,
@@ -131,8 +132,7 @@ export class ChainsRepo {
 
   getEntry(id: string): ChainEntryRow | undefined {
     return this.db.db.prepare(`SELECT * FROM chain_entries WHERE id = ?`).get(id) as
-      | ChainEntryRow
-      | undefined;
+      ChainEntryRow | undefined;
   }
 
   listEntries(chainId: string): ChainEntryRow[] {

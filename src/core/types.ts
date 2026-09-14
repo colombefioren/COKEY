@@ -59,6 +59,7 @@ export interface UsageStats {
   outputTokens: number;
   totalTokens: number;
   rateLimitErrors: number;
+  quotaErrors: number;
   authErrors: number;
   serverErrors: number;
   averageLatencyMs: number;
@@ -75,6 +76,7 @@ export function emptyUsage(): UsageStats {
     outputTokens: 0,
     totalTokens: 0,
     rateLimitErrors: 0,
+    quotaErrors: 0,
     authErrors: 0,
     serverErrors: 0,
     averageLatencyMs: 0,
@@ -97,6 +99,13 @@ export interface Credential {
    * global setting.
    */
   proxyUrl?: string;
+  /**
+   * True when the automatic egress pool chose this proxy.
+   *
+   * The flag is what keeps a pool re-plan from overwriting a proxy the user
+   * typed by hand: only pool-owned proxies are ever reassigned.
+   */
+  proxyAuto?: boolean;
   description: string;
   status: CredentialStatus;
   createdAt: number;
@@ -111,6 +120,8 @@ export interface Credential {
 /** Proxy configuration of a credential, with credentials stripped. */
 export interface CredentialProxyInfo {
   configured: boolean;
+  /** True when the pool chose this exit IP rather than the user. */
+  auto: boolean;
   /** `host:port` of the proxy. Never includes a proxy username or password. */
   label?: string;
 }
@@ -167,6 +178,13 @@ export interface ChainEntry {
   chainId: string;
   providerId: string;
   model: string;
+  /**
+   * Optional display name shown to people and clients.
+   *
+   * Nothing here is derived from the upstream catalogue: a user may call
+   * `deepseek-v4-pro` whatever they like, for example "DeepSeek V4 Pro (xKiro)".
+   */
+  label?: string;
   baseUrl: string;
   credentialIds: string[];
   enabled: boolean;
@@ -251,6 +269,17 @@ export interface ValidationResult {
 export interface ModelInfo {
   id: string;
   providerId: string;
+  /**
+   * Whether the listing itself says this model costs nothing to use.
+   *
+   * Several aggregators (OpenRouter-style ones especially) answer `/models`
+   * with an `access_tier` or `pricing` field alongside the id — real signal
+   * that a naming convention like a `:free` suffix can silently stop
+   * matching once a provider reshuffles its catalog. `undefined` means the
+   * listing carried no such field, not that the model is known to cost
+   * money.
+   */
+  free?: boolean;
 }
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -274,8 +303,21 @@ export interface Settings {
   freeProviderTarget: number;
   /** Opt-in escape hatch for the SSRF guard on custom endpoints. */
   allowPrivateEndpoints: boolean;
+  /**
+   * Spread the egress pool across same-provider keys automatically.
+   *
+   * When on, every credential of a provider leaves through a different pool
+   * entry, which is what makes two keys of one provider genuinely independent
+   * instead of sharing the provider's IP-level limit. Keys whose proxy was set
+   * by hand are never touched.
+   */
+  autoProxy: boolean;
+  autoProxyStrategy: AutoProxyStrategy;
   fallback: FallbackPolicy;
 }
+
+/** How the pool walks its entries when assigning them to providers. */
+export type AutoProxyStrategy = "per-provider" | "round-robin";
 
 export const DEFAULT_FALLBACK_POLICY: FallbackPolicy = {
   enabled: true,
@@ -294,6 +336,8 @@ export function defaultSettings(dataDir: string): Settings {
     showFreeProviderNudger: true,
     freeProviderTarget: 3,
     allowPrivateEndpoints: false,
+    autoProxy: false,
+    autoProxyStrategy: "per-provider",
     fallback: { ...DEFAULT_FALLBACK_POLICY },
   };
 }

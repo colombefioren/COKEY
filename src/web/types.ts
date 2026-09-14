@@ -26,6 +26,7 @@ export interface UsageStats {
   outputTokens: number;
   totalTokens: number;
   rateLimitErrors: number;
+  quotaErrors: number;
   authErrors: number;
   serverErrors: number;
   averageLatencyMs: number;
@@ -36,6 +37,8 @@ export interface UsageStats {
 /** Proxy state of a credential. Never carries the proxy's own credentials. */
 export interface CredentialProxyInfo {
   configured: boolean;
+  /** True when the automatic pool chose this exit rather than the user. */
+  auto: boolean;
   /** `host:port` of the egress proxy. */
   label?: string;
 }
@@ -79,6 +82,13 @@ export interface ChainEntryView {
   chainId: string;
   providerId: string;
   model: string;
+  /**
+   * Display name chosen by the user.
+   *
+   * COKEY never derives this from the model id: "DeepSeek V4 Pro (xKiro)" is
+   * something a person types, not something the gateway invents.
+   */
+  label?: string;
   baseUrl: string;
   credentialIds: string[];
   enabled: boolean;
@@ -187,8 +197,88 @@ export interface Settings {
   showFreeProviderNudger: boolean;
   freeProviderTarget: number;
   allowPrivateEndpoints: boolean;
+  /** Spread pool proxies across same-provider keys without manual wiring. */
+  autoProxy: boolean;
+  autoProxyStrategy: AutoProxyStrategy;
+  proxyPoolSize: number;
   fallback: FallbackPolicy;
   passwordLocked: boolean;
+}
+
+export type AutoProxyStrategy = "per-provider" | "round-robin";
+
+/** The envelope every paginated endpoint returns. */
+export interface Paginated<T> {
+  data: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+}
+
+export interface PageParams {
+  page?: number;
+  pageSize?: number;
+  q?: string;
+}
+
+/** One entry in the automatic egress pool. */
+export interface ProxyPoolEntryView {
+  id: string;
+  /** `host:port` only. The proxy's own credentials never leave the server. */
+  label: string;
+  enabled: boolean;
+  createdAt: number;
+  assignedTo: number;
+}
+
+export interface ProxyPoolStatus {
+  enabled: boolean;
+  size: number;
+  enabledCount: number;
+  providerCount: number;
+  assignments: number;
+  /** Providers with more keys than the pool, so sharing is unavoidable. */
+  saturatedProviders: string[];
+  strategy: AutoProxyStrategy;
+}
+
+export interface ProxyPoolResponse {
+  entries: ProxyPoolEntryView[];
+  status: ProxyPoolStatus;
+}
+
+export interface ProxyPoolBulkResponse extends ProxyPoolResponse {
+  added: number;
+  skipped: number;
+  /** Present when the fetch verified candidates before importing. */
+  checked?: number;
+  alive?: number;
+  dead?: number;
+}
+
+/** Result of a pool sweep: how many exits are still alive, how many dropped. */
+export interface ProxyPoolCheckResponse extends ProxyPoolResponse {
+  checked: number;
+  healthy: number;
+  dead: string[];
+  removed: number;
+}
+
+/** Result of the model play button: a real request, not a cached status. */
+export interface ModelProbeResult {
+  ok: boolean;
+  providerId: string;
+  model: string;
+  credentialId?: string;
+  credentialDescription?: string;
+  status?: number;
+  latencyMs: number;
+  classification: string;
+  message?: string;
+  reply?: string;
+  proxyLabel?: string;
 }
 
 export interface ApiKeyView {
@@ -210,6 +300,116 @@ export interface Nudge {
 export interface ConnectResult {
   credential: PublicCredential;
   validation: ValidationResult;
+  /** What the provider reported serving, when the key verified. */
+  models?: ModelDiscoveryReport;
+}
+
+// ---- provider model inventory --------------------------------------------
+
+/**
+ * What changed about a provider's model list on the last check.
+ *
+ * The three lists are kept apart because they mean different things to a user:
+ * `added` is new capability, `restored` is a model that came back after being
+ * retired, and `removed` is a model that stopped being served. Collapsing them
+ * into one count would lose exactly the information that makes the refresh
+ * worth running.
+ */
+export interface ModelDiscoveryReport {
+  added: string[];
+  restored: string[];
+  removed: string[];
+  /** Missing models old enough to be forgotten entirely. */
+  pruned: number;
+  /** Catalogued models the provider did not return. */
+  stale: string[];
+  /** Returned models the curated catalog does not list. */
+  uncurated: string[];
+  /** Records that were already live and still are. */
+  unchanged: number;
+  providerId: string;
+  displayName: string;
+  ok: boolean;
+  /** Why the check could not be trusted, when `ok` is false. */
+  message?: string;
+  latencyMs: number;
+  checkedAt: number;
+  /** How many models the provider returned. */
+  discovered: number;
+  /** How many rows the provider's inventory holds after the check. */
+  tracked: number;
+}
+
+/** One observed model, with the provenance of the observation. */
+export interface ProviderModelRecordView {
+  providerId: string;
+  model: string;
+  /** True when the shipped catalog also lists this model. */
+  curated: boolean;
+  /** True when the provider returned it on the most recent check. */
+  available: boolean;
+  firstSeen: number;
+  lastSeen: number;
+  lastChecked: number;
+}
+
+export interface ProviderModelInventory {
+  providerId: string;
+  displayName: string;
+  /** Absent when this provider's model list has never been fetched. */
+  checkedAt?: number;
+  models: ProviderModelRecordView[];
+}
+
+// ---- guidance -------------------------------------------------------------
+
+export type GuidanceSeverity = "info" | "warn" | "critical";
+
+export type GuidanceKind =
+  | "credential.rejected"
+  | "credential.struggling"
+  | "credential.never-verified"
+  | "provider.all-keys-unusable"
+  | "provider.models-stale"
+  | "provider.models-never-checked"
+  | "provider.models-outdated"
+  | "chain.model-retired"
+  | "chain.node-unkeyed"
+  | "chain.node-unhealthy"
+  | "chain.none"
+  | "egress.saturated"
+  | "coverage.free-providers";
+
+/**
+ * What a notice's button does.
+ *
+ * A closed set rather than a free-form callback: these cross a JSON boundary,
+ * and the UI has to be able to render every one of them as a button that does
+ * something real. A notice without an action is a complaint.
+ */
+export type GuidanceAction =
+  | { kind: "navigate"; label: string; path: string }
+  | { kind: "refresh-models"; label: string; providerId: string }
+  | { kind: "reverify-credential"; label: string; credentialId: string };
+
+export interface GuidanceNotice {
+  /** Stable across snapshots, so a dismissal can be remembered. */
+  id: string;
+  kind: GuidanceKind;
+  severity: GuidanceSeverity;
+  title: string;
+  detail: string;
+  actions: GuidanceAction[];
+  providerId?: string;
+  credentialId?: string;
+  chainId?: string;
+  entryId?: string;
+}
+
+export interface GuidanceResponse {
+  notices: GuidanceNotice[];
+  summary: Record<GuidanceSeverity, number>;
+  checkedAt: number;
 }
 
 /** What the router is doing right now. */
@@ -246,6 +446,7 @@ export interface CokeyEvent {
     | "route.start"
     | "route.attempt"
     | "route.switch"
+    | "chain.state"
     | "route.success"
     | "route.failure"
     | "credential.cooldown"
@@ -275,7 +476,14 @@ export interface StatusResponse {
   subscribers: number;
 }
 
-/** A curated free model, selectable only when its provider has a working key. */
+/**
+ * A model the user might pick.
+ *
+ * Three independent questions, kept as three fields rather than collapsed into
+ * one: is it in the hand-written catalog (`curated`), does the provider still
+ * serve it (`live`), and may the user select it right now (`selectable`, which
+ * is true only when the provider holds a verified key).
+ */
 export interface SelectableModel {
   id: string;
   providerId: string;
@@ -283,6 +491,10 @@ export interface SelectableModel {
   bestFor?: string;
   latencySeconds?: number;
   selectable: boolean;
+  curated: boolean;
+  live: boolean;
+  firstSeenAt?: number;
+  lastSeenAt?: number;
 }
 
 export interface ModelCatalogView {
@@ -297,6 +509,17 @@ export interface ModelCatalogView {
   credentialCount: number;
   healthyCount: number;
   credentialIds: string[];
+  /** Catalogued models the provider did not return on the last check. */
+  staleModels: string[];
+  /** Absent when this provider's model list has never been fetched. */
+  inventoryCheckedAt?: number;
+  counts: {
+    curated: number;
+    /** Curated models the provider still returns. */
+    live: number;
+    /** Models the provider returns that the catalog does not list. */
+    discovered: number;
+  };
   models: SelectableModel[];
 }
 
@@ -304,6 +527,27 @@ export interface ModelsResponse {
   providers: ModelCatalogView[];
   total: number;
   available: number;
+  /** Catalogued models no provider returns any more, summed. */
+  stale: number;
+}
+
+/** One usable model, ranked by this user's own probe history. */
+export interface MyModelRanking {
+  providerId: string;
+  displayName: string;
+  model: string;
+  attempts: number;
+  successes: number;
+  /** 0-1. Undefined when never probed. */
+  successRate?: number;
+  avgLatencyMs?: number;
+  lastCheckedAt?: number;
+  lastOk?: boolean;
+}
+
+export interface MyModelsResponse {
+  rankings: MyModelRanking[];
+  tested: number;
 }
 
 /** Per-model usage inside one provider. */
@@ -353,4 +597,113 @@ export interface UsageView {
   today: string;
   providers: UsageProviderView[];
   chains: UsageChainView[];
+}
+
+// ---- catalog intelligence -------------------------------------------------
+
+export type ProviderKind = "lab" | "inference-cloud" | "aggregator" | "gateway" | "local";
+export type ProviderVerdict = "recommended" | "usable" | "limited" | "avoid";
+
+export interface CuratedModel {
+  id: string;
+  /** Advertised context window, as a display string (e.g. "262K"). */
+  context?: string;
+  bestFor?: string;
+  latencySeconds?: number;
+}
+
+export interface ProviderDossier {
+  operator: string;
+  origin: string;
+  kind: ProviderKind;
+  summary: string;
+  verdict: ProviderVerdict;
+  verdictReason: string;
+  sourceUrl?: string;
+  /** ISO date a human last checked these claims. */
+  reviewedAt?: string;
+  /** One-line free-tier summary, when it differs from the catalog's own. */
+  freeTierSummary?: string;
+  /** A caveat worth keeping next to the verdict. */
+  notes?: string;
+  /** Free model list, when the catalog curates one for this provider. */
+  models?: CuratedModel[];
+}
+
+/** A provider card with its dossier folded in. */
+export interface CatalogProviderRow extends ProviderStatus {
+  dossier: ProviderDossier;
+}
+
+export type QuotaProvenance = "operator" | "third-party" | "unpublished";
+
+export interface RankingSource {
+  label: string;
+  url: string;
+}
+
+export interface SkillEntry {
+  model: string;
+  providerId?: string;
+  tierName: "S" | "A" | "B" | "C";
+  sweScore?: number;
+  reason: string;
+  reasonFr?: string;
+}
+
+export interface SkillTier {
+  name: "S" | "A" | "B" | "C";
+  label: string;
+  labelFr?: string;
+  blurb: string;
+  blurbFr?: string;
+}
+
+export interface RateLimitEntry {
+  providerId: string;
+  provider: string;
+  tier: 1 | 2 | 3 | 4;
+  quota: string;
+  provenance: QuotaProvenance;
+  reliability: "solid" | "watch" | "avoid";
+  note?: string;
+  noteFr?: string;
+}
+
+export interface CombinedEntry {
+  rank: number;
+  providerId: string;
+  model: string;
+  why: string;
+  whyFr?: string;
+  tier: RateLimitEntry["tier"];
+}
+
+export interface RedundancyEntry {
+  family: string;
+  alsoOn: string[];
+  keep: string;
+  fallback: string;
+}
+
+export interface RankingsResponse {
+  tiers: SkillTier[];
+  skill: SkillEntry[];
+  rateLimit: RateLimitEntry[];
+  combined: CombinedEntry[];
+  redundancy: RedundancyEntry[];
+  dropList: Array<{ provider: string; reason: string; reasonFr?: string }>;
+  bottomLine: string;
+  bottomLineFr?: string;
+  disclaimer: string;
+  disclaimerFr?: string;
+  sources: RankingSource[];
+  /** `remote` when a published bundle replaced these boards. */
+  source: "remote" | "compiled";
+  /** When the remote boards were last fetched, when they are in use. */
+  fetchedAt?: string;
+  /** Short trivia for the dashboard's Insights cards. */
+  funFacts?: string[];
+  /** French sibling of `funFacts`, same order and length when present. */
+  funFactsFr?: string[];
 }

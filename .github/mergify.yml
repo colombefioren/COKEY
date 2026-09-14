@@ -1,0 +1,75 @@
+merge_protections:
+  - name: default
+    # Applies to every pull request targeting the long-lived branches.
+    if:
+      - base = preprod
+      - base = prod
+    success_conditions:
+      - "#approved-reviews-by >= 1"
+      - check-success = test
+      - check-success = "Lint"
+      - check-success = "Typecheck"
+      - check-success = "Test"
+      - check-success = "CodeQL"
+    failure_conditions:
+      - "check-failure = Test"
+      - "check-failure = Typecheck"
+      - files ~= ^\.env
+    queue_conditions:
+      - "#approved-reviews-by >= 1"
+      - check-success = "Lint"
+      - check-success = "Typecheck"
+      - check-success = "Test"
+      - check-success = "Validate main branch"
+      - check-success = "Analyze (javascript-typescript)"
+      - check-success = "Analyze (actions)"
+    merge_conditions:
+      - check-success = "Test"
+      - check-success = "CodeQL"
+    merge_method: squash
+    dismiss_reviews: true
+
+merge_queue:
+  max_parallel_checks: 2
+
+queue_rules:
+  - name: default
+    merge_method: squash
+    queue_conditions:
+      - "#approved-reviews-by >= 1"
+      - check-success = "Lint"
+      - check-success = "Typecheck"
+      - check-success = "Test"
+      - check-success = "Validate main branch"
+      - check-success = "Analyze (javascript-typescript)"
+      - check-success = "Analyze (actions)"
+    merge_conditions:
+      - check-success = "Test"
+      - check-success = "CodeQL"
+
+pull_request_rules:
+  - name: ask for a review on every pull request
+    conditions:
+      - base = preprod
+      - -draft
+    actions:
+      comment:
+        message: |
+          Thanks. A maintainer review plus a green CI run is required before this
+          can enter the merge queue.
+
+  - name: keep the branch up to date
+    conditions:
+      - base = preprod
+      - "#commits-behind > 0"
+      - -conflict
+    actions:
+      update: {}
+
+  - name: label documentation-only changes
+    conditions:
+      - files ~= ^(README|docs)/.*|.*\.md$
+      - -files ~= ^src/
+    actions:
+      label:
+        add: ["documentation"]

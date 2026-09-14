@@ -1,6 +1,7 @@
 /** Terminal output helpers. No dependencies: just ANSI codes. */
 
-const useColor = Boolean(process.stdout.isTTY) && !process.env.NO_COLOR && process.env.TERM !== "dumb";
+const useColor =
+  Boolean(process.stdout.isTTY) && !process.env.NO_COLOR && process.env.TERM !== "dumb";
 
 function wrap(code: number): (value: string) => string {
   return (value) => (useColor ? `\x1b[${code}m${value}\x1b[0m` : value);
@@ -13,6 +14,8 @@ export const green = wrap(32);
 export const yellow = wrap(33);
 export const blue = wrap(34);
 export const cyan = wrap(36);
+export const magenta = wrap(35);
+export const brightMagenta = wrap(95);
 
 /** A coloured status glyph for a credential. */
 export function statusGlyph(status: string): string {
@@ -41,7 +44,10 @@ export function table(headers: string[], rows: string[][]): string {
   for (const row of rows) {
     lines.push(
       row
-        .map((cell, i) => (cell ?? "") + " ".repeat(Math.max(0, widths[i]! - visibleLength(cell ?? ""))))
+        .map(
+          (cell, i) =>
+            (cell ?? "") + " ".repeat(Math.max(0, widths[i]! - visibleLength(cell ?? ""))),
+        )
         .join("  ")
         .trimEnd(),
     );

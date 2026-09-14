@@ -39,7 +39,9 @@ export function registerConfigCommands(cli: CAC): void {
           console.log(`  credentials bound: ${summary.credentialsMatched}`);
           for (const warning of summary.warnings) console.log(yellow(`  ! ${warning}`));
           if (summary.credentialsMatched === 0) {
-            console.log(dim("  Add credentials for these providers, then entries become routable."));
+            console.log(
+              dim("  Add credentials for these providers, then entries become routable."),
+            );
           }
         });
       });
@@ -70,20 +72,27 @@ export function registerConfigCommands(cli: CAC): void {
     },
   );
 
-  defineCommand(cli, "endpoints", "List custom OpenAI-compatible endpoints", async (_args, context) => {
-    await withCokey(context, (cokey) => {
-      const endpoints = cokey.listCustomEndpoints();
-      emit(context, endpoints, () => {
-        if (endpoints.length === 0) {
-          console.log(dim("No custom endpoints. Add one from the UI's Settings page."));
-          return;
-        }
-        for (const endpoint of endpoints) {
-          console.log(`${cyan(endpoint.id.padEnd(24))} ${endpoint.displayName} ${dim(endpoint.baseUrl)}`);
-        }
+  defineCommand(
+    cli,
+    "endpoints",
+    "List custom OpenAI-compatible endpoints",
+    async (_args, context) => {
+      await withCokey(context, (cokey) => {
+        const endpoints = cokey.listCustomEndpoints();
+        emit(context, endpoints, () => {
+          if (endpoints.length === 0) {
+            console.log(dim("No custom endpoints. Add one from the UI's Settings page."));
+            return;
+          }
+          for (const endpoint of endpoints) {
+            console.log(
+              `${cyan(endpoint.id.padEnd(24))} ${endpoint.displayName} ${dim(endpoint.baseUrl)}`,
+            );
+          }
+        });
       });
-    });
-  });
+    },
+  );
 
   defineCommand(cli, "catalog", "Dump the provider catalog", async (_args, context) => {
     await withCokey(context, (cokey) => {

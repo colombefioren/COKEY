@@ -67,6 +67,22 @@ export default tseslint.config(
     },
   },
   {
+    // Repository scripts run on Node, so their globals have to be declared.
+    files: ["scripts/**/*.mjs", "scripts/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        Buffer: "readonly",
+        // Node 18+ global. Declared rather than imported so the script needs no
+        // dependency to fetch a font file.
+        fetch: "readonly",
+      },
+    },
+  },
+  {
     files: ["src/version.ts"],
     rules: {},
   },

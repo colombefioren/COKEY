@@ -1,0 +1,888 @@
+/*
+ * Shared chrome.
+ *
+ * The surfaces the shell owns rather than any one screen: the toast stack, the
+ * overlay and its modal, the login card, the scrollbars and the ambient wash.
+ * They are gathered here instead of being scattered through the tail of the
+ * largest sheet, so everything that sits *above* the page can be read together
+ * and changes to the palette reach all of it at once.
+ *
+ * Imported after core.css, so the rules here are the ones that win.
+ */
+
+/* ---- notifications -------------------------------------------------------- */
+
+/*
+ * A toast as a tag rather than a bar.
+ *
+ * Three decisions: one square corner so it reads as a label that was pinned
+ * down rather than a rounded rectangle that appeared; a gradient rule on the
+ * leading edge carrying the state, in the same ramp as everything else; and a
+ * hairline under the message that drains over the four seconds the toast lives,
+ * so "how long have I got" is answered by looking, not by remembering.
+ *
+ * Toasts are stacked from the oldest at the top, which is the order they were
+ * read in, and each one is dismissable by clicking anywhere on it — a notice
+ * you have already read costs one gesture to get out of the way.
+ */
+.toasts {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 70;
+  display: grid;
+  gap: 10px;
+  width: min(370px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  --toast-accent: var(--violet);
+  --toast-accent-2: var(--violet-strong);
+  --toast-bg: var(--surface);
+  --toast-line: var(--violet-line);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 12px 12px 16px;
+  border-radius: 18px 18px 18px 7px;
+  border: 1px solid var(--toast-line);
+  background: var(--toast-bg);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  font-weight: 500;
+  text-align: left;
+  box-shadow: var(--shadow-pop);
+  cursor: pointer;
+  pointer-events: auto;
+  overflow: hidden;
+  animation: toast-in 0.38s var(--ease) both;
+}
+
+.toast.err {
+  --toast-accent: var(--rose);
+  --toast-accent-2: var(--rose-strong);
+  --toast-line: var(--rose-line);
+}
+.toast.ok {
+  --toast-accent: var(--sage);
+  --toast-accent-2: var(--sage);
+  --toast-line: var(--sage-line);
+  --toast-bg: linear-gradient(140deg, var(--surface), var(--sage-soft));
+}
+.toast:not(.ok):not(.err) {
+  --toast-bg: linear-gradient(140deg, var(--surface), var(--violet-soft));
+}
+
+/* The leading rule: the state, stated once and quietly. */
+.toast::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--toast-accent), var(--toast-accent-2));
+}
+
+/* The life line, draining left to right over the toast's four seconds. */
+.toast::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--toast-accent);
+  opacity: 0.45;
+  transform-origin: left;
+  animation: toast-life 4s linear forwards;
+}
+
+.toast-glyph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--toast-accent) 14%, transparent);
+  color: var(--toast-accent);
+}
+.toast-glyph::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+}
+.toast.ok .toast-glyph::before {
+  clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
+}
+.toast.err .toast-glyph::before {
+  clip-path: polygon(58% 0%, 18% 58%, 46% 58%, 36% 100%, 82% 40%, 52% 40%);
+}
+.toast:not(.ok):not(.err) .toast-glyph::before {
+  border-radius: 50% 50% 50% 12%;
+}
+
+.toast-close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--faint);
+  font-size: 15px;
+  line-height: 1;
+}
+.toast-close:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--toast-accent) 16%, transparent);
+  color: var(--toast-accent);
+  box-shadow: none;
+  transform: none;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) translateX(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes toast-life {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- insights -------------------------------------------------------------- */
+
+/*
+ * Insights: a small editorial note, bottom-right, deliberately unlike a toast
+ * or a chat bubble - a flat surface, one thin rule down the spine, a small
+ * caps kicker instead of an icon, and the body set in the same display serif
+ * the rest of the app already uses for a quoted or titled aside. No gradient,
+ * no glyph, no rounded "pill" corners: it should read as a printed margin
+ * note, not a notification.
+ */
+.insights {
+  position: fixed;
+  right: 20px;
+  bottom: 92px;
+  z-index: 72;
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.insight-card {
+  --insight-accent: var(--violet-strong);
+
+  position: relative;
+  padding: 13px 30px 13px 16px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--insight-accent);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.6;
+  text-align: left;
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+  animation: toast-in 0.38s var(--ease) both;
+}
+.insight-card.fact {
+  --insight-accent: var(--pink-strong);
+}
+
+.insight-kicker {
+  display: block;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 12.5px;
+  color: var(--insight-accent);
+  margin-bottom: 3px;
+}
+
+.insight-text {
+  margin: 0;
+  color: var(--text);
+}
+
+.insight-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--faint);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.insight-close:hover {
+  background: var(--surface-3);
+  color: var(--text);
+}
+
+/*
+ * "Needs attention" — the bell's content, and the one panel that was never
+ * styled at all.
+ *
+ * Each notice is a card with a rule down its leading edge in the colour of its
+ * severity, so a stack of three is read in one pass: what is on fire, what is
+ * worth a look, what is merely information. The remedy buttons sit inside the
+ * card they belong to, because a notice you have to navigate away from in order
+ * to act on is a notice that gets ignored.
+ */
+.guidance-list {
+  display: grid;
+  gap: 10px;
+}
+
+/* One colour signal per notice — the severity badge — not three: the card
+   itself stays a plain white rectangle so a stack of them reads as calm
+   text with one accent, not a row of differently-tinted panels. */
+.guidance-item {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  padding: 13px 15px;
+  border-radius: 16px;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+}
+
+.guidance-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.guidance-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text);
+}
+.guidance-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+.guidance-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
+.guidance-actions button {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+.guidance-foot {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+  font-size: 11px;
+}
+
+/*
+ * In the dropdown the header is narrow, so the panel's controls take their own
+ * line rather than squeezing against the title. Nested like this rather than
+ * styled twice, because the panel is the same component in both places.
+ */
+.notif-panel .window-bar {
+  padding: 12px 14px 10px;
+  gap: 8px;
+}
+.notif-panel .window-actions {
+  margin-left: 0;
+  width: 100%;
+  flex-wrap: wrap;
+}
+.notif-panel .window-body {
+  padding: 12px 14px 14px;
+}
+
+/* ---- overlay and modal ---------------------------------------------------- */
+
+/*
+ * The scrim is plum, not black: a neutral grey veil over a warm page reads as
+ * dirt, and it is the single most visible "this was a default" tell in any UI.
+ */
+.overlay {
+  background: color-mix(in srgb, var(--text) 42%, transparent);
+  backdrop-filter: blur(6px) saturate(120%);
+  animation: scrim-in 0.24s ease both;
+}
+
+.modal {
+  position: relative;
+  border: none;
+  border-radius: 22px;
+  padding: 24px 26px;
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: modal-in 0.34s var(--ease) both;
+}
+
+.modal h3 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.modal .modal-sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 18px;
+}
+
+/* ---- onboarding tour -------------------------------------------------------- */
+
+/*
+ * The scrim starts after the sidebar (its `left` is set inline, from a live
+ * measurement of the sidebar's own edge) and clips its own overflow, so the
+ * spotlight's 9999px box-shadow trick never bleeds past that edge - the
+ * sidebar stays fully lit through the whole tour, which is the one place a
+ * person can always tell which page they are on.
+ *
+ * One darkness, used consistently: the same tint whether or not a spot is
+ * present, and the spot's own cutout is the only thing that ever goes back
+ * to full brightness. Deliberately not very dark - this only has to hold the
+ * eye on the card, not black out the app.
+ */
+.tour-scrim {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 100;
+  overflow: hidden;
+  animation: scrim-in 0.24s ease both;
+}
+.tour-scrim.no-spot {
+  background: color-mix(in srgb, black 45%, var(--text) 10%);
+}
+
+.tour-spot {
+  position: absolute;
+  border-radius: 14px;
+  box-shadow: 0 0 0 9999px color-mix(in srgb, black 45%, var(--text) 10%);
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+  transition:
+    top 0.32s var(--ease),
+    left 0.32s var(--ease),
+    width 0.32s var(--ease),
+    height 0.32s var(--ease);
+  pointer-events: none;
+}
+
+.tour-card {
+  position: fixed;
+  width: min(300px, calc(100vw - 32px));
+  padding: 16px 18px;
+  border-radius: 18px;
+  border: 1px solid var(--violet-line);
+  background: var(--surface);
+  box-shadow: var(--shadow-pop);
+  animation: modal-in 0.3s var(--ease) both;
+}
+/*
+ * The centred (no-target) steps position themselves with an inline
+ * `transform: translate(-50%, -50%)` - `modal-in`'s own `transform` keyframe
+ * would otherwise win and settle on `transform: none`, silently uncentring
+ * the card the moment its entrance animation finishes. A transform-free fade
+ * keeps the inline centring intact throughout.
+ */
+.tour-card-center {
+  animation: tour-fade-in 0.3s var(--ease) both;
+}
+
+.tour-eyebrow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 4px;
+}
+
+.tour-hint {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.tour-title {
+  font-family: var(--font-display);
+  font-size: 19px;
+  font-weight: 400;
+  margin: 0 0 6px;
+}
+
+/* The welcome card shows the real mark instead of a typed "COKEY". */
+.tour-logo {
+  display: block;
+  color: var(--violet-strong);
+  margin: 2px 0 10px;
+}
+
+.tour-body {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+.tour-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+}
+.tour-actions button {
+  padding: 7px 13px;
+  font-size: 12.5px;
+}
+
+@keyframes tour-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/*
+ * A hand-drawn arrow, not a geometric one: a single wobbly stroke ending in an
+ * open chevron whose two wings meet exactly at the stroke's tip, sketched the
+ * way someone would circle something on a screenshot. It is a decoration, not
+ * a precise pointer, so the exact path only has to read as "this way."
+ */
+.tour-arrow {
+  position: absolute;
+  color: var(--violet);
+}
+.tour-arrow-left {
+  left: -46px;
+  top: 2px;
+}
+.tour-arrow-up {
+  top: -44px;
+  left: 50%;
+  margin-left: -15px;
+}
+
+/* ---- login ---------------------------------------------------------------- */
+
+.login {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Two slow blooms behind the card, so the sign-in screen is part of the same
+   room as the dashboard rather than a bare page that was never styled. */
+.login::before,
+.login::after {
+  content: "";
+  position: absolute;
+  width: 620px;
+  height: 620px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+.login::before {
+  top: -240px;
+  left: -180px;
+  background: radial-gradient(closest-side, var(--pink-soft), transparent 70%);
+}
+.login::after {
+  bottom: -280px;
+  right: -160px;
+  background: radial-gradient(closest-side, var(--violet-soft), transparent 70%);
+}
+
+.login-card {
+  position: relative;
+  z-index: 1;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 30px;
+  padding: 36px 32px;
+  background: var(--surface-glass);
+  backdrop-filter: blur(16px) saturate(140%);
+  box-shadow: var(--shadow-pop);
+}
+
+.login-card h1 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: 0.01em;
+}
+
+.login-card input[type="password"] {
+  border-radius: 14px;
+}
+
+/* Picked before the first login, because the guided tour that greets it reads
+   in whichever language is current at that moment. */
+.login-lang-toggle {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+}
+
+.login-terms {
+  margin: 16px 0 0;
+  text-align: center;
+}
+
+/* ---- dialog interiors ----------------------------------------------------- */
+
+/*
+ * Pick-a-thing rows inside a modal. The whole row is the target, so it is a
+ * full-width button with its own outline rather than a bank of small controls
+ * with a label floating beside them.
+ */
+.selected-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+}
+.selected-list button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 14px 16px 13px 17px;
+  text-align: left;
+  font-size: 12.5px;
+}
+.selected-list .spacer {
+  flex: 1;
+}
+
+.selected-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 14px 16px 13px 17px;
+  background: var(--surface-2);
+  font-size: 12.5px;
+  color: var(--text);
+}
+
+/* The inline verdict under a field, as a chip: it is a sentence about the field
+   above it, not a paragraph of its own. */
+.verify {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--verify-line, var(--border));
+  background: var(--verify-bg, var(--surface-2));
+  color: var(--verify-ink, var(--muted));
+  font-size: 11.5px;
+  font-weight: 550;
+}
+.verify.ok {
+  --verify-line: var(--sage-line);
+  --verify-bg: var(--sage-soft);
+  --verify-ink: var(--sage);
+}
+.verify.err {
+  --verify-line: var(--rose-line);
+  --verify-bg: var(--rose-soft);
+  --verify-ink: var(--rose);
+}
+.verify.pending {
+  --verify-line: var(--peach-line);
+  --verify-bg: var(--peach-soft);
+  --verify-ink: var(--peach);
+}
+
+.detail-grid {
+  display: grid;
+  gap: 2px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.detail-row {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--surface);
+}
+.detail-row:nth-child(odd) {
+  background: var(--surface-2);
+}
+.detail-row + .detail-row {
+  border-top: 1px solid var(--border);
+}
+.detail-label {
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+/*
+ * The free-provider nudge.
+ *
+ * A callout, so it is drawn like one: the ramp down the leading edge, the tint
+ * spreading out of it, and a headline in the display face at a size that
+ * actually asks to be read.
+ */
+.nudger {
+  position: relative;
+  border: none;
+  border-radius: 20px;
+  padding: 18px 20px 18px 22px;
+  display: grid;
+  gap: 10px;
+  background: var(--surface);
+  box-shadow: var(--shadow-lift);
+  overflow: hidden;
+}
+.nudger::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 18px;
+  bottom: 18px;
+  width: 4px;
+  border-radius: 0 4px 4px 0;
+  background: var(--violet);
+}
+.nudger h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.nudger .actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ---- topbar affordances --------------------------------------------------- */
+
+/* The public endpoint, as a chip rather than a bare link: it is a thing you
+   might copy or open, not a place in the app. */
+.topbar-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 11.5px;
+  white-space: nowrap;
+  transition:
+    border-color 0.18s ease,
+    color 0.18s ease,
+    background 0.18s ease;
+}
+.topbar-link:hover {
+  text-decoration: none;
+  border-color: var(--violet-line);
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+}
+
+/* ---- kinetic title -------------------------------------------------------- */
+
+/*
+ * The page title types itself in, one glyph at a time.
+ *
+ * A title arriving as a single sliding slab is the animation every generated
+ * dashboard has. A staggered per-character rise keeps the same promise — the
+ * page changed — while putting the movement in the letterforms, which is the
+ * one part of the chrome that can carry motion without shifting anything the
+ * reader is trying to read. The stagger is read off the glyph's index, so the
+ * words stay ordinary text in the markup and copy out normally.
+ */
+.topbar-title {
+  /* The motion now lives in the glyphs, so the container itself no longer
+     slides in as a block. */
+  animation: none;
+}
+.kinetic-glyph {
+  display: inline-block;
+  animation: kinetic-rise 0.46s var(--ease) both;
+  animation-delay: calc(var(--glyph, 0) * 26ms);
+}
+
+@keyframes kinetic-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.42em) rotate(-5deg);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ---- status bar ----------------------------------------------------------- */
+
+/*
+ * The strip along the bottom edge.
+ *
+ * An OS puts the things you glance at and never touch in a bar like this, so it
+ * is allowed to be quiet — but not invisible. The counts get their numbers in
+ * the display face, the live flag is the only thing that is ever coloured, and
+ * the creator links stay at the far right where they are read once and then
+ * ignored forever.
+ */
+.statusbar {
+  gap: 14px;
+  margin-top: 20px;
+  padding: 11px 16px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: linear-gradient(160deg, var(--surface), var(--surface-2));
+  font-size: 11.5px;
+}
+.statusbar .status-cell strong {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 15px;
+  font-weight: 400;
+}
+.statusbar .live-flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+/* The dot is drawn here and nowhere else: it is the one thing on this bar that
+   is ever coloured, so it is worth getting to be a single mark. */
+.statusbar .live-flag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  border: 1.5px solid var(--faint);
+  background: transparent;
+}
+.statusbar .live-flag.on {
+  border-color: var(--sage-line);
+  background: var(--sage-soft);
+}
+.statusbar .live-flag.on::before {
+  border-color: var(--sage);
+  background: var(--sage);
+  animation: flow-blink 2.2s ease-in-out infinite;
+}
+
+/* ---- focus ---------------------------------------------------------------- */
+
+/*
+ * One focus ring, never removed.
+ *
+ * This app is full of custom controls — rail rows, chain nodes, route pills —
+ * and a control you cannot see the focus on is a control nobody can use without
+ * a mouse. `:focus-visible` keeps that promise without drawing a ring on every
+ * click.
+ */
+a:focus-visible,
+.nav-item:focus-visible,
+.nav-child:focus-visible,
+.flow-pill:focus-visible,
+.tab:focus-visible,
+.entry-node:focus-visible,
+.flow-node:focus-visible,
+.window-control:focus-visible,
+.topbar-link:focus-visible,
+.toast:focus-visible {
+  outline: 2px solid var(--violet);
+  outline-offset: 2px;
+  text-decoration: none;
+}
+
+/* Everything decorative that animates forever, switched off in one place for
+   the readers who asked the OS for less movement. */
+@media (prefers-reduced-motion: reduce) {
+  .toast::after,
+  .toast-glyph,
+  .status-pill.healthy .status-glyph,
+  .dot.healthy,
+  .flow-hub-orb,
+  .flow-hub-ring,
+  .notif-trigger.has-alerts,
+  .flow-pill.live .flow-pill-dot,
+  .flow-state.live i,
+  .flow-key-ring,
+  .kinetic-glyph,
+  .statusbar .live-flag.on::before {
+    animation: none !important;
+  }
+  .toast::after {
+    transform: scaleX(0);
+  }
+}
+
+/* ---- chrome --------------------------------------------------------------- */
+
+::selection {
+  background: var(--violet-soft);
+  color: var(--violet-strong);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--faint);
+}

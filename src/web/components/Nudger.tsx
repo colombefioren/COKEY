@@ -1,4 +1,5 @@
 import type { Nudge } from "../types.js";
+import { useLang } from "../lang.js";
 
 /**
  * The free-provider nudger.
@@ -16,6 +17,7 @@ export function Nudger({
   onDismiss: () => void;
   onGoToProviders: () => void;
 }) {
+  const { t } = useLang();
   if (!nudge.enabled) return null;
   if (nudge.connectedFree >= nudge.target) return null;
 
@@ -25,24 +27,25 @@ export function Nudger({
   return (
     <div className="nudger">
       <h3>
-        You have {nudge.connectedFree} of {nudge.target} free providers connected.
+        {nudge.connectedFree} {t("of")} {nudge.target} {t("free providers connected")}
       </h3>
       <div className="muted">
-        Adding {missing} more {missing === 1 ? "provider" : "providers"} unlocks automatic failover, so
-        a single rate limit never blocks you.
+        {t("Add")} {missing} {t("more and a rate limit can never block you.")}
       </div>
 
       <div className="actions">
         {suggestions.map((suggestion) => (
           <a key={suggestion.id} href={suggestion.signupUrl} target="_blank" rel="noreferrer">
-            <button className="secondary">Connect {suggestion.displayName} ↗</button>
+            <button className="secondary">
+              {t("Connect")} {suggestion.displayName} ↗
+            </button>
           </a>
         ))}
         <button className="secondary" onClick={onGoToProviders}>
-          Browse providers
+          {t("Browse providers")}
         </button>
         <button className="ghost" onClick={onDismiss}>
-          Remind me later
+          {t("Later")}
         </button>
       </div>
     </div>
