@@ -2425,14 +2425,21 @@ button.play.fail {
  * Four facts about a provider, as a small grid of tiles rather than a striped
  * settings table - the shape a definition list defaults to reads as a form,
  * and this is reference material, not something anyone is filling in.
+ *
+ * Scoped to `.modal .dossier`, not `.provider-card .dossier`: the modal that
+ * holds this list is rendered through a portal straight onto `document.body`
+ * (see `Modal` in Primitives.tsx), so in the real DOM it is never a
+ * descendant of the card that opened it - a `.provider-card .dossier`
+ * selector can never match at all, which is why this grid rendered as an
+ * unstyled definition list despite the rule existing.
  */
-.provider-card .dossier {
+.modal .dossier {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   margin: 14px 0 12px;
 }
-.provider-card .dossier > div {
+.modal .dossier > div {
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -2441,14 +2448,14 @@ button.play.fail {
   border: 1px solid var(--border);
   background: var(--surface-2);
 }
-.provider-card .dossier dt {
+.modal .dossier dt {
   color: var(--muted);
   font-size: 10.5px;
   font-weight: 650;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
-.provider-card .dossier dd {
+.modal .dossier dd {
   margin: 0;
   font-size: 13px;
   font-weight: 500;
@@ -2458,11 +2465,11 @@ button.play.fail {
 /* Free tier earns the same accent as the card's own quota chip - it is the
    fact most worth a second glance, so it should not read as identical to
    "type" or "reviewed". */
-.provider-card .dossier > div.dossier-freetier {
+.modal .dossier > div.dossier-freetier {
   border-color: var(--sage-line);
   background: var(--sage-soft);
 }
-.provider-card .dossier > div.dossier-freetier dt {
+.modal .dossier > div.dossier-freetier dt {
   color: var(--sage);
 }
 

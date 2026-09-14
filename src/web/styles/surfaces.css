@@ -372,17 +372,22 @@
  * everything *outside* itself. That trick keeps the cutout a real DOM box
  * (so it can transition smoothly between steps) instead of an SVG mask.
  *
- * The scrim itself carries most of the darkening now, not just the spot's own
- * box-shadow, so the very first and last steps - which have no target and
- * therefore no spot - are dark from the moment the tour opens instead of only
- * tinted.
+ * The scrim itself carries the darkening only when there is no spot to do it
+ * instead (the welcome and closing cards, which target nothing): give the
+ * scrim its own background *and* keep the spot's box-shadow and the two
+ * stack, so the "highlighted" element ends up exactly as dark as everywhere
+ * else - a bordered hole, not a spotlight. With a spot present, the spot's
+ * own box-shadow is the only thing that darkens the page, which is what
+ * actually leaves its own rectangle undimmed.
  */
 .tour-scrim {
   position: fixed;
   inset: 0;
   z-index: 100;
-  background: color-mix(in srgb, black 62%, var(--text) 10%);
   animation: scrim-in 0.24s ease both;
+}
+.tour-scrim.no-spot {
+  background: color-mix(in srgb, black 62%, var(--text) 10%);
 }
 
 .tour-spot {

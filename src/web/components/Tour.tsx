@@ -113,7 +113,12 @@ export function Tour({
       : null;
 
   return (
-    <div className="tour-scrim" role="dialog" aria-modal="true" aria-label={t("Guided tour")}>
+    <div
+      className={`tour-scrim${spot ? "" : " no-spot"}`}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t("Guided tour")}
+    >
       {spot ? (
         <div
           className="tour-spot"
