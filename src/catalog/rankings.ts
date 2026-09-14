@@ -632,3 +632,36 @@ export const DROP_LIST: Array<{ provider: string; reason: string }> = [
 /** The bottom line, in one paragraph. */
 export const RANKING_BOTTOM_LINE =
   "Groq and Cloudflare cover daily high-volume coding. OpenCode Zen or Poolside cover needing a coding specialist. xKiro, Void AI and Mistral direct are the deep fallbacks. Everything else on the list is either a re-export of those same models or too rate-limited to build around, so six or seven providers is the practical ceiling.";
+
+/** The ranking boards, in the shape `/api/catalog/rankings` returns. */
+export interface RankingsView {
+  tiers: SkillTier[];
+  skill: SkillEntry[];
+  rateLimit: RateLimitEntry[];
+  combined: CombinedEntry[];
+  redundancy: RedundancyEntry[];
+  dropList: Array<{ provider: string; reason: string }>;
+  bottomLine: string;
+  disclaimer: string;
+  sources: RankingSource[];
+  /** `remote` when a published update replaced these boards. */
+  source: "remote" | "compiled";
+  /** When the remote boards were last fetched, when they are in use. */
+  fetchedAt?: string;
+}
+
+/** The boards exactly as compiled into this build. */
+export function compiledRankingsView(): RankingsView {
+  return {
+    tiers: SKILL_TIERS,
+    skill: SKILL_RANKING,
+    rateLimit: RATE_LIMIT_RANKING,
+    combined: COMBINED_RANKING,
+    redundancy: REDUNDANCY_TABLE,
+    dropList: DROP_LIST,
+    bottomLine: RANKING_BOTTOM_LINE,
+    disclaimer: RANKING_DISCLAIMER,
+    sources: RANKING_SOURCES,
+    source: "compiled",
+  };
+}

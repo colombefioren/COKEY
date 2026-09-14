@@ -4,25 +4,23 @@ import type { ChainView, Nudge, RequestLogEntry, Stats } from "../types.js";
 import { Nudger } from "../components/Nudger.js";
 import { ChainFlow } from "../components/ChainFlow.js";
 import { Resilience } from "../components/Resilience.js";
-import { ContentSource } from "../components/ContentSource.js";
 import { Empty, Panel, Stat, formatDuration, formatNumber } from "../components/Primitives.js";
 import { useToast } from "../components/Toast.js";
 
-type DashboardTab = "route" | "resilience" | "content" | "activity";
+type DashboardTab = "route" | "resilience" | "activity";
 
 const TABS: Array<{ id: DashboardTab; label: string }> = [
   { id: "route", label: "Live route" },
   { id: "resilience", label: "Resilience" },
-  { id: "content", label: "Content" },
   { id: "activity", label: "Activity" },
 ];
 
 /**
  * One section at a time, not the whole dashboard stacked.
  *
- * The live route, the resilience explainer, the content source and the
- * activity tables each answer a different question — stacking all four made
- * every visit feel like scrolling past three sections to get to the one that
+ * The live route, the resilience explainer and the activity tables each
+ * answer a different question — stacking all three made every visit feel
+ * like scrolling past two sections to get to the one that
  * actually changed since yesterday.
  */
 export function Dashboard({
@@ -108,8 +106,6 @@ export function Dashboard({
       ) : null}
 
       {tab === "resilience" ? <Resilience /> : null}
-
-      {tab === "content" ? <ContentSource refreshKey={refreshKey} /> : null}
 
       {tab === "activity" ? (
         <>

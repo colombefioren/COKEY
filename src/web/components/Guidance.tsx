@@ -100,18 +100,7 @@ export function Guidance({ refreshKey, onChanged }: { refreshKey: number; onChan
 
     setBusy(notice.id);
     try {
-      if (action.kind === "reload-content") {
-        const result = await api.reloadContent();
-        if (result.changed) {
-          toast.ok(`Content reloaded: ${result.counts.providers} providers`);
-        } else if (result.issues.length > 0) {
-          // Still broken after a re-read: say so once, with the first cause,
-          // rather than reporting a success the user cannot see.
-          toast.err(`${result.issues[0]!.file}: ${result.issues[0]!.message}`);
-        } else {
-          toast.info("Content reloaded: nothing changed");
-        }
-      } else if (action.kind === "refresh-models") {
+      if (action.kind === "refresh-models") {
         const report = await api.refreshProviderModels(action.providerId);
         if (!report.ok) {
           toast.err(report.message ?? `${report.displayName} could not be checked`);

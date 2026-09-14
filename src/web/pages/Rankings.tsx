@@ -25,6 +25,7 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
   const { route, navigate } = useRoute();
   const toast = useToast();
   const [data, setData] = useState<RankingsResponse | null>(null);
+  const [checking, setChecking] = useState(false);
 
   const requested = route.sub ?? route.section;
   const board = (BOARDS.find((candidate) => candidate.id === requested)?.id ?? "skill") as Board;
@@ -38,6 +39,23 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
       }
     })();
   }, [refreshKey, toast]);
+
+  async function checkForUpdates() {
+    setChecking(true);
+    try {
+      const result = await api.refreshRankings();
+      if (result.changed && result.rankings) {
+        setData(result.rankings);
+        toast.ok("Rankings updated from the published bundle.");
+      } else {
+        toast.info(result.message ?? "No update available.");
+      }
+    } catch (error) {
+      toast.err(error instanceof Error ? error.message : String(error));
+    } finally {
+      setChecking(false);
+    }
+  }
 
   if (!data) return <Empty>Loading rankings…</Empty>;
 
@@ -66,16 +84,24 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
           {data.disclaimer}
         </p>
         {/*
-         * Provenance for the boards themselves. A ranking read from the content
-         * repository is a live document that someone reviews; one from this
-         * build is frozen at the version you installed, and the difference
-         * matters when a free tier changes underneath it.
+         * Provenance for the boards themselves. Fetched only when a person
+         * clicks the button below — never on a timer, never on startup.
          */}
-        <p className="small faint" style={{ margin: "8px 0 0" }}>
-          {data.source === "cms"
-            ? `Curated boards from the content repository${data.reviewedAt ? `, last reviewed ${data.reviewedAt}` : ""}.`
-            : "Compiled-in boards: this build's snapshot, with no content repository checked out."}
-        </p>
+        <div className="row between center" style={{ marginTop: 8, flexWrap: "wrap", gap: 8 }}>
+          <p className="small faint" style={{ margin: 0 }}>
+            {data.source === "remote"
+              ? `Published boards${data.fetchedAt ? `, fetched ${new Date(data.fetchedAt).toLocaleString()}` : ""}.`
+              : "Compiled-in boards: this build's own snapshot."}
+          </p>
+          <button
+            type="button"
+            className="secondary small"
+            disabled={checking}
+            onClick={() => void checkForUpdates()}
+          >
+            {checking ? "checking…" : "check for updates"}
+          </button>
+        </div>
       </Panel>
 
       {board === "skill" ? <SkillBoard data={data} /> : null}

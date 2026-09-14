@@ -281,21 +281,9 @@ function ProviderDossierCard({
       <div className="title">
         {row.displayName}
         <span className={`badge ${VERDICT_TONE[dossier.verdict]}`}>{dossier.verdict}</span>
-        {/*
-         * Where this opinion came from matters. A dossier read from the content
-         * repository can be corrected without a release, so a reader who
-         * disagrees with the verdict knows exactly which file to open.
-         */}
-        {dossier.source === "cms" ? (
-          <span
-            className="badge neutral"
-            title={
-              dossier.reviewedAt
-                ? `Curated content, last reviewed ${dossier.reviewedAt}`
-                : "Curated content"
-            }
-          >
-            curated
+        {dossier.reviewedAt ? (
+          <span className="badge neutral" title={`Reviewed ${dossier.reviewedAt}`}>
+            reviewed
           </span>
         ) : null}
         {stale.length > 0 ? (
@@ -363,7 +351,7 @@ function ProviderDossierCard({
             </div>
             <div>
               <dt>Free tier</dt>
-              {/* The content repository's own one-liner wins when it has one. */}
+              {/* The dossier's own one-liner wins when it has one. */}
               <dd>{dossier.freeTierSummary ?? row.freeTier.summary}</dd>
             </div>
             <div>
@@ -387,9 +375,9 @@ function ProviderDossierCard({
           {row.notes ? <p className="small faint">{row.notes}</p> : null}
 
           {/*
-           * The content repository's model list carries what a name alone cannot:
-           * context window, what the model is good at, and measured latency. When
-           * it exists it is the better list, and the catalog's is the fallback.
+           * The dossier's model list carries what a name alone cannot: context
+           * window, what the model is good at, and measured latency. When it
+           * exists it is the better list, and the plain id list is the fallback.
            *
            * Neither list is trustworthy on its own about which of its entries
            * the provider still actually serves — that only comes from the last
@@ -461,9 +449,9 @@ function ProviderDossierCard({
           )}
 
           {/*
-           * Retired models the content repository never described in the
-           * first place — the ones above already carry their own "retired"
-           * badge inline, so this only needs to cover the gap.
+           * Retired models the dossier never described in the first place —
+           * the ones above already carry their own "retired" badge inline,
+           * so this only needs to cover the gap.
            */}
           {unlistedStale.length > 0 ? (
             <div className="model-list">

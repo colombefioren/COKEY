@@ -742,41 +742,68 @@ await cokey.addChain({
 
 <div align="center">
 
-## 📚 The content repository
+## 📚 Provider dossiers and rankings
 
 </div>
 
-Who runs a provider, whether their free tier is infrastructure or a demo, which models are worth
-your time, and what the terms actually say — that is content, not code. It lives in its own Git
-repository ([`COKEY--CMS`](https://github.com/colombefioren/COKEY--CMS)) so it can be corrected,
-reviewed and reverted without shipping a build.
+Who runs a provider, whether their free tier is infrastructure or a demo, and which models are
+worth your time — that is all reference data compiled straight into `src/catalog/`
+(`dossiers.ts`, `models.ts`, `rankings.ts`). Correcting it is a normal pull request against COKEY
+itself, so a fresh clone is useful with zero setup and nothing to check out alongside it.
 
+The ranking boards are the one exception: free-tier availability drifts faster than a release
+cycle, so the Rankings screen has a **"check for updates"** button that fetches one published
+JSON bundle and replaces the boards with it — nothing else. It is never fetched automatically,
+never on a timer, never on startup; the compiled boards keep serving until that button is
+clicked and succeeds. The published bundle lives at
+[`colombefioren/COKEY--RANKINGS`](https://github.com/colombefioren/COKEY--RANKINGS) as a single
+`content/rankings.json` file — edit it, commit, push, and the button picks it up for everyone.
+See [Updating the rankings](#updating-the-rankings) below for its exact shape.
+
+<a id="updating-the-rankings"></a>
+
+### Updating the rankings
+
+The published bundle is one JSON file:
+[`content/rankings.json`](https://github.com/colombefioren/COKEY--RANKINGS/blob/main/content/rankings.json)
+in the `COKEY--RANKINGS` repository. It has no build step and no schema tooling — edit the file
+directly, in place, and commit it.
+
+Its shape mirrors `RankingsView` in `src/catalog/rankings.ts` exactly:
+
+```json
+{
+  "tiers": [{ "name": "S", "label": "…", "blurb": "…" }],
+  "skill": [{ "model": "…", "providerId": "…", "tierName": "S", "sweScore": 62.4, "reason": "…" }],
+  "rateLimit": [
+    {
+      "providerId": "…",
+      "provider": "…",
+      "tier": 1,
+      "quota": "…",
+      "provenance": "operator",
+      "reliability": "solid"
+    }
+  ],
+  "combined": [{ "rank": 1, "providerId": "…", "model": "…", "tier": 1, "why": "…" }],
+  "redundancy": [{ "family": "…", "alsoOn": ["…"], "keep": "…", "fallback": "…" }],
+  "dropList": [{ "provider": "…", "reason": "…" }],
+  "bottomLine": "…",
+  "disclaimer": "…",
+  "sources": [{ "label": "…", "url": "https://…" }]
+}
 ```
-COKEY--CMS/
-├── content/
-│   ├── providers/    one dossier per provider: verdict, argument, operator, free models
-│   ├── terms/        the terms document, one Markdown section per file
-│   └── rankings/     skill, rate-limit, combined, redundancy and drop-list boards
-├── src/              schema, validator, builder, preview server and CLI
-└── tests/
-```
 
-COKEY looks for that checkout in four places, in order: `COKEY_CMS_DIR`, then `./cms/content`, then
-`../COKEY--CMS/content`, then `../cokey-cms/content`. It watches whichever it finds, so **editing a dossier updates the dashboard
-while it is open** — no restart, no rebuild. With no checkout present, COKEY serves the catalog
-compiled into this build, which is why a fresh clone is useful with zero setup.
+To publish an update:
 
-The overlay is field-by-field: content wins where it speaks and the compiled catalog fills every
-gap, so a dossier that only states a verdict still gets its operator, summary and source URL. The
-loader never throws — a malformed file costs exactly that file, and the Dashboard's *Curated
-content* window names it along with the directory being watched.
+1. Edit `content/rankings.json` in the `COKEY--RANKINGS` repository.
+2. Commit and push to `main`.
+3. In COKEY, open **Models → Rankings** and click **check for updates**.
 
-```bash
-# in the content repository
-npm run validate   # schema + cross-references + staleness, with warnings
-npm run build      # emit the consumable content bundle
-npm run serve      # preview the content locally
-```
+That fetch is validated the same way the compiled boards are typed — a malformed file is refused
+with the specific reason, and the boards already being served keep serving. Point
+`COKEY_RANKINGS_URL` at a different URL (a fork, a mirror, a local file server) to publish from
+somewhere else instead.
 
 ---
 
@@ -794,7 +821,7 @@ npm run typecheck # server, tests and web UI
 The suite covers the routing invariant (key rotation before node fallback, cross-node fallback
 order, request-scoped early exit, user reordering, cooldown skipping), live event emission, proxy
 parsing and wiring, per-credential rate tracking, model-availability gating, model discovery and
-reconciliation, the guidance rules, and the content loader's tolerance of a half-written checkout.
+reconciliation, the guidance rules, and the ranking-bundle fetch's tolerance of a bad response.
 
 ---
 
@@ -810,7 +837,6 @@ src/
 ├── cli/              command-line interface and the ASCII logo
 ├── core/
 │   ├── chains/       chain and node ordering
-│   ├── cms/          the content repository: load, watch and overlay
 │   ├── credentials/  lifecycle, cooldowns, selection, rate tracking
 │   ├── crypto/       AES-256-GCM vault and master-key resolution
 │   ├── db/           SQLite schema, migrations, repositories
@@ -819,6 +845,7 @@ src/
 │   ├── models/       model catalog, availability and live probes
 │   ├── providers/    adapters, HTTP executor, proxy dispatchers, egress pool
 │   ├── quota/        rate-limit header parsing
+│   ├── remote-rankings.ts  the one on-demand fetch: a published ranking bundle
 │   ├── router/       the fallback engine
 │   └── security/     SSRF guard
 ├── server/           Fastify: OpenAI surface, management API, SSE

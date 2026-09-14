@@ -7,10 +7,11 @@ import { withErrors } from "./http-errors.js";
 /**
  * Catalog surfaces: the curated provider dossiers and the ranking boards.
  *
- * The dossiers and boards are reference data, but not static: they are read from
- * the content repository on every request, so an edit on disk is reflected the
- * next time the dashboard asks. The probe is the one live endpoint, and the only
- * place a "does this model actually work" answer can come from.
+ * The dossiers come from the catalog compiled into this build. The rankings
+ * can be replaced wholesale by a published bundle (`POST /api/rankings/refresh`),
+ * but only when a person asks for that — there is no background fetch. The
+ * probe is the one live endpoint, and the only place a "does this model
+ * actually work" answer can come from.
  */
 export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void {
   /** Provider dossiers joined with connection state, paginated and searchable. */
@@ -23,7 +24,7 @@ export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void 
       const rows = statuses
         .map((status) => ({
           ...status,
-          dossier: cokey.curateProvider(status.id),
+          dossier: cokey.providerDossier(status.id),
         }))
         .filter((row) =>
           matchesQuery(
@@ -54,6 +55,23 @@ export function registerCatalogRoutes(app: FastifyInstance, cokey: Cokey): void 
   app.get(
     "/api/catalog/rankings",
     withErrors(() => cokey.rankings()),
+  );
+
+  /**
+   * Fetch the published ranking bundle and replace the boards with it.
+   *
+   * Only runs when this is called — a person clicking "check for updates" —
+   * never on a timer or on startup. A failure changes nothing: the response
+   * says why, and the boards already being served keep being served.
+   */
+  app.post(
+    "/api/catalog/rankings/refresh",
+    withErrors(async () => {
+      const result = await cokey.refreshRankings();
+      return result.ok
+        ? { changed: true, rankings: result.rankings }
+        : { changed: false, message: result.message };
+    }),
   );
 
   /**

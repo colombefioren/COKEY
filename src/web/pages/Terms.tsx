@@ -1,10 +1,6 @@
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { api } from "../api.js";
-import type { ContentStatusResponse, TermsResponse } from "../types.js";
 import { ContactGrid } from "../components/Contact.js";
 import { Markdown } from "../components/Markdown.js";
 import { Panel } from "../components/Primitives.js";
-import { useToast } from "../components/Toast.js";
 import { CREATOR } from "../links.js";
 
 /**
@@ -12,215 +8,148 @@ import { CREATOR } from "../links.js";
  *
  * Plain language on purpose. The short version is that COKEY is a local tool
  * that holds your own keys, and that what you do with those keys is your
- * responsibility rather than the author's.
- *
- * The document itself lives in the content repository so it can be corrected
- * without a release. The copy below is the compiled fallback for a checkout with
- * no content beside it — the same text, kept in step by hand, and rendered only
- * when the repository is absent.
+ * responsibility rather than the author's. This text used to live in a
+ * separate content repository so it could be edited without a release; in
+ * practice terms are not something that should change without one, so it is
+ * back in the app it describes.
  */
-const FALLBACK_SECTIONS: Array<{ title: string; body: ReactNode }> = [
+const TERMS_SECTIONS: Array<{ order: number; title: string; body: string }> = [
   {
-    title: "1. What COKEY is",
-    body: (
-      <>
-        COKEY is a local gateway that runs on your machine. It stores API keys you already own,
-        encrypts them at rest, and exposes one OpenAI-compatible endpoint that rotates between them.
-        It does not create accounts, buy credits, or hold funds on your behalf.
-      </>
-    ),
+    order: 1,
+    title: "What COKEY is",
+    body: `COKEY is a **local gateway that runs on your machine**. It stores API keys you
+already own, encrypts them at rest, and exposes one OpenAI-compatible endpoint
+that rotates between them.
+
+It does not create accounts, buy credits, or hold funds on your behalf. There is
+no service behind it to sign up to, and nobody is running a COKEY server that
+your requests travel through.`,
   },
   {
-    title: "2. Your keys, your responsibility",
-    body: (
-      <>
-        Every credential in this pool belongs to an account you control. You are responsible for
-        obtaining those keys lawfully, for the accuracy of the account information you store, and
-        for anything a request made with them does upstream. The author of COKEY is not a party to
-        any agreement between you and a provider.
-      </>
-    ),
+    order: 2,
+    title: "Your keys, your responsibility",
+    body: `Every credential in this pool belongs to an account **you** control.
+
+You are responsible for:
+
+- obtaining those keys lawfully;
+- the accuracy of the account information you store;
+- anything a request made with them does upstream.
+
+The author of COKEY is not a party to any agreement between you and a provider.
+Adding a key is you acting on your own account, in your own name, under your own
+agreement with that provider.`,
   },
   {
-    title: "3. Provider terms come first",
-    body: (
-      <>
-        Providers set the rules for their own free tiers: rate limits, permitted uses, how many
-        accounts one person may hold, whether automated routing is allowed at all. Where COKEY's
-        behaviour and a provider's terms disagree, the provider's terms win, and it is your job to
-        know them before you add a key. Using this to evade a provider's limits is not a supported
-        use.
-      </>
-    ),
+    order: 3,
+    title: "Provider terms come first",
+    body: `Providers set the rules for their own free tiers: rate limits, permitted uses,
+how many accounts one person may hold, and whether automated routing is allowed
+at all.
+
+**Where COKEY's behaviour and a provider's terms disagree, the provider's terms
+win.** It is your job to know them before you add a key.
+
+Using COKEY to evade a provider's limits is not a supported use. Rotation exists
+so that a rate limit on one key does not take down your own legitimate traffic;
+it is not a way to obtain more capacity than the provider has offered you.`,
   },
   {
-    title: "4. No warranty",
-    body: (
-      <>
-        COKEY is provided as is, without warranty of any kind. It may route a request to a provider
-        that is down, return a limit number that the provider has since changed, or lose a cooldown
-        window. Rate limits, quotas and latency figures shown in the dashboard are what a provider
-        publishes, and published numbers drift. Nothing here is a guarantee of availability.
-      </>
-    ),
+    order: 4,
+    title: "No warranty",
+    body: `COKEY is provided **as is**, without warranty of any kind.
+
+It may route a request to a provider that is down, report a limit number the
+provider has since changed, or lose a cooldown window. Rate limits, quotas and
+latency figures shown in the dashboard are what a provider publishes — and
+published numbers drift.
+
+Nothing here is a guarantee of availability, correctness or fitness for a
+particular purpose.`,
   },
   {
-    title: "5. Limitation of liability",
-    body: (
-      <>
-        To the extent permitted by law, the author is not liable for any indirect, incidental or
-        consequential loss arising from your use of COKEY. That includes, without limitation, lost
-        credits, suspended provider accounts, failed requests, leaked prompts, or legal trouble with
-        a third party. You agree to use the software at your own risk and to resolve any dispute
-        with a provider directly with that provider.
-      </>
-    ),
+    order: 5,
+    title: "Limitation of liability",
+    body: `To the extent permitted by law, the author is not liable for any indirect,
+incidental or consequential loss arising from your use of COKEY.
+
+That includes, without limitation:
+
+- lost credits or paid capacity;
+- suspended or terminated provider accounts;
+- failed, delayed or misrouted requests;
+- prompts or responses exposed by a provider;
+- legal trouble with a third party.
+
+You agree to use the software at your own risk, and to resolve any dispute with
+a provider directly with that provider.`,
   },
   {
-    title: "6. No monitoring, no telemetry",
-    body: (
-      <>
-        COKEY has no analytics, no phone-home, and no server component you did not start yourself.
-        Everything is stored in a local SQLite database under your data directory. If you join a
-        community to ask a question, you choose what to share.
-      </>
-    ),
+    order: 6,
+    title: "No monitoring, no telemetry",
+    body: `COKEY has **no analytics, no phone-home, and no server component you did not
+start yourself**.
+
+Everything is stored in a local SQLite database under your data directory. Your
+keys, your prompts, your request history and your provider catalog live on your
+disk and nowhere else.
+
+The dashboard's own fonts and icons are served from the gateway rather than a
+CDN, for the same reason: rendering a page should not tell a third party that
+you opened it.
+
+If you join a community to ask a question, you choose what to share.`,
   },
   {
-    title: "7. Acceptable use",
-    body: (
-      <>
-        Do not use COKEY to attack a provider, to resell free capacity as a paid service, to
-        circumvent an account ban, or for anything unlawful in your jurisdiction or the provider's.
-        The automatic egress pool exists so that one provider's per-IP limit does not collapse your
-        own legitimate traffic, not as a means of disguising abusive volume.
-      </>
-    ),
+    order: 7,
+    title: "Acceptable use",
+    body: `Do not use COKEY to:
+
+- attack, probe or overload a provider;
+- resell free capacity as a paid service;
+- circumvent an account ban;
+- do anything unlawful in your jurisdiction or the provider's.
+
+The automatic egress pool exists so that one provider's per-IP limit does not
+collapse your own legitimate traffic — not as a means of disguising abusive
+volume. Spreading abuse across exits is still abuse.`,
   },
   {
-    title: "8. Changes",
-    body: (
-      <>
-        These terms may change with the software. Continuing to use a new version means accepting
-        the terms that ship with it. The version you are running is shown in the status bar.
-      </>
-    ),
+    order: 8,
+    title: "Changes",
+    body: `These terms may change with the software. Continuing to use a new version means
+accepting the terms that ship with it.
+
+Because this repository is public and versioned, the exact wording at any point
+in the project's history is one \`git log\` away:
+
+\`\`\`bash
+git log --follow -p src/web/pages/Terms.tsx
+\`\`\`
+
+The version you are running is shown in the gateway's status bar.`,
   },
 ];
 
-export function Terms({ refreshKey = 0 }: { refreshKey?: number }) {
-  const toast = useToast();
-  const [terms, setTerms] = useState<TermsResponse | null>(null);
-  const [status, setStatus] = useState<ContentStatusResponse | null>(null);
-  const [reloading, setReloading] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const [document, contentStatus] = await Promise.all([
-        api.contentTerms(),
-        api.contentStatus(),
-      ]);
-      setTerms(document);
-      setStatus(contentStatus);
-    } catch {
-      // No content endpoint reachable: the compiled copy below still renders.
-      // This is a supported state, not an error worth a toast.
-      setTerms(null);
-      setStatus(null);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load, refreshKey]);
-
-  /**
-   * Re-read the content directory.
-   *
-   * The filesystem watcher already covers local edits, so this is the manual
-   * path for a network mount or a container where watching does not work. It
-   * reports honestly: "no change" is a real answer and saying "reloaded" when
-   * nothing moved would make the button a lie.
-   */
-  const reload = useCallback(async () => {
-    setReloading(true);
-    try {
-      const result = await api.reloadContent();
-      toast[result.changed ? "ok" : "info"](
-        result.changed
-          ? `Content reloaded: ${result.counts.providers} providers`
-          : "Content reloaded: nothing changed",
-      );
-      await load();
-    } catch (error) {
-      toast.err(error instanceof Error ? error.message : String(error));
-    } finally {
-      setReloading(false);
-    }
-  }, [load, toast]);
-
-  const curated = terms && terms.sections.length > 0 ? terms.sections : null;
-
+export function Terms() {
   return (
     <>
-      <Panel
-        hue="lav"
-        title="Terms of service"
-        actions={
-          status ? (
-            <span className="small faint">
-              {curated
-                ? `curated content · ${status.counts.providers} provider dossiers`
-                : "compiled copy"}
-            </span>
-          ) : null
-        }
-      >
+      <Panel hue="lav" title="Terms of service">
         <p className="small muted" style={{ marginTop: 0 }}>
           The short version: COKEY is a local tool, the keys are yours, the providers' rules come
           first, and legal problems between you and a provider are yours to resolve.
         </p>
 
-        {curated ? (
-          <>
-            <div className="terms">
-              {curated.map((section) => (
-                <section key={section.slug}>
-                  <h3>
-                    {section.order}. {section.title}
-                  </h3>
-                  <Markdown text={section.body} />
-                </section>
-              ))}
-            </div>
-            <div className="row between center small faint" style={{ marginTop: "0.75rem" }}>
-              <span>
-                {terms?.updatedAt
-                  ? `Last content revision: ${terms.updatedAt}`
-                  : "No revision date recorded"}
-              </span>
-              <button className="btn" onClick={() => void reload()} disabled={reloading}>
-                {reloading ? "reloading..." : "reload content"}
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="terms">
-              {FALLBACK_SECTIONS.map((section) => (
-                <section key={section.title}>
-                  <h3>{section.title}</h3>
-                  <div>{section.body}</div>
-                </section>
-              ))}
-            </div>
-            <p className="small faint">
-              This is the compiled copy. Point COKEY at a content checkout (the{" "}
-              <code>COKEY_CMS_DIR</code> environment variable) to edit these terms without a
-              release.
-            </p>
-          </>
-        )}
+        <div className="terms">
+          {TERMS_SECTIONS.map((section) => (
+            <section key={section.order}>
+              <h3>
+                {section.order}. {section.title}
+              </h3>
+              <Markdown text={section.body} />
+            </section>
+          ))}
+        </div>
       </Panel>
 
       <Panel hue="butter" title="In one sentence">
@@ -236,7 +165,8 @@ export function Terms({ refreshKey = 0 }: { refreshKey?: number }) {
         <p className="small muted" style={{ marginTop: 0 }}>
           COKEY is built and maintained by one person, <strong>@{CREATOR.name}</strong>. Bug
           reports, provider tips, a free tier that changed under you, and pull requests are all
-          welcome - the software is MIT licensed and the source is public.
+          welcome - the software is MIT licensed and the source is public. If a provider changed its
+          limits, the fastest fix is a pull request against the catalog rather than an issue.
         </p>
         <ContactGrid />
       </Panel>
