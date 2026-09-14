@@ -1137,4 +1137,27 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "re-check models": "revérifier les modèles",
   "replied:": "a répondu :",
   Success: "Réussite",
+
+  // ---- Insights flash cards -------------------------------------------------------
+  Dismiss: "Ignorer",
+  'That key came back invalid. Worth a double-check for a stray trailing space or newline from a copy-paste - a surprising number of "invalid key" errors are exactly that.':
+    "Cette clé est ressortie invalide. Vérifiez qu'il n'y a pas d'espace ou de retour à la ligne superflu venant d'un copier-coller - beaucoup d'erreurs « clé invalide » viennent exactement de là.",
+  "Rate-limited already? If this key shares an exit IP with others on the same provider, an egress pool gives each one its own IP - Settings → Automatic egress pool.":
+    "Déjà limitée en débit ? Si cette clé partage une IP de sortie avec d'autres du même fournisseur, un pool d'égress donne une IP propre à chacune - Paramètres → Pool d'égress automatique.",
+  "Quota's gone for this key. If you were testing several keys back-to-back, some providers count verification calls against the same daily quota as real traffic.":
+    "Le quota de cette clé est épuisé. Si vous testiez plusieurs clés à la suite, certains fournisseurs comptent les appels de vérification dans le même quota journalier que le trafic réel.",
+  "Couldn't reach the provider at all. If you're behind a VPN or a proxy, that's usually the first thing to check.":
+    "Impossible de joindre le fournisseur. Si vous êtes derrière un VPN ou un proxy, c'est généralement la première chose à vérifier.",
+  "The provider hiccuped (5xx) - that's usually about them, not your key. Worth a retry in a moment.":
+    "Le fournisseur a eu un raté (5xx) - ça vient généralement d'eux, pas de votre clé. Ça vaut le coup de réessayer dans un instant.",
+  "That model isn't reachable through this key right now. Some providers gate free models per account rather than per key.":
+    "Ce modèle n'est pas accessible avec cette clé pour le moment. Certains fournisseurs limitent les modèles gratuits par compte plutôt que par clé.",
+  "That request was too big for the model's context window - rotating keys won't help here, only a shorter prompt will.":
+    "Cette requête était trop grande pour la fenêtre de contexte du modèle - changer de clé n'y changera rien, seul un message plus court le peut.",
+  "The provider rejected the request shape itself, not the key - check the model name matches what the provider actually serves.":
+    "Le fournisseur a rejeté la forme de la requête elle-même, pas la clé - vérifiez que le nom du modèle correspond à ce que le fournisseur sert réellement.",
+  "Testing a lot of keys back-to-back? A few providers count verification calls against the same quota as real traffic - worth pacing it out if you'll need them soon.":
+    "Vous testez beaucoup de clés à la suite ? Certains fournisseurs comptent les appels de vérification dans le même quota que le trafic réel - mieux vaut étaler un peu si vous en aurez besoin bientôt.",
+  "Checking every model in a row can eat into a provider's daily quota faster than real usage would. Consider testing just the ones you're about to chain.":
+    "Vérifier tous les modèles à la suite peut entamer le quota journalier d'un fournisseur plus vite qu'un usage réel. Testez plutôt seulement ceux que vous allez chaîner.",
 };

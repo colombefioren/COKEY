@@ -695,4 +695,6 @@ export interface RankingsResponse {
   source: "remote" | "compiled";
   /** When the remote boards were last fetched, when they are in use. */
   fetchedAt?: string;
+  /** Short trivia for the dashboard's Insights cards. */
+  funFacts?: string[];
 }

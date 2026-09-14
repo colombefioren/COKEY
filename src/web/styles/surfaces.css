@@ -170,6 +170,98 @@
   }
 }
 
+/* ---- insights -------------------------------------------------------------- */
+
+/*
+ * Insights: contextual flash cards, bottom-right, in the same tag language as
+ * a toast - so the two read as one family when they both have something to
+ * say - but parked above the toast stack instead of sharing its exact corner,
+ * so one landing does not cover the other.
+ */
+.insights {
+  position: fixed;
+  right: 20px;
+  bottom: 92px;
+  z-index: 72;
+  width: min(340px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.insight-card {
+  --insight-accent: var(--violet);
+  --insight-accent-2: var(--violet-strong);
+  --insight-line: var(--violet-line);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 12px 12px 12px 16px;
+  border-radius: 18px 18px 7px 18px;
+  border: 1px solid var(--insight-line);
+  background: linear-gradient(140deg, var(--surface), var(--violet-soft));
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+  box-shadow: var(--shadow-pop);
+  pointer-events: auto;
+  overflow: hidden;
+  animation: toast-in 0.38s var(--ease) both;
+}
+.insight-card.fact {
+  --insight-accent: var(--pink);
+  --insight-accent-2: var(--pink-strong);
+  --insight-line: var(--pink-line);
+  background: linear-gradient(140deg, var(--surface), var(--pink-soft));
+}
+
+.insight-card::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(180deg, var(--insight-accent), var(--insight-accent-2));
+}
+
+.insight-glyph {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  flex: none;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--insight-accent) 14%, transparent);
+  font-size: 12px;
+  margin-top: 1px;
+}
+
+.insight-text {
+  min-width: 0;
+}
+
+.insight-close {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--faint);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.insight-close:hover {
+  background: color-mix(in srgb, var(--insight-accent) 16%, transparent);
+  color: var(--insight-accent);
+}
+
 /*
  * "Needs attention" — the bell's content, and the one panel that was never
  * styled at all.

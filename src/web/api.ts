@@ -26,6 +26,7 @@ import type {
   UsageView,
   ValidationResult,
 } from "./types.js";
+import { reportInsightAttempt, reportInsightFailure } from "./insights-bus.js";
 
 export class ApiError extends Error {
   constructor(
@@ -113,7 +114,11 @@ export const api = {
 
   /** Send a real hello through one working key. The play button. */
   probeModel: (body: { providerId: string; model: string; credentialId?: string }) =>
-    request<ModelProbeResult>("POST", "/api/models/probe", body),
+    request<ModelProbeResult>("POST", "/api/models/probe", body).then((result) => {
+      reportInsightAttempt("model");
+      if (!result.ok) reportInsightFailure(result.classification);
+      return result;
+    }),
 
   // ---- automatic egress pool ------------------------------------------------
 
@@ -169,7 +174,11 @@ export const api = {
       "POST",
       `/api/providers/${encodeURIComponent(providerId)}/test`,
       body,
-    ),
+    ).then((result) => {
+      reportInsightAttempt("credential");
+      if (!result.ok) reportInsightFailure(result.classification);
+      return result;
+    }),
 
   /**
    * The curated free-model catalog with availability folded in.
@@ -321,7 +330,12 @@ export const api = {
     },
   ) => request<PublicCredential>("PATCH", `/api/credentials/${id}`, body),
   deleteCredential: (id: string) => request<{ ok: boolean }>("DELETE", `/api/credentials/${id}`),
-  testCredential: (id: string) => request<ValidationResult>("POST", `/api/credentials/${id}/test`),
+  testCredential: (id: string) =>
+    request<ValidationResult>("POST", `/api/credentials/${id}/test`).then((result) => {
+      reportInsightAttempt("credential");
+      if (!result.ok) reportInsightFailure(result.classification);
+      return result;
+    }),
   credentialQuota: (id: string) =>
     request<{ quota: PublicCredential["quota"]; usage: PublicCredential["usage"] }>(
       "GET",
