@@ -216,23 +216,6 @@ export const SKILL_RANKING: SkillEntry[] = [
     reason: "The whole gateway is curated for coding agents, not general chat.",
     reasonFr: "Toute la passerelle est organisée pour les agents de codage, pas le chat général.",
   },
-  {
-    model: "DeepSeek-V4-Pro",
-    providerId: "xkiro",
-    tierName: "S",
-    sweScore: 71.6,
-    reason: "DeepSeek's line has led open-weight code benchmarks.",
-    reasonFr: "La gamme DeepSeek a dominé les benchmarks de code à poids ouverts.",
-  },
-  {
-    model: "DeepSeek-V3.2",
-    providerId: "xkiro",
-    tierName: "S",
-    sweScore: 61.9,
-    reason: "Widely reproduced open-weight coding baseline.",
-    reasonFr: "Référence de codage à poids ouverts largement reproduite.",
-  },
-
   // ---- Tier A -------------------------------------------------------------
   {
     model: "gpt-oss-120b",
@@ -243,20 +226,12 @@ export const SKILL_RANKING: SkillEntry[] = [
     reasonFr: "Généraliste à poids ouverts qui code bien et tourne extrêmement vite sur Groq.",
   },
   {
-    model: "GLM-5.2",
-    providerId: "zai",
-    tierName: "A",
-    sweScore: 55.4,
-    reason: "Strong tool calling and long-context reasoning.",
-    reasonFr: "Appel d'outils solide et raisonnement à long contexte.",
-  },
-  {
     model: "GLM-4.7",
     providerId: "zai",
     tierName: "A",
     sweScore: 49.8,
-    reason: "Previous GLM generation, still a solid generalist.",
-    reasonFr: "Génération GLM précédente, toujours un généraliste solide.",
+    reason: "Strong tool calling and long-context reasoning.",
+    reasonFr: "Appel d'outils solide et raisonnement à long contexte.",
   },
   {
     model: "Qwen3.8-27B",
@@ -273,22 +248,6 @@ export const SKILL_RANKING: SkillEntry[] = [
     sweScore: 42.1,
     reason: "NVIDIA's open generalist, dependable on NIM.",
     reasonFr: "Le généraliste ouvert de NVIDIA, fiable sur NIM.",
-  },
-  {
-    model: "MiniMax-M2.7",
-    providerId: "zylo",
-    tierName: "A",
-    sweScore: 50.2,
-    reason: "Strong agentic behaviour for its size.",
-    reasonFr: "Comportement agentique solide pour sa taille.",
-  },
-  {
-    model: "command-a-plus",
-    providerId: "cohere",
-    tierName: "A",
-    sweScore: 38.9,
-    reason: "Enterprise tool-calling focus.",
-    reasonFr: "Axé sur l'appel d'outils en entreprise.",
   },
   {
     model: "Qwen2.5-Coder-32B",
@@ -323,22 +282,6 @@ export const SKILL_RANKING: SkillEntry[] = [
     sweScore: 40.5,
     reason: "Huge context helps on big repositories, but it is not code-specialised.",
     reasonFr: "Un contexte immense aide sur les gros dépôts, mais ce n'est pas spécialisé en code.",
-  },
-  {
-    model: "Llama-4-Scout",
-    providerId: "groq",
-    tierName: "B",
-    sweScore: 24.7,
-    reason: "Broad model, mid-tier at code.",
-    reasonFr: "Modèle généraliste, milieu de gamme en code.",
-  },
-  {
-    model: "Intern s2-preview",
-    providerId: "internai",
-    tierName: "B",
-    sweScore: 35.8,
-    reason: "Strong output, slow enough that it hurts as a first entry.",
-    reasonFr: "Sortie solide, mais assez lent pour pénaliser comme premier nœud.",
   },
 
   // ---- Tier C -------------------------------------------------------------
@@ -570,7 +513,7 @@ export const COMBINED_RANKING: CombinedEntry[] = [
   {
     rank: 7,
     providerId: "xkiro",
-    model: "mistralai/codestral-2508 or deepseek/deepseek-v4-pro",
+    model: "mistralai/codestral-2508",
     tier: 1,
     why: "Large daily token allowance: good for batch work.",
     whyFr: "Grand quota quotidien de jetons : bon pour le travail par lots.",
@@ -627,9 +570,9 @@ export const REDUNDANCY_TABLE: RedundancyEntry[] = [
   },
   {
     family: "DeepSeek V4 Pro / Flash",
-    alsoOn: ["helixmind", "gonka", "voidai", "huggingface", "literouter", "orcarouter"],
-    keep: "xkiro",
-    fallback: "voidai",
+    alsoOn: ["helixmind", "gonka", "huggingface", "literouter", "orcarouter"],
+    keep: "voidai",
+    fallback: "helixmind",
   },
   {
     family: "Poolside laguna-s / xs-2.1",
