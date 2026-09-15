@@ -148,3 +148,14 @@ export function getHeader(
   }
   return undefined;
 }
+
+export function stripTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url.charCodeAt(end - 1) === 47) end--;
+  return url.slice(0, end);
+}
+
+export function stripTrailingV1(url: string): string {
+  const trimmed = stripTrailingSlashes(url);
+  return trimmed.endsWith("/v1") ? trimmed.slice(0, -3) : trimmed;
+}

@@ -9,7 +9,7 @@ import type {
   ValidationResult,
 } from "../types.js";
 import type { ProviderRequest, SendResult, TokenUsage, TransformContext } from "./adapter.js";
-import { performRequest } from "./http.js";
+import { performRequest, stripTrailingSlashes } from "./http.js";
 import { OpenAICompatibleAdapter, num } from "./openai-compatible.js";
 import { iterateSse, sseFrame, SSE_DONE, streamFrom } from "./sse.js";
 import { flattenContent, mapFinishReason, openAiChunk, openAiCompletion } from "./transform.js";
@@ -20,7 +20,7 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
     credential: Credential,
     request: ChatCompletionRequest,
   ): ProviderRequest {
-    const base = entry.baseUrl.replace(/\/+$/, "");
+    const base = stripTrailingSlashes(entry.baseUrl);
     const body: Record<string, unknown> = {
       model: entry.model,
       messages: (request.messages ?? []).map((message) => ({
@@ -97,7 +97,7 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
     credential: Credential,
     options?: { timeoutMs?: number },
   ): Promise<ModelInfo[]> {
-    const base = this.catalog.baseUrl.replace(/\/+$/, "");
+    const base = stripTrailingSlashes(this.catalog.baseUrl);
     const result = await performRequest(
       {
         url: `${base}/models`,

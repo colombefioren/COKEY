@@ -1,5 +1,6 @@
 import type { ChainEntry, ChatCompletionRequest, Credential } from "../types.js";
 import type { ProviderRequest } from "./adapter.js";
+import { stripTrailingSlashes } from "./http.js";
 import { OpenAICompatibleAdapter } from "./openai-compatible.js";
 
 export class CloudflareAdapter extends OpenAICompatibleAdapter {
@@ -7,9 +8,9 @@ export class CloudflareAdapter extends OpenAICompatibleAdapter {
     if (!credential.accountId) {
       throw new Error("Cloudflare credentials require an account id");
     }
-    return entry.baseUrl
-      .replace(/\{account_id\}/g, encodeURIComponent(credential.accountId))
-      .replace(/\/+$/, "");
+    return stripTrailingSlashes(
+      entry.baseUrl.replace(/\{account_id\}/g, encodeURIComponent(credential.accountId)),
+    );
   }
 
   override buildHeaders(credential: Credential): Record<string, string> {
@@ -23,9 +24,9 @@ export class CloudflareAdapter extends OpenAICompatibleAdapter {
     if (!credential.accountId) {
       throw new Error("Cloudflare credentials require an account id");
     }
-    const base = this.catalog.baseUrl
-      .replace(/\{account_id\}/g, encodeURIComponent(credential.accountId))
-      .replace(/\/+$/, "");
+    const base = stripTrailingSlashes(
+      this.catalog.baseUrl.replace(/\{account_id\}/g, encodeURIComponent(credential.accountId)),
+    );
     return `${base}/models`;
   }
 
@@ -69,7 +70,7 @@ export class CloudflareAdapter extends OpenAICompatibleAdapter {
     const body = JSON.stringify({ ...this.sanitizeBody(request), model: entry.model });
 
     return {
-      url: this.chatUrl(base.replace(/\/+$/, ""), credential),
+      url: this.chatUrl(base, credential),
       method: "POST",
       headers,
       body,
