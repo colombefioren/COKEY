@@ -1250,6 +1250,27 @@ textarea:focus {
     transform: scale(1) translateY(0);
   }
 }
+.select-search {
+  width: 100%;
+  margin-bottom: 4px;
+  padding: 7px 10px;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  box-sizing: border-box;
+  position: sticky;
+  top: -6px;
+  z-index: 1;
+}
+.select-empty {
+  padding: 10px;
+  font-size: 13px;
+  color: var(--faint);
+  text-align: center;
+}
 .select-option {
   display: flex;
   align-items: center;

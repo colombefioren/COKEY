@@ -249,6 +249,24 @@ export const SKILL_RANKING: SkillEntry[] = [
       "Pas un codeur dédié, mais le palier flash de DeepSeek est un généraliste rapide et compétent, et il est gratuit spécifiquement sur TokenHarbor en ce moment.",
   },
   {
+    model: "deepseek/deepseek-v4.1-flash:free",
+    providerId: "xkiro",
+    tierName: "A",
+    reason:
+      "xKiro's genuinely free DeepSeek line, and the only DeepSeek variant the 5M TPD grant actually covers — the pro and non-flash ids are metered. A stronger generalist than the V4 Flash it replaces. xKiro publishes no independent benchmark number for it, so none is listed here.",
+    reasonFr:
+      "La ligne DeepSeek réellement gratuite de xKiro, et la seule variante DeepSeek que le crédit de 5M TPD couvre vraiment — les identifiants pro et non-flash sont mesurés. Un généraliste plus solide que le V4 Flash qu'elle remplace. xKiro ne publie aucun chiffre de benchmark indépendant, donc aucun n'est listé ici.",
+  },
+  {
+    model: "deepseek/deepseek-v4-pro",
+    providerId: "xkiro",
+    tierName: "B",
+    reason:
+      "Served by the same xKiro key but without the :free tag, so it draws on metered balance rather than the free allowance. Worth knowing it is there; do not build a free chain on it.",
+    reasonFr:
+      "Servi par la même clé xKiro mais sans l'étiquette :free, donc il puise dans le solde mesuré plutôt que dans l'allocation gratuite. Bon à savoir qu'il est là ; ne bâtissez pas une chaîne gratuite dessus.",
+  },
+  {
     model: "gpt-oss-120b",
     providerId: "groq",
     tierName: "A",
@@ -398,9 +416,13 @@ export const RATE_LIMIT_RANKING: RateLimitEntry[] = [
     providerId: "xkiro",
     provider: "xKiro AI",
     tier: 1,
-    quota: "5M tokens/day",
+    quota: "5M tokens/day, free models only",
     provenance: "third-party",
     reliability: "watch",
+    fieldTested: false,
+    note: "The 5M TPD figure is the operator's own, not independently reproduced, and it applies to the :free-flagged catalogue only — the DeepSeek V4.1 Flash line qualifies, the pro and non-flash DeepSeek ids do not. Treat the ceiling as unverified until your own dashboard agrees.",
+    noteFr:
+      "Le chiffre de 5M TPD provient de l'opérateur et n'a pas été reproduit indépendamment ; il ne s'applique qu'au catalogue marqué :free — la ligne DeepSeek V4.1 Flash est éligible, les identifiants DeepSeek pro et non-flash ne le sont pas. Considérez le plafond comme non vérifié tant que votre propre tableau de bord ne le confirme pas.",
   },
   {
     providerId: "zylo",
@@ -603,10 +625,11 @@ export const COMBINED_RANKING: CombinedEntry[] = [
   {
     rank: 7,
     providerId: "xkiro",
-    model: "mistralai/codestral-2508",
+    model: "deepseek/deepseek-v4.1-flash:free / mistralai/codestral-2508",
     tier: 1,
-    why: "Large daily token allowance: good for batch work.",
-    whyFr: "Grand quota quotidien de jetons : bon pour le travail par lots.",
+    why: "Large daily token allowance (5M TPD), and the DeepSeek V4.1 Flash line is inside the free grant, not just the Mistral code models. Good for batch work — the volume is third-party, so confirm it against your own dashboard before leaning on it.",
+    whyFr:
+      "Grande allocation quotidienne de jetons (5M TPD), et la ligne DeepSeek V4.1 Flash fait partie du crédit gratuit, pas seulement les modèles de code Mistral. Bon pour le travail par lots — le volume est tiers, vérifiez-le sur votre propre tableau de bord avant de vous y appuyer.",
   },
   {
     rank: 8,
@@ -669,12 +692,29 @@ export const REDUNDANCY_TABLE: RedundancyEntry[] = [
   },
   {
     family: "DeepSeek V4 Pro / Flash",
-    alsoOn: ["helixmind", "gonka", "huggingface", "literouter", "orcarouter", "tokenharbor"],
+    alsoOn: [
+      "helixmind",
+      "gonka",
+      "huggingface",
+      "literouter",
+      "orcarouter",
+      "tokenharbor",
+      "xkiro",
+    ],
     keep: "voidai",
     fallback: "helixmind",
-    note: "For V4 Flash specifically, TokenHarbor is worth a look too — it's a dedicated free grant rather than a shared quota, at least while the product is new.",
+    note: "For V4 Flash specifically, TokenHarbor is worth a look too — it's a dedicated free grant rather than a shared quota, at least while the product is new. xKiro carries the V4.1 Flash generation, which the older V4-only rows above do not.",
     noteFr:
-      "Pour V4 Flash spécifiquement, TokenHarbor mérite aussi le détour — c'est un crédit gratuit dédié plutôt qu'un quota partagé, du moins tant que le produit est récent.",
+      "Pour V4 Flash spécifiquement, TokenHarbor mérite aussi le détour — c'est un crédit gratuit dédié plutôt qu'un quota partagé, du moins tant que le produit est récent. xKiro porte la génération V4.1 Flash, que les lignes V4 ci-dessus ne couvrent pas.",
+  },
+  {
+    family: "deepseek-v4.1-flash",
+    alsoOn: ["xkiro", "tokenharbor"],
+    keep: "xkiro",
+    fallback: "tokenharbor",
+    note: "Both expose it under a :free id, but xKiro's grant is the larger and the more stable of the two (5M TPD against TokenHarbor's unpublished pre-GA allowance). Lead with xKiro and let TokenHarbor catch the spill.",
+    noteFr:
+      "Les deux l'exposent sous un identifiant :free, mais le crédit de xKiro est le plus large et le plus stable des deux (5M TPD contre l'allocation pré-GA non publiée de TokenHarbor). Mettez xKiro en tête et laissez TokenHarbor absorber le débordement.",
   },
   {
     family: "Poolside laguna-s / xs-2.1",
@@ -790,9 +830,9 @@ export const WORTH_TRYING_WITH_CAVEATS: WorthTryingEntry[] = [
 
 /** The bottom line, in one paragraph. */
 export const RANKING_BOTTOM_LINE =
-  "Groq is still the daily driver. Poolside moves up to #2 once you go direct instead of through a shared mirror — it has the best coding pedigree on the list and turned out to be far less limited than advertised. TokenHarbor is a solid new addition for free DeepSeek V4 Flash while its launch-week grant lasts. Cloudflare drops from #2 to #9: the real free tier is a 10,000-Neuron pool, not 100,000 requests, and it throws quota errors under real load — still worth wiring up for the edge latency, just verify it yourself. Poixe is genuinely usable for about 5 requests a day and then stops; treat it as a bonus, not a plan. Everything else is either a re-export of the same models or too rate-limited to build around, so six to eight providers is the practical ceiling.";
+  "Groq is still the daily driver. Poolside moves up to #2 once you go direct instead of through a shared mirror — it has the best coding pedigree on the list and turned out to be far less limited than advertised. xKiro's DeepSeek V4.1 Flash line now sits alongside its Mistral code models at #7: it is the only DeepSeek variant the 5M TPD free grant actually covers, which the boards previously ignored entirely. TokenHarbor is a solid new addition for free DeepSeek V4 Flash while its launch-week grant lasts. Cloudflare drops from #2 to #9: the real free tier is a 10,000-Neuron pool, not 100,000 requests, and it throws quota errors under real load — still worth wiring up for the edge latency, just verify it yourself. Poixe is genuinely usable for about 5 requests a day and then stops; treat it as a bonus, not a plan. Everything else is either a re-export of the same models or too rate-limited to build around, so six to eight providers is the practical ceiling.";
 export const RANKING_BOTTOM_LINE_FR =
-  "Groq reste le pilote quotidien. Poolside remonte à la 2e place une fois utilisé en direct plutôt que via un mirroir partagé — il a le meilleur pedigree de codage de la liste et s'est révélé bien moins limité qu'annoncé. TokenHarbor est un bon nouvel ajout pour DeepSeek V4 Flash gratuit tant que son crédit de lancement dure. Cloudflare passe de la 2e à la 9e place : le vrai palier gratuit est un pool de 10 000 Neurones, pas 100 000 requêtes, et il renvoie des erreurs de quota sous charge réelle — ça vaut toujours la peine de le brancher pour la latence en périphérie, mais vérifiez-le vous-même. Poixe est réellement utilisable pour environ 5 requêtes par jour puis s'arrête ; à traiter comme un bonus, pas comme un plan. Tout le reste est soit une re-exportation des mêmes modèles, soit trop limité en débit pour s'y appuyer, donc six à huit fournisseurs constituent le plafond pratique.";
+  "Groq reste le pilote quotidien. Poolside remonte à la 2e place une fois utilisé en direct plutôt que via un mirroir partagé — il a le meilleur pedigree de codage de la liste et s'est révélé bien moins limité qu'annoncé. La ligne DeepSeek V4.1 Flash de xKiro rejoint désormais ses modèles de code Mistral à la 7e place : c'est la seule variante DeepSeek que le crédit gratuit de 5M TPD couvre réellement, ce que les tableaux ignoraient totalement auparavant. TokenHarbor est un bon nouvel ajout pour DeepSeek V4 Flash gratuit tant que son crédit de lancement dure. Cloudflare passe de la 2e à la 9e place : le vrai palier gratuit est un pool de 10 000 Neurones, pas 100 000 requêtes, et il renvoie des erreurs de quota sous charge réelle — ça vaut toujours la peine de le brancher pour la latence en périphérie, mais vérifiez-le vous-même. Poixe est réellement utilisable pour environ 5 requêtes par jour puis s'arrête ; à traiter comme un bonus, pas comme un plan. Tout le reste est soit une re-exportation des mêmes modèles, soit trop limité en débit pour s'y appuyer, donc six à huit fournisseurs constituent le plafond pratique.";
 
 /**
  * Short trivia for the dashboard's Insights cards. One or two sentences: this

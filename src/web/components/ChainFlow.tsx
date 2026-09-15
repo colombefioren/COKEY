@@ -200,6 +200,10 @@ export function ChainFlow({
         {t("cooldown")}
         <span className="flow-legend-dot invalid" aria-hidden="true" />
         {t("invalid")}
+        <span className="flow-legend-dot unverified" aria-hidden="true" />
+        {t("new")}
+        <span className="flow-legend-dot disabled" aria-hidden="true" />
+        {t("paused")}
         <span className="spacer" />
         {sweep.winnerId ? (
           <span className="flow-legend-note ok">{t("current · first node that answered")}</span>

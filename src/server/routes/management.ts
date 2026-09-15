@@ -9,6 +9,7 @@ import {
   CustomEndpointSchema,
   MoveEntrySchema,
   ProxyUrlSchema,
+  ReorderChainsSchema,
   ReorderSchema,
   TestSecretSchema,
   UpdateChainSchema,
@@ -160,6 +161,15 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       const { id } = request.params as { id: string };
       cokey.chains.deleteChain(id);
       return { ok: true };
+    }),
+  );
+
+  app.post(
+    "/api/chains/reorder",
+    withErrors((request) => {
+      const body = ReorderChainsSchema.parse(request.body);
+      cokey.chains.reorderChains(body.chainIds);
+      return { ok: true, chains: cokey.listChains() };
     }),
   );
 
