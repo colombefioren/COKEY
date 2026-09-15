@@ -303,7 +303,6 @@ function ProviderDossierCard({
 
       <div className="sub clamp-2">{t(dossier.summary)}</div>
 
-      {}
       <div
         className={`quota-chip${row.freeTier.quotaSource === "unknown" ? " unknown" : ""}`}
         title={
@@ -316,7 +315,6 @@ function ProviderDossierCard({
         <span>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</span>
       </div>
 
-      {}
       <div className="sub faint" style={{ marginTop: 4 }}>
         {checkedAt
           ? `${t("model list checked")} ${timeAgo(checkedAt)}`
@@ -325,7 +323,6 @@ function ProviderDossierCard({
             : t("connect a key to check")}
       </div>
 
-      {}
       <div
         className="row"
         style={{ marginTop: 12, flexWrap: "wrap" }}
@@ -370,7 +367,6 @@ function ProviderDossierCard({
             </div>
             <div className="dossier-freetier">
               <dt>{t("Free tier")}</dt>
-              {}
               <dd>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</dd>
             </div>
             <div>
@@ -393,7 +389,6 @@ function ProviderDossierCard({
           {dossier.notes ? <p className="small faint">{t(dossier.notes)}</p> : null}
           {row.notes ? <p className="small faint">{t(row.notes)}</p> : null}
 
-          {}
           {dossier.models && dossier.models.length > 0 ? (
             <div className="model-list">
               {dossier.models.map((model) => {
@@ -456,7 +451,6 @@ function ProviderDossierCard({
             </div>
           )}
 
-          {}
           {unlistedStale.length > 0 ? (
             <div className="model-list">
               <div className="small faint">

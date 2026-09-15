@@ -108,7 +108,6 @@ export function NotificationsBell({
         {count > 0 ? <span className="notif-count">{count > 9 ? "9+" : count}</span> : null}
       </button>
 
-      {}
       {open ? (
         <div className="notif-panel" role="dialog" aria-label={t("Needs attention")}>
           <div className="notif-scroll">

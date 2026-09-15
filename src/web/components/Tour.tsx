@@ -143,7 +143,6 @@ export function Tour({
       aria-label={t("Guided tour")}
       style={{ left: sidebarEdge }}
     >
-      {}
       {spot ? (
         <div
           className="tour-spot"
