@@ -660,14 +660,15 @@
 
 .flow-node-flag {
   position: absolute;
-  top: -11px;
-  right: 16px;
-  padding: 4px 11px;
+  top: -16px;
+  right: 14px;
+  padding: 7px 14px;
   border-radius: 999px;
   background: var(--violet);
   color: var(--violet-ink);
   font-size: 10px;
   font-weight: 600;
+  line-height: 1;
   box-shadow: var(--shadow);
 }
 .flow-node-flag.live {
@@ -754,6 +755,12 @@
 }
 .flow-legend-dot.invalid {
   background: var(--rose);
+}
+.flow-legend-dot.unverified {
+  background: var(--sky);
+}
+.flow-legend-dot.disabled {
+  background: var(--faint);
 }
 .flow-legend-note {
   font-size: 12px;

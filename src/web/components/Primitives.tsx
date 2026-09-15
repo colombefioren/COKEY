@@ -297,6 +297,14 @@ export function QuotaLabel({
   return <span className="muted">{parts.join(" · ")}</span>;
 }
 
+function nodeText(node: ReactNode): string {
+  if (node === null || node === undefined || typeof node === "boolean") return "";
+  if (typeof node === "string" || typeof node === "number") return String(node);
+  if (Array.isArray(node)) return node.map(nodeText).join("");
+  if (isValidElement(node)) return nodeText((node.props as { children?: ReactNode }).children);
+  return "";
+}
+
 export function Select({
   id,
   value,
@@ -304,6 +312,8 @@ export function Select({
   disabled,
   style,
   className,
+  searchable,
+  searchPlaceholder,
   children,
 }: {
   id?: string;
@@ -312,10 +322,14 @@ export function Select({
   disabled?: boolean;
   style?: CSSProperties;
   className?: string;
+  searchable?: boolean;
+  searchPlaceholder?: string;
   children: ReactNode;
 }) {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
+  const [query, setQuery] = useState("");
   const [geometry, setGeometry] = useState<{
     top: number;
     left: number;
@@ -324,6 +338,7 @@ export function Select({
   } | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   const options = useMemo(() => {
     return Children.toArray(children)
@@ -333,10 +348,23 @@ export function Select({
         return {
           value: String(props.value ?? ""),
           label: props.children,
+          text: nodeText(props.children),
           disabled: props.disabled,
         };
       });
   }, [children]);
+
+  const showSearch = searchable !== false;
+
+  const filtered = useMemo(() => {
+    const needle = query.trim().toLowerCase();
+    if (!showSearch || needle === "") return options;
+    return options.filter(
+      (option) =>
+        option.text.toLowerCase().includes(needle) ||
+        option.value.toLowerCase().includes(needle),
+    );
+  }, [options, query, showSearch]);
 
   const selectedIndex = options.findIndex((option) => option.value === value);
   const selected = options[selectedIndex];
@@ -353,9 +381,20 @@ export function Select({
       width: rect.width,
       openUp,
     });
+    setQuery("");
     setHighlight(selectedIndex >= 0 ? selectedIndex : 0);
     setOpen(true);
   };
+
+  useEffect(() => {
+    setHighlight(0);
+  }, [query]);
+
+  useEffect(() => {
+    if (!open || !showSearch) return undefined;
+    const timer = window.setTimeout(() => searchRef.current?.focus(), 0);
+    return () => window.clearTimeout(timer);
+  }, [open, showSearch]);
 
   useEffect(() => {
     if (!open) return;
@@ -370,25 +409,29 @@ export function Select({
       if (panelRef.current?.contains(event.target as Node)) return;
       setOpen(false);
     };
+    const pick = () => {
+      const option = filtered[highlight];
+      if (!option || option.disabled) return;
+      onChange(option.value);
+      setOpen(false);
+      triggerRef.current?.focus();
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
+      const inSearch = showSearch && event.target === searchRef.current;
       if (event.key === "Escape") {
         event.preventDefault();
         setOpen(false);
         triggerRef.current?.focus();
       } else if (event.key === "ArrowDown") {
         event.preventDefault();
-        setHighlight((current) => Math.min(options.length - 1, current + 1));
+        setHighlight((current) => Math.min(filtered.length - 1, current + 1));
       } else if (event.key === "ArrowUp") {
         event.preventDefault();
         setHighlight((current) => Math.max(0, current - 1));
-      } else if (event.key === "Enter" || event.key === " ") {
+      } else if (event.key === "Enter" || (event.key === " " && !inSearch)) {
         event.preventDefault();
-        const option = options[highlight];
-        if (option && !option.disabled) {
-          onChange(option.value);
-          setOpen(false);
-          triggerRef.current?.focus();
-        }
+        pick();
       }
     };
 
@@ -400,13 +443,13 @@ export function Select({
       document.removeEventListener("scroll", onScroll, true);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [open, options, highlight, onChange]);
+  }, [open, filtered, highlight, onChange, showSearch]);
 
   useLayoutEffect(() => {
     if (!open) return;
     const row = panelRef.current?.querySelector(`[data-index="${highlight}"]`);
     row?.scrollIntoView({ block: "nearest" });
-  }, [open, highlight]);
+  }, [open, highlight, filtered]);
 
   return (
     <>
@@ -440,30 +483,48 @@ export function Select({
                   : { top: geometry.top }),
               }}
             >
-              {options.map((option, index) => (
-                <div
-                  key={option.value}
-                  data-index={index}
-                  role="option"
-                  aria-selected={option.value === value}
-                  aria-disabled={option.disabled}
-                  className={`select-option${index === highlight ? " active" : ""}${
-                    option.value === value ? " selected" : ""
-                  }${option.disabled ? " disabled" : ""}`}
-                  onMouseEnter={() => setHighlight(index)}
-                  onClick={() => {
-                    if (option.disabled) return;
-                    onChange(option.value);
-                    setOpen(false);
-                    triggerRef.current?.focus();
+              {showSearch ? (
+                <input
+                  ref={searchRef}
+                  className="select-search"
+                  value={query}
+                  placeholder={searchPlaceholder ?? t("Search…")}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Tab") event.preventDefault();
                   }}
-                >
-                  <span className="select-option-check">
-                    {option.value === value ? <IconCheck size={12} /> : null}
-                  </span>
-                  <span className="select-option-label">{option.label}</span>
-                </div>
-              ))}
+                  aria-label={searchPlaceholder ?? t("Search…")}
+                />
+              ) : null}
+
+              {filtered.length === 0 ? (
+                <div className="select-empty">{t("No match")}</div>
+              ) : (
+                filtered.map((option, index) => (
+                  <div
+                    key={option.value}
+                    data-index={index}
+                    role="option"
+                    aria-selected={option.value === value}
+                    aria-disabled={option.disabled}
+                    className={`select-option${index === highlight ? " active" : ""}${
+                      option.value === value ? " selected" : ""
+                    }${option.disabled ? " disabled" : ""}`}
+                    onMouseEnter={() => setHighlight(index)}
+                    onClick={() => {
+                      if (option.disabled) return;
+                      onChange(option.value);
+                      setOpen(false);
+                      triggerRef.current?.focus();
+                    }}
+                  >
+                    <span className="select-option-check">
+                      {option.value === value ? <IconCheck size={12} /> : null}
+                    </span>
+                    <span className="select-option-label">{option.label}</span>
+                  </div>
+                ))
+              )}
             </div>,
             document.body,
           )

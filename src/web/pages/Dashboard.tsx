@@ -152,6 +152,9 @@ export function Dashboard({
                       const healthy = credentials.filter((c) => c.status === "healthy").length;
                       const cooldown = credentials.filter((c) => c.status === "cooldown").length;
                       const invalid = credentials.filter((c) => c.status === "invalid").length;
+                      const unverified = credentials.filter(
+                        (c) => c.status === "unverified",
+                      ).length;
 
                       return (
                         <tr key={chain.id}>
@@ -164,6 +167,11 @@ export function Dashboard({
                             {cooldown > 0 ? (
                               <span className="badge warn">
                                 {cooldown} {t("cooldown")}
+                              </span>
+                            ) : null}{" "}
+                            {unverified > 0 ? (
+                              <span className="badge tier-s">
+                                {unverified} {t("new")}
                               </span>
                             ) : null}{" "}
                             {invalid > 0 ? (
