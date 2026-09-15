@@ -3,6 +3,18 @@ import type { RankingsView } from "../catalog/rankings.js";
 
 const RankingSourceSchema = z.object({ label: z.string(), url: z.string() });
 
+const RankingsMetaSchema = z.object({
+  lastResearched: z.string(),
+  methodology: z.string(),
+  methodologyFr: z.string().optional(),
+});
+
+const WorthTryingEntrySchema = z.object({
+  provider: z.string(),
+  note: z.string(),
+  noteFr: z.string().optional(),
+});
+
 const SkillTierSchema = z.object({
   name: z.enum(["S", "A", "B", "C"]),
   label: z.string(),
@@ -27,6 +39,7 @@ const RateLimitEntrySchema = z.object({
   quota: z.string(),
   provenance: z.enum(["operator", "third-party", "unpublished"]),
   reliability: z.enum(["solid", "watch", "avoid"]),
+  fieldTested: z.boolean().optional(),
   note: z.string().optional(),
   noteFr: z.string().optional(),
 });
@@ -45,9 +58,12 @@ const RedundancyEntrySchema = z.object({
   alsoOn: z.array(z.string()),
   keep: z.string(),
   fallback: z.string(),
+  note: z.string().optional(),
+  noteFr: z.string().optional(),
 });
 
 const RankingsBundleSchema = z.object({
+  meta: RankingsMetaSchema.optional(),
   tiers: z.array(SkillTierSchema).min(1),
   skill: z.array(SkillEntrySchema),
   rateLimit: z.array(RateLimitEntrySchema),
@@ -56,6 +72,7 @@ const RankingsBundleSchema = z.object({
   dropList: z.array(
     z.object({ provider: z.string(), reason: z.string(), reasonFr: z.string().optional() }),
   ),
+  worthTryingWithCaveats: z.array(WorthTryingEntrySchema).optional(),
   bottomLine: z.string(),
   bottomLineFr: z.string().optional(),
   disclaimer: z.string(),
