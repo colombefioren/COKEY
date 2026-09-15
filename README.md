@@ -9,7 +9,7 @@
 
 <br />
 
-[![npm](https://img.shields.io/npm/v/cokey?style=flat-square&color=DD5C95&labelColor=2B1A2F&logo=npm&logoColor=white)](https://www.npmjs.com/package/cokey)
+[![npm](https://img.shields.io/npm/v/%40cocofioren%2Fcokey?style=flat-square&color=DD5C95&labelColor=2B1A2F&logo=npm&logoColor=white)](https://www.npmjs.com/package/@cocofioren/cokey)
 [![Docker Hub](https://img.shields.io/docker/v/cocofioren/cokey?style=flat-square&color=F482B4&labelColor=2B1A2F&logo=docker&logoColor=white&label=docker)](https://hub.docker.com/r/cocofioren/cokey)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2F9D74?style=flat-square&labelColor=2B1A2F)](LICENSE)
 [![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-6B86E8?style=flat-square&labelColor=2B1A2F)](package.json)
@@ -230,7 +230,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
   </tr>
   <tr>
     <td align="center">npm (global)</td>
-    <td align="center"><code>npm install -g cokey &amp;&amp; cokey</code></td>
+    <td align="center"><code>npm install -g @cocofioren/cokey &amp;&amp; cokey</code></td>
   </tr>
   <tr>
     <td align="center">Docker</td>
@@ -250,7 +250,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
   </tr>
   <tr>
     <td align="center">Programmatic API</td>
-    <td align="center"><code>import { Cokey } from "cokey"</code></td>
+    <td align="center"><code>import { Cokey } from "@cocofioren/cokey"</code></td>
   </tr>
 </table>
 
@@ -431,7 +431,7 @@ cokey catalog                # dump the provider catalog
 ## 🧑‍💻 Programmatic API
 
 ```ts
-import { Cokey, startServer } from "cokey";
+import { Cokey, startServer } from "@cocofioren/cokey";
 
 const cokey = new Cokey({ port: 8787 });
 cokey.start(); // background upkeep: cooldown expiry, proxy assignment

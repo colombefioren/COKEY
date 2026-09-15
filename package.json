@@ -1,6 +1,9 @@
 {
-  "name": "cokey",
+  "name": "@cocofioren/cokey",
   "version": "0.1.0",
+  "publishConfig": {
+    "access": "public"
+  },
   "description": "COKEY: an LLM credential pool and chain-fallback gateway",
   "keywords": [
     "llm",
