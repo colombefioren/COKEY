@@ -436,6 +436,13 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       if (body.proxyPoolId !== undefined) return cokey.assignCredentialProxy(id, body.proxyPoolId);
       if (body.proxyUrl !== undefined) return cokey.setCredentialProxy(id, body.proxyUrl);
 
+      cokey.events.emit({
+        type: "credential.updated",
+        level: "info",
+        message: `${cokey.credentials.getOrThrow(id).description} updated`,
+        credentialId: id,
+      });
+
       return cokey.credentials.toPublic(cokey.credentials.getOrThrow(id));
     }),
   );
