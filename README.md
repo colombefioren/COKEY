@@ -10,7 +10,7 @@
 <br />
 
 [![npm](https://img.shields.io/npm/v/cokey?style=flat-square&color=DD5C95&labelColor=2B1A2F&logo=npm&logoColor=white)](https://www.npmjs.com/package/cokey)
-[![Docker Hub](https://img.shields.io/docker/v/cocofiore/cokey?style=flat-square&color=F482B4&labelColor=2B1A2F&logo=docker&logoColor=white&label=docker)](https://hub.docker.com/r/cocofiore/cokey)
+[![Docker Hub](https://img.shields.io/docker/v/cocofioren/cokey?style=flat-square&color=F482B4&labelColor=2B1A2F&logo=docker&logoColor=white&label=docker)](https://hub.docker.com/r/cocofioren/cokey)
 [![License: MIT](https://img.shields.io/badge/License-MIT-2F9D74?style=flat-square&labelColor=2B1A2F)](LICENSE)
 [![Node](https://img.shields.io/badge/Node-%3E%3D%2020.10-6B86E8?style=flat-square&labelColor=2B1A2F)](package.json)
 [![TypeScript](https://img.shields.io/badge/TypeScript-100%25-7452F0?style=flat-square&labelColor=2B1A2F)](https://www.typescriptlang.org/)
@@ -234,7 +234,7 @@ Every provider's real free tier limits — RPD, RPM, TPD, whatever they publish 
   </tr>
   <tr>
     <td align="center">Docker</td>
-    <td align="center"><code>docker run -p 8787:8787 -v cokey:/data cocofiore/cokey</code></td>
+    <td align="center"><code>docker run -p 8787:8787 -v cokey:/data cocofioren/cokey</code></td>
   </tr>
   <tr>
     <td align="center">Render / Railway / Fly</td>
