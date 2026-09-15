@@ -676,12 +676,7 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
       quotaSource: "unknown",
       freeModelsOnly: true,
     },
-    knownModels: [
-      "qwen/qwen3.8-max:free",
-      "qwen/qwen3.6-27b:free",
-      "minimax/minimax-m3:free",
-      "mistralai/codestral-2508",
-    ],
+    knownModels: [],
     credentialFields: ["secret"],
     verification: { method: "models" },
   },
