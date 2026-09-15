@@ -1,0 +1,25 @@
+name: No pull requests against prod
+
+on:
+  pull_request_target:
+    types: [opened]
+    branches: [prod]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  close-prod-pr:
+    name: close-prod-pr
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Close and explain
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          gh pr comment "${NUMBER}" --repo "${REPO}" --body "prod only receives changes by merging preprod once it's ready to ship — pull requests aren't accepted against it directly. Please retarget this PR at \`preprod\` instead."
+          gh pr close "${NUMBER}" --repo "${REPO}"
