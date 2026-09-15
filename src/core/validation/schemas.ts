@@ -127,6 +127,10 @@ export const ReorderSchema = z.object({
   entryIds: z.array(z.string().min(1)),
 });
 
+export const ReorderChainsSchema = z.object({
+  chainIds: z.array(z.string().min(1)),
+});
+
 export const MoveEntrySchema = z.object({
   toIndex: z.number().int().min(0),
 });

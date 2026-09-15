@@ -67,6 +67,7 @@ export class ChainManager {
       alias: input.alias,
       description: input.description,
       enabled: true,
+      position: this.repo.maxPosition() + 1,
       createdAt: now,
       updatedAt: now,
     });
@@ -91,6 +92,21 @@ export class ChainManager {
 
   listChains(): Chain[] {
     return this.repo.listChains().map((row) => this.chainFromRow(row));
+  }
+
+  reorderChains(orderedIds: string[]): void {
+    const existing = this.listChains();
+    const valid = new Set(existing.map((chain) => chain.id));
+
+    const filtered: string[] = [];
+    for (const id of orderedIds) {
+      if (valid.has(id) && !filtered.includes(id)) filtered.push(id);
+    }
+    for (const chain of existing) {
+      if (!filtered.includes(chain.id)) filtered.push(chain.id);
+    }
+
+    this.repo.reorderChains(filtered);
   }
 
   setChainEnabled(id: string, enabled: boolean): void {

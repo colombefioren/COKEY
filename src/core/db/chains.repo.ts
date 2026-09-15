@@ -5,6 +5,7 @@ export interface InsertChainInput {
   alias: string;
   description?: string;
   enabled: boolean;
+  position: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -68,14 +69,15 @@ export class ChainsRepo {
   insertChain(input: InsertChainInput): void {
     this.db
       .prepareCached(
-        `INSERT INTO chains (id, alias, description, enabled, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO chains (id, alias, description, enabled, position, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
       )
       .run(
         input.id,
         input.alias,
         input.description ?? null,
         input.enabled ? 1 : 0,
+        input.position,
         input.createdAt,
         input.updatedAt,
       );
@@ -93,8 +95,27 @@ export class ChainsRepo {
 
   listChains(): ChainRow[] {
     return this.db
-      .prepareCached(`SELECT * FROM chains ORDER BY created_at ASC`)
+      .prepareCached(`SELECT * FROM chains ORDER BY position ASC, created_at ASC`)
       .all() as ChainRow[];
+  }
+
+  maxPosition(): number {
+    const row = this.db.prepareCached(`SELECT MAX(position) AS p FROM chains`).get() as {
+      p: number | null;
+    };
+    return row.p ?? -1;
+  }
+
+  reorderChains(orderedIds: string[]): void {
+    const statement = this.db.prepareCached(
+      `UPDATE chains SET position = ?, updated_at = ? WHERE id = ?`,
+    );
+    const now = Date.now();
+    this.db.transaction(() => {
+      orderedIds.forEach((id, index) => {
+        statement.run(index + 1, now, id);
+      });
+    });
   }
 
   updateChain(id: string, patch: ChainPatch): void {

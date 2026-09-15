@@ -228,6 +228,20 @@ export const MIGRATIONS: Migration[] = [
         ON model_probes(provider_id, model, checked_at);
     `,
   },
+  {
+    version: 10,
+    name: "chain_position",
+    sql: `
+      ALTER TABLE chains ADD COLUMN position INTEGER NOT NULL DEFAULT 0;
+
+      UPDATE chains
+         SET position = (
+           SELECT COUNT(*) FROM chains older
+            WHERE older.created_at < chains.created_at
+               OR (older.created_at = chains.created_at AND older.id < chains.id)
+         );
+    `,
+  },
 ];
 
 export class DatabaseClient {
@@ -328,6 +342,7 @@ export interface ChainRow {
   alias: string;
   description: string | null;
   enabled: number;
+  position: number;
   created_at: number;
   updated_at: number;
 }

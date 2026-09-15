@@ -90,6 +90,27 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
     return { nodes, keys };
   }, [chains]);
 
+  async function moveChain(id: string, delta: number) {
+    const ids = chains.map((chain) => chain.id);
+    const from = ids.indexOf(id);
+    const to = from + delta;
+    if (from === -1 || to < 0 || to >= ids.length) return;
+
+    const next = [...chains];
+    const [moved] = next.splice(from, 1);
+    next.splice(to, 0, moved!);
+    setChains(next);
+
+    try {
+      await api.reorderChains(next.map((chain) => chain.id));
+      await load();
+      onChanged();
+    } catch (error) {
+      toast.err(error instanceof ApiError ? error.message : String(error));
+      await load();
+    }
+  }
+
   async function createChain() {
     const name = alias.trim();
     if (!name) {
@@ -146,7 +167,8 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
         </div>
         <div className="small faint" style={{ marginTop: 8 }}>
           {t("Tried top to bottom. Reorder by dragging,")} <code>Alt+↑</code> / <code>Alt+↓</code>,{" "}
-          {t("or the arrows.")}
+          {t("or the arrows.")}{" "}
+          {t("Chains themselves are ordered here too — the dashboard lists them in this order.")}
         </div>
       </Panel>
 
@@ -163,10 +185,13 @@ function ChainList({ refreshKey, onChanged }: { refreshKey: number; onChanged: (
         {chains.length === 0 ? (
           <Empty>{t("No chains yet.")}</Empty>
         ) : (
-          visible.map((chain) => (
+          visible.map((chain, index) => (
             <ChainCard
               key={chain.id}
               chain={chain}
+              index={(current - 1) * pageSize + index}
+              total={chains.length}
+              onMove={(id, delta) => void moveChain(id, delta)}
               onChanged={() => {
                 void load();
                 onChanged();

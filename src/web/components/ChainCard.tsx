@@ -10,7 +10,19 @@ import { useToast } from "./Toast.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 import { useLang } from "../lang.js";
 
-export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: () => void }) {
+export function ChainCard({
+  chain,
+  index,
+  total,
+  onMove,
+  onChanged,
+}: {
+  chain: ChainView;
+  index: number;
+  total: number;
+  onMove: (id: string, delta: number) => void;
+  onChanged: () => void;
+}) {
   const toast = useToast();
   const { t } = useLang();
   const [entries, setEntries] = useState<ChainEntryView[]>(chain.entries);
@@ -18,9 +30,9 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
   const [renaming, setRenaming] = useState(false);
   const [aliasDraft, setAliasDraft] = useState(chain.alias);
   const [addingEntry, setAddingEntry] = useState(false);
-  const [credentialTarget, setCredentialTarget] = useState<ChainEntryView | null>(null);
-  const [editingEntry, setEditingEntry] = useState<ChainEntryView | null>(null);
-  const [viewingEntry, setViewingEntry] = useState<ChainEntryView | null>(null);
+  const [credentialTargetId, setCredentialTargetId] = useState<string | null>(null);
+  const [editingEntryId, setEditingEntryId] = useState<string | null>(null);
+  const [viewingEntryId, setViewingEntryId] = useState<string | null>(null);
   const [removingEntry, setRemovingEntry] = useState<ChainEntryView | null>(null);
   const [deletingChain, setDeletingChain] = useState(false);
   const sweep = useChainRefresh(chain, onChanged);
@@ -29,6 +41,16 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
     setEntries(chain.entries);
     setAliasDraft(chain.alias);
   }, [chain]);
+
+  const credentialTarget = credentialTargetId
+    ? (entries.find((entry) => entry.id === credentialTargetId) ?? null)
+    : null;
+  const editingEntry = editingEntryId
+    ? (entries.find((entry) => entry.id === editingEntryId) ?? null)
+    : null;
+  const viewingEntry = viewingEntryId
+    ? (entries.find((entry) => entry.id === viewingEntryId) ?? null)
+    : null;
 
   async function persistOrder(next: ChainEntryView[]) {
     setEntries(next);
@@ -190,6 +212,26 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           </>
         )}
         <span className="spacer" />
+        <Tooltip label={t("Move this chain up")}>
+          <button
+            className="ghost"
+            aria-label={t("Move this chain up")}
+            disabled={index <= 0}
+            onClick={() => onMove(chain.id, -1)}
+          >
+            ▲
+          </button>
+        </Tooltip>
+        <Tooltip label={t("Move this chain down")}>
+          <button
+            className="ghost"
+            aria-label={t("Move this chain down")}
+            disabled={index >= total - 1}
+            onClick={() => onMove(chain.id, 1)}
+          >
+            ▼
+          </button>
+        </Tooltip>
         <button
           className="ghost"
           onClick={() => void sweep.refresh()}
@@ -263,11 +305,11 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
 
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
-              <button
-                className="model-name"
-                title={t("View details")}
-                onClick={() => setViewingEntry(entry)}
-              >
+                <button
+                  className="model-name"
+                  title={t("View details")}
+                  onClick={() => setViewingEntryId(entry.id)}
+                >
                 {entry.label ?? entry.model}
               </button>
               {entry.label ? <span className="small faint mono">{entry.model}</span> : null}
@@ -298,7 +340,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                 <button
                   className="ghost"
                   aria-label={t("View details")}
-                  onClick={() => setViewingEntry(entry)}
+                  onClick={() => setViewingEntryId(entry.id)}
                 >
                   👁
                 </button>
@@ -307,7 +349,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
                 <button
                   className="ghost"
                   aria-label={t("Edit")}
-                  onClick={() => setEditingEntry(entry)}
+                  onClick={() => setEditingEntryId(entry.id)}
                 >
                   ✎
                 </button>
@@ -366,7 +408,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
       {credentialTarget ? (
         <AddCredentialModal
           entry={credentialTarget}
-          onClose={() => setCredentialTarget(null)}
+          onClose={() => setCredentialTargetId(null)}
           onChanged={() => {
             onChanged();
           }}
@@ -376,7 +418,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
       {editingEntry ? (
         <EditEntryModal
           entry={editingEntry}
-          onClose={() => setEditingEntry(null)}
+          onClose={() => setEditingEntryId(null)}
           onChanged={() => {
             onChanged();
           }}
@@ -386,7 +428,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
       {viewingEntry ? (
         <ViewEntryModal
           entry={viewingEntry}
-          onClose={() => setViewingEntry(null)}
+          onClose={() => setViewingEntryId(null)}
           onChanged={() => {
             onChanged();
           }}

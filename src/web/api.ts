@@ -209,6 +209,8 @@ export const api = {
     body: { alias?: string; description?: string | null; enabled?: boolean },
   ) => request<ChainView>("PATCH", `/api/chains/${id}`, body),
   deleteChain: (id: string) => request<{ ok: boolean }>("DELETE", `/api/chains/${id}`),
+  reorderChains: (chainIds: string[]) =>
+    request<{ ok: boolean }>("POST", "/api/chains/reorder", { chainIds }),
   reorderChain: (id: string, entryIds: string[]) =>
     request<{ ok: boolean }>("POST", `/api/chains/${id}/reorder`, { entryIds }),
 
