@@ -685,15 +685,44 @@ export class Cokey {
 
     if (validation.ok) {
       this.credentials.markVerified(credential.id);
+      this.events.emit({
+        type: "credential.verified",
+        level: "success",
+        message: `${credential.description} verified`,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+      });
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
       this.credentials.markFailure(credential.id, validation.classification);
+      this.events.emit({
+        type: "credential.invalid",
+        level: "error",
+        message: `${credential.description} was rejected`,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        classification: validation.classification,
+      });
     } else if (
       validation.classification === "credential_rate_limited" ||
       validation.classification === "quota_exhausted"
     ) {
       this.credentials.putInCooldown(credential.id);
       this.credentials.markFailure(credential.id, validation.classification);
+      this.events.emit({
+        type: "credential.cooldown",
+        level: "warn",
+        message: `${credential.description} ${validation.classification === "quota_exhausted" ? "quota exhausted" : "rate limited"} — cooling down`,
+        providerId: entry.providerId,
+        model: entry.model,
+        credentialId: credential.id,
+        credentialDescription: credential.description,
+        classification: validation.classification,
+      });
     }
 
     return { ...validation, credentialId: credential.id };
