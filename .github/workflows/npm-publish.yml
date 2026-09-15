@@ -63,7 +63,7 @@ jobs:
         id: exists
         run: |
           set -euo pipefail
-          if npm view "cokey@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1; then
+          if npm view "@cocofioren/cokey@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1; then
             echo "published=true" >> "${GITHUB_OUTPUT}"
           else
             echo "published=false" >> "${GITHUB_OUTPUT}"
