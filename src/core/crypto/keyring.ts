@@ -1,5 +1,5 @@
 import { randomBytes, scryptSync } from "node:crypto";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
@@ -139,22 +139,28 @@ export function parseKeyString(raw: string): Buffer | undefined {
 
 export function deriveFromPassphrase(passphrase: string, dataDir: string): Buffer {
   const salt = Buffer.from(`cokey:v1:${dataDir}`);
-  return scryptSync(passphrase, salt, KEY_BYTES, { N: 1 << 15, r: 8, p: 1 });
+  return scryptSync(passphrase, salt, KEY_BYTES, {
+    N: 1 << 15,
+    r: 8,
+    p: 1,
+    maxmem: 64 * 1024 * 1024,
+  });
 }
 
 function readOrCreateKeyFile(dataDir: string): Buffer {
   mkdirSync(dataDir, { recursive: true });
   const keyPath = join(dataDir, "master.key");
 
-  if (existsSync(keyPath)) {
-    const parsed = parseKeyString(readFileSync(keyPath, "utf8"));
-    if (!parsed) throw new Error(`master.key is corrupt or not 32 bytes: ${keyPath}`);
-    return parsed;
+  const generated = randomBytes(KEY_BYTES);
+  try {
+    writeFileSync(keyPath, generated.toString("hex"), { mode: 0o600, flag: "wx" });
+    storeKeyInKeychain(generated);
+    return generated;
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") throw error;
   }
 
-  const key = randomBytes(KEY_BYTES);
-  writeFileSync(keyPath, key.toString("hex"), { mode: 0o600 });
-
-  storeKeyInKeychain(key);
-  return key;
+  const parsed = parseKeyString(readFileSync(keyPath, "utf8"));
+  if (!parsed) throw new Error(`master.key is corrupt or not 32 bytes: ${keyPath}`);
+  return parsed;
 }
