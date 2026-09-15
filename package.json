@@ -54,7 +54,8 @@
     "lint": "eslint .",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.ts\"",
-    "fonts": "node scripts/fetch-fonts.mjs"
+    "fonts": "node scripts/fetch-fonts.mjs",
+    "export:catalog": "tsx scripts/export-catalog-snapshot.mjs"
   },
   "dependencies": {
     "better-sqlite3": "^12.11.1",

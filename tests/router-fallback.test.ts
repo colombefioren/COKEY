@@ -192,6 +192,62 @@ describe("router fallback order", () => {
   });
 });
 
+describe("credentialFallback: false", () => {
+  it("still cools down a rate-limited credential instead of leaving it retryable", async () => {
+    h.cleanup();
+    h = createHarness({ credentialFallback: false });
+    const key1 = addCredential(h, "groq", "key-1");
+    const key2 = addCredential(h, "groq", "key-2");
+
+    const adapter = new StubAdapter(() => ({
+      status: 429,
+      body: { error: { message: "rate limit exceeded" } },
+    }));
+    h.registry.register("groq", adapter);
+
+    const chain = h.chains.createChain({ alias: "best" });
+    h.chains.addEntry({
+      chainId: chain.id,
+      providerId: "groq",
+      model: "qwen/qwen3.8-27b",
+      baseUrl: BASE,
+      credentialIds: [key1.id, key2.id],
+    });
+
+    await expect(h.router.route("best", REQUEST)).rejects.toThrow();
+
+    // The router must not rotate to key-2, but key-1 must still be put in
+    // cooldown - otherwise the very next request retries the same
+    // still-rate-limited key as if this attempt never happened.
+    expect(adapter.calls).toHaveLength(1);
+    expect(h.credentials.get(key1.id)?.status).toBe("cooldown");
+  });
+
+  it("still marks a rejected credential invalid instead of leaving it retryable", async () => {
+    h.cleanup();
+    h = createHarness({ credentialFallback: false });
+    const key1 = addCredential(h, "groq", "key-1");
+
+    h.registry.register(
+      "groq",
+      new StubAdapter(() => ({ status: 401, body: { error: { message: "invalid api key" } } })),
+    );
+
+    const chain = h.chains.createChain({ alias: "best" });
+    h.chains.addEntry({
+      chainId: chain.id,
+      providerId: "groq",
+      model: "qwen/qwen3.8-27b",
+      baseUrl: BASE,
+      credentialIds: [key1.id],
+    });
+
+    await expect(h.router.route("best", REQUEST)).rejects.toThrow();
+
+    expect(h.credentials.get(key1.id)?.status).toBe("invalid");
+  });
+});
+
 describe("live routing feedback", () => {
   it("narrates each key change and leaves a success snapshot", async () => {
     const key1 = addCredential(h, "groq", "key-1");

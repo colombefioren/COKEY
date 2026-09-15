@@ -426,14 +426,15 @@ export class RouterEngine {
         return policy.entryFallback ? { kind: "next_entry" } : { kind: "stop" };
       }
 
+      // Side effects (cooldown, marking a credential invalid) happen regardless
+      // of the fallback policy — disabling credential fallback only means the
+      // router won't rotate to another key, not that this one should be tried
+      // again on the very next request as if nothing happened.
+      this.applyClassification(credential, classification, outcome.error, state);
+
       if (!policy.credentialFallback) {
-        this.credentials.markFailure(credential.id, classification);
-        state.fallback = true;
-        state.fallbackReason ??= reasonFor(classification);
         return { kind: "stop" };
       }
-
-      this.applyClassification(credential, classification, outcome.error, state);
     }
 
     return { kind: "next_entry" };

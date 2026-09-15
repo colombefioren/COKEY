@@ -445,10 +445,6 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
     m("qwen3.8-27b", undefined, "General"),
   ],
   xkiro: [
-    m("deepseek/deepseek-chat-v3.1", "128K", "General", 2.18),
-    m("deepseek/deepseek-v3.2", "128K", "Reasoning", 2.31),
-    m("deepseek/deepseek-v4-flash", "1M", "Reasoning", 1.86),
-    m("deepseek/deepseek-v4-pro", "1M", "Reasoning", 7.51),
     m("minimax/minimax-m2.1", "200K", "General", 2.5),
     m("minimax/minimax-m3:free", "1M", "General", 1.93),
     m("minimax/minimax-m2.7", "200K", "General", 5.65),

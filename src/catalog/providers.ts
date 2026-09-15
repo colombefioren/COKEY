@@ -695,7 +695,6 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
       freeModelsOnly: true,
     },
     knownModels: [
-      "deepseek/deepseek-v4-flash",
       "qwen/qwen3.8-max:free",
       "qwen/qwen3.6-27b:free",
       "minimax/minimax-m3:free",

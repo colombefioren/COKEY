@@ -74,15 +74,21 @@ function toInt(value: string | undefined): number | undefined {
  * milliseconds, a duration string ("1m30s"), an ISO timestamp, or an epoch. We
  * return an absolute timestamp when we can, otherwise `undefined`.
  */
+const DURATION_CHUNK_RE = /(\d+(?:\.\d+)?)(ms|s|m|h)/g;
+const DURATION_RE = /^(?:\d+(?:\.\d+)?(?:ms|s|m|h))+$/;
+
 export function parseResetValue(value: string): number | undefined {
   const t = value.trim();
 
-  const duration = t.match(/^(\d+(?:\.\d+)?)(ms|s|m|h)$/);
-  if (duration) {
-    const n = Number(duration[1]);
-    const unit = duration[2];
-    const mult = unit === "ms" ? 1 : unit === "s" ? 1000 : unit === "m" ? 60_000 : 3_600_000;
-    return Date.now() + n * mult;
+  // Handles both a single unit ("30s") and a compound duration ("1m30s",
+  // "1h30m") - a provider is free to mix units in one header value.
+  if (DURATION_RE.test(t)) {
+    let totalMs = 0;
+    for (const [, amount, unit] of t.matchAll(DURATION_CHUNK_RE)) {
+      const mult = unit === "ms" ? 1 : unit === "s" ? 1000 : unit === "m" ? 60_000 : 3_600_000;
+      totalMs += Number(amount) * mult;
+    }
+    return Date.now() + totalMs;
   }
 
   if (/^\d+$/.test(t)) {
