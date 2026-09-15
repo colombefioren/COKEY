@@ -30,10 +30,10 @@ jobs:
 
           SUBJECT="$(git log -1 --pretty=%s)"
           case "${SUBJECT}" in
-            release*|chore\(release\)*) echo "Allowed release commit: ${SUBJECT}";;
+            release*|chore\(release\)*|promotion:\ preprod\ -\>\ prod) echo "Allowed: ${SUBJECT}";;
             *)
               echo "::error::Direct pushes to ${GITHUB_REF_NAME} are locked after release."
-              echo "Open a pull request against the main branch instead."
+              echo "Merge preprod into prod instead of pushing arbitrary commits directly."
               exit 1
               ;;
           esac
