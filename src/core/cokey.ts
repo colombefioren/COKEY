@@ -1406,8 +1406,16 @@ export class Cokey {
     summary: Record<GuidanceSeverity, number>;
     checkedAt: number;
   } {
-    const notices = deriveGuidance(this.guidanceInput());
-    return { notices, summary: guidanceSummary(notices), checkedAt: Date.now() };
+    // The summary badge must count every notice, not just the ones that fit
+    // on the dashboard: deriving it from an already-capped list would let a
+    // pile of critical notices silently hide warn/info counts behind the cap.
+    const all = deriveGuidance(this.guidanceInput(), Infinity);
+    const NOTICE_DISPLAY_CAP = 12;
+    return {
+      notices: all.slice(0, NOTICE_DISPLAY_CAP),
+      summary: guidanceSummary(all),
+      checkedAt: Date.now(),
+    };
   }
 
   /** Flatten the gateway's state into the plain shape the guidance rules read. */
