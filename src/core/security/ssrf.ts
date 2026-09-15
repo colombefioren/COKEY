@@ -105,9 +105,68 @@ export function assertSafeEndpoint(raw: string, options: UrlGuardOptions = {}): 
 }
 
 function isLinkLocal(host: string): boolean {
-  if (isIP(host) !== 4) return false;
-  const [a, b] = host.split(".").map(Number);
-  return a === 169 && b === 254;
+  if (isIP(host) === 4) {
+    const [a, b] = host.split(".").map(Number);
+    return a === 169 && b === 254;
+  }
+  const mapped = mappedIPv4(host);
+  return mapped !== undefined && isLinkLocal(mapped);
+}
+
+/**
+ * The IPv4 address embedded in an IPv4-mapped IPv6 literal (`::ffff:0:0/96`),
+ * in either its dotted-decimal tail (`::ffff:169.254.169.254`) or fully
+ * hex-group form (`::ffff:a9fe:a9fe`) — the two encode the same address, and
+ * only the first was ever recognized here, which let the second walk straight
+ * past both the link-local and private-range checks below.
+ */
+function mappedIPv4(host: string): string | undefined {
+  const groups = expandIPv6(host);
+  if (!groups) return undefined;
+  if (groups.slice(0, 5).some((g) => g !== 0) || groups[5] !== 0xffff) return undefined;
+  return [(groups[6]! >> 8) & 0xff, groups[6]! & 0xff, (groups[7]! >> 8) & 0xff, groups[7]! & 0xff].join(
+    ".",
+  );
+}
+
+/** Expand a valid IPv6 literal to its 8 hextets, resolving `::` and an embedded IPv4 tail. */
+function expandIPv6(host: string): number[] | undefined {
+  if (isIP(host) !== 6) return undefined;
+
+  let addr = host;
+  let ipv4Tail: string | undefined;
+  const lastColon = addr.lastIndexOf(":");
+  const tail = addr.slice(lastColon + 1);
+  if (tail.includes(".")) {
+    ipv4Tail = tail;
+    addr = addr.slice(0, lastColon + 1);
+  }
+
+  const [head, tailPart] = addr.split("::");
+  const headGroups = head ? head.split(":").filter(Boolean) : [];
+  const tailGroups = tailPart !== undefined ? tailPart.split(":").filter(Boolean) : [];
+
+  let hex: string[];
+  if (tailPart !== undefined) {
+    const known = headGroups.length + tailGroups.length + (ipv4Tail ? 2 : 0);
+    const missing = 8 - known;
+    if (missing < 0) return undefined;
+    hex = [...headGroups, ...Array(missing).fill("0"), ...tailGroups];
+  } else {
+    hex = [...headGroups, ...tailGroups];
+  }
+
+  if (ipv4Tail) {
+    const parts = ipv4Tail.split(".").map(Number);
+    if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) {
+      return undefined;
+    }
+    hex.push((((parts[0]! << 8) | parts[1]!) >>> 0).toString(16));
+    hex.push((((parts[2]! << 8) | parts[3]!) >>> 0).toString(16));
+  }
+
+  if (hex.length !== 8) return undefined;
+  return hex.map((g) => parseInt(g, 16));
 }
 
 function isPrivateV4(host: string): boolean {
@@ -130,6 +189,7 @@ function isPrivateV6(host: string): boolean {
   if (h === "::" || h === "::1") return true;
   if (h.startsWith("fc") || h.startsWith("fd")) return true; // unique local
   if (h.startsWith("fe80")) return true; // link-local
-  if (h.startsWith("::ffff:")) return isPrivateV4(h.slice(7));
+  const mapped = mappedIPv4(h);
+  if (mapped !== undefined) return isPrivateV4(mapped);
   return false;
 }
