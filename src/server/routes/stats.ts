@@ -11,6 +11,7 @@ import { withErrors } from "./http-errors.js";
 export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
   app.get(
     "/health",
+    { config: { public: true } },
     withErrors(() => ({
       ok: true,
       version: COKEY_VERSION,
@@ -100,6 +101,7 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
 
   app.post(
     "/api/password",
+    { config: { rateLimit: { max: 10, timeWindow: "1 minute" } } },
     withErrors((request) => {
       const body = request.body as { password?: unknown } | undefined;
       const password = typeof body?.password === "string" ? body.password : "";

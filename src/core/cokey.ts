@@ -25,6 +25,7 @@ import { providerDossier, type ProviderDossier } from "../catalog/dossiers.js";
 import { compiledRankingsView, type RankingsView } from "../catalog/rankings.js";
 import { fetchRemoteRankings, type RankingsFetchResult } from "./remote-rankings.js";
 import { parseProxyUrl, proxyLabel } from "./providers/proxy.js";
+import { stripTrailingSlashes } from "./providers/http.js";
 import { checkProxyUrl, collectHealthy } from "./providers/proxy-health.js";
 import {
   ProxyPoolService,
@@ -1455,7 +1456,7 @@ export class Cokey {
     this.customEndpointsRepo.insert({
       id,
       displayName: input.displayName,
-      baseUrl: guard.toString().replace(/\/+$/, ""),
+      baseUrl: stripTrailingSlashes(guard.toString()),
       apiStyle: ApiStyleSchema.parse(input.apiStyle),
       authScheme: AuthSchemeSchema.parse(input.authScheme),
       models: JSON.stringify(input.models ?? []),

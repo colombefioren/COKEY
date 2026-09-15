@@ -12,7 +12,7 @@ import type {
   ValidationResult,
 } from "../types.js";
 import type { ProviderAdapter, ProviderRequest, SendResult, TokenUsage } from "./adapter.js";
-import { performRequest } from "./http.js";
+import { performRequest, stripTrailingSlashes } from "./http.js";
 
 export class OpenAICompatibleAdapter implements ProviderAdapter {
   readonly id: string;
@@ -24,7 +24,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   resolveBaseUrl(entry: ChainEntry, _credential: Credential): string {
-    return entry.baseUrl.replace(/\/+$/, "");
+    return stripTrailingSlashes(entry.baseUrl);
   }
 
   buildHeaders(credential: Credential): Record<string, string> {
@@ -157,8 +157,10 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     model: string,
     started: number,
   ): Promise<ValidationResult> {
-    const base = this.catalog.baseUrl.replace(/\{account_id\}/, credential.accountId ?? "");
-    const url = this.chatUrl(base.replace(/\/+$/, ""), credential);
+    const base = stripTrailingSlashes(
+      this.catalog.baseUrl.replace(/\{account_id\}/, credential.accountId ?? ""),
+    );
+    const url = this.chatUrl(base, credential);
 
     const result = await performRequest({
       url,
@@ -233,9 +235,9 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 
   protected modelsUrl(credential: Credential): string {
-    const base = this.catalog.baseUrl
-      .replace(/\{account_id\}/, credential.accountId ?? "")
-      .replace(/\/+$/, "");
+    const base = stripTrailingSlashes(
+      this.catalog.baseUrl.replace(/\{account_id\}/, credential.accountId ?? ""),
+    );
     return `${base}/models`;
   }
 

@@ -9,7 +9,7 @@ import type {
   ValidationResult,
 } from "../types.js";
 import type { ProviderRequest, SendResult, TokenUsage, TransformContext } from "./adapter.js";
-import { performRequest } from "./http.js";
+import { performRequest, stripTrailingV1 } from "./http.js";
 import { OpenAICompatibleAdapter, num } from "./openai-compatible.js";
 import { iterateSse, sseFrame, SSE_DONE, streamFrom } from "./sse.js";
 import { flattenContent, mapFinishReason, openAiChunk, openAiCompletion } from "./transform.js";
@@ -23,7 +23,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
     credential: Credential,
     request: ChatCompletionRequest,
   ): ProviderRequest {
-    const base = entry.baseUrl.replace(/\/+$/, "").replace(/\/v1$/, "");
+    const base = stripTrailingV1(entry.baseUrl);
     const { system, messages } = toAnthropicMessages(request);
 
     const body: Record<string, unknown> = {
@@ -121,7 +121,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
     credential: Credential,
     options?: { timeoutMs?: number },
   ): Promise<ModelInfo[]> {
-    const base = this.catalog.baseUrl.replace(/\/+$/, "").replace(/\/v1$/, "");
+    const base = stripTrailingV1(this.catalog.baseUrl);
     const result = await performRequest(
       {
         url: `${base}/v1/models`,

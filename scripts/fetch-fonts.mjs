@@ -28,10 +28,25 @@ const FAMILIES = [
   },
 ];
 
+const MAX_FONT_BYTES = 5 * 1024 * 1024;
+
 async function get(url) {
   const response = await fetch(url, { headers: { "user-agent": UA } });
   if (!response.ok) throw new Error(`${url} answered ${response.status}`);
   return response;
+}
+
+async function getFontBytes(url) {
+  const response = await get(url);
+  const contentLength = response.headers.get("content-length");
+  if (contentLength && Number(contentLength) > MAX_FONT_BYTES) {
+    throw new Error(`${url} is larger than the ${MAX_FONT_BYTES} byte font size cap`);
+  }
+  const bytes = Buffer.from(await response.arrayBuffer());
+  if (bytes.length > MAX_FONT_BYTES) {
+    throw new Error(`${url} is larger than the ${MAX_FONT_BYTES} byte font size cap`);
+  }
+  return bytes;
 }
 
 
@@ -98,10 +113,15 @@ async function main() {
       if (existsSync(target)) {
         reused += 1;
       } else {
-        const bytes = Buffer.from(await (await get(srcUrl)).arrayBuffer());
-        await writeFile(target, bytes);
-        downloaded += 1;
-        console.log(`+ ${file} (${(bytes.length / 1024).toFixed(1)} KiB)`);
+        const bytes = await getFontBytes(srcUrl);
+        try {
+          await writeFile(target, bytes, { flag: "wx" });
+          downloaded += 1;
+          console.log(`+ ${file} (${(bytes.length / 1024).toFixed(1)} KiB)`);
+        } catch (error) {
+          if (error.code !== "EEXIST") throw error;
+          reused += 1;
+        }
       }
 
       declarations.push({ family, weight: weightLabel, style: group[0].style, file });

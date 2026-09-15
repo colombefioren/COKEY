@@ -2,9 +2,9 @@ name: CodeQL
 
 on:
   push:
-    branches: [preprod, prod, freebuff-web]
+    branches: [preprod, prod]
   pull_request:
-    branches: [preprod, prod, freebuff-web]
+    branches: [preprod, prod]
   schedule:
     - cron: "27 4 * * 1"
 
