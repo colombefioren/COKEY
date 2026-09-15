@@ -1,4 +1,4 @@
-import { createHash, timingSafeEqual } from "node:crypto";
+import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import type { SettingsRepo } from "./db/settings.repo.js";
 import {
   DEFAULT_FALLBACK_POLICY,
@@ -13,6 +13,31 @@ const LOG_LEVELS: LogLevel[] = ["debug", "info", "warn", "error"];
 const PASSWORD_KEY = "adminPassword";
 const PASSWORD_LOCKED_KEY = "adminPasswordLocked";
 export const DEFAULT_ADMIN_PASSWORD = "coco-the-best";
+
+const SCRYPT_KEYLEN = 32;
+const SCRYPT_PARAMS = { N: 1 << 15, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
+
+function scryptHash(value: string, salt: Buffer): Buffer {
+  return scryptSync(value, salt, SCRYPT_KEYLEN, SCRYPT_PARAMS);
+}
+
+function encodePasswordRecord(password: string): string {
+  const salt = randomBytes(16);
+  return `${salt.toString("hex")}:${scryptHash(password, salt).toString("hex")}`;
+}
+
+function decodePasswordRecord(record: string): { salt: Buffer; hash: Buffer } | undefined {
+  const separator = record.indexOf(":");
+  if (separator === -1) return undefined;
+  try {
+    const salt = Buffer.from(record.slice(0, separator), "hex");
+    const hash = Buffer.from(record.slice(separator + 1), "hex");
+    if (salt.length === 0 || hash.length === 0) return undefined;
+    return { salt, hash };
+  } catch {
+    return undefined;
+  }
+}
 
 export class InvalidSettingError extends Error {
   constructor(message: string) {
@@ -65,8 +90,20 @@ export class SettingsService {
     return this.get();
   }
 
-  password(): string {
-    return this.repo.get(PASSWORD_KEY) ?? DEFAULT_ADMIN_PASSWORD;
+  private passwordRecord(): { salt: Buffer; hash: Buffer } {
+    const stored = this.repo.get(PASSWORD_KEY);
+    if (!stored) {
+      const salt = randomBytes(16);
+      return { salt, hash: scryptHash(DEFAULT_ADMIN_PASSWORD, salt) };
+    }
+
+    const record = decodePasswordRecord(stored);
+    if (record) return record;
+
+    const salt = randomBytes(16);
+    const hash = scryptHash(stored, salt);
+    this.repo.set(PASSWORD_KEY, `${salt.toString("hex")}:${hash.toString("hex")}`);
+    return { salt, hash };
   }
 
   passwordLocked(): boolean {
@@ -76,9 +113,9 @@ export class SettingsService {
   verifyPassword(candidate: string): boolean {
     if (candidate.length === 0) return false;
 
-    const expected = createHash("sha256").update(this.password()).digest();
-    const actual = createHash("sha256").update(candidate).digest();
-    return timingSafeEqual(actual, expected);
+    const { salt, hash } = this.passwordRecord();
+    const actual = scryptHash(candidate, salt);
+    return actual.length === hash.length && timingSafeEqual(actual, hash);
   }
 
   setPassword(password: string): void {
@@ -90,7 +127,7 @@ export class SettingsService {
     if (!password || password.length < 4) {
       throw new InvalidSettingError("Password must be at least 4 characters");
     }
-    this.repo.set(PASSWORD_KEY, password);
+    this.repo.set(PASSWORD_KEY, encodePasswordRecord(password));
     this.repo.set(PASSWORD_LOCKED_KEY, "1");
     this.current = this.compute();
   }

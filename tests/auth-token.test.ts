@@ -8,7 +8,12 @@ import { SettingsService, DEFAULT_ADMIN_PASSWORD } from "../src/core/settings.js
 import { ApiKeyService } from "../src/core/api-keys.js";
 import { ApiKeysRepo } from "../src/core/db/api-keys.repo.js";
 
-function createSettingsService(): { service: SettingsService; dir: string; cleanup: () => void } {
+function createSettingsService(): {
+  service: SettingsService;
+  repo: SettingsRepo;
+  dir: string;
+  cleanup: () => void;
+} {
   const dir = mkdtempSync(join(tmpdir(), "cokey-test-"));
   const db = new DatabaseClient(join(dir, "cokey.db"));
   const repo = new SettingsRepo(db);
@@ -16,6 +21,7 @@ function createSettingsService(): { service: SettingsService; dir: string; clean
 
   return {
     service,
+    repo,
     dir,
     cleanup() {
       db.close();
@@ -28,7 +34,7 @@ describe("SettingsService admin password", () => {
   it("defaults to coco-the-best and is not locked", () => {
     const { service, cleanup } = createSettingsService();
     try {
-      expect(service.password()).toBe(DEFAULT_ADMIN_PASSWORD);
+      expect(service.verifyPassword(DEFAULT_ADMIN_PASSWORD)).toBe(true);
       expect(service.passwordLocked()).toBe(false);
     } finally {
       cleanup();
@@ -50,7 +56,7 @@ describe("SettingsService admin password", () => {
     const { service, cleanup } = createSettingsService();
     try {
       service.setPassword("hunter2");
-      expect(service.password()).toBe("hunter2");
+      expect(service.verifyPassword("hunter2")).toBe(true);
       expect(service.passwordLocked()).toBe(true);
       expect(service.verifyPassword("hunter2")).toBe(true);
       expect(service.verifyPassword(DEFAULT_ADMIN_PASSWORD)).toBe(false);
@@ -64,7 +70,7 @@ describe("SettingsService admin password", () => {
     try {
       service.setPassword("first-choice");
       expect(() => service.setPassword("second-choice")).toThrow();
-      expect(service.password()).toBe("first-choice");
+      expect(service.verifyPassword("first-choice")).toBe(true);
     } finally {
       cleanup();
     }
@@ -75,6 +81,22 @@ describe("SettingsService admin password", () => {
     try {
       expect(() => service.setPassword("abc")).toThrow();
       expect(service.passwordLocked()).toBe(false);
+    } finally {
+      cleanup();
+    }
+  });
+
+  it("upgrades a plaintext password from an older COKEY version on first successful verify", () => {
+    const { service, repo, cleanup } = createSettingsService();
+    try {
+      repo.set("adminPassword", "legacy-plaintext");
+      expect(service.verifyPassword("legacy-plaintext")).toBe(true);
+
+      const stored = repo.get("adminPassword")!;
+      expect(stored).not.toBe("legacy-plaintext");
+      expect(stored).toMatch(/^[0-9a-f]+:[0-9a-f]+$/);
+      expect(service.verifyPassword("legacy-plaintext")).toBe(true);
+      expect(service.verifyPassword("wrong")).toBe(false);
     } finally {
       cleanup();
     }
