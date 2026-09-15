@@ -21,6 +21,10 @@
 
 <br />
 
+```bash
+npm install -g @cocofioren/cokey && cokey
+```
+
 <br />
 <br />
 
