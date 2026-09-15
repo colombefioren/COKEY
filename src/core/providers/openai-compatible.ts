@@ -1,4 +1,5 @@
 import type { ProviderCatalogEntry } from "../../catalog/types.js";
+import { COKEY_USER_AGENT } from "../../version.js";
 import { classifyError } from "../errors/classify.js";
 import { parseQuota } from "../quota/parse.js";
 import type {
@@ -29,7 +30,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
 
   buildHeaders(credential: Credential): Record<string, string> {
     const headers: Record<string, string> = {
-      "user-agent": "cokey/0.1.0",
+      "user-agent": COKEY_USER_AGENT,
       ...this.catalog.extraHeaders,
     };
 

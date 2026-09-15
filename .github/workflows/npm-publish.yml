@@ -75,14 +75,27 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Tag the release
+      - name: Create the GitHub release
         if: steps.exists.outputs.published != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           TAG="v${{ steps.pkg.outputs.version }}"
-          if git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
-            echo "::notice::${TAG} already exists, skipping."
+
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "::notice::Release ${TAG} already exists, skipping."
             exit 0
           fi
-          git tag "${TAG}"
-          git push origin "${TAG}"
+
+          if ! git ls-remote --tags origin "refs/tags/${TAG}" | grep -q "${TAG}"; then
+            git tag "${TAG}"
+            git push origin "${TAG}"
+          fi
+
+          gh release create "${TAG}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "${TAG}" \
+            --generate-notes \
+            --verify-tag \
+            --latest

@@ -1,4 +1,5 @@
 import { classifyError } from "../errors/classify.js";
+import { COKEY_USER_AGENT } from "../../version.js";
 import type {
   ChainEntry,
   ChatCompletionRequest,
@@ -162,7 +163,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
       accept,
       "anthropic-version": ANTHROPIC_VERSION,
       "x-api-key": credential.secret,
-      "user-agent": "cokey/0.1.0",
+      "user-agent": COKEY_USER_AGENT,
       ...this.catalog.extraHeaders,
     };
   }
