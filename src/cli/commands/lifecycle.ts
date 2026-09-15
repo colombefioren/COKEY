@@ -4,6 +4,7 @@ import { createServer as createNetServer } from "node:net";
 import { platform } from "node:os";
 import type { CAC } from "cac";
 import { Cokey } from "../../core/cokey.js";
+import { DEFAULT_ADMIN_PASSWORD } from "../../core/settings.js";
 import { startServer } from "../../server/server.js";
 import { freeProviders } from "../../catalog/providers.js";
 import {
@@ -102,7 +103,7 @@ export function registerLifecycleCommands(cli: CAC): void {
           console.log(`  data dir:     ${stats.dataDir}`);
           console.log(`  master key:   ${stats.keySource}`);
           console.log(
-            `  password:     ${cokey.passwordLocked() ? green("set") : yellow("default (coco-the-best)")}`,
+            `  password:     ${cokey.passwordLocked() ? green("set") : yellow(`default (${DEFAULT_ADMIN_PASSWORD})`)}`,
           );
           console.log(
             `  credentials:  ${stats.credentials} (${stats.healthyCredentials} healthy, ${stats.cooldownCredentials} cooldown, ${stats.invalidCredentials} invalid)`,
