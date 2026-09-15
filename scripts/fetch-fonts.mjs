@@ -2,7 +2,6 @@
 
 
 import { mkdir, writeFile } from "node:fs/promises";
-import { existsSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -110,18 +109,14 @@ async function main() {
       const file = `${family.slug}-${weightSlug}${styleSlug}.woff2`;
       const target = join(OUT_DIR, file);
 
-      if (existsSync(target)) {
+      const bytes = await getFontBytes(srcUrl);
+      try {
+        await writeFile(target, bytes, { flag: "wx" });
+        downloaded += 1;
+        console.log(`+ ${file} (${(bytes.length / 1024).toFixed(1)} KiB)`);
+      } catch (error) {
+        if (error.code !== "EEXIST") throw error;
         reused += 1;
-      } else {
-        const bytes = await getFontBytes(srcUrl);
-        try {
-          await writeFile(target, bytes, { flag: "wx" });
-          downloaded += 1;
-          console.log(`+ ${file} (${(bytes.length / 1024).toFixed(1)} KiB)`);
-        } catch (error) {
-          if (error.code !== "EEXIST") throw error;
-          reused += 1;
-        }
       }
 
       declarations.push({ family, weight: weightLabel, style: group[0].style, file });
