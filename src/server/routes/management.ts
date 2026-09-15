@@ -78,8 +78,7 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     withErrors(async (request) => {
       const { id } = request.params as { id: string };
       const body = TestSecretSchema.parse(request.body);
-      const validation = await cokey.testProviderSecret(id, body);
-      return { validated: validation.ok, validation };
+      return cokey.testProviderSecret(id, body);
     }),
   );
 
