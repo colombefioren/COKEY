@@ -23,8 +23,6 @@ jobs:
         run: |
           set -euo pipefail
 
-          # A released branch only moves through an explicit release commit.
-          # Anything else is a mistake, so fail loudly and cheaply.
           if [[ "${GITHUB_EVENT_NAME}" == "release" ]]; then
             echo "Release published; branch is frozen."
             exit 0

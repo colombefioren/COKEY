@@ -9,7 +9,6 @@ export interface GlobalOptions {
   json?: boolean;
 }
 
-/** Options cac merges into every action's final argument. */
 export interface CommandContext extends GlobalOptions {
   [key: string]: unknown;
 }
@@ -18,12 +17,10 @@ export function resolveDataDir(options: GlobalOptions = {}): string {
   return options.dataDir ?? process.env.COKEY_DATA_DIR ?? join(process.cwd(), ".cokey");
 }
 
-/** Open the application without starting its background sweeper. */
 export function openCokey(options: GlobalOptions = {}): Cokey {
   return new Cokey({ dataDir: resolveDataDir(options) });
 }
 
-/** Run a function against an open application, always closing the database. */
 export async function withCokey<T>(
   options: GlobalOptions,
   fn: (cokey: Cokey) => Promise<T> | T,
@@ -36,20 +33,8 @@ export async function withCokey<T>(
   }
 }
 
-/**
- * A command handler receives the flattened positional arguments and the merged
- * options object, in that order.
- *
- * cac calls an action as `(...declaredArgs, options)`, and it always supplies
- * every declared slot (filling omitted ones with `undefined`). Normalising that
- * here means no handler has to know how many positionals were declared.
- */
 export type CommandHandler = (args: string[], context: CommandContext) => Promise<void> | void;
 
-/**
- * Register a command with the shared `--data-dir` option and uniform error
- * handling, so a failure prints one clean line instead of a stack trace.
- */
 export function defineCommand(
   cli: CAC,
   name: string,
@@ -91,7 +76,6 @@ export function defineCommand(
   });
 }
 
-/** Print JSON when `--json` was passed, otherwise a human summary. */
 export function emit(context: CommandContext, data: unknown, human: () => void): void {
   if (context.json) {
     console.log(JSON.stringify(data, null, 2));
@@ -99,8 +83,6 @@ export function emit(context: CommandContext, data: unknown, human: () => void):
   }
   human();
 }
-
-// ---- pidfile --------------------------------------------------------------
 
 export function pidFilePath(dataDir: string): string {
   return join(dataDir, "cokey.pid");
@@ -124,9 +106,7 @@ export function clearPidFile(dataDir: string): void {
   if (existsSync(path)) {
     try {
       unlinkSync(path);
-    } catch {
-      /* already gone */
-    }
+    } catch {}
   }
 }
 

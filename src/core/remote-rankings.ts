@@ -1,17 +1,6 @@
 import { z } from "zod";
 import type { RankingsView } from "../catalog/rankings.js";
 
-/**
- * Pulling one published ranking bundle over the network, on request.
- *
- * This is the only place in COKEY that makes an outbound request the user did
- * not directly ask a provider to serve, so it stays deliberately small: one
- * URL, one JSON file, fetched only when a person clicks "check for updates" —
- * never on a timer, never on startup. A bad or unreachable URL never breaks
- * the dashboard: the caller keeps serving the boards compiled into this build
- * until a fetch actually succeeds and validates.
- */
-
 const RankingSourceSchema = z.object({ label: z.string(), url: z.string() });
 
 const SkillTierSchema = z.object({
@@ -80,10 +69,9 @@ export type RankingsFetchResult =
   { ok: true; rankings: RankingsView } | { ok: false; message: string };
 
 const FETCH_TIMEOUT_MS = 8_000;
-/** A response over this size is refused outright rather than parsed. */
+
 const MAX_BYTES = 2 * 1024 * 1024;
 
-/** Fetch and validate one ranking bundle. Never throws. */
 export async function fetchRemoteRankings(
   url: string,
   timeoutMs: number = FETCH_TIMEOUT_MS,

@@ -1,38 +1,20 @@
 import type { DatabaseClient, ProviderModelRow } from "./database.js";
 
-/** The observed inventory of one provider, as stored. */
 export interface ProviderModelRecord {
   providerId: string;
   model: string;
-  /** True when the shipped catalog also lists this model. */
+
   curated: boolean;
-  /** True when the provider returned it on the most recent check. */
+
   available: boolean;
   firstSeen: number;
   lastSeen: number;
   lastChecked: number;
 }
 
-/**
- * Storage for what each provider actually serves.
- *
- * The catalog in `src/catalog` is a curated default written by hand. This table
- * is the observed truth written by asking the provider. The two are joined at
- * read time: the catalog supplies context (window size, best use), the inventory
- * supplies whether the model is still there.
- */
 export class ProviderModelsRepo {
   constructor(private readonly db: DatabaseClient) {}
 
-  /**
-   * Replace one provider's inventory with `records`.
-   *
-   * The reconciler has already decided the complete final set, including any
-   * recently-missing models that are being remembered, so a wholesale replace is
-   * both correct and far simpler than a diff. It runs in a single transaction so
-   * a crash mid-write cannot leave a provider with a half-populated inventory
-   * that would read as "everything was removed".
-   */
   replace(providerId: string, records: ProviderModelRecord[]): void {
     const deleteStmt = this.db.prepareCached(`DELETE FROM provider_models WHERE provider_id = ?`);
     const insertStmt = this.db.prepareCached(
@@ -71,7 +53,6 @@ export class ProviderModelsRepo {
     return rows.map(toRecord);
   }
 
-  /** The moment this provider's inventory was last written. */
   lastCheckedAt(providerId: string): number | undefined {
     const row = this.db
       .prepareCached(`SELECT MAX(last_checked) AS at FROM provider_models WHERE provider_id = ?`)
@@ -80,11 +61,11 @@ export class ProviderModelsRepo {
   }
 
   deleteByProvider(providerId: string): number {
-    return this.db.prepareCached(`DELETE FROM provider_models WHERE provider_id = ?`).run(providerId)
-      .changes;
+    return this.db
+      .prepareCached(`DELETE FROM provider_models WHERE provider_id = ?`)
+      .run(providerId).changes;
   }
 
-  /** Total and available model counts per provider, for list views. */
   countsByProvider(): Map<string, { total: number; available: number }> {
     const rows = this.db
       .prepareCached(

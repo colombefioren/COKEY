@@ -5,7 +5,7 @@ import { FR } from "./translations.js";
 interface LangContextValue {
   lang: Lang;
   toggleLang: () => void;
-  /** Looks a static string up in the French dictionary; English is a no-op. */
+
   t: (text: string) => string;
 }
 
@@ -15,14 +15,6 @@ const LangContext = createContext<LangContextValue>({
   t: (text) => text,
 });
 
-/**
- * The one place the site's current language lives.
- *
- * Every page reads it from here instead of receiving it as a prop, because
- * a toggle in the topbar affecting a page ten components deep is exactly the
- * case prop-drilling makes painful — every intermediate component would need
- * to accept and forward a `lang` prop it never otherwise cares about.
- */
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLang] = useState<Lang>(() => getStoredLang());
 

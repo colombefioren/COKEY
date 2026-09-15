@@ -6,7 +6,7 @@ export interface InsertCredentialInput {
   accountId?: string;
   secretEncrypted: string;
   proxyUrl?: string;
-  /** 1 when the pool picked this proxy, 0 when the user set it. */
+
   proxyAuto?: number;
   description: string;
   status: string;
@@ -15,7 +15,6 @@ export interface InsertCredentialInput {
   usage: string;
 }
 
-/** Partial update. Absent keys are left untouched; `null` clears a column. */
 export interface CredentialPatch {
   providerId?: string;
   accountId?: string | null;
@@ -90,7 +89,6 @@ export class CredentialsRepo {
       .all() as CredentialRow[];
   }
 
-  /** Fetch a set of ids in one query; used by the router on every request. */
   listByIds(ids: string[]): CredentialRow[] {
     if (ids.length === 0) return [];
     const placeholders = ids.map(() => "?").join(", ");
@@ -136,7 +134,9 @@ export class CredentialsRepo {
   }
 
   count(): number {
-    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM credentials`).get() as { n: number };
+    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM credentials`).get() as {
+      n: number;
+    };
     return row.n;
   }
 }

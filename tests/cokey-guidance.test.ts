@@ -4,14 +4,6 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { Cokey } from "../src/core/cokey.js";
 
-/**
- * `guidance()` caps the notices it hands the dashboard at 12 so a user with
- * dozens of broken keys sees the worst few, not a wall of rows - but the
- * severity summary badge is a different promise: it has to count everything,
- * because a summary computed from the already-capped list would silently
- * drop notices that got crowded out by a pile of higher-severity ones,
- * telling the user their warnings are gone when they were only hidden.
- */
 describe("Cokey.guidance", () => {
   let dir: string;
   let cokey: Cokey;

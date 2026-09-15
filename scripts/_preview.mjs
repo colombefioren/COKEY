@@ -1,5 +1,5 @@
-// Scratch previewer: renders stroked/filled paths as ASCII so a logo can be
-// checked without an image viewer. Deleted after use.
+
+
 const MODE = process.env.MODE ?? "all";
 const ONLY_LETTERS = MODE === "letters";
 const COLS = process.env.COLS ? Number(process.env.COLS) : MODE === "letters" ? 200 : 96;

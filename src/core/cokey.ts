@@ -84,9 +84,9 @@ export interface CokeyOptions {
   host?: string;
   dataDir?: string;
   logLevel?: LogLevel;
-  /** Injectable environment, primarily for tests. */
+
   env?: NodeJS.ProcessEnv;
-  /** Silence logs in tests. */
+
   silent?: boolean;
 }
 
@@ -99,11 +99,11 @@ export interface AddChainInput {
     routingStrategy?: RoutingStrategy;
     credentials: Array<{
       secret?: string;
-      /** Read the secret from this environment variable instead. */
+
       env?: string;
       description: string;
       accountId?: string;
-      /** Keep the credential even if verification fails transiently. */
+
       addAnyway?: boolean;
     }>;
   }>;
@@ -113,28 +113,18 @@ export interface ConnectProviderInput {
   secret: string;
   description: string;
   accountId?: string;
-  /** Optional egress proxy, so this key leaves through its own IP. */
+
   proxyUrl?: string;
-  /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+
   saveAnyway?: boolean;
-  /**
-   * Route the verification probe through the automatic egress pool.
-   * Defaults to true: a probe should reflect what production will do.
-   */
+
   useProxy?: boolean;
 }
 
 export interface ConnectProviderResult {
   credential: PublicCredential;
   validation: ValidationResult;
-  /**
-   * What the provider reported serving, once the key was accepted.
-   *
-   * A freshly connected key is the first moment COKEY can ask the provider what
-   * it actually serves, so the answer travels back with the connect response
-   * instead of being something the user has to go and request. Absent when the
-   * key did not verify or the provider could not be asked.
-   */
+
   models?: ModelDiscoveryReport;
 }
 
@@ -163,14 +153,13 @@ export interface FreeProviderNudge {
   suggestions: ProviderCatalogEntry[];
 }
 
-/** One usable model, ranked by this user's own probe history. */
 export interface MyModelRanking {
   providerId: string;
   displayName: string;
   model: string;
   attempts: number;
   successes: number;
-  /** 0-1. Undefined when never probed. */
+
   successRate?: number;
   avgLatencyMs?: number;
   lastCheckedAt?: number;
@@ -187,13 +176,6 @@ export class BadCredentialError extends Error {
   }
 }
 
-/**
- * The COKEY application.
- *
- * This class owns every long-lived object - database, vault, managers, router -
- * and is the single entry point used by the HTTP server, the CLI and the public
- * programmatic API. Nothing here knows about HTTP.
- */
 export class Cokey {
   readonly dataDir: string;
   readonly db: DatabaseClient;
@@ -210,7 +192,7 @@ export class Cokey {
   readonly proxyPoolRepo: ProxyPoolRepo;
   readonly apiKeysRepo: ApiKeysRepo;
   readonly apiKeys: ApiKeyService;
-  /** Automatic per-credential egress, so one provider's keys do not share an IP. */
+
   readonly proxyPool: ProxyPoolService;
 
   readonly settingsService: SettingsService;
@@ -221,18 +203,13 @@ export class Cokey {
   readonly selector: CredentialSelector;
   readonly router: RouterEngine;
   readonly history: RequestHistory;
-  /**
-   * Ranking boards fetched from a published bundle, when one has been pulled
-   * successfully. `undefined` means "serve the boards compiled into this
-   * build" — the default, and the only state on a fresh clone with no network
-   * request ever made.
-   */
+
   private remoteRankings?: RankingsView;
-  /** Where `refreshRankings()` fetches from. Overridable for a fork or a mirror. */
+
   readonly rankingsUrl: string;
-  /** Live routing narration: what is running now, and every switch. */
+
   readonly events = new EventBus();
-  /** Locally measured per-credential throughput. */
+
   readonly rates = new RateTracker();
 
   private started = false;
@@ -293,9 +270,6 @@ export class Cokey {
       env.COKEY_RANKINGS_URL ??
       "https://raw.githubusercontent.com/colombefioren/COKEY--BUNDLE/main/content/rankings.json";
 
-    // A pool supplied through the environment is seeded once; the UI can add,
-    // disable and remove entries afterwards without touching the database by
-    // hand.
     this.proxyPool.addMany(env.COKEY_PROXY_POOL);
     this.router = new RouterEngine(
       this.chains,
@@ -314,14 +288,11 @@ export class Cokey {
     return this.settingsService.get();
   }
 
-  // ---- lifecycle ----------------------------------------------------------
-
   start(): void {
     if (this.started) return;
     this.started = true;
     this.syncProxyAssignments();
 
-    // Expire elapsed cooldowns so the UI and router always see fresh state.
     this.sweeper = setInterval(() => {
       try {
         const changed = this.credentials.refreshCooldowns();
@@ -348,25 +319,14 @@ export class Cokey {
     this.started = false;
   }
 
-  // ---- catalog reference data -----------------------------------------------
-
-  /** The dossier for a provider, from the catalog compiled into this build. */
   providerDossier(providerId: string): ProviderDossier {
     return providerDossier(providerId);
   }
 
-  /** The ranking boards: a published bundle if one was fetched, else compiled. */
   rankings(): RankingsView {
     return this.remoteRankings ?? compiledRankingsView();
   }
 
-  /**
-   * Fetch and validate the ranking bundle at `rankingsUrl`.
-   *
-   * Only runs when asked — there is no timer and no fetch on startup. A
-   * failure never touches what `rankings()` returns; the previous boards
-   * (published or compiled) keep serving.
-   */
   async refreshRankings(): Promise<RankingsFetchResult> {
     const result = await fetchRemoteRankings(this.rankingsUrl);
     if (result.ok) {
@@ -380,13 +340,9 @@ export class Cokey {
     return result;
   }
 
-  // ---- providers ----------------------------------------------------------
-
-  /** Catalog entries annotated with the user's connection state. */
   providerStatuses(): ProviderStatus[] {
     const counts = this.credentials.countsByProvider();
     return this.providers.getCatalog().map((entry) => {
-      // Keys connected under a collapsed id still count for the surviving one.
       const aliases = [entry.id];
       for (const [alias, target] of PROVIDER_ALIASES) {
         if (target === entry.id) aliases.push(alias);
@@ -409,18 +365,6 @@ export class Cokey {
     });
   }
 
-  /**
-   * Ask a provider what it currently serves, and reconcile that with what COKEY
-   * believed it served.
-   *
-   * This is the only place the curated catalog meets reality. The catalog is a
-   * hand-written default and is right most of the time; a model listing is right
-   * now. When they disagree the listing wins, because a model the provider has
-   * retired cannot serve a request no matter what a document says.
-   *
-   * Failure is always reported rather than thrown, and never destroys the
-   * inventory already held — see the empty-listing guard below for why.
-   */
   async refreshProviderModels(
     providerId: string,
     options: { credentialId?: string; retainMissingMs?: number; timeoutMs?: number } = {},
@@ -471,10 +415,6 @@ export class Cokey {
     const discovered = normaliseModelIds(eligible.map((model) => model.id));
 
     if (!isTrustworthyListing(discovered)) {
-      // A 200 with an empty list is not evidence that a provider stopped serving
-      // everything. Storing it would detach every model of this provider from
-      // every chain that uses one, so it is refused and the previous inventory
-      // is left exactly as it was.
       return refuse(`${displayName} returned no models — inventory left untouched`, latencyMs);
     }
 
@@ -500,8 +440,6 @@ export class Cokey {
       ...changes,
     };
 
-    // Only a real change is worth interrupting the UI for. A periodic sweep that
-    // found what it expected should be silent.
     const touched = changes.added.length + changes.restored.length + changes.removed.length;
     if (touched > 0) {
       this.events.emit({
@@ -532,21 +470,6 @@ export class Cokey {
     return report;
   }
 
-  /**
-   * Refresh every provider that has at least one connected key.
-   *
-   * Bounded concurrency, not fully sequential: a handful of these are
-   * third-party endpoints being asked an administrative question, and firing
-   * all of them at once is the behaviour that gets a free tier rate-limited
-   * for reasons that have nothing to do with the user's traffic. But strictly
-   * one-at-a-time meant a single unresponsive provider — a free tier that
-   * hangs rather than errors — held up every provider behind it for the full
-   * completion timeout (120s), which made a "re-check everything" click feel
-   * like it had frozen. A small pool bounds the fan-out, and a much shorter
-   * per-call timeout is enough for a cheap `GET /models`: a provider that
-   * cannot answer that in a few seconds is not one worth waiting two minutes
-   * on when there are others still to check.
-   */
   async refreshAllProviderModels(
     options: { retainMissingMs?: number; concurrency?: number } = {},
   ): Promise<ModelDiscoveryReport[]> {
@@ -571,13 +494,6 @@ export class Cokey {
     return reports;
   }
 
-  /**
-   * Refresh a provider's inventory in the background.
-   *
-   * Used where the refresh is a bonus rather than the point of the action —
-   * re-verifying an existing key, for instance — so the response is not held up
-   * by a second round trip to the provider.
-   */
   private scheduleModelDiscovery(providerId: string, credentialId?: string): void {
     void this.refreshProviderModels(providerId, { credentialId }).catch((error) => {
       this.logger.warn("model discovery failed", {
@@ -587,7 +503,6 @@ export class Cokey {
     });
   }
 
-  /** Observed model inventory, grouped by provider. */
   private inventoryByProvider(): Map<string, ProviderModelRecord[]> {
     const map = new Map<string, ProviderModelRecord[]>();
     for (const record of this.providerModelsRepo.listAll()) {
@@ -598,12 +513,6 @@ export class Cokey {
     return map;
   }
 
-  /**
-   * Connect a credential, verifying it first.
-   *
-   * The credential is only persisted as healthy when the provider accepts it.
-   * An outright rejection rolls the row back so a typo never lingers in the UI.
-   */
   async connectProvider(
     providerId: string,
     input: ConnectProviderInput,
@@ -623,8 +532,6 @@ export class Cokey {
       proxyAuto: false,
     });
 
-    // A key only becomes independent of its siblings once it leaves through
-    // its own exit IP, so the pool is re-planned the moment a key appears.
     this.syncProxyAssignments();
 
     const adapter = this.providers.get(providerId);
@@ -649,12 +556,8 @@ export class Cokey {
     ) {
       this.credentials.putInCooldown(credential.id);
     } else if (validation.classification === "network_error") {
-      // Transient: keep it, but clearly unverified. The caller decides whether
-      // to keep it ("Retry" or "Add anyway").
       this.credentials.setStatus(credential.id, "unverified");
     } else if (input.saveAnyway) {
-      // Explicit override: the user chose to save this key regardless of the
-      // probe verdict. Keep it, clearly marked unverified.
       this.credentials.setStatus(credential.id, "unverified");
     } else {
       this.credentials.delete(credential.id);
@@ -671,10 +574,6 @@ export class Cokey {
       latencyMs: validation.latencyMs,
     });
 
-    // A key that just verified is the first moment this provider can be asked
-    // what it really serves. Awaited so the answer can travel back with the
-    // response, but never fatal: a provider that cannot list its models still
-    // has a working key, and the catalog remains the fallback truth.
     let models: ModelDiscoveryReport | undefined;
     if (validation.ok) {
       try {
@@ -694,14 +593,6 @@ export class Cokey {
     };
   }
 
-  /**
-   * Probe a raw secret without persisting anything.
-   *
-   * Backs the separate "Test" button: the verdict appears in the UI, and the
-   * key is only stored when the user then confirms with "Save". This is the
-   * mirror of `connectProvider` that never writes a row and never throws for a
-   * rejected key - rejection is reported as `ok: false`.
-   */
   async testProviderSecret(
     providerId: string,
     input: { secret: string; accountId?: string; model?: string; useProxy?: boolean },
@@ -709,8 +600,6 @@ export class Cokey {
     const catalog = this.providers.findCatalogEntry(providerId);
     if (!catalog) throw new Error(`Unknown provider: ${providerId}`);
 
-    // A transient credential drives the same probe paths as a stored row,
-    // without ever touching the vault or the database.
     const credential: Credential = {
       id: "probe",
       providerId,
@@ -724,9 +613,6 @@ export class Cokey {
       updatedAt: Date.now(),
     };
 
-    // The probe leaves through the exit this key would get from the pool, so
-    // "Test" reflects what production requests will actually do. An explicit
-    // proxyUrl on the input is honored first.
     const probeExit = this.resolveProbeProxy(credential, input.useProxy !== false);
     if (probeExit) credential.proxyUrl = probeExit;
 
@@ -734,7 +620,6 @@ export class Cokey {
     return this.providers.get(providerId).validateCredential(credential);
   }
 
-  /** Re-run verification for a stored credential. */
   async testCredential(credentialId: string): Promise<ValidationResult> {
     const credential = this.credentials.getOrThrow(credentialId);
     const adapter = this.providers.get(credential.providerId);
@@ -750,8 +635,7 @@ export class Cokey {
         credentialId: credential.id,
         credentialDescription: credential.description,
       });
-      // A key that just came back to life may have a provider behind it that
-      // changed its model list while the key was down.
+
       this.scheduleModelDiscovery(credential.providerId, credential.id);
     } else if (validation.classification === "credential_invalid") {
       this.credentials.markInvalid(credential.id);
@@ -784,12 +668,6 @@ export class Cokey {
     return validation;
   }
 
-  /**
-   * Prove an entry's model is operational with one of its own keys.
-   *
-   * The best-ranked bound credential is probed against the entry's exact model,
-   * and the verdict updates that credential's state so the result is durable.
-   */
   async testEntry(entryId: string): Promise<ValidationResult & { credentialId?: string }> {
     const entry = this.chains.getEntryOrThrow(entryId);
     const credentials = this.credentials.listByIds(entry.credentialIds);
@@ -820,17 +698,11 @@ export class Cokey {
     return { ...validation, credentialId: credential.id };
   }
 
-  /**
-   * Point a credential at a different egress proxy, or back to direct traffic.
-   *
-   * Changing the exit IP mid-flight is safe: the next request picks up the new
-   * dispatcher, while in-flight requests keep the connection they opened.
-   */
   setCredentialProxy(credentialId: string, proxyUrl: string | null): PublicCredential {
     const credential = this.credentials.getOrThrow(credentialId);
-    // Validate before persisting so a typo cannot silently disable a key.
+
     const parsed = parseProxyUrl(proxyUrl);
-    // A hand-set proxy is permanent: the pool must never move this key again.
+
     this.credentials.markProxyManual(credentialId, parsed ? parsed.href : null);
 
     this.events.emit({
@@ -848,17 +720,6 @@ export class Cokey {
     return this.credentials.toPublic(this.credentials.getOrThrow(credentialId));
   }
 
-  // ---- automatic egress pool ----------------------------------------------
-
-  /**
-   * Re-plan every pool-owned credential so same-provider keys never share an
-   * exit IP.
-   *
-   * Called after a key is added or removed and whenever the pool changes. It
-   * is deliberately cheap and idempotent: credentials whose proxy already
-   * matches the plan are left untouched, and hand-set proxies are skipped
-   * entirely.
-   */
   syncProxyAssignments(): number {
     if (!this.settings.autoProxy) return 0;
 
@@ -872,8 +733,7 @@ export class Cokey {
     for (const credential of this.credentials.listAll()) {
       const target = byId.get(credential.id);
       if (!target) continue;
-      // Only pool-owned credentials move. `proxyAuto` is false for a key the
-      // user pinned, and for one that has never been assigned.
+
       if (credential.proxyUrl && !credential.proxyAuto) continue;
       if (credential.proxyUrl === target.proxyUrl) continue;
       this.credentials.setAutoProxyUrl(credential.id, target.proxyUrl);
@@ -903,15 +763,6 @@ export class Cokey {
     );
   }
 
-  /**
-   * Resolve the exit IP a probe or test request should leave through.
-   *
-   * Mirrors `syncProxyAssignments`, but on a transient credential that has not
-   * been persisted yet: an explicit `proxyUrl` wins, then the pool slot this
-   * key would land on (when the pool is enabled and has entries), otherwise
-   * nothing - meaning the request goes direct. The probe stays direct when the
-   * caller opted out with `useProxy: false`.
-   */
   private resolveProbeProxy(credential: Credential, useProxy: boolean): string | undefined {
     if (credential.proxyUrl) return credential.proxyUrl;
     if (!useProxy || !this.settings.autoProxy) return undefined;
@@ -924,33 +775,18 @@ export class Cokey {
     return slot?.proxyUrl;
   }
 
-  /** Add one proxy to the pool and re-plan immediately. */
   addProxyToPool(url: string): ProxyPoolView[] {
     this.proxyPool.add(url);
     this.syncProxyAssignments();
     return this.listProxyPool();
   }
 
-  /** Add many proxies from one pasted blob, then re-plan once. */
   addProxiesToPool(rawList: string): { added: number; skipped: number; entries: ProxyPoolView[] } {
     const result = this.proxyPool.addMany(rawList);
     this.syncProxyAssignments();
     return { ...result, entries: this.listProxyPool() };
   }
 
-  /**
-   * Fetch Proxifly's free public list and fold it into the egress pool.
-   *
-   * The list is a static CDN-hosted file, so there is no API key involved and
-   * nothing to be charged. `limit` caps how many entries a single click can
-   * add (the file is ~60 KB today). The pool is re-planned afterwards so any
-   * pool-owned credentials land on their new exits immediately.
-   *
-   * By default every candidate is probed first and only working exits are
-   * imported: free lists die fast, and importing 2,400 addresses where only a
-   * handful answer just fills the pool with timeouts. Pass `verify: false` to
-   * go back to importing the whole file untouched.
-   */
   async addProxiflyFreeList(
     limit?: number,
     options: { verify?: boolean; concurrency?: number; timeoutMs?: number } = {},
@@ -966,9 +802,6 @@ export class Cokey {
     const raw = await fetchProxiflyFreeList();
 
     if (options.verify !== false) {
-      // Probe candidates first; only working exits land in the pool. Parse a
-      // wider net than the target so enough live ones can be found, then stop
-      // probing once the cap is reached instead of timing out on every corpse.
       const target = limit ?? 100;
       const candidateCap = Math.min(2_000, Math.max(target * 10, 200));
       const { urls } = parseProxiflyList(raw, candidateCap);
@@ -1012,14 +845,6 @@ export class Cokey {
     };
   }
 
-  /**
-   * Probe every enabled pool exit and drop the ones that no longer answer.
-   *
-   * Sweeping the pool periodically is the cheapest way to keep it honest: free
-   * proxies open and die on a schedule, and a stale exit just turns valid keys
-   * into timeouts. `prune: false` reports without deleting, so a caller can
-   * preview a sweep before committing to it.
-   */
   async verifyProxyPool(
     options: {
       concurrency?: number;
@@ -1052,16 +877,6 @@ export class Cokey {
     return this.listProxyPool();
   }
 
-  /**
-   * Pin a credential to a specific pool entry, or hand it back to the pool.
-   *
-   * The browser only ever sees a pool entry's `host:port` label, never the
-   * proxy's own credentials, so the UI assigns by entry id and the URL is
-   * resolved here on the server. A pinned key is marked manual, which is what
-   * tells `syncProxyAssignments` to leave it alone from now on; passing `null`
-   * clears the pin and immediately re-runs the pool so the key lands on an exit
-   * again.
-   */
   assignCredentialProxy(credentialId: string, poolId: string | null): PublicCredential {
     if (poolId === null) {
       this.setCredentialProxy(credentialId, null);
@@ -1088,15 +903,6 @@ export class Cokey {
       .map((credential) => ({ id: credential.id, providerId: credential.providerId }));
   }
 
-  // ---- model probe ---------------------------------------------------------
-
-  /**
-   * Prove one provider/model pair works right now, through one real request.
-   *
-   * This is what the catalog's play button calls. A 200 means the model and the
-   * key agree; anything else is returned verbatim so the UI can say why rather
-   * than showing a generic failure.
-   */
   async probeModel(
     providerId: string,
     model: string,
@@ -1200,9 +1006,7 @@ export class Cokey {
         };
         const content = body.choices?.[0]?.message?.content;
         if (typeof content === "string") reply = content.slice(0, 200);
-      } catch {
-        // A 200 with a body we cannot parse is still a working model.
-      }
+      } catch {}
 
       this.credentials.markVerified(credential.id);
       this.events.emit({
@@ -1260,7 +1064,6 @@ export class Cokey {
     }
   }
 
-  /** Log one play-button attempt so "My models" can rank on what actually happened. */
   private recordModelProbe(
     providerId: string,
     model: string,
@@ -1280,17 +1083,6 @@ export class Cokey {
     });
   }
 
-  /**
-   * The user's own models, ranked by their own probe history.
-   *
-   * Scoped to models the user can actually use right now (their provider has
-   * a healthy key), which is what makes this a *usable* ranking rather than a
-   * curated opinion: a model with a five-star community verdict is worth
-   * nothing here if this user's key cannot reach it. Within that scope, a
-   * model that has answered every time it was asked, quickly, outranks one
-   * that has not — and a model never probed sorts last, clearly marked, since
-   * there is nothing yet to rank it on.
-   */
   myModelRankings(): MyModelRanking[] {
     const statsByKey = new Map(
       this.modelProbesRepo.allStats().map((stats) => [`${stats.providerId} ${stats.model}`, stats]),
@@ -1316,8 +1108,6 @@ export class Cokey {
       }
     }
 
-    // Tested models first — best success rate, then fastest, ties broken by
-    // most recently checked. Untested models keep catalog order at the tail.
     return rankings.sort((a, b) => {
       const aTested = a.attempts > 0;
       const bTested = b.attempts > 0;
@@ -1331,7 +1121,6 @@ export class Cokey {
     });
   }
 
-  /** The live status payload: current route plus recent routing events. */
   liveStatus(limit = 30): {
     route: ReturnType<EventBus["routeSnapshot"]>;
     recent: CokeyEvent[];
@@ -1344,21 +1133,11 @@ export class Cokey {
     };
   }
 
-  /**
-   * Every curated free model, annotated with whether the user can actually use
-   * it right now.
-   *
-   * A model is only selectable once its provider has at least one working key;
-   * showing the rest greyed out is what makes the catalog honest rather than a
-   * wish list.
-   */
   modelCatalog(): ModelCatalogView[] {
     const counts = new Map<string, { total: number; healthy: number }>();
     const working = new Map<string, string[]>();
     const inventory = this.inventoryByProvider();
     for (const credential of this.credentials.listAll()) {
-      // Fold a collapsed id onto the entry that survived deduplication, so a
-      // key connected as `aion-labs` still makes `aion` usable.
       const providerId = PROVIDER_ALIASES.get(credential.providerId) ?? credential.providerId;
 
       if (credential.status === "healthy") {
@@ -1372,12 +1151,6 @@ export class Cokey {
     return modelAvailability(this.providers.getBuiltInCatalog(), counts, working, inventory);
   }
 
-  /**
-   * The observed model inventory for one provider, curated models annotated.
-   *
-   * Powers the provider detail view: what COKEY believed, what the provider last
-   * said, and which of the two disagrees.
-   */
   providerModelInventory(providerId: string): {
     providerId: string;
     displayName: string;
@@ -1393,22 +1166,11 @@ export class Cokey {
     };
   }
 
-  /**
-   * What the user should do next, ordered by how much it matters.
-   *
-   * This method only assembles a snapshot of live state; the judgement about
-   * which conditions are worth interrupting someone for lives in the pure rules
-   * in `guidance.ts`. Keeping the query and the policy apart is what makes the
-   * thresholds testable — and there are a lot of thresholds.
-   */
   guidance(): {
     notices: GuidanceNotice[];
     summary: Record<GuidanceSeverity, number>;
     checkedAt: number;
   } {
-    // The summary badge must count every notice, not just the ones that fit
-    // on the dashboard: deriving it from an already-capped list would let a
-    // pile of critical notices silently hide warn/info counts behind the cap.
     const all = deriveGuidance(this.guidanceInput(), Infinity);
     const NOTICE_DISPLAY_CAP = 12;
     return {
@@ -1418,7 +1180,6 @@ export class Cokey {
     };
   }
 
-  /** Flatten the gateway's state into the plain shape the guidance rules read. */
   private guidanceInput(): GuidanceInput {
     const now = Date.now();
     const statuses = this.providerStatuses();
@@ -1499,12 +1260,6 @@ export class Cokey {
     };
   }
 
-  // ---- chains -------------------------------------------------------------
-
-  /**
-   * Programmatic chain creation, mirroring the UI flow: every credential is
-   * verified before the entry that references it is persisted.
-   */
   async addChain(input: AddChainInput): Promise<{ chainId: string; entryIds: string[] }> {
     const existing = this.chains.getChainByAlias(input.alias);
     const chain =
@@ -1594,7 +1349,6 @@ export class Cokey {
         entryIds.push(entry.id);
       }
     } catch (error) {
-      // Roll back this call's side effects so a failed add leaves no residue.
       for (const id of createdCredentials) {
         this.chains.detachCredentialEverywhere(id);
         this.credentials.delete(id);
@@ -1605,12 +1359,6 @@ export class Cokey {
     return { chainId: chain.id, entryIds };
   }
 
-  /**
-   * Verify a credential specifically for the model it will serve.
-   *
-   * Providers that validate per model get a one-token ping against the chosen
-   * model; the rest are checked with a model listing, which is cheaper.
-   */
   async verifyCredential(
     providerId: string,
     model: string,
@@ -1620,13 +1368,9 @@ export class Cokey {
     const catalog = this.providers.findCatalogEntry(providerId);
     const adapter = this.providers.get(providerId);
 
-    // Probe leaves through the exit this key would get in production. The pool
-    // reassignment happens after connect, so it cannot be relied on here.
     const exit = this.resolveProbeProxy(credential, useProxy);
     const probeCredential = exit !== undefined ? { ...credential, proxyUrl: exit } : credential;
 
-    // Always try a real chat request against the specific model so that
-    // quota exhaustion and model availability are both tested.
     if (catalog) {
       const started = Date.now();
       const now = Date.now();
@@ -1685,13 +1429,10 @@ export class Cokey {
     };
   }
 
-  // ---- routing ------------------------------------------------------------
-
   route(chainAlias: string, request: ChatCompletionRequest): Promise<RouteResult> {
     return this.router.route(chainAlias, request);
   }
 
-  /** Chain aliases plus every model reachable through an enabled entry. */
   listModelIds(): string[] {
     const ids = new Set<string>();
     for (const chain of this.chains.listChains()) {
@@ -1703,8 +1444,6 @@ export class Cokey {
     }
     return [...ids].sort();
   }
-
-  // ---- custom endpoints ---------------------------------------------------
 
   addCustomEndpoint(input: CustomEndpointInput) {
     const guard = assertSafeEndpoint(input.baseUrl, {
@@ -1740,15 +1479,6 @@ export class Cokey {
     this.providers.syncCustomEndpoints(this.customEndpointsRepo.list());
   }
 
-  // ---- reporting ----------------------------------------------------------
-
-  /**
-   * Usage view: per provider → per key → per model, plus the live route.
-   *
-   * Token counts come from the per-day rollup; remaining quota comes from the
-   * last provider response (may be absent - never invented). `now` is the route
-   * the router is on, so the UI can show which node/sub-key is serving.
-   */
   usageView(): {
     now: ReturnType<EventBus["routeSnapshot"]>;
     today: string;
@@ -1931,11 +1661,6 @@ export class Cokey {
     };
   }
 
-  /** The local "incite" check: how many advertised-free providers are connected,
-   *  and which ones would widen failover coverage.
-   *
-   * Entirely local - there is no telemetry behind this.
-   */
   freeProviderNudge(): FreeProviderNudge {
     const counts = this.credentials.countsByProvider();
     const free = this.providers.getCatalog().filter((entry) => entry.freeTier.advertised);
@@ -1947,8 +1672,6 @@ export class Cokey {
       suggestions: free.filter((entry) => !connected.includes(entry)),
     };
   }
-
-  // ---- management auth ------------------------------------------------------
 
   verifyPassword(password: string): boolean {
     return this.settingsService.verifyPassword(password);
@@ -1985,13 +1708,6 @@ function readEnvSecret(name: string | undefined): string | undefined {
   return value && value.trim() ? value.trim() : undefined;
 }
 
-/**
- * One line describing a model inventory change.
- *
- * Written to name the provider first, because the notification appears in a bar
- * that may be showing a dozen other providers' news, and "3 models added" is
- * useless without knowing whose.
- */
 function describeModelChange(
   displayName: string,
   changes: { added: string[]; restored: string[]; removed: string[] },

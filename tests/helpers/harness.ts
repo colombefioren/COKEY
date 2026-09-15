@@ -20,9 +20,12 @@ import type {
 } from "../../src/core/providers/adapter.js";
 import type { ProviderRegistry } from "../../src/core/providers/registry.js";
 import { RouterEngine } from "../../src/core/router/engine.js";
-import { DEFAULT_FALLBACK_POLICY, type Credential, type FallbackPolicy } from "../../src/core/types.js";
+import {
+  DEFAULT_FALLBACK_POLICY,
+  type Credential,
+  type FallbackPolicy,
+} from "../../src/core/types.js";
 
-/** A scripted upstream answer. `status` below 300 (or absent) means success. */
 export interface StubResponse {
   status?: number;
   body?: unknown;
@@ -38,12 +41,6 @@ export interface StubCall {
   proxyUrl?: string;
 }
 
-/**
- * A provider adapter whose every answer is dictated by a test.
- *
- * It records the exact order credentials were tried, which is what the routing
- * invariant is actually about.
- */
 export class StubAdapter implements ProviderAdapter {
   readonly id = "stub";
   readonly apiStyle = "openai";
@@ -115,7 +112,6 @@ export class StubAdapter implements ProviderAdapter {
   }
 }
 
-/** Minimal registry: the router only ever asks for an adapter by provider id. */
 export class StubRegistry {
   private readonly adapters = new Map<string, StubAdapter>();
 
@@ -145,7 +141,6 @@ export interface Harness {
   cleanup(): void;
 }
 
-/** Build an isolated COKEY core around a throwaway data directory. */
 export function createHarness(policyOverrides: Partial<FallbackPolicy> = {}): Harness {
   const dir = mkdtempSync(join(tmpdir(), "cokey-test-"));
   const db = new DatabaseClient(join(dir, "cokey.db"));
@@ -190,7 +185,6 @@ export function createHarness(policyOverrides: Partial<FallbackPolicy> = {}): Ha
   };
 }
 
-/** Convenience: create a credential with a readable label. */
 export function addCredential(
   harness: Harness,
   providerId: string,

@@ -1,37 +1,17 @@
-/**
- * The free-model catalog.
- *
- * One entry per model that is currently available on a provider's
- * self-replenishing free tier. This is *data*, exactly like the provider
- * catalog: the Add-Chain picker renders it, and the API only lets a model be
- * selected when its provider has a working key in the pool.
- *
- * Fields mirror what a user actually chooses on:
- *   - `context`        the advertised window (`256K`, `1M`, …)
- *   - `bestFor`        Code | General | Reasoning | Vision | Agent | Fallback
- *   - `latencySeconds` measured time to first token, and therefore how good a
- *                      model is as the *first* entry of a chain
- *
- * Keep this list to models a provider genuinely serves for free. A model that
- * starts costing money does not belong here, even if it still answers.
- */
 export interface ModelSpec {
-  /** Model id exactly as the provider expects it in a request. */
   id: string;
-  /** Advertised context window. */
+
   context?: string;
-  /** What the model is best at. */
+
   bestFor?: string;
-  /** Measured latency to first token, in seconds. */
+
   latencySeconds?: number;
 }
 
-/** Terse constructor so the catalog below stays readable. */
 function m(id: string, context?: string, bestFor?: string, latencySeconds?: number): ModelSpec {
   return { id, context, bestFor, latencySeconds };
 }
 
-/** Free models per provider id, in the order the catalogue lists them. */
 export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
   "agnes-ai": [
     m("agnes-2.0-flash", "512K", "General", 0.65),
@@ -485,18 +465,11 @@ export const MODELS_BY_PROVIDER: Record<string, ModelSpec[]> = {
   ],
 };
 
-/** Total number of curated free models across every provider. */
 export const MODEL_CATALOG_SIZE = Object.values(MODELS_BY_PROVIDER).reduce(
   (total, models) => total + models.length,
   0,
 );
 
-/**
- * Look up the curated models for a provider.
- *
- * Duplicate rows for one model id are collapsed: the same model listed twice is
- * one model, and the first row is the curated one.
- */
 export function modelsForProvider(providerId: string): ModelSpec[] {
   const models = MODELS_BY_PROVIDER[providerId] ?? [];
   if (models.length <= 1) return models;

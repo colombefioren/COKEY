@@ -48,8 +48,7 @@ describe("ModelProbesRepo", () => {
     expect(stats.attempts).toBe(3);
     expect(stats.successes).toBe(2);
     expect(stats.successRate).toBeCloseTo(2 / 3);
-    // Only the two successful attempts (400ms, 600ms) count toward latency —
-    // the failed request's 9000ms never should.
+
     expect(stats.avgLatencyMs).toBe(500);
     expect(stats.lastCheckedAt).toBe(3);
     expect(stats.lastOk).toBe(true);

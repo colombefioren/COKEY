@@ -23,7 +23,6 @@ import type {
   ProviderError,
 } from "../types.js";
 
-/** One recorded attempt, surfaced in error payloads and the request history. */
 export interface AttemptLog {
   chainAlias: string;
   entryId: string;
@@ -48,16 +47,9 @@ export interface RouteResult {
   fallback: boolean;
   fallbackReason?: string;
   attempts: AttemptLog[];
-  /** Identity used when translating a non-OpenAI upstream response. */
+
   context: TransformContext;
-  /**
-   * Frees this credential's in-flight slot. The credential stays counted as
-   * busy - so the "no thundering herd" load balancing in `CredentialSelector`
-   * reflects reality - until the caller has actually finished reading
-   * `response`'s body, not merely until its headers arrived. Call exactly
-   * once, after the body (streamed or not) is fully drained or the request
-   * gives up on it.
-   */
+
   release: () => void;
 }
 
@@ -72,21 +64,12 @@ export class AllChainsExhaustedError extends Error {
   }
 }
 
-/**
- * Everything needed to narrate a request-level failure to a client.
- *
- * Attached to the routing errors the gateway throws, so an error response can
- * reuse the same `X-Cokey-*` transparency headers that a success does — the
- * coding tool can read which provider failed the same way it reads which one
- * succeeded.
- */
 export interface RouteErrorInfo {
   chainAlias?: string;
   fallback: boolean;
   fallbackReason?: string;
 }
 
-/** A request-shaped failure. Rotation would fail identically, so we stop. */
 export class RequestScopedError extends Error {
   constructor(
     readonly classification: ErrorClassification,
@@ -113,13 +96,11 @@ export class ChainDisabledError extends Error {
 }
 
 export interface RouterOptions {
-  /** Pause between bounded retries of the same credential. */
   retryDelayMs?: number;
-  /** Injectable sleep so tests never actually wait. */
+
   sleep?: (ms: number) => Promise<void>;
 }
 
-/** Mutable bookkeeping for a single route() call. */
 interface RouteState {
   attempts: AttemptLog[];
   fallback: boolean;
@@ -128,26 +109,8 @@ interface RouteState {
 }
 
 type EntryOutcome =
-  | { kind: "success"; result: RouteResult }
-  /** This entry is done; the caller may try the next one. */
-  | { kind: "next_entry" }
-  /** Fallback is disabled or impossible; stop routing immediately. */
-  | { kind: "stop" };
+  { kind: "success"; result: RouteResult } | { kind: "next_entry" } | { kind: "stop" };
 
-/**
- * The heart of COKEY.
- *
- * Routing priority is, without exception:
- *
- *     entry → credential → next credential → next entry
- *
- * **Invariant:** a lower-priority entry is never attempted while a
- * higher-priority entry still has an eligible, unattempted credential for the
- * current request. The only early exit from an entry is a definitive
- * request-level error (`context_too_large`, `invalid_request`), which aborts
- * routing entirely instead of rotating, or a `model_unavailable` verdict, which
- * skips the entry's remaining credentials because the model itself is wrong.
- */
 export class RouterEngine {
   private readonly retryDelayMs: number;
   private readonly sleep: (ms: number) => Promise<void>;
@@ -159,9 +122,9 @@ export class RouterEngine {
     private readonly cooldown: CooldownManager,
     private readonly selector: CredentialSelector,
     private readonly logger: Logger,
-    /** Live feedback for the UI: route progress and key/model switches. */
+
     private readonly events: EventBus,
-    /** Per-credential throughput gauge. */
+
     private readonly rates: RateTracker,
     private readonly policy: () => FallbackPolicy,
     options: RouterOptions = {},
@@ -170,7 +133,6 @@ export class RouterEngine {
     this.sleep = options.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
   }
 
-  /** Resolve a chain alias, or throw if unknown or disabled. */
   resolveChain(alias: string): Chain {
     const chain = this.chains.getChainByAlias(alias);
     if (!chain) throw new ChainNotFoundError(alias);
@@ -241,7 +203,6 @@ export class RouterEngine {
     });
   }
 
-  /** Walk every eligible credential of a single entry, in selector order. */
   private async tryEntry(
     chainAlias: string,
     entry: ChainEntry,
@@ -262,15 +223,12 @@ export class RouterEngine {
       );
       if (bound.length === 0) return { kind: "next_entry" };
 
-      // Every bound credential is cooling down, invalid or disabled.
       state.fallback = true;
       state.fallbackReason ??= "cooldown";
       return policy.credentialFallback ? { kind: "next_entry" } : { kind: "stop" };
     }
 
     for (const candidate of ordered) {
-      // Re-read immediately before use: a concurrent request may have cooled
-      // this credential down since the order was computed.
       const credential = this.credentials.get(candidate.id);
       if (!credential || this.cooldown.isInCooldown(credential)) {
         state.attempts.push(
@@ -299,9 +257,7 @@ export class RouterEngine {
       });
 
       this.selector.acquire(entry.id, credential.id);
-      // `attemptWithRetries` never throws - a failed `adapter.send` becomes a
-      // `{ ok: false }` result - so releasing is always reached from here on,
-      // whichever branch below returns.
+
       const outcome = await this.attemptWithRetries(
         adapter,
         entry,
@@ -421,15 +377,10 @@ export class RouterEngine {
       ) {
         state.fallback = true;
         state.fallbackReason ??= reasonFor(classification);
-        // The model is wrong, unavailable, or can't handle this request:
-        // skip straight to the next entry — a different model may work.
+
         return policy.entryFallback ? { kind: "next_entry" } : { kind: "stop" };
       }
 
-      // Side effects (cooldown, marking a credential invalid) happen regardless
-      // of the fallback policy — disabling credential fallback only means the
-      // router won't rotate to another key, not that this one should be tried
-      // again on the very next request as if nothing happened.
       this.applyClassification(credential, classification, outcome.error, state);
 
       if (!policy.credentialFallback) {
@@ -440,7 +391,6 @@ export class RouterEngine {
     return { kind: "next_entry" };
   }
 
-  /** Side effects for a credential-scoped failure, then the caller rotates. */
   private applyClassification(
     credential: Credential,
     classification: ErrorClassification,
@@ -499,11 +449,6 @@ export class RouterEngine {
     }
   }
 
-  /**
-   * Attempt one credential, retrying only transient failures and only up to the
-   * configured bound. Request-shaped and credential-shaped errors are returned
-   * to the caller immediately.
-   */
   private async attemptWithRetries(
     adapter: ProviderAdapter,
     entry: ChainEntry,
@@ -556,18 +501,9 @@ export class RouterEngine {
         ? adapter.parseQuotaResponse(response)
         : parseQuota(response.headers);
       if (quota.available) this.credentials.setQuota(credential.id, quota);
-    } catch {
-      // Quota parsing is cosmetic; never fail a successful request for it.
-    }
+    } catch {}
   }
 
-  /**
-   * Publish the credential about to serve, and flag a switch when the target
-   * differs from the previous attempt of this route.
-   *
-   * This is what powers the "key changed" / "model changed" notifications: a
-   * client cannot see a rotation happen, so the gateway narrates it.
-   */
   private announceAttempt(
     chainAlias: string,
     entry: ChainEntry,
@@ -625,9 +561,6 @@ export class RouterEngine {
         data: { changedModel, changedCredential, changedProvider },
       });
 
-      // A second, plainly worded event for clients that want to raise a
-      // notification rather than an error. Editor integrations show this as an
-      // informational toast: the request still succeeds, only the path moved.
       this.events.emit({
         type: "chain.state",
         level: "info",

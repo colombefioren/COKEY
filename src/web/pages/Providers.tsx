@@ -39,14 +39,6 @@ const KIND_LABEL: Record<ProviderDossier["kind"], string> = {
   local: "Local runtime",
 };
 
-/**
- * The provider browser.
- *
- * A card answers the two questions a catalogue normally dodges: who runs this
- * and from where, and is it worth depending on. Providers are grouped by
- * verdict rather than alphabetically, because "recommended" is the only ordering
- * a person actually needs when picking their first three keys.
- */
 export function Providers({
   refreshKey,
   onChanged,
@@ -66,13 +58,7 @@ export function Providers({
   const [connectedOnly, setConnectedOnly] = useState(false);
   const [connecting, setConnecting] = useState<ProviderStatus | null>(null);
   const [custom, setCustom] = useState<ProviderCatalogEntry[]>([]);
-  /**
-   * The observed model inventory, joined onto the cards.
-   *
-   * Fetched from the same `/api/models` the Models screen uses rather than
-   * duplicated onto the provider row, so there is one source of truth for what a
-   * provider serves and the two screens can never disagree.
-   */
+
   const [inventory, setInventory] = useState<Map<string, ModelCatalogView>>(new Map());
   const [refreshing, setRefreshing] = useState<string | null>(null);
 
@@ -93,7 +79,6 @@ export function Providers({
     }
   }, [page, pageSize, query, toast]);
 
-  /** Ask one provider what it serves now, and report what changed. */
   const refreshModels = useCallback(
     async (providerId: string, displayName: string) => {
       setRefreshing(providerId);
@@ -248,7 +233,6 @@ export function Providers({
   );
 }
 
-/** One provider card: identity, jurisdiction, verdict and connection state. */
 function ProviderDossierCard({
   row,
   inventory,
@@ -257,7 +241,7 @@ function ProviderDossierCard({
   onRefreshModels,
 }: {
   row: CatalogProviderRow;
-  /** Observed model inventory, when this provider has ever been checked. */
+
   inventory?: ModelCatalogView;
   refreshing: boolean;
   onConnect: (provider: ProviderStatus) => void;
@@ -319,14 +303,7 @@ function ProviderDossierCard({
 
       <div className="sub clamp-2">{t(dossier.summary)}</div>
 
-      {/*
-       * The number that actually decides whether this provider is worth a
-       * click, right on the card - not two clicks deep in the model-list
-       * modal. Tone follows whether the provider itself published the
-       * number: an operator's own figure reads as a confident chip, a gap in
-       * their docs reads as the same honest "we don't know" as the rest of
-       * the app uses for an unpublished rate limit.
-       */}
+      {}
       <div
         className={`quota-chip${row.freeTier.quotaSource === "unknown" ? " unknown" : ""}`}
         title={
@@ -339,10 +316,7 @@ function ProviderDossierCard({
         <span>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</span>
       </div>
 
-      {/*
-       * The state that used to be invisible: whether this provider's model list
-       * has ever been checked, and whether it has gone stale since.
-       */}
+      {}
       <div className="sub faint" style={{ marginTop: 4 }}>
         {checkedAt
           ? `${t("model list checked")} ${timeAgo(checkedAt)}`
@@ -351,12 +325,7 @@ function ProviderDossierCard({
             : t("connect a key to check")}
       </div>
 
-      {/*
-       * The whole card opens the dossier now, so this row's own clicks must
-       * never bubble up to it - Connect and re-check are different actions
-       * entirely, and even the Models button, which happens to do the same
-       * thing as the card, should not fire it twice.
-       */}
+      {}
       <div
         className="row"
         style={{ marginTop: 12, flexWrap: "wrap" }}
@@ -401,7 +370,7 @@ function ProviderDossierCard({
             </div>
             <div className="dossier-freetier">
               <dt>{t("Free tier")}</dt>
-              {/* The dossier's own one-liner wins when it has one. */}
+              {}
               <dd>{t(dossier.freeTierSummary ?? row.freeTier.summary)}</dd>
             </div>
             <div>
@@ -424,18 +393,7 @@ function ProviderDossierCard({
           {dossier.notes ? <p className="small faint">{t(dossier.notes)}</p> : null}
           {row.notes ? <p className="small faint">{t(row.notes)}</p> : null}
 
-          {/*
-           * The dossier's model list carries what a name alone cannot: context
-           * window, what the model is good at, and measured latency. When it
-           * exists it is the better list, and the plain id list is the fallback.
-           *
-           * Neither list is trustworthy on its own about which of its entries
-           * the provider still actually serves — that only comes from the last
-           * live check (`stale`). A retired model stays visible, so a reader
-           * can still see what it was, but greyed out with no way to add it to
-           * a chain: the whole point of checking model lists is to stop a
-           * chain being built against a model that is already gone.
-           */}
+          {}
           {dossier.models && dossier.models.length > 0 ? (
             <div className="model-list">
               {dossier.models.map((model) => {
@@ -498,11 +456,7 @@ function ProviderDossierCard({
             </div>
           )}
 
-          {/*
-           * Retired models the dossier never described in the first place —
-           * the ones above already carry their own "retired" badge inline,
-           * so this only needs to cover the gap.
-           */}
+          {}
           {unlistedStale.length > 0 ? (
             <div className="model-list">
               <div className="small faint">

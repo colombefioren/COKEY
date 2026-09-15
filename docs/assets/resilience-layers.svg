@@ -31,7 +31,6 @@
   <rect width="980" height="340" fill="#fffaf7" />
   <rect width="980" height="340" fill="url(#dotgrid2)" />
 
-  <!-- layer 1 -->
   <g filter="url(#lift2)">
     <rect x="20" y="18" width="940" height="88" rx="20" fill="#ffffff" />
   </g>
@@ -44,7 +43,6 @@
     <animate attributeName="opacity" values="1;0.4;1" dur="2.1s" begin="0s" repeatCount="indefinite" />
   </circle>
 
-  <!-- layer 2 -->
   <g filter="url(#lift2)">
     <rect x="20" y="126" width="940" height="88" rx="20" fill="#ffffff" />
   </g>
@@ -57,7 +55,6 @@
     <animate attributeName="opacity" values="1;0.4;1" dur="2.1s" begin="0.7s" repeatCount="indefinite" />
   </circle>
 
-  <!-- layer 3 -->
   <g filter="url(#lift2)">
     <rect x="20" y="234" width="940" height="88" rx="20" fill="#ffffff" />
   </g>

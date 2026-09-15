@@ -1,24 +1,7 @@
 import type { AttemptLog, RouteResult } from "../../core/router/engine.js";
 
-/**
- * Client-facing identity for the gateway.
- *
- * A client should never have to learn about nine upstream vendors to use COKEY.
- * Everything a client sees is branded COKEY, and the chain alias is the model
- * name, because the alias is the only identifier COKEY actually owns:
- *
- *   - `owned_by` is always COKEY, so a picker lists one provider, not fifteen;
- *   - the response `model` is the alias the user asked for, so a chat window
- *     shows their own chain name instead of whichever upstream answered;
- *   - the real upstream is still reported in `X-Cokey-Entry` for anyone who
- *     wants to know, which is the honest place for it.
- *
- * None of this hides information. It moves the vendor detail out of the field
- * the UI renders and into a header that tools can read.
- */
 export const COKEY_PROVIDER_NAME = "COKEY";
 
-/** Rewrite the `model` field of an OpenAI-shaped body to the chain alias. */
 export function withCokeyIdentity(body: unknown, chainAlias: string): unknown {
   if (!body || typeof body !== "object" || Array.isArray(body)) return body;
   const record = body as Record<string, unknown>;
@@ -26,12 +9,6 @@ export function withCokeyIdentity(body: unknown, chainAlias: string): unknown {
   return { ...record, model: chainAlias };
 }
 
-/**
- * One line describing what the router did, suitable for a client notification.
- *
- * This is the "chain changed state" message: not an error, just the gateway
- * narrating that the node or the key underneath the client moved.
- */
 export function chainStateMessage(result: RouteResult): string {
   const entry = `${result.providerId}/${result.entryModel}`;
   if (!result.fallback) {
@@ -41,25 +18,11 @@ export function chainStateMessage(result: RouteResult): string {
   return `chain changed state: ${result.chainAlias} now on ${entry} via ${result.credentialDescription} (${reason})`;
 }
 
-/**
- * Visible notice to prepend to the assistant output when the chain moved.
- *
- * Headers are readable by tools but invisible to a chat window, so a fallback —
- * the moment the chain actually changes who answers — becomes a literal line in
- * the response. Coding agents then see the chain moved without reading headers.
- * Returns `null` when nothing changed and the reply should stay clean.
- */
 export function chainStateNotice(result: RouteResult): string | null {
   if (!result.fallback) return null;
   return `\n[chain state] ${chainStateMessage(result)}\n\n`;
 }
 
-/**
- * Prepend a notice to each choice's assistant content.
- *
- * The upstream text is untouched: the notice is a prefix on the already-built
- * message so the model output the client sees starts with the state change.
- */
 export function withChainStateNotice(body: unknown, notice: string | null): unknown {
   if (!notice || !body || typeof body !== "object" || Array.isArray(body)) return body;
   const record = body as Record<string, unknown>;
@@ -77,7 +40,6 @@ export function withChainStateNotice(body: unknown, notice: string | null): unkn
   return { ...record, choices: changed };
 }
 
-/** Headers that make the current routing state machine-readable. */
 export function identityHeaders(result: RouteResult): Record<string, string> {
   return {
     "x-cokey-provider": COKEY_PROVIDER_NAME,
@@ -86,21 +48,12 @@ export function identityHeaders(result: RouteResult): Record<string, string> {
     "x-cokey-model": result.entryModel,
     "x-cokey-credential": result.credentialDescription,
     "x-cokey-fallback": String(result.fallback),
-    // Clients that surface headers (most CLIs do) get the state change here.
+
     "x-cokey-state": chainStateMessage(result),
     ...(result.fallbackReason ? { "x-cokey-fallback-reason": result.fallbackReason } : {}),
   };
 }
 
-/**
- * Build the `X-Cokey-*` headers for a failed request.
- *
- * Success already reports routing state out-of-band; failure does not get a
- * `response` to annotate, so the gateway reconstructs the same headers from the
- * attempts it recorded. A coding agent that reads `x-cokey-provider` on a 200
- * now sees exactly which vendor raised the 502 — and `x-cokey-error-origin`
- * marks it as `provider`, never Cokey's own voice.
- */
 export function errorIdentityHeaders(info: {
   attempts: AttemptLog[];
   chainAlias?: string;
@@ -128,7 +81,6 @@ export function errorIdentityHeaders(info: {
   return headers;
 }
 
-/** Plain-language narration of a failed route, for `x-cokey-state` on errors. */
 export function errorStateMessage(info: {
   attempts: AttemptLog[];
   chainAlias?: string;

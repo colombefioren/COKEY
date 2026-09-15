@@ -7,15 +7,6 @@ import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
-/**
- * Two-field connect dialog (plus account id for Cloudflare).
- *
- * Two buttons, each an independent contract:
- *  - "Test" probes the raw key without persisting anything — you get a verdict
- *    and can keep editing.
- *  - "Save" persists the key regardless of the verdict. A rejected key is kept
- *    but clearly marked unverified, so nothing silently disappears.
- */
 export function ConnectProviderModal({
   provider,
   onClose,
@@ -93,9 +84,6 @@ export function ConnectProviderModal({
       });
       setResult(response.validation);
 
-      // Saving a key is also the first moment this provider can be asked what it
-      // serves, so the confirmation reports the model list rather than making
-      // the user go and find out.
       const found = response.models;
       const modelNote =
         found && found.ok

@@ -3,18 +3,6 @@ import { api, ApiError } from "../api.js";
 import { CokeyLogo } from "./Logo.js";
 import { useLang } from "../lang.js";
 
-/**
- * Full-screen password gate.
- *
- * The server requires a session cookie for every `/api/*` call. The form posts
- * the admin password once and the cookie keeps the user signed in until it
- * expires or the gateway restarts.
- *
- * The language toggle lives here too, not only inside the app: the guided
- * tour that greets a first login is written in whichever language is picked
- * before that first login, so there is no later screen where picking it
- * "sooner" would still be soon enough.
- */
 export function LoginForm({ onLogin }: { onLogin: () => void }) {
   const { lang, toggleLang, t } = useLang();
   const [password, setPassword] = useState("");

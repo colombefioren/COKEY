@@ -1,18 +1,6 @@
-/**
- * The COKEY mark.
- *
- * One continuous line crossing itself into a C and an O, with two leaves off
- * the second loop, then KEY stroked beside it. It is inlined rather than loaded
- * as an image so it stays crisp at any size, inherits nothing from the network,
- * and re-colours for wherever it sits through `currentColor` — one solid pink,
- * not a gradient standing in for a brand.
- */
-
-/** The mark alone: the CO ligature and the leaves. */
 const MARK_PATH =
   "M84 50 C75 44 63 43 52 50 C32 62 32 90 52 102 C72 114 96 102 96 76 C96 50 120 38 140 50 C160 62 160 90 140 102 C120 114 96 102 96 76";
 
-/** Letterforms for KEY, as single strokes: stem-and-diagonals, three bars, a fork. */
 const WORD_PATHS = [
   "M246 40 V114 M294 40 L250 74 L294 114",
   "M348 40 H314 V114 H348 M314 74 H340",
@@ -47,9 +35,6 @@ export function CokeyMark({ height = 30, className }: { height?: number; classNa
   );
 }
 
-/**
- * The full lockup: mark plus the KEY wordmark, matching the readme asset.
- */
 export function CokeyLogo({
   height = 26,
   className,
@@ -58,7 +43,7 @@ export function CokeyLogo({
   height?: number;
   className?: string;
   withWordmark?: boolean;
-  /** Unused — kept so existing call sites do not need to change. */
+
   uid?: string;
 }) {
   const viewWidth = withWordmark ? 440 : 220;

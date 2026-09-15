@@ -5,25 +5,6 @@ import { Empty, Tooltip } from "./Primitives.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 import { useLang } from "../lang.js";
 
-/**
- * The live route, drawn as an actual node graph.
- *
- * A chain is the whole product, and it is invisible by default: a client sends
- * one request to one alias and never learns that four keys and two models were
- * involved. This diagram makes that physical: the client sits on the left, one
- * curved line runs to the COKEY hub, and the hub fans out to every node in the
- * order they will be tried, each carrying its own bound keys. It reads as a
- * network diagram because that is what a chain actually is — a routing
- * decision is a graph, not a table row.
- *
- * The fan-out geometry is computed in plain arithmetic (fixed node height and
- * gap, centred as a group) rather than measured from the DOM, so it never
- * needs a layout effect and never flashes un-positioned on the first paint.
- *
- * It is driven by the same live route snapshot the topbar uses, so the node
- * that is currently serving lights up and a fallback is visible as it happens.
- */
-
 const POLL_MS = 3000;
 const NODE_HEIGHT = 150;
 const NODE_GAP = 24;
@@ -54,9 +35,7 @@ export function ChainFlow({
       try {
         const snapshot = await api.status(1);
         if (!cancelled) setRoute(snapshot.route);
-      } catch {
-        // The gateway may be restarting; the next tick picks it up.
-      }
+      } catch {}
     };
 
     void poll();
@@ -79,7 +58,9 @@ export function ChainFlow({
     route?.providerId && route?.model ? `${route.providerId}/${route.model}` : null;
 
   if (chains.length === 0) {
-    return <Empty>{t("No chains yet. Create one in Chains and the route draws itself here.")}</Empty>;
+    return (
+      <Empty>{t("No chains yet. Create one in Chains and the route draws itself here.")}</Empty>
+    );
   }
 
   const steps = selected ? [...selected.entries].sort((a, b) => a.priority - b.priority) : [];
@@ -306,8 +287,6 @@ function EntryNode({
   );
 }
 
-/** One bound key, as a plain coloured dot — the tooltip carries the exact
-    description, the legend underneath carries the colour key. */
 function KeyChip({ credential, active }: { credential: PublicCredential; active: boolean }) {
   const { t } = useLang();
   const label = `${t("Key")}: ${credential.description} (${credential.status})${

@@ -1,29 +1,6 @@
-/*
- * COKEY dashboard theme.
- *
- * Pink is the lead voice, full stop — not a companion to a lilac-violet
- * accent. `--violet` is kept as a token name only so the hundreds of call
- * sites that already reference it do not need to change; its value is the
- * real pink. `--pink` holds the secondary lilac tone instead. The supporting
- * accents (jade, apricot, coral, periwinkle) are deliberately the *only*
- * things outside that family, which is what keeps status readable instead of
- * drowned in pink.
- *
- * The page is warm paper rather than white: a bare white ground makes every
- * pastel look like it is fading. Small cards borrow a rotating set of tints
- * so a row of them looks like a handful of stickers, not a spreadsheet.
- *
- * Only one theme: there is no dark mode. A single considered palette beats two
- * half-considered ones, and the ink-on-paper feel does not survive an inversion.
- *
- * Every colour is still a token — nothing hex-coded outside this block — so the
- * palette can move again without hunting through every sheet.
- */
-
 :root {
   color-scheme: light;
 
-  /* Warm paper. Not white — baby pink needs something to sit on. */
   --ground: #fffaf7;
   --surface: #ffffff;
   --surface-2: #fdf6fa;
@@ -37,16 +14,12 @@
   --muted: #6d5871;
   --faint: #a394a9;
 
-  /* The lead voice: one real, solid pink — everything that reads as "the
-     brand" (buttons, links, the logo, the active nav item) draws from this. */
   --violet: #f482b4;
   --violet-strong: #dd5c95;
   --violet-soft: #ffeaf4;
   --violet-line: #ffc8e1;
   --violet-ink: #ffffff;
 
-  /* The secondary lilac tone, used sparingly as a companion — never the
-     subject. */
   --pink: #7452f0;
   --pink-strong: #5b39d4;
   --pink-soft: #f1ecff;
@@ -70,13 +43,10 @@
   --sky-soft: #ecf0fe;
   --sky-line: #cfd9fc;
 
-  /* The rail is its own solid wash, not another white card and not a
-     gradient — one flat pink tint. */
   --sidebar-bg: #ffeaf4;
   --sidebar-border: #ffc8e1;
   --sidebar-wash: #ffeaf4;
 
-  /* The rotating sticker tints small cards and stat tiles borrow from. */
   --tint-1: #ffeaf4;
   --tint-1-line: #ffc8e1;
   --tint-2: #f1ecff;
@@ -102,7 +72,6 @@
   --bad-bg: var(--rose-soft);
   --neutral-bg: var(--surface-3);
 
-  /* Low, plum-tinted shadows. Grey shadows on a pink page read as dirt. */
   --shadow: 0 1px 2px rgba(43, 26, 47, 0.05), 0 10px 26px -18px rgba(43, 26, 47, 0.2);
   --shadow-lift: 0 2px 5px rgba(43, 26, 47, 0.07), 0 18px 38px -22px rgba(43, 26, 47, 0.24);
   --shadow-pop: 0 6px 14px rgba(43, 26, 47, 0.08), 0 30px 60px -30px rgba(43, 26, 47, 0.3);
@@ -112,16 +81,13 @@
   --radius-md: 15px;
   --radius-sm: 11px;
   --font-body: "Work Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* Headings, titles and stat numbers only, always italic — a display serif
-     slows body reading down. */
+
   --font-display: "Instrument Serif", Georgia, serif;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
   --sidebar-w: 264px;
   --sidebar-w-collapsed: 84px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 
-  /* The three stops every gradient in the app interpolates through, so no two
-     gradients meet at a seam of a different warmth. */
   --bloom-1: #ffd7ea;
   --bloom-2: #d9cbff;
   --bloom-3: #ffe6cf;
@@ -151,9 +117,7 @@ body {
   margin: 0;
   overflow-x: hidden;
   color: var(--text);
-  /* A flat beige sheet of paper with one dot-grid texture — no rainbow of
-     soft blooms behind it. The cards are what get to be white; the page
-     underneath stays quiet so they read as sitting on something. */
+
   background: radial-gradient(rgba(221, 92, 149, 0.3) 1.4px, transparent 1.4px), var(--ground);
   background-size:
     22px 22px,
@@ -170,8 +134,7 @@ a {
   color: var(--violet);
   text-decoration: none;
 }
-/* A secondary reference — a provider id beside the model that matters, a
-   footnote — reads as plain text until it is actually useful to follow. */
+
 a.link-quiet {
   color: var(--muted);
 }
@@ -196,12 +159,6 @@ h3 {
   margin: 0 0 8px;
 }
 
-/*
- * A scrap of tape, for the handful of cards and nodes that get one. It sits
- * on `position: absolute`, sized and rotated by whichever caller places it —
- * no shadow: a piece of tape lies flat against the paper, it does not float
- * above it.
- */
 .tape {
   position: absolute;
   width: 56px;
@@ -211,8 +168,6 @@ h3 {
   pointer-events: none;
   z-index: 2;
 }
-
-/* ---- shell ---------------------------------------------------------------- */
 
 .shell {
   display: grid;
@@ -228,12 +183,6 @@ h3 {
   grid-template-columns: var(--sidebar-w-collapsed) minmax(0, 1fr);
 }
 
-/*
- * The sidebar is a pink-to-lilac wash, not another white card — it is what
- * makes the warm page underneath read as paper rather than a blank canvas that
- * forgot to load. The inner top highlight is the light source: without it a
- * gradient panel looks like a rectangle that was filled, not a surface.
- */
 .sidebar {
   position: sticky;
   top: 16px;
@@ -259,10 +208,6 @@ h3 {
   z-index: 1;
 }
 
-/*
- * The brand is the drawn lockup: one solid pink via `currentColor`, no
- * gradient standing in for an identity.
- */
 .sidebar-brand {
   display: flex;
   align-items: center;
@@ -284,7 +229,6 @@ h3 {
   transform: translateY(-1px) scale(1.03);
 }
 
-/* Positioned so the gliding highlight can be measured against it. */
 .sidebar-nav {
   position: relative;
   display: flex;
@@ -319,11 +263,6 @@ h3 {
   flex-direction: column;
 }
 
-/*
- * The moving highlight: one white pill on the wash, with a pink-to-violet rule
- * on its leading edge so the active row is marked by the brand ramp rather than
- * by a colour that already exists in the rail behind it.
- */
 .nav-glider {
   position: absolute;
   left: 0;
@@ -447,7 +386,6 @@ h3 {
   color: var(--violet);
 }
 
-/* The nested rail, animated open with a measured height. */
 .nav-children {
   display: grid;
   gap: 2px;
@@ -502,7 +440,6 @@ h3 {
   flex: none;
 }
 
-/* The round handle that folds the rail, sitting proud of the sidebar's edge. */
 .sidebar-fold {
   position: absolute;
   top: 22px;
@@ -532,14 +469,6 @@ h3 {
   transform: rotate(-90deg);
 }
 
-/*
- * The float-out label for a folded row.
- *
- * It is a sibling of the nav column, not a child of the row, because the nav
- * column scrolls and a scroll container clips its overflow — which is exactly
- * how a tooltip on a folded rail ends up invisible. Anchored in the rail's own
- * coordinate space, it can sit outside the column entirely.
- */
 .nav-hint {
   position: absolute;
   left: calc(100% - 6px);
@@ -568,8 +497,6 @@ h3 {
   }
 }
 
-/* Collapsed rail: a clean icon column. Text is removed, not squeezed, and the
-   flex gap goes with it so the icons sit on the rail's true center line. */
 .sidebar.collapsed {
   padding: 18px 12px 16px;
 }
@@ -631,13 +558,6 @@ h3 {
   min-width: 0;
 }
 
-/*
- * The topbar is a floating shelf, not a strip that was pasted across the page:
- * it is inset from the column, has its own hairline and lip, and the page's
- * content slides under it in glass rather than disappearing behind an opaque
- * band. The radius matches the panels below it, so the whole column reads as a
- * stack of the same object at different sizes.
- */
 .topbar {
   position: sticky;
   top: 10px;
@@ -690,8 +610,6 @@ h3 {
   box-shadow: none;
 }
 
-/* A two-letter segmented switch, the same shape as the tab row, so it reads
-   as a setting rather than another button competing with the bell. */
 .lang-toggle {
   display: inline-flex;
   align-items: center;
@@ -718,8 +636,6 @@ h3 {
   box-shadow: var(--shadow);
 }
 
-/* The tour's topbar entry point: always there, so "how do I see that again"
-   has one obvious answer. Icon-only on a narrow screen, per responsive.css. */
 .guide-toggle {
   display: inline-flex;
   align-items: center;
@@ -740,10 +656,6 @@ h3 {
   box-shadow: none;
 }
 
-/* ---- notifications --------------------------------------------------------
- * "Needs attention", as a bell reachable from every screen instead of a
- * fixture on the Dashboard.
- */
 .notif-bell {
   position: relative;
 }
@@ -791,7 +703,6 @@ h3 {
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-/* The bell itself wears the ramp when it has something to say. */
 .notif-trigger.has-alerts {
   animation: bell-wake 3.4s ease-in-out infinite;
 }
@@ -813,16 +724,6 @@ h3 {
   }
 }
 
-/*
- * The dropdown reuses the Guidance panel verbatim, so it only needs a holder
- * and a scroll boundary — the content styles itself.
- *
- * The tray exists because the panel it holds is a hand-inked card: its 2px
- * outline and the offset shadow behind it need breathing room on every side. A
- * scroll container clips at its own edge, so scrolling the panel directly cut
- * the outline off the moment the list moved. The tray owns the edge; the inner
- * column owns the scrolling; the card keeps its whole silhouette either way.
- */
 .notif-panel {
   position: absolute;
   top: calc(100% + 10px);
@@ -843,11 +744,10 @@ h3 {
   max-height: min(66vh, 520px);
   overflow-y: auto;
   overscroll-behavior: contain;
-  /* Just enough for the card's offset shadow, never enough to look like a gap. */
+
   padding: 2px 3px 4px 2px;
 }
 
-/* Nested, so the panel reads as sitting in the tray rather than filling it. */
 .notif-panel .window {
   border-radius: 22px;
   box-shadow:
@@ -855,8 +755,6 @@ h3 {
     var(--shadow);
 }
 
-/* Docked at the bottom of the content column: counts on the left, creator
-   links on the right, out of the way of the work above it. */
 .statusbar .status-cell {
   display: inline-flex;
   align-items: center;
@@ -883,22 +781,6 @@ main {
   align-content: start;
 }
 
-/* ---- surfaces ------------------------------------------------------------- */
-
-/*
- * `.window` and `section.panel` are the same surface: `.window` is the
- * component that renders an optional header (icon, title, actions) above a
- * body, and `Panel` renders one with the `panel` class alongside it so a
- * couple of hand-rolled sections can still select it directly. Padding lives
- * on `.window-body`, never here, so the two names never double it up.
- */
-/*
- * The sketchy outline: a second, slightly offset line in the shadow layer
- * behind the real 2px border. Two lines that do not quite trace each other is
- * what reads as inked by hand rather than drawn by a rasteriser — cheaper and
- * safer than an SVG displacement filter, which would also smear the text
- * inside the very box it is meant to outline.
- */
 .window,
 section.panel {
   position: relative;
@@ -918,12 +800,6 @@ section.panel.soft {
   background: var(--surface-2);
 }
 
-/*
- * The panel header carries the section's name in the display face at reading
- * size, not as a letter-spaced uppercase label. Small-caps micro-labels are the
- * house style of every generated dashboard; a title someone can actually read
- * is friendlier and, at this size, still no louder than the data under it.
- */
 .window-bar {
   display: flex;
   align-items: center;
@@ -945,8 +821,6 @@ section.panel.soft {
   white-space: nowrap;
 }
 
-/* A pebble, not a square: four unequal radii, and an inner ring taken from the
-   icon's own colour so the five hues stay five hues. */
 .window-icon {
   display: grid;
   place-items: center;
@@ -998,11 +872,6 @@ section.panel.soft {
   padding: 18px 20px 20px;
 }
 
-/*
- * Hue blocking: a window declares its hue and the icon chip follows. Five
- * options, assigned deliberately per section, which is what stops the page
- * reading as one brand colour end to end.
- */
 .window.hue-pink {
   --window-accent: var(--rose);
   --window-accent-soft: var(--rose-soft);
@@ -1069,21 +938,6 @@ section.panel.soft {
   gap: 14px;
 }
 
-/*
- * One neutral card style for every stat. The number carries the emphasis, in
- * the brand violet — a row of five identical cards reads as calmer and more
- * confident than a row cycling through five background tints, and it is the
- * number that changes from card to card, not the wallpaper behind it.
- */
-/*
- * Stat tiles.
- *
- * Each one fades out of its own pastel rather than being filled with it — a
- * gradient from white to a tint reads as light falling across the tile, while a
- * flat tint reads as a coloured rectangle — and each carries a short rule of
- * its tint along the top edge. No rotation: leaning stickers were the right
- * gesture for a scrapbook, not for a number someone has to read.
- */
 .stat {
   position: relative;
   overflow: hidden;
@@ -1174,8 +1028,7 @@ section.panel.soft {
   font-size: 12px;
   margin-top: 6px;
 }
-/* Capped so a long dossier summary never crowds out the quota chip below it -
-   the number is the reason the card exists, the summary is background. */
+
 .card .sub.clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1183,11 +1036,6 @@ section.panel.soft {
   overflow: hidden;
 }
 
-/*
- * The free-tier limit, right on the card face instead of two clicks deep in a
- * modal - RPD, RPM, whatever the provider actually publishes. Tone carries
- * whether that number came from the provider itself.
- */
 .quota-chip {
   display: inline-flex;
   align-items: center;
@@ -1216,14 +1064,6 @@ section.panel.soft {
   color: var(--faint);
 }
 
-/* ---- controls ------------------------------------------------------------- */
-
-/*
- * The primary button is the one place the brand ramp is filled in solid, which
- * is what makes it read as the thing to press without needing to be bigger,
- * brighter or a different hue from the rest of the page. Everything else is an
- * outline, because there is only ever one primary action on a screen.
- */
 button {
   background: var(--violet);
   border: 1px solid transparent;
@@ -1325,12 +1165,6 @@ textarea:focus {
   box-shadow: 0 0 0 3px var(--violet-soft);
 }
 
-/*
- * A dropdown COKEY actually draws (see the `Select` component), because a
- * native <select>'s open list is the one form control a browser never lets a
- * page style — every other control here could be made to match the theme,
- * and this was the one that couldn't.
- */
 .select-trigger {
   display: flex;
   align-items: center;
@@ -1538,12 +1372,6 @@ label {
   font-size: 12px;
 }
 
-/*
- * A status word, not a coloured chip: the preview's whole point is that most
- * of the page is plain writing, with colour doing the one job of telling
- * healthy from failing apart. A pill behind every count is what made the
- * page read as louder and more saturated than it actually needed to be.
- */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -1589,15 +1417,6 @@ label {
   color: var(--rose);
 }
 
-/*
- * Status marks.
- *
- * Each state is given a silhouette, not just a hue: a burst for healthy, a
- * crescent for cooling, a crack for invalid, a dotted ring for one that has
- * never been proven, a bar for paused. Five dots in five colours is a colour
- * question; five shapes is a reading question, and a five-colour dot row is
- * exactly what made the old state column feel machine-made.
- */
 .dot {
   display: inline-block;
   width: 9px;
@@ -1645,12 +1464,6 @@ label {
   }
 }
 
-/*
- * The same five silhouettes, wrapped in a word.
- *
- * Used wherever there is room to name the state — tables, legends, the route
- * diagram — so the mark and the meaning always arrive together.
- */
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -1732,7 +1545,6 @@ label {
   background: none;
 }
 
-/* Segmented switch, used for every tab row in the app. */
 .tabs,
 .tabs-inline {
   display: inline-flex;
@@ -1772,8 +1584,6 @@ label {
   color: var(--violet-strong);
 }
 
-/* ---- pager ---------------------------------------------------------------- */
-
 .pager {
   display: flex;
   align-items: center;
@@ -1810,8 +1620,6 @@ label {
   font-size: 12px;
 }
 
-/* ---- tables --------------------------------------------------------------- */
-
 .table-scroll {
   overflow-x: auto;
 }
@@ -1847,8 +1655,7 @@ tbody tr {
 tbody tr:hover td {
   background: var(--surface-2);
 }
-/* The hovered row is marked on its leading edge, so a wide table tells you
-   where you are without tinting five columns at once. */
+
 tbody tr td:first-child {
   box-shadow: inset 3px 0 0 0 transparent;
   transition: box-shadow 0.15s ease;
@@ -1866,10 +1673,6 @@ tbody tr:hover td:first-child {
   background: var(--surface-2);
 }
 
-/*
- * A tooltip drawn in the brand's own voice, not the browser's grey box: see
- * the `Tooltip` component for why an icon-only button needed one at all.
- */
 .tooltip-anchor {
   display: inline-flex;
 }
@@ -1951,13 +1754,6 @@ tbody tr:hover td:first-child {
   line-height: 1.7;
 }
 
-/*
- * The connect-provider modal's free-tier callout. A plain sentence in the
- * subtitle read as boilerplate the moment there was a second sentence next to
- * it - this is the one number in the whole dialog that actually decides
- * whether to keep going, so it gets its own bordered, gradient-lit block
- * instead of sharing a line with "the key never leaves this machine."
- */
 .freetier-banner {
   display: flex;
   align-items: flex-start;
@@ -2003,13 +1799,6 @@ code {
   color: var(--violet-strong);
 }
 
-/* ---- chains --------------------------------------------------------------- */
-
-/*
- * One chain, as a plain white card. No coloured header block, no accent rule
- * across the top — the border and a soft shadow are what separate it from
- * the one below.
- */
 .chain {
   position: relative;
   border: 1px solid var(--border);
@@ -2042,8 +1831,6 @@ code {
   margin-top: 14px;
 }
 
-/* A node in the order, cut rather than stamped: four unequal radii again, which
-   is what stops a stack of them reading as a settings list. */
 .entry-node {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -2130,8 +1917,7 @@ code {
   min-width: 0;
   flex-wrap: wrap;
 }
-/* The stop number, as the same hand-cut tab the route diagram uses, so the
-   order you set here and the order you see routed are visibly the same thing. */
+
 .entry-model .priority {
   display: grid;
   place-items: center;
@@ -2199,8 +1985,6 @@ button.model-name:hover {
   background: var(--surface-2);
 }
 
-/* ---- credentials ---------------------------------------------------------- */
-
 .cred-chip {
   display: inline-flex;
   align-items: center;
@@ -2251,15 +2035,10 @@ button.model-name:hover {
   background: var(--peach);
 }
 
-/* ---- modals and toasts ---------------------------------------------------- */
-
 .search {
   max-width: 300px;
 }
 
-/* Matches .search's own box exactly (same padding, border and line-height)
-   so the two sit flush at the same height in the actions row, instead of the
-   shorter box a plain small button renders at. */
 .recheck-all-btn {
   height: 39px;
   padding: 9px 15px;
@@ -2267,8 +2046,6 @@ button.model-name:hover {
   white-space: nowrap;
   flex-shrink: 0;
 }
-
-/* ---- chrome --------------------------------------------------------------- */
 
 * {
   scrollbar-width: thin;
@@ -2283,13 +2060,6 @@ button.model-name:hover {
   background: transparent;
 }
 
-/* ---- motion --------------------------------------------------------------- */
-
-/*
- * Every screen arrives the same way: a short rise and fade, staggered a little
- * per block, so moving between pages reads as a transition rather than a
- * repaint. Transform and opacity only, all under half a second.
- */
 .page {
   display: grid;
   gap: 16px;
@@ -2308,8 +2078,6 @@ button.model-name:hover {
   }
 }
 
-/* A hand-drawn circle that never quite closes on itself, redrawn forever
-   instead of rotating — used anywhere something is actively being probed. */
 @keyframes scribble-wobble {
   0% {
     border-radius: 42% 58% 60% 40% / 50% 45% 55% 50%;
@@ -2333,7 +2101,6 @@ button.model-name:hover {
   }
 }
 
-/* A slow, steady blink for the dot beside anything that is live right now. */
 @keyframes flow-blink {
   0%,
   100% {
@@ -2344,8 +2111,6 @@ button.model-name:hover {
   }
 }
 
-/* A quick fade-in for anything that appears on top of the page: toasts,
-   modal scrims, popovers. */
 @keyframes scrim-in {
   from {
     opacity: 0;
@@ -2403,7 +2168,6 @@ button.model-name:hover {
   }
 }
 
-/* Staggered rows, so a table fills in rather than appearing all at once. */
 tbody tr {
   animation: row-in 0.38s ease both;
 }
@@ -2452,7 +2216,6 @@ tbody tr:nth-child(n + 6) {
   }
 }
 
-/* The live chip gets a calm ring while a request is in flight, never a flare. */
 .live-chip.active {
   animation: chip-breathe 3s ease-in-out infinite;
 }
@@ -2478,8 +2241,6 @@ tbody tr:nth-child(n + 6) {
   white-space: nowrap;
   border: 0;
 }
-
-/* ---- creator footer ------------------------------------------------------- */
 
 .creator-card {
   display: grid;
@@ -2517,5 +2278,3 @@ tbody tr:nth-child(n + 6) {
   position: relative;
   z-index: 1;
 }
-
-/* @@PART-9 */

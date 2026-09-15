@@ -4,20 +4,8 @@ import type { CokeyEvent, LiveRouteSnapshot } from "../types.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
-/** Keep the notification feed bounded; the router is chatty by nature. */
 const MAX_EVENTS = 40;
 
-/**
- * The live routing strip.
- *
- * COKEY silently rotates credentials, so a client cannot tell that their
- * request moved from a depleted Groq key to a fresh one. This component makes
- * that visible: the chip always names the model, the key and the exit IP in
- * play, and switches are announced as notifications the moment they happen.
- *
- * Data arrives over SSE (`/api/events`); a snapshot frame seeds the view so a
- * reload never starts blank.
- */
 export function LiveStatus() {
   const toast = useToast();
   const { t } = useLang();
@@ -26,7 +14,6 @@ export function LiveStatus() {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
 
-  // Event ids are stable, so a reconnecting EventSource cannot double-notify.
   const seen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -63,9 +50,7 @@ export function LiveStatus() {
         for (const event of snapshot.recent) seen.current.add(event.id);
         setEvents(snapshot.recent.slice(-MAX_EVENTS));
       })
-      .catch(() => {
-        // The gateway may still be starting; SSE will carry the state.
-      });
+      .catch(() => {});
 
     const source = new EventSource(api.eventsUrl());
 
@@ -139,9 +124,7 @@ export function LiveStatus() {
       accept([event]);
     };
 
-    source.onerror = () => {
-      // EventSource reconnects on its own; nothing to do beyond letting it.
-    };
+    source.onerror = () => {};
 
     return () => {
       closed = true;
@@ -149,9 +132,7 @@ export function LiveStatus() {
     };
   }, [toast]);
 
-  const model = route?.model
-    ? `${route.providerId ?? "?"}/${route.model}`
-    : t("no traffic yet");
+  const model = route?.model ? `${route.providerId ?? "?"}/${route.model}` : t("no traffic yet");
   const key = route?.credentialDescription ?? "—";
 
   return (
@@ -160,9 +141,7 @@ export function LiveStatus() {
         type="button"
         className={`live-chip ${route?.active ? "active" : "idle"}`}
         onClick={() => setOpen((value) => !value)}
-        title={
-          route?.active ? t("A request is being routed right now") : t("Last routed request")
-        }
+        title={route?.active ? t("A request is being routed right now") : t("Last routed request")}
       >
         <span className="live-dot" aria-hidden>
           ●

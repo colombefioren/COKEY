@@ -3,18 +3,6 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { execFileSync } from "node:child_process";
 
-/**
- * Master-key resolution.
- *
- * Order of preference:
- *   1. `COKEY_MASTER_KEY` environment variable (hex) — CI and containers.
- *   2. The OS keychain, via the platform's standard CLI tool.
- *   3. A passphrase (`COKEY_PASSPHRASE`) stretched with scrypt.
- *   4. A generated key file at `<dataDir>/master.key`, mode 0600.
- *
- * The key is 32 bytes. Every tier is local; nothing leaves the machine.
- */
-
 export type MasterKeyKind = "env" | "keychain" | "passphrase" | "keyfile";
 
 export interface MasterKey {
@@ -28,9 +16,9 @@ const KEYCHAIN_ACCOUNT = "master-key";
 
 export interface ResolveOptions {
   dataDir: string;
-  /** Passphrase override, normally read from COKEY_PASSPHRASE. */
+
   passphrase?: string;
-  /** Skip the OS keychain (tests, headless CI). */
+
   disableKeychain?: boolean;
 }
 
@@ -51,12 +39,6 @@ export function resolveMasterKey(options: ResolveOptions): MasterKey {
   return { key: readOrCreateKeyFile(options.dataDir), kind: "keyfile" };
 }
 
-/**
- * Store a freshly generated key in the OS keychain if one is available.
- *
- * Best effort by design: on headless Linux there is often no Secret Service
- * session, in which case the keyfile path is used instead.
- */
 export function storeKeyInKeychain(key: Buffer): boolean {
   const hex = key.toString("hex");
   try {
@@ -135,8 +117,6 @@ function keychainStoreCommand(): { cmd: string; args: string[] } | undefined {
         args: ["add-generic-password", "-U", "-s", KEYCHAIN_SERVICE, "-a", KEYCHAIN_ACCOUNT, "-w"],
       };
     default:
-      // Windows storage via PowerShell is implemented in the keyfile tier only;
-      // DPAPI-backed storage would need a native helper.
       return undefined;
   }
 }
@@ -146,7 +126,6 @@ function readEnvKey(raw: string | undefined): Buffer | undefined {
   return parseKeyString(raw);
 }
 
-/** Accept hex or base64; reject anything that is not exactly 32 bytes. */
 export function parseKeyString(raw: string): Buffer | undefined {
   const value = raw.trim();
   if (!value) return undefined;
@@ -154,20 +133,10 @@ export function parseKeyString(raw: string): Buffer | undefined {
   try {
     const buf = Buffer.from(value, "base64");
     if (buf.length === KEY_BYTES) return buf;
-  } catch {
-    /* fall through */
-  }
+  } catch {}
   return undefined;
 }
 
-/**
- * Stretch a passphrase into a key with scrypt.
- *
- * Argon2id would be preferable, but it requires a native dependency; scrypt is
- * memory-hard, ships with Node, and is a defensible choice for a purely local
- * key derivation. The salt is a stable function of the data directory so the
- * same passphrase always unlocks the same vault.
- */
 export function deriveFromPassphrase(passphrase: string, dataDir: string): Buffer {
   const salt = Buffer.from(`cokey:v1:${dataDir}`);
   return scryptSync(passphrase, salt, KEY_BYTES, { N: 1 << 15, r: 8, p: 1 });
@@ -185,7 +154,7 @@ function readOrCreateKeyFile(dataDir: string): Buffer {
 
   const key = randomBytes(KEY_BYTES);
   writeFileSync(keyPath, key.toString("hex"), { mode: 0o600 });
-  // Opportunistically mirror into the OS keychain for better at-rest hygiene.
+
   storeKeyInKeychain(key);
   return key;
 }

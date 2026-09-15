@@ -16,7 +16,6 @@ export interface InsertProxyInput {
   createdAt: number;
 }
 
-/** Storage for the automatic egress pool. */
 export class ProxyPoolRepo {
   constructor(private readonly db: DatabaseClient) {}
 
@@ -51,7 +50,9 @@ export class ProxyPoolRepo {
   }
 
   setEnabled(id: string, enabled: boolean): void {
-    this.db.prepareCached(`UPDATE proxy_pool SET enabled = ? WHERE id = ?`).run(enabled ? 1 : 0, id);
+    this.db
+      .prepareCached(`UPDATE proxy_pool SET enabled = ? WHERE id = ?`)
+      .run(enabled ? 1 : 0, id);
   }
 
   delete(id: string): void {

@@ -1,23 +1,4 @@
-/**
- * The site's French strings, keyed by their English original.
- *
- * `t(lang, text)` (see `lang.tsx`) looks a string up here when `lang` is
- * `"fr"` and falls back to the English original when a key is missing, so a
- * string that has not been added yet degrades to English instead of
- * disappearing or crashing the page.
- *
- * This covers the app's own copy: labels, buttons, headings, static
- * explanatory text, empty states, placeholders and tooltips. It deliberately
- * does not cover data that comes from elsewhere and is not COKEY's own
- * writing — provider names and descriptions from the catalog, model ids,
- * a provider's own error text, or a sentence assembled at runtime from live
- * numbers and names. Translating those would either mean maintaining a
- * second copy of the entire provider catalog in French or gluing French and
- * English fragments into one sentence, both worse than leaving them as the
- * provider or the gateway actually reports them.
- */
 export const FR: Record<string, string> = {
-  // ---- Dashboard ----------------------------------------------------------
   "Live route": "Route en direct",
   Resilience: "Résilience",
   Activity: "Activité",
@@ -54,7 +35,6 @@ export const FR: Record<string, string> = {
   ok: "ok",
   fallback: "repli",
 
-  // ---- Nudger ---------------------------------------------------------------
   of: "sur",
   "free providers connected": "fournisseurs gratuits connectés",
   Add: "Ajoutez",
@@ -64,7 +44,6 @@ export const FR: Record<string, string> = {
   "Browse providers": "Parcourir les fournisseurs",
   Later: "Plus tard",
 
-  // ---- Resilience -----------------------------------------------------------
   scope: "portée",
   "whole chain": "toute la chaîne",
   "Chain fallback": "Repli de chaîne",
@@ -109,7 +88,6 @@ export const FR: Record<string, string> = {
   "key 429 → cooldown · rejected key → rotate · node 5xx → fallback · context too large → stop":
     "clé 429 → pause · clé rejetée → rotation · nœud 5xx → repli · contexte trop grand → arrêt",
 
-  // ---- ChainFlow --------------------------------------------------------------
   "No chains yet. Create one in Chains and the route draws itself here.":
     "Pas encore de chaîne. Créez-en une dans Chaînes et la route se dessinera ici.",
   routing: "routage",
@@ -136,7 +114,6 @@ export const FR: Record<string, string> = {
   "auto egress": "sortie automatique",
   "pinned egress": "sortie épinglée",
 
-  // ---- Chains ---------------------------------------------------------------
   "Give the chain an alias, for example cokey-best":
     "Donnez un alias à la chaîne, par exemple cokey-best",
   "New chain": "Nouvelle chaîne",
@@ -150,7 +127,6 @@ export const FR: Record<string, string> = {
   keys: "clés",
   "No chains yet.": "Pas encore de chaîne.",
 
-  // ---- Pagination -------------------------------------------------------------
   to: "à",
   "per page": "par page",
   "First page": "Première page",
@@ -160,7 +136,6 @@ export const FR: Record<string, string> = {
   rows: "lignes",
   chains: "chaînes",
 
-  // ---- ChainCard --------------------------------------------------------------
   "Entry duplicated": "Entrée dupliquée",
   "Renamed to": "Renommée en",
   Deleted: "Supprimée :",
@@ -186,8 +161,7 @@ export const FR: Record<string, string> = {
   "View details": "Voir les détails",
   Provider: "Fournisseur",
   "auto proxy": "proxy automatique",
-  "Automatic egress pool is assigning exits":
-    "Le pool de sortie automatique attribue des sorties",
+  "Automatic egress pool is assigning exits": "Le pool de sortie automatique attribue des sorties",
   Edit: "Modifier",
   Duplicate: "Dupliquer",
   Disable: "Désactiver",
@@ -207,7 +181,6 @@ export const FR: Record<string, string> = {
   "Answered OK": "A répondu OK",
   Failed: "Échoué",
 
-  // ---- Keys -------------------------------------------------------------------
   "verified in": "vérifiée en",
   "A replacement key cannot be empty": "Une clé de remplacement ne peut pas être vide",
   "Key replaced": "Clé remplacée",
@@ -258,7 +231,6 @@ export const FR: Record<string, string> = {
   providers: "fournisseurs",
   Providers: "Fournisseurs",
 
-  // ---- ConnectProviderModal / AddCredentialModal -------------------------------
   "Name, key and account id are required": "Nom, clé et id de compte sont requis",
   "Agree to the Terms before saving a key": "Acceptez les Conditions avant d'enregistrer une clé",
   models: "modèles",
@@ -276,7 +248,8 @@ export const FR: Record<string, string> = {
   "Cloudflare account id": "Id de compte Cloudflare",
   Verified: "Vérifiée",
   "accepted the key": "a accepté la clé",
-  "Route this test/save through the egress pool": "Router ce test/enregistrement via le pool de sortie",
+  "Route this test/save through the egress pool":
+    "Router ce test/enregistrement via le pool de sortie",
   "Protects your real IP, but free pool exits can hang, error or get blocked — no proxy is faster. Off = direct.":
     "Protège votre IP réelle, mais les sorties gratuites du pool peuvent bloquer, échouer ou être filtrées — sans proxy c'est plus rapide. Désactivé = direct.",
   "Need a key?": "Besoin d'une clé ?",
@@ -286,7 +259,6 @@ export const FR: Record<string, string> = {
   "Saving…": "Enregistrement…",
   "Save key": "Enregistrer la clé",
 
-  // ---- AddCredentialModal -------------------------------------------------------
   "Credential attached": "Identifiant rattaché",
   "Key is required": "Une clé est requise",
   "Name and key are both required": "Nom et clé sont tous deux requis",
@@ -309,7 +281,6 @@ export const FR: Record<string, string> = {
     "COKEY attribue déjà les IP de sortie tout seul : ajoutez des proxys au pool de sortie une fois et chaque clé d'un fournisseur en obtient une différente, replanifiée à mesure que des clés apparaissent. Laissez ceci vide pour en hériter. Ne saisissez une URL ici que pour épingler cette clé à une sortie précise, ce qui prime sur le pool pour elle.",
   "Verifying with": "Vérification avec",
 
-  // ---- AddEntryModal ------------------------------------------------------------
   "Pick a provider and a model": "Choisissez un fournisseur et un modèle",
   "Select at least one credential, or connect a key for this provider first":
     "Sélectionnez au moins un identifiant, ou connectez d'abord une clé pour ce fournisseur",
@@ -332,7 +303,6 @@ export const FR: Record<string, string> = {
     "pour l'instant. Connectez-en un d'abord depuis l'onglet Fournisseurs — COKEY ne créera pas d'entrée avec une clé non vérifiée.",
   "Adding…": "Ajout…",
 
-  // ---- EditEntryModal -------------------------------------------------------------
   "Pick or type a model": "Choisissez ou saisissez un modèle",
   "Chain node updated": "Nœud de chaîne mis à jour",
   "Edit chain node": "Modifier le nœud de chaîne",
@@ -346,7 +316,6 @@ export const FR: Record<string, string> = {
   "Sequential: use the keys in order": "Séquentiel : utiliser les clés dans l'ordre",
   "Round robin: rotate the keys": "Tourniquet : faire tourner les clés",
 
-  // ---- ViewEntryModal ---------------------------------------------------------
   "Credential removed": "Identifiant retiré",
   Details: "Détails",
   "Everything this node routes to. Keys are tried in the strategy order below.":
@@ -365,7 +334,6 @@ export const FR: Record<string, string> = {
   "Test this credential": "Tester cet identifiant",
   "Remove credential": "Retirer l'identifiant",
 
-  // ---- Primitives ---------------------------------------------------------------
   paused: "en pause",
   new: "nouvelle",
   OK: "OK",
@@ -377,27 +345,22 @@ export const FR: Record<string, string> = {
   "req left": "req restantes",
   "tok left": "jetons restants",
 
-  // ---- Window -------------------------------------------------------------------
   "Expand panel": "Développer le panneau",
   "Collapse panel": "Réduire le panneau",
   panel: "panneau",
 
-  // ---- Sidebar --------------------------------------------------------------
   "COKEY dashboard": "Tableau de bord COKEY",
   Sections: "Sections",
 
-  // ---- App topbar -----------------------------------------------------------
   "Close navigation": "Fermer la navigation",
   "Open navigation": "Ouvrir la navigation",
   "The public model list, as any OpenAI client would see it":
     "La liste publique de modèles, telle que la verrait n'importe quel client OpenAI",
 
-  // ---- NotificationsBell ------------------------------------------------------
   "notice(s) need attention": "notification(s) à traiter",
   Notifications: "Notifications",
   "Needs attention": "À traiter",
 
-  // ---- Guidance ---------------------------------------------------------------
   "Key verified": "Clé vérifiée",
   "Still failing": "Toujours en échec",
   "could not be checked": "n'a pas pu être vérifié",
@@ -424,7 +387,6 @@ export const FR: Record<string, string> = {
   checked: "vérifié",
   "stays on this machine": "reste sur cette machine",
 
-  // ---- Providers --------------------------------------------------------------
   "connected only": "connectés uniquement",
   "Search providers": "Rechercher des fournisseurs",
   "Much of this list is one free pool re-exported under several names, so the verdicts are the point: start at the top and never build on an":
@@ -468,7 +430,6 @@ export const FR: Record<string, string> = {
   source: "source",
   "get a free key": "obtenir une clé gratuite",
 
-  // ---- ApiKeys ------------------------------------------------------------------
   "Give the key a name, e.g. OpenCode": "Donnez un nom à la clé, par ex. OpenCode",
   "API key revoked": "Clé API révoquée",
   "New API key": "Nouvelle clé API",
@@ -490,7 +451,6 @@ export const FR: Record<string, string> = {
   "Clients using it stop working immediately.":
     "Les clients qui l'utilisent cessent immédiatement de fonctionner.",
 
-  // ---- Models -------------------------------------------------------------------
   Catalog: "Catalogue",
   "My models": "Mes modèles",
   "sending hello": "envoi d'un bonjour",
@@ -534,7 +494,6 @@ export const FR: Record<string, string> = {
   "More models": "Plus de modèles",
   "API equivalent:": "Équivalent API :",
 
-  // ---- Rankings -----------------------------------------------------------------
   "Loading rankings…": "Chargement des classements…",
   "How to read this": "Comment lire ceci",
   "Coding skill": "Compétence en code",
@@ -557,7 +516,7 @@ export const FR: Record<string, string> = {
     "Les scores de benchmark bougent chaque mois et les chiffres publiés par les fournisseurs les flattent. Le bouton lecture du catalogue est le seul score qui reflète votre propre clé.",
   Tier: "Palier",
   Why: "Pourquoi",
-  "Find": "Trouver",
+  Find: "Trouver",
   "in the catalog": "dans le catalogue",
   "in the provider catalog": "dans le catalogue des fournisseurs",
   "vendor direct": "direct fournisseur",
@@ -582,7 +541,6 @@ export const FR: Record<string, string> = {
   Keep: "Garder",
   Fallback: "Repli",
 
-  // ---- Usage --------------------------------------------------------------------
   Overview: "Aperçu",
   "Serving now": "En service actuellement",
   "Loading…": "Chargement…",
@@ -599,7 +557,8 @@ export const FR: Record<string, string> = {
   "keys:": "clés :",
   "serving now": "en service actuellement",
   now: "maintenant",
-  "Nothing recorded yet. Send a request to": "Rien d'enregistré pour l'instant. Envoyez une requête à",
+  "Nothing recorded yet. Send a request to":
+    "Rien d'enregistré pour l'instant. Envoyez une requête à",
   "Models used": "Modèles utilisés",
   "30-day requests": "Requêtes sur 30 jours",
   "30-day tokens": "Jetons sur 30 jours",
@@ -612,7 +571,8 @@ export const FR: Record<string, string> = {
   "Quota vs limit": "Quota vs limite",
   Reset: "Réinitialisation",
   unknown: "inconnu",
-  "No model usage for this provider yet.": "Aucune utilisation de modèle pour ce fournisseur pour l'instant.",
+  "No model usage for this provider yet.":
+    "Aucune utilisation de modèle pour ce fournisseur pour l'instant.",
   "Daily rollup": "Cumul quotidien",
   "No daily totals yet.": "Aucun total quotidien pour l'instant.",
   Day: "Jour",
@@ -641,7 +601,6 @@ export const FR: Record<string, string> = {
   "no declared limit": "aucune limite déclarée",
   "source:": "source :",
 
-  // ---- Settings -------------------------------------------------------------------
   "Password set. It is now permanent.": "Mot de passe défini. Il est désormais permanent.",
   "Settings saved": "Paramètres enregistrés",
   "A display name and base URL are required": "Un nom affiché et une URL de base sont requis",
@@ -689,11 +648,12 @@ export const FR: Record<string, string> = {
   "Set this password permanently? It cannot be changed again.":
     "Définir ce mot de passe de façon permanente ? Il ne pourra plus être changé.",
 
-  // ---- EgressPoolPanel ------------------------------------------------------------
   "Proxy added to the pool": "Proxy ajouté au pool",
-  "Proxy removed; affected keys were reassigned": "Proxy retiré ; les clés concernées ont été réassignées",
+  "Proxy removed; affected keys were reassigned":
+    "Proxy retiré ; les clés concernées ont été réassignées",
   "Assignments already up to date": "Assignations déjà à jour",
-  "credential(s) moved to a new exit IP": "identifiant(s) déplacé(s) vers une nouvelle IP de sortie",
+  "credential(s) moved to a new exit IP":
+    "identifiant(s) déplacé(s) vers une nouvelle IP de sortie",
   "working free exit(s) added": "sortie(s) gratuite(s) fonctionnelle(s) ajoutée(s)",
   probed: "sondée(s)",
   "dead skipped": "morte(s) ignorée(s)",
@@ -740,7 +700,6 @@ export const FR: Record<string, string> = {
   "Keys using it": "Clés qui l'utilisent",
   Enabled: "Activée",
 
-  // ---- BulkProxyModal -------------------------------------------------------------
   "Nothing to add": "Rien à ajouter",
   "No new exits —": "Aucune nouvelle sortie —",
   "skipped (duplicate or invalid)": "ignorée(s) (doublon ou invalide)",
@@ -756,7 +715,6 @@ export const FR: Record<string, string> = {
   "pasted.": "collée(s).",
   "Add proxies": "Ajouter les proxys",
 
-  // ---- About --------------------------------------------------------------------
   "a tool for broke lads made by a broke princess":
     "un outil pour les fauchés, fait par une princesse fauchée",
   "Pool the free API keys you already have into ordered chains, behind one OpenAI-compatible endpoint. When a key runs out, the next one takes over and the client never notices. It runs on your machine, encrypted at rest, and sends nothing anywhere.":
@@ -770,16 +728,13 @@ export const FR: Record<string, string> = {
   "with thanks. Rate limits change constantly, so the ranking boards always name their source and let you decide.":
     "avec nos remerciements. Les limites de débit changent constamment, donc les classements nomment toujours leur source et vous laissent décider.",
 
-  // ---- LoginForm ------------------------------------------------------------------
   "Sign in to manage the gateway": "Connectez-vous pour gérer la passerelle",
   Password: "Mot de passe",
   Default: "Par défaut",
-  "change it in Settings and it is permanent.":
-    "changez-le dans Paramètres et c'est permanent.",
+  "change it in Settings and it is permanent.": "changez-le dans Paramètres et c'est permanent.",
   "Signing in…": "Connexion…",
   "Sign in": "Se connecter",
 
-  // ---- StatusBar ------------------------------------------------------------------
   "Connected to the live event stream — this page updates as the gateway changes":
     "Connecté au flux d'évènements en direct — cette page se met à jour au fil des changements de la passerelle",
   "Event stream offline — falling back to a periodic refresh":
@@ -794,7 +749,6 @@ export const FR: Record<string, string> = {
   "Gateway version": "Version de la passerelle",
   "made by": "fait par",
 
-  // ---- LiveStatus -----------------------------------------------------------------
   "Model changed": "Modèle changé",
   "Key changed": "Clé changée",
   was: "était",
@@ -809,14 +763,12 @@ export const FR: Record<string, string> = {
   updated: "mise à jour",
   "No routing activity yet.": "Aucune activité de routage pour l'instant.",
 
-  // ---- Contact ------------------------------------------------------------------
   "Issues, pull requests and the source": "Tickets, pull requests et le code source",
   "Work and updates": "Travail et actualités",
   "Say hello": "Dire bonjour",
   Repository: "Dépôt",
   "Open source, MIT licensed": "Open source, licence MIT",
 
-  // ---- Tutorial -------------------------------------------------------------------
   "Getting started": "Prise en main",
   "Connect two or three providers.": "Connectez deux ou trois fournisseurs.",
   "Open the Providers tab and paste a key for each. COKEY verifies every key before storing it, so a typo is caught immediately.":
@@ -825,7 +777,8 @@ export const FR: Record<string, string> = {
   "Chains, then": "Chaînes, puis",
   "Name it whatever you will type into your editor, for example":
     "Nommez-la comme vous la saisirez dans votre éditeur, par exemple",
-  "Add nodes in the order you want them tried.": "Ajoutez des nœuds dans l'ordre où vous voulez qu'ils soient essayés.",
+  "Add nodes in the order you want them tried.":
+    "Ajoutez des nœuds dans l'ordre où vous voulez qu'ils soient essayés.",
   "Each node is a provider plus a model plus the keys bound to it. Every key of a node is exhausted before the next node runs.":
     "Chaque nœud est un fournisseur plus un modèle plus les clés qui lui sont rattachées. Chaque clé d'un nœud est épuisée avant que le nœud suivant ne s'exécute.",
   "Press play in the Models tab.": "Appuyez sur lecture dans l'onglet Modèles.",
@@ -836,16 +789,19 @@ export const FR: Record<string, string> = {
     "Utilisez l'une des recettes ci-dessous. L'URL de base est toujours",
   "Editor and CLI recipes": "Recettes éditeur et CLI",
   "Automatic egress proxies": "Proxys de sortie automatiques",
-  "Provider limits are usually tracked per key": "Les limites des fournisseurs sont généralement suivies par clé",
+  "Provider limits are usually tracked per key":
+    "Les limites des fournisseurs sont généralement suivies par clé",
   and: "et",
   "per IP, so rotating five keys from one address still trips the same limit. Fill the pool once and COKEY assigns the exits for you:":
     "par IP, donc faire tourner cinq clés depuis une seule adresse déclenche quand même la même limite. Remplissez le pool une fois et COKEY assigne les sorties pour vous :",
-  "Every key of one provider gets a different exit IP.": "Chaque clé d'un fournisseur obtient une IP de sortie différente.",
+  "Every key of one provider gets a different exit IP.":
+    "Chaque clé d'un fournisseur obtient une IP de sortie différente.",
   "Keys of different providers may share an entry, because nothing correlates them upstream.":
     "Les clés de différents fournisseurs peuvent partager une entrée, car rien ne les corrèle en amont.",
   "The mapping is stable across restarts, so a key does not appear to move cities every boot.":
     "L'association est stable entre les redémarrages, donc une clé ne semble pas changer de ville à chaque démarrage.",
-  "A proxy you set by hand is never overwritten by the pool.": "Un proxy que vous définissez à la main n'est jamais écrasé par le pool.",
+  "A proxy you set by hand is never overwritten by the pool.":
+    "Un proxy que vous définissez à la main n'est jamais écrasé par le pool.",
   "Add entries under Settings, Egress pool, or supply a comma-separated list through":
     "Ajoutez des entrées dans Paramètres, Pool de sortie, ou fournissez une liste séparée par des virgules via",
   copied: "copié",
@@ -893,8 +849,10 @@ export const FR: Record<string, string> = {
     "Démarrez-le comme d'habitude et sélectionnez l'alias de la chaîne quand un modèle est demandé :",
   "If your version also sends a beta header the gateway does not recognise, COKEY forwards unknown headers upstream untouched, so nothing breaks.":
     "Si votre version envoie aussi un en-tête bêta que la passerelle ne reconnaît pas, COKEY transmet les en-têtes inconnus en amont sans y toucher, donc rien ne casse.",
-  "Add a provider entry in ~/.codex/config.toml:": "Ajoutez une entrée fournisseur dans ~/.codex/config.toml :",
-  "Set the placeholder key the config refers to:": "Définissez la clé espace réservé référencée par la config :",
+  "Add a provider entry in ~/.codex/config.toml:":
+    "Ajoutez une entrée fournisseur dans ~/.codex/config.toml :",
+  "Set the placeholder key the config refers to:":
+    "Définissez la clé espace réservé référencée par la config :",
   "Open Settings and search for the extension's API base URL field, or set it in settings.json:":
     "Ouvrez Settings et cherchez le champ URL de base API de l'extension, ou définissez-le dans settings.json :",
   "Reload the window. The model picker gains a COKEY entry using your chain alias.":
@@ -923,7 +881,8 @@ export const FR: Record<string, string> = {
     "Exportez le point de terminaison et une clé espace réservé avant de lancer :",
   "Long tool-calling loops benefit most from failover: raise maxRetriesPerCredential in Settings if a run keeps hitting one provider's limit.":
     "Les longues boucles d'appels d'outils profitent le plus du repli : augmentez maxRetriesPerCredential dans Paramètres si une exécution bute sans cesse sur la limite d'un fournisseur.",
-  "Register COKEY as an OpenAI-compatible provider:": "Enregistrez COKEY comme fournisseur compatible OpenAI :",
+  "Register COKEY as an OpenAI-compatible provider:":
+    "Enregistrez COKEY comme fournisseur compatible OpenAI :",
   "Restart the agent and confirm the first request shows up in the Usage tab.":
     "Redémarrez l'agent et vérifiez que la première requête apparaît dans l'onglet Utilisation.",
   "Set the generic variables:": "Définissez les variables génériques :",
@@ -932,7 +891,6 @@ export const FR: Record<string, string> = {
   "List what COKEY currently serves, owned by COKEY rather than the upstream vendor:":
     "Listez ce que COKEY sert actuellement, la réponse venant de COKEY plutôt que du fournisseur en amont :",
 
-  // ---- Terms ----------------------------------------------------------------------
   "Terms of service": "Conditions d'utilisation",
   "The short version: COKEY is a local tool, the keys are yours, the providers' rules come first, and legal problems between you and a provider are yours to resolve.":
     "En bref : COKEY est un outil local, les clés sont les vôtres, les règles des fournisseurs priment, et les problèmes juridiques entre vous et un fournisseur sont à régler par vous.",
@@ -940,7 +898,8 @@ export const FR: Record<string, string> = {
   "You are responsible for the keys you add, you agree to respect each provider's own terms and limits, and you accept that the author is not liable for how you use their software or for any consequences that follow from it. If a dispute arises with a provider, it is between you and that provider.":
     "Vous êtes responsable des clés que vous ajoutez, vous acceptez de respecter les conditions et limites propres à chaque fournisseur, et vous acceptez que l'autrice ne soit pas responsable de l'usage que vous faites de son logiciel ni des conséquences qui en découlent. Si un litige survient avec un fournisseur, il est entre vous et ce fournisseur.",
   "Contact the creator": "Contacter la créatrice",
-  "COKEY is built and maintained by one person,": "COKEY est construit et maintenu par une seule personne,",
+  "COKEY is built and maintained by one person,":
+    "COKEY est construit et maintenu par une seule personne,",
   "Bug reports, provider tips, a free tier that changed under you, and pull requests are all welcome - the software is MIT licensed and the source is public. If a provider changed its limits, the fastest fix is a pull request against the catalog rather than an issue.":
     "Rapports de bugs, tuyaux sur les fournisseurs, un palier gratuit qui a changé sous vos pieds, et les pull requests sont tous les bienvenus - le logiciel est sous licence MIT et le code source est public. Si un fournisseur a changé ses limites, le correctif le plus rapide est une pull request contre le catalogue plutôt qu'un ticket.",
 
@@ -951,7 +910,8 @@ that rotates between them.
 
 It does not create accounts, buy credits, or hold funds on your behalf. There is
 no service behind it to sign up to, and nobody is running a COKEY server that
-your requests travel through.`]: `COKEY est une **passerelle locale qui tourne sur votre machine**. Elle stocke les clés API
+your requests travel through.`]:
+    `COKEY est une **passerelle locale qui tourne sur votre machine**. Elle stocke les clés API
 que vous possédez déjà, les chiffre au repos, et expose un point de terminaison compatible OpenAI
 qui tourne entre elles.
 
@@ -970,7 +930,8 @@ You are responsible for:
 
 The author of COKEY is not a party to any agreement between you and a provider.
 Adding a key is you acting on your own account, in your own name, under your own
-agreement with that provider.`]: `Chaque identifiant de ce pool appartient à un compte que **vous** contrôlez.
+agreement with that provider.`]:
+    `Chaque identifiant de ce pool appartient à un compte que **vous** contrôlez.
 
 Vous êtes responsable :
 
@@ -992,7 +953,8 @@ win.** It is your job to know them before you add a key.
 
 Using COKEY to evade a provider's limits is not a supported use. Rotation exists
 so that a rate limit on one key does not take down your own legitimate traffic;
-it is not a way to obtain more capacity than the provider has offered you.`]: `Les fournisseurs fixent les règles de leurs propres paliers gratuits : limites de débit, usages
+it is not a way to obtain more capacity than the provider has offered you.`]:
+    `Les fournisseurs fixent les règles de leurs propres paliers gratuits : limites de débit, usages
 permis, combien de comptes une personne peut détenir, et si le routage automatisé est autorisé
 du tout.
 
@@ -1035,7 +997,8 @@ That includes, without limitation:
 - legal trouble with a third party.
 
 You agree to use the software at your own risk, and to resolve any dispute with
-a provider directly with that provider.`]: `Dans la mesure permise par la loi, l'autrice n'est pas responsable de toute perte indirecte,
+a provider directly with that provider.`]:
+    `Dans la mesure permise par la loi, l'autrice n'est pas responsable de toute perte indirecte,
 accessoire ou consécutive résultant de votre usage de COKEY.
 
 Cela inclut, sans s'y limiter :
@@ -1061,7 +1024,8 @@ The dashboard's own fonts and icons are served from the gateway rather than a
 CDN, for the same reason: rendering a page should not tell a third party that
 you opened it.
 
-If you join a community to ask a question, you choose what to share.`]: `COKEY n'a **aucune analytique, aucune communication vers l'extérieur, et aucun composant serveur
+If you join a community to ask a question, you choose what to share.`]:
+    `COKEY n'a **aucune analytique, aucune communication vers l'extérieur, et aucun composant serveur
 que vous n'avez pas démarré vous-même**.
 
 Tout est stocké dans une base de données SQLite locale sous votre répertoire de données. Vos
@@ -1106,7 +1070,8 @@ in the project's history is one \`git log\` away:
 git log --follow -p src/web/pages/Terms.tsx
 \`\`\`
 
-The version you are running is shown in the gateway's status bar.`]: `Ces conditions peuvent changer avec le logiciel. Continuer à utiliser une nouvelle version signifie
+The version you are running is shown in the gateway's status bar.`]:
+    `Ces conditions peuvent changer avec le logiciel. Continuer à utiliser une nouvelle version signifie
 accepter les conditions qui l'accompagnent.
 
 Comme ce dépôt est public et versionné, le libellé exact à n'importe quel moment
@@ -1118,7 +1083,6 @@ git log --follow -p src/web/pages/Terms.tsx
 
 La version que vous utilisez est affichée dans la barre d'état de la passerelle.`,
 
-  // ---- Gap-fill pass (found by cross-checking every t() call against the dictionary) --
   "Add this model to a chain": "Ajouter ce modèle à une chaîne",
   "answered 200": "a répondu 200",
   "Ask every connected provider what it serves right now":
@@ -1138,7 +1102,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "replied:": "a répondu :",
   Success: "Réussite",
 
-  // ---- Insights flash cards -------------------------------------------------------
   Dismiss: "Ignorer",
   'That key came back invalid. Worth a double-check for a stray trailing space or newline from a copy-paste - a surprising number of "invalid key" errors are exactly that.':
     "Cette clé est ressortie invalide. Vérifiez qu'il n'y a pas d'espace ou de retour à la ligne superflu venant d'un copier-coller - beaucoup d'erreurs « clé invalide » viennent exactement de là.",
@@ -1161,7 +1124,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Checking every model in a row can eat into a provider's daily quota faster than real usage would. Consider testing just the ones you're about to chain.":
     "Vérifier tous les modèles à la suite peut entamer le quota journalier d'un fournisseur plus vite qu'un usage réel. Testez plutôt seulement ceux que vous allez chaîner.",
 
-  // ---- Onboarding tour -------------------------------------------------------------
   Guide: "Guide",
   "Replay the guided tour": "Rejouer le guide",
   "Guided tour": "Visite guidée",
@@ -1181,7 +1143,7 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "Cliquez sur la carte d'un fournisseur - pas seulement sur le bouton Connecter - pour voir son dossier complet, sa juridiction et sa limite de palier gratuit avant de coller une clé. COKEY vérifie une clé dès que vous l'enregistrez.",
   "A chain's name IS the model id": "Le nom d'une chaîne EST l'id du modèle",
   'Whatever you type here - say cokey-best - is exactly what your client should request as "model". COKEY resolves that alias to a node, a model and a key on every single request, and moves to the next one the moment any of those runs out.':
-    'Ce que vous tapez ici - disons cokey-best - est exactement ce que votre client doit demander comme "model". COKEY résout cet alias en un nœud, un modèle et une clé à chaque requête, et passe au suivant dès que l\'un d\'eux est épuisé.',
+    "Ce que vous tapez ici - disons cokey-best - est exactement ce que votre client doit demander comme \"model\". COKEY résout cet alias en un nœud, un modèle et une clé à chaque requête, et passe au suivant dès que l'un d'eux est épuisé.",
   "Don't want a chain? You don't need one": "Pas envie d'une chaîne ? Vous n'en avez pas besoin",
   "A chain is for fallback across several keys or providers. If you only ever use one key, skip building a chain entirely: connect the provider and call its real model id directly. Open this link any time to see every model your connected keys can currently serve.":
     "Une chaîne sert au repli entre plusieurs clés ou fournisseurs. Si vous n'utilisez qu'une seule clé, ne construisez pas de chaîne du tout : connectez le fournisseur et appelez directement son véritable id de modèle. Ouvrez ce lien à tout moment pour voir tous les modèles que vos clés connectées peuvent servir actuellement.",
@@ -1207,23 +1169,18 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Connect a free key, then either chain it for fallback or use its model id directly - both are first-class here. Terms and About, in the sidebar, are where bug reports and provider tips live.":
     "Connectez une clé gratuite, puis chaînez-la pour le repli ou utilisez directement son id de modèle - les deux sont traités à égalité ici. Conditions et À propos, dans la barre latérale, sont l'endroit pour les rapports de bug et les astuces de fournisseurs.",
 
-  // ---- Provider card free-tier chip ------------------------------------------------
   "This provider does not publish its free-tier limits.":
     "Ce fournisseur ne publie pas ses limites de palier gratuit.",
   "Published by the provider.": "Publié par le fournisseur.",
 
-  // ---- Connect-provider modal free-tier banner ------------------------------------
   "Not published by the provider - treat this as unverified.":
     "Non publié par le fournisseur - à considérer comme non vérifié.",
 
-  // ---- Login form ------------------------------------------------------------------
   "By continuing you agree to the terms.": "En continuant, vous acceptez les conditions.",
 
-  // ---- Insights card kickers --------------------------------------------------------
   "Fun fact": "Anecdote",
   Insight: "Astuce",
 
-  // ---- Provider dossier origins ------------------------------------------------------
   Canada: "Canada",
   China: "Chine",
   France: "France",
@@ -1234,7 +1191,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "United States": "États-Unis",
   "United States / France": "États-Unis / France",
 
-  // ---- Provider dossier summaries ----------------------------------------------------
   "A coding-agent extension that also exposes an OpenAI-compatible gateway. Much of its free catalogue mirrors OpenRouter's.":
     "Une extension d'agent de codage qui expose aussi une passerelle compatible OpenAI. Une grande partie de son catalogue gratuit reflète celui d'OpenRouter.",
   "A community free hub with a daily request and token allowance.":
@@ -1265,8 +1221,7 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "Un hub gratuit servant des modèles à poids ouverts avec des limites quotidiennes de jetons annoncées.",
   "A free hub serving open-weight models with tight limits.":
     "Un hub gratuit servant des modèles à poids ouverts avec des limites serrées.",
-  "A free hub that does not publish its quotas.":
-    "Un hub gratuit qui ne publie pas ses quotas.",
+  "A free hub that does not publish its quotas.": "Un hub gratuit qui ne publie pas ses quotas.",
   "A free hub that does not reliably honour structured output.":
     "Un hub gratuit qui ne respecte pas de façon fiable la sortie structurée.",
   "A free hub whose catalogue mirrors the OpenRouter free pool.":
@@ -1330,8 +1285,8 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Workers AI runs open models on Cloudflare's edge network, so requests terminate close to you. The free allowance is the largest per-day ceiling here.":
     "Workers AI exécute des modèles ouverts sur le réseau de périphérie de Cloudflare, si bien que les requêtes se terminent près de vous. Le quota gratuit est le plus grand plafond quotidien de cette liste.",
 
-  // ---- Provider dossier verdict reasons ----------------------------------------------
-  "50 requests per day is a demo, not a pool.": "Cinquante requêtes par jour, c'est une démo, pas un pool.",
+  "50 requests per day is a demo, not a pool.":
+    "Cinquante requêtes par jour, c'est une démo, pas un pool.",
   "An undocumented operator cannot be recommended or ruled out.":
     "Un opérateur non documenté ne peut être ni recommandé ni écarté.",
   "Best coding pedigree on this list when you do not need high volume.":
@@ -1403,10 +1358,13 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
     "Le démon local est l'option honnêtement illimitée ; le palier cloud se réinitialise chaque semaine.",
   "The same model is faster and freer on Groq or Cloudflare.":
     "Le même modèle est plus rapide et plus libre sur Groq ou Cloudflare.",
-  "Tight per-minute limits and an unverified operator.": "Limites par minute serrées et opérateur non vérifié.",
-  "Too thin and too slow to route real work through.": "Trop peu et trop lent pour y faire transiter du vrai travail.",
+  "Tight per-minute limits and an unverified operator.":
+    "Limites par minute serrées et opérateur non vérifié.",
+  "Too thin and too slow to route real work through.":
+    "Trop peu et trop lent pour y faire transiter du vrai travail.",
   "Unlimited in name, rate-shaped in practice.": "Illimité de nom, limité en débit dans les faits.",
-  "Unspecified limits and no operator disclosure.": "Limites non précisées et aucune divulgation d'opérateur.",
+  "Unspecified limits and no operator disclosure.":
+    "Limites non précisées et aucune divulgation d'opérateur.",
   "Useful batch capacity; treat the advertised volume as unverified until your dashboard agrees.":
     "Capacité de traitement par lots utile ; considérez le volume annoncé comme non vérifié jusqu'à confirmation par votre tableau de bord.",
   "Wide model coverage and no token cap, but per-model RPM is modest.":
@@ -1418,12 +1376,12 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Your own endpoint: quotas and jurisdiction are whatever you configured.":
     "Votre propre point de terminaison : quotas et juridiction sont ceux que vous avez configurés.",
 
-  // ---- Provider dossier notes ---------------------------------------------------------
   "Hosted in Russia; some free models are region-sensitive.":
     "Hébergé en Russie ; certains modèles gratuits sont sensibles à la région.",
   "Imported from the legacy catalog without a dossier. Needs an editor.":
     "Importé de l'ancien catalogue sans dossier. Nécessite une relecture éditoriale.",
-  "New accounts may go through manual review.": "Les nouveaux comptes peuvent passer par une vérification manuelle.",
+  "New accounts may go through manual review.":
+    "Les nouveaux comptes peuvent passer par une vérification manuelle.",
   "Rate limit is generous but the key is your own upstream key (BYOK).":
     "La limite de débit est généreuse mais la clé est votre propre clé en amont (BYOK).",
   "Requires both an API token and the Cloudflare account id.":
@@ -1433,7 +1391,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Weekly credit cap; not suitable as a chain's first entry.":
     "Plafond de crédits hebdomadaire ; ne convient pas comme premier nœud d'une chaîne.",
 
-  // ---- Provider free-tier quota prose (numbers/units left as-is; prose translated) ---
   "$0.10 of monthly inference credits": "0,10 $ de crédits d'inférence par mois",
   "$20 of credits per day": "20 $ de crédits par jour",
   "5-hour session · weekly reset": "Session de 5 heures · réinitialisation hebdomadaire",
@@ -1441,7 +1398,8 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "~2–30 RPM · 50,000 TPM shared pool": "~2–30 RPM · 50 000 TPM en pool partagé",
   "40 RPM per model · uncapped TPD": "40 RPM par modèle · TPD illimité",
   "Free 'on the house' models": "Modèles gratuits « maison »",
-  "Free DeepSeek models · ~1 request per 5 minutes": "Modèles DeepSeek gratuits · ~1 requête toutes les 5 minutes",
+  "Free DeepSeek models · ~1 request per 5 minutes":
+    "Modèles DeepSeek gratuits · ~1 requête toutes les 5 minutes",
   "Free community-hosted models": "Modèles gratuits hébergés par la communauté",
   "Free laguna-s-2.1 · DeepSeek models paid": "laguna-s-2.1 gratuit · modèles DeepSeek payants",
   "Free models · limits unspecified": "Modèles gratuits · limites non précisées",
@@ -1458,7 +1416,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Uncapped TPD · 1 concurrent": "TPD illimité · 1 simultané",
   "Unlimited requests · 10 RPM": "Requêtes illimitées · 10 RPM",
 
-  // ---- Provider catalog notes (src/catalog/providers.ts) -----------------------------
   "Alibaba's official inference API with canonical DeepSeek model names. All four DeepSeek models verified. Requires an Alibaba Cloud account bound to the ModelScope token before requests work. Paid per-token.":
     "API d'inférence officielle d'Alibaba avec les noms de modèles DeepSeek canoniques. Les quatre modèles DeepSeek sont vérifiés. Nécessite un compte Alibaba Cloud lié au jeton ModelScope avant que les requêtes fonctionnent. Payant au jeton.",
   "DeepSeek-R1-0528-Qwen3-8B and qwen3.8-27b verified. deepseek/deepseek-chat-v3.1 is advertised in /models but returns model_not_found (no available channel) and is intentionally not listed.":
@@ -1482,7 +1439,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Requires email verification before requests start working. On free tier the same caveat applies: shared, capacity-limited compute.":
     "Nécessite une vérification par e-mail avant que les requêtes fonctionnent. Sur le palier gratuit, la même réserve s'applique : calcul partagé à capacité limitée.",
 
-  // ---- Insights bundled fallback fun facts (no remote funFactsFr needed) -------------
   "Did you know COKEY never fabricates a quota? A provider that publishes no rate-limit header is reported as Quota: Unknown, not a guess.":
     "Saviez-vous que COKEY n'invente jamais un quota ? Un fournisseur qui ne publie pas d'en-tête de limite de débit est signalé comme Quota : Inconnu, jamais deviné.",
   "COKEY's routing invariant fits in five words: node, then key, then node.":
@@ -1490,9 +1446,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Two keys of the same provider never share an exit IP once the automatic egress pool is on - that's the whole point of it.":
     "Deux clés d'un même fournisseur ne partagent jamais d'IP de sortie une fois le pool d'égress automatique activé - c'est tout son intérêt.",
 
-  // ---- Insights fallback fun facts, as a static safety net alongside the remote-bundle
-  // French array: covers the case where the backend hasn't restarted onto the version
-  // that serves funFactsFr yet, so the cards never silently stay English. ----------------
   "Did you know COKEY was built with the help of COKEY? The gateway spent part of its own development pooling free keys for the assistant that wrote it.":
     "Saviez-vous que COKEY a été construit avec l'aide de COKEY ? La passerelle a passé une partie de son propre développement à mutualiser des clés gratuites pour l'assistant qui l'a écrite.",
   "A provider rate limit is almost always per key *and* per IP. That is the entire reason the automatic egress pool exists.":
@@ -1514,10 +1467,6 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "Some providers count a single verification call against the same daily quota as real traffic. Testing ten keys back-to-back can look, to them, like ten real requests.":
     "Certains fournisseurs comptent un simple appel de vérification dans le même quota quotidien que le trafic réel. Tester dix clés à la suite peut ressembler, pour eux, à dix vraies requêtes.",
 
-  // ---- Free-tier quota strings (src/catalog/dossiers.ts + providers.ts) --------------
-  // Numbers and unit abbreviations (RPM/RPD/TPD/TPM) are language-neutral and read the
-  // same in French; every entry below is still listed explicitly so none can be mistaken
-  // for a missed translation. Only the handful with real English words actually change.
   "$0.10/month credits": "0,10 $/mois de crédits",
   "$20 daily credits · 2 concurrent": "20 $ de crédits quotidiens · 2 simultanés",
   "10 RPD per model": "10 RPD par modèle",
@@ -1570,9 +1519,9 @@ La version que vous utilisez est affichée dans la barre d'état de la passerell
   "60 RPM · 550 RPD · 200,000 TPM": "60 RPM · 550 RPD · 200 000 TPM",
   "90M tokens/month": "90M jetons/mois",
   "Free models only": "Modèles gratuits uniquement",
-  "Paid models · works with a funded key": "Modèles payants · fonctionne avec une clé approvisionnée",
+  "Paid models · works with a funded key":
+    "Modèles payants · fonctionne avec une clé approvisionnée",
 
-  // ---- About page credits ------------------------------------------------------------
   "The automatic egress pool's free-proxy import pulls its list from":
     "L'importation de proxys gratuits du pool d'égress automatique récupère sa liste depuis",
   "a community-maintained list refreshed continuously, no key and no quota.":

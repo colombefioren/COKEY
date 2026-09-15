@@ -85,7 +85,7 @@ describe("EventBus", () => {
     expect(route.active).toBe(false);
     expect(route.lastOutcome).toBe("success");
     expect(route.attempts).toBe(2);
-    // Merging must not drop the last known target.
+
     expect(route.credentialDescription).toBe("Main");
 
     bus.clear();
@@ -122,15 +122,11 @@ describe("topicFor", () => {
     expect(topicFor("credential.cooldown")).toBe("credentials");
     expect(topicFor("models.updated")).toBe("models");
     expect(topicFor("chain.updated")).toBe("chains");
-    // Curated content is its own subject: a subscriber that only renders
-    // dossiers should not be woken by a key going into cooldown.
+
     expect(topicFor("content.updated")).toBe("content");
   });
 
   it("keeps chain.state with the route it narrates", () => {
-    // It is phrased as a chain notification, but it is emitted from the routing
-    // hot path to describe a request, so a data-only subscriber must not be
-    // woken by it on every attempt.
     expect(topicFor("chain.state")).toBe("route");
   });
 });
@@ -148,8 +144,6 @@ describe("parseTopics", () => {
   });
 
   it("drops unknown names rather than rejecting the request", () => {
-    // A subscriber asking for a topic this build does not have should still get
-    // the topics it does have.
     const topics = parseTopics("models,telepathy")!;
     expect([...topics]).toEqual(["models"]);
   });

@@ -33,7 +33,6 @@ function credential(): Credential {
   };
 }
 
-/** A fetch stub that answers the models list and records every chat body. */
 function stubFetch(liveModels: string[], chatBodies: unknown[]) {
   return stubFetchWithEntries(
     liveModels.map((id) => ({ id })),
@@ -41,7 +40,6 @@ function stubFetch(liveModels: string[], chatBodies: unknown[]) {
   );
 }
 
-/** Same as `stubFetch`, but each listing entry can carry its own fields. */
 function stubFetchWithEntries(liveModels: Array<Record<string, unknown>>, chatBodies: unknown[]) {
   return vi.fn(async (url: string, init?: RequestInit) => {
     if (url.includes("/models")) {
@@ -112,10 +110,6 @@ describe("OpenAICompatibleAdapter verification model selection", () => {
   });
 
   it("skips a curated model the listing marks paid, even though it is still served", async () => {
-    // The exact shape that broke xKiro verification: a curated id with no
-    // ":free" suffix is still returned by /models, but its own access_tier
-    // says it now bills against a wallet, while an uncurated model in the
-    // same response is explicitly free.
     const chatBodies: unknown[] = [];
     vi.stubGlobal(
       "fetch",

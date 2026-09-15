@@ -8,27 +8,15 @@ interface Recipe {
   name: string;
   kind: "Editor" | "Editor extension" | "CLI" | "Agent framework";
   blurb: string;
-  /** Steps in order. `code` is a snippet, `text` a sentence. */
+
   steps: Array<{ text: string; code?: string; lang?: string }>;
   notes?: string;
 }
 
 const BASE_URL = "http://127.0.0.1:8787/v1";
-/**
- * The placeholder every client recipe reuses. COKEY runs locally and its own
- * keys are gateway API keys (optional) - the chat client just needs *a* value,
- * so this exact string works in every config below.
- */
+
 const PLACEHOLDER_KEY = "your_cokey_api_key";
 
-/**
- * Setup guides, one per client.
- *
- * Every recipe ends at the same place: point the client at the gateway's base
- * URL and give it the shared placeholder key. COKEY holds the real keys, so
- * nothing else in the client's configuration has to change when a credential
- * rotates.
- */
 const RECIPES: Recipe[] = [
   {
     id: "opencode",

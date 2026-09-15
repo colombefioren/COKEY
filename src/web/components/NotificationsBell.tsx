@@ -23,27 +23,9 @@ function writeDismissed(ids: string[]): void {
   try {
     if (ids.length === 0) window.localStorage.removeItem(DISMISS_KEY);
     else window.localStorage.setItem(DISMISS_KEY, JSON.stringify(ids));
-  } catch {
-    // Private browsing or a blocked store: dismissals just don't persist.
-  }
+  } catch {}
 }
 
-/**
- * "Needs attention", as a notification bell rather than a fixture on the
- * Dashboard.
- *
- * It lives in the topbar so it is reachable from every screen — the whole
- * point of a notice like "every xKiro key is unusable" is that it should not
- * require being on the Dashboard to see. The badge is a plain count, not a
- * generic dot: the first thing anyone wants to know is how many, before they
- * open it to find out which.
- *
- * The dismissed set lives here, one level above the dropdown, rather than
- * inside it — the badge needs to know the same thing the dropdown does
- * ("dismissed notices don't count"), and two components independently
- * reading the same localStorage key is exactly how the badge and the panel
- * drift apart the moment one of them updates without the other noticing.
- */
 export function NotificationsBell({
   refreshKey,
   onChanged,
@@ -62,8 +44,6 @@ export function NotificationsBell({
     try {
       setData(await api.guidance());
     } catch (error) {
-      // Guidance is advisory. A failure to load it must never break the page it
-      // is rendered on, so it degrades to silence rather than a toast storm.
       if (error instanceof ApiError && error.status >= 500) toast.err(error.message);
     }
   }, [toast]);
@@ -128,13 +108,7 @@ export function NotificationsBell({
         {count > 0 ? <span className="notif-count">{count > 9 ? "9+" : count}</span> : null}
       </button>
 
-      {/*
-       * Two layers on purpose. The tray holds the scroll boundary and the
-       * padding; the inner column is what actually moves. Scrolling the panel
-       * itself was what sliced the notice cards' inked outlines off against
-       * the dropdown edge — the tray gives them room to be scrolled past
-       * instead of through.
-       */}
+      {}
       {open ? (
         <div className="notif-panel" role="dialog" aria-label={t("Needs attention")}>
           <div className="notif-scroll">

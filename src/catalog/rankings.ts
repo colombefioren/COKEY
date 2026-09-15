@@ -1,42 +1,10 @@
-/**
- * Ranking data.
- *
- * Three boards answer three different questions, because "best model" and "best
- * model you can actually call ten thousand times today" are not the same model:
- *
- *   - `skill`    how well a model codes, benchmark first and limits ignored;
- *   - `rateLimit` how much throughput a provider will give away, skill ignored;
- *   - `combined` the shortlist that is both good enough and big enough.
- *
- * Every quota figure below is the operator's own published number, not a
- * measurement. COKEY does not infer limits from traffic: it reports what the
- * provider says and marks the rest `unverified`. Where a number came from a
- * third party rather than the provider's own page, it is flagged so you can
- * check the dashboard before you build on it.
- */
-
 export interface RankingSource {
   label: string;
   url: string;
 }
 
-/** Where a quota number came from. */
-export type QuotaProvenance =
-  /** Published by the operator on its own site. */
-  | "operator"
-  /** Third-party or community reported; verify it yourself. */
-  | "third-party"
-  /** Operator publishes nothing; treat the free tier as unknown. */
-  | "unpublished";
+export type QuotaProvenance = "operator" | "third-party" | "unpublished";
 
-/**
- * One band of the skill board: the letter, what it means, and who belongs in it.
- *
- * `labelFr`/`blurbFr` are the French sibling of `label`/`blurb`, optional so an
- * older or partial published bundle still renders (falling back to English)
- * rather than being refused. Model and provider identifiers are never
- * localized - only prose is.
- */
 export interface SkillTier {
   name: SkillEntry["tierName"];
   label: string;
@@ -47,10 +15,10 @@ export interface SkillTier {
 
 export interface SkillEntry {
   model: string;
-  /** Provider id in this catalog, when the model is reachable through it. */
+
   providerId?: string;
   tierName: "S" | "A" | "B" | "C";
-  /** SWE-bench Verified pass rate, as a percentage. Omitted when unpublished. */
+
   sweScore?: number;
   reason: string;
   reasonFr?: string;
@@ -59,7 +27,7 @@ export interface SkillEntry {
 export interface RateLimitEntry {
   providerId: string;
   provider: string;
-  /** 1 is the highest volume band, 4 the lowest. */
+
   tier: 1 | 2 | 3 | 4;
   quota: string;
   provenance: QuotaProvenance;
@@ -122,8 +90,7 @@ export const SKILL_TIERS: SkillTier[] = [
     label: "Strong generalists",
     labelFr: "Généralistes solides",
     blurb: "Not code-specialised, but they code well enough to be your first entry.",
-    blurbFr:
-      "Non spécialisés en code, mais ils codent assez bien pour être votre premier nœud.",
+    blurbFr: "Non spécialisés en code, mais ils codent assez bien pour être votre premier nœud.",
   },
   {
     name: "B",
@@ -143,7 +110,6 @@ export const SKILL_TIERS: SkillTier[] = [
 ];
 
 export const SKILL_RANKING: SkillEntry[] = [
-  // ---- Tier S -------------------------------------------------------------
   {
     model: "Poolside laguna-s-2.1",
     providerId: "poolside",
@@ -216,7 +182,7 @@ export const SKILL_RANKING: SkillEntry[] = [
     reason: "The whole gateway is curated for coding agents, not general chat.",
     reasonFr: "Toute la passerelle est organisée pour les agents de codage, pas le chat général.",
   },
-  // ---- Tier A -------------------------------------------------------------
+
   {
     model: "gpt-oss-120b",
     providerId: "groq",
@@ -258,7 +224,6 @@ export const SKILL_RANKING: SkillEntry[] = [
     reasonFr: "Le codeur ouvert classique, servi en périphérie.",
   },
 
-  // ---- Tier B -------------------------------------------------------------
   {
     model: "gpt-oss-20b",
     providerId: "groq",
@@ -284,11 +249,34 @@ export const SKILL_RANKING: SkillEntry[] = [
     reasonFr: "Un contexte immense aide sur les gros dépôts, mais ce n'est pas spécialisé en code.",
   },
 
-  // ---- Tier C -------------------------------------------------------------
-  { model: "Sapphira-L3.3-70b", tierName: "C", sweScore: 8.2, reason: "Roleplay fine-tune.", reasonFr: "Affinage pour le jeu de rôle." },
-  { model: "Violet-Lotus-12B", tierName: "C", sweScore: 5.4, reason: "Roleplay fine-tune.", reasonFr: "Affinage pour le jeu de rôle." },
-  { model: "Euryale-v2.1", tierName: "C", sweScore: 6.1, reason: "Roleplay fine-tune.", reasonFr: "Affinage pour le jeu de rôle." },
-  { model: "MythoMax-L2-13B", tierName: "C", sweScore: 4.7, reason: "Roleplay fine-tune.", reasonFr: "Affinage pour le jeu de rôle." },
+  {
+    model: "Sapphira-L3.3-70b",
+    tierName: "C",
+    sweScore: 8.2,
+    reason: "Roleplay fine-tune.",
+    reasonFr: "Affinage pour le jeu de rôle.",
+  },
+  {
+    model: "Violet-Lotus-12B",
+    tierName: "C",
+    sweScore: 5.4,
+    reason: "Roleplay fine-tune.",
+    reasonFr: "Affinage pour le jeu de rôle.",
+  },
+  {
+    model: "Euryale-v2.1",
+    tierName: "C",
+    sweScore: 6.1,
+    reason: "Roleplay fine-tune.",
+    reasonFr: "Affinage pour le jeu de rôle.",
+  },
+  {
+    model: "MythoMax-L2-13B",
+    tierName: "C",
+    sweScore: 4.7,
+    reason: "Roleplay fine-tune.",
+    reasonFr: "Affinage pour le jeu de rôle.",
+  },
   {
     model: "hermes-4-14b",
     tierName: "C",
@@ -319,7 +307,8 @@ export const RATE_LIMIT_RANKING: RateLimitEntry[] = [
     provenance: "operator",
     reliability: "solid",
     note: "Cloudflare's own request and token figures are internally inconsistent; confirm both on your dashboard before relying on the ceiling.",
-    noteFr: "Les chiffres de requêtes et de jetons de Cloudflare sont en interne incohérents ; confirmez les deux sur votre tableau de bord avant de vous fier au plafond.",
+    noteFr:
+      "Les chiffres de requêtes et de jetons de Cloudflare sont en interne incohérents ; confirmez les deux sur votre tableau de bord avant de vous fier au plafond.",
   },
   {
     providerId: "groq",
@@ -392,7 +381,8 @@ export const RATE_LIMIT_RANKING: RateLimitEntry[] = [
     provenance: "operator",
     reliability: "solid",
     note: "Low volume, highest skill: ideal as a first entry for hard work, not for bulk.",
-    noteFr: "Faible volume, compétence la plus élevée : idéal comme premier nœud pour le travail difficile, pas pour le volume.",
+    noteFr:
+      "Faible volume, compétence la plus élevée : idéal comme premier nœud pour le travail difficile, pas pour le volume.",
   },
   {
     providerId: "nvidia",
@@ -430,7 +420,8 @@ export const RATE_LIMIT_RANKING: RateLimitEntry[] = [
     provenance: "operator",
     reliability: "avoid",
     note: "Huge model lists, single-use budget. Novelties, not infrastructure.",
-    noteFr: "Immenses listes de modèles, budget à usage unique. Des curiosités, pas une infrastructure.",
+    noteFr:
+      "Immenses listes de modèles, budget à usage unique. Des curiosités, pas une infrastructure.",
   },
   {
     providerId: "tokenreply",
@@ -468,7 +459,8 @@ export const COMBINED_RANKING: CombinedEntry[] = [
     model: "qwen/qwen3.8-27b or openai/gpt-oss-120b",
     tier: 1,
     why: "Tier-1 volume, sub-300ms latency and an explicit code tag. The daily driver.",
-    whyFr: "Volume de niveau 1, latence sous 300 ms et une étiquette code explicite. Le pilote quotidien.",
+    whyFr:
+      "Volume de niveau 1, latence sous 300 ms et une étiquette code explicite. Le pilote quotidien.",
   },
   {
     rank: 2,
@@ -476,7 +468,8 @@ export const COMBINED_RANKING: CombinedEntry[] = [
     model: "@cf/qwen/qwen2.5-coder-32b-instruct or @cf/openai/gpt-oss-120b",
     tier: 1,
     why: "The largest ceiling on the list with edge latency. Confirms the quota on its own dashboard.",
-    whyFr: "Le plus grand plafond de la liste avec une latence de périphérie. Confirmez le quota sur son propre tableau de bord.",
+    whyFr:
+      "Le plus grand plafond de la liste avec une latence de périphérie. Confirmez le quota sur son propre tableau de bord.",
   },
   {
     rank: 3,
@@ -484,7 +477,8 @@ export const COMBINED_RANKING: CombinedEntry[] = [
     model: "muse-spark-1.3-contributor-free",
     tier: 2,
     why: "Actually curated for coding agents, 1M context, and a real contributor tier.",
-    whyFr: "Réellement organisé pour les agents de codage, 1M de contexte, et un vrai palier contributeur.",
+    whyFr:
+      "Réellement organisé pour les agents de codage, 1M de contexte, et un vrai palier contributeur.",
   },
   {
     rank: 4,
@@ -648,7 +642,8 @@ export const DROP_LIST: Array<{ provider: string; reason: string; reasonFr?: str
     provider: "Gonka Broker",
     reason:
       "Phone verification for three models that are all available elsewhere without friction.",
-    reasonFr: "Vérification par téléphone pour trois modèles tous disponibles ailleurs sans friction.",
+    reasonFr:
+      "Vérification par téléphone pour trois modèles tous disponibles ailleurs sans friction.",
   },
   {
     provider: "FreeInference",
@@ -665,24 +660,16 @@ export const DROP_LIST: Array<{ provider: string; reason: string; reasonFr?: str
   {
     provider: "Yolo-Auto",
     reason: "One model, about fifteen requests per day, with better equivalents elsewhere.",
-    reasonFr: "Un modèle, environ quinze requêtes par jour, avec de meilleurs équivalents ailleurs.",
+    reasonFr:
+      "Un modèle, environ quinze requêtes par jour, avec de meilleurs équivalents ailleurs.",
   },
 ];
 
-/** The bottom line, in one paragraph. */
 export const RANKING_BOTTOM_LINE =
   "Groq and Cloudflare cover daily high-volume coding. OpenCode Zen or Poolside cover needing a coding specialist. xKiro, Void AI and Mistral direct are the deep fallbacks. Everything else on the list is either a re-export of those same models or too rate-limited to build around, so six or seven providers is the practical ceiling.";
 export const RANKING_BOTTOM_LINE_FR =
   "Groq et Cloudflare couvrent le codage quotidien à fort volume. OpenCode Zen ou Poolside couvrent le besoin d'un spécialiste du code. xKiro, Void AI et Mistral en direct sont les recours de secours profonds. Tout le reste de la liste est soit une re-exportation de ces mêmes modèles, soit trop limité en débit pour s'y appuyer, donc six ou sept fournisseurs constituent le plafond pratique.";
 
-/**
- * Fun facts for the dashboard's Insights cards.
- *
- * Same distribution story as the rankings: compiled into the build so there is
- * always something to show, and replaceable by a published bundle so a new one
- * does not need a release. Kept short - these render in a small card, not a
- * paragraph.
- */
 export const FUN_FACTS: string[] = [
   "Did you know COKEY was built with the help of COKEY? The gateway spent part of its own development pooling free keys for the assistant that wrote it.",
   "A provider rate limit is almost always per key *and* per IP. That is the entire reason the automatic egress pool exists.",
@@ -696,7 +683,6 @@ export const FUN_FACTS: string[] = [
   "Some providers count a single verification call against the same daily quota as real traffic. Testing ten keys back-to-back can look, to them, like ten real requests.",
 ];
 
-/** French sibling of {@link FUN_FACTS}, same order, same length. */
 export const FUN_FACTS_FR: string[] = [
   "Saviez-vous que COKEY a été construit avec l'aide de COKEY ? La passerelle a passé une partie de son propre développement à mutualiser des clés gratuites pour l'assistant qui l'a écrite.",
   "Une limite de débit de fournisseur est presque toujours par clé *et* par IP. C'est la seule raison d'être du pool d'égress automatique.",
@@ -710,7 +696,6 @@ export const FUN_FACTS_FR: string[] = [
   "Certains fournisseurs comptent un simple appel de vérification dans le même quota quotidien que le trafic réel. Tester dix clés à la suite peut ressembler, pour eux, à dix vraies requêtes.",
 ];
 
-/** The ranking boards, in the shape `/api/catalog/rankings` returns. */
 export interface RankingsView {
   tiers: SkillTier[];
   skill: SkillEntry[];
@@ -723,17 +708,16 @@ export interface RankingsView {
   disclaimer: string;
   disclaimerFr?: string;
   sources: RankingSource[];
-  /** `remote` when a published update replaced these boards. */
+
   source: "remote" | "compiled";
-  /** When the remote boards were last fetched, when they are in use. */
+
   fetchedAt?: string;
-  /** Short trivia for the dashboard's Insights cards. Optional in a remote bundle. */
+
   funFacts?: string[];
-  /** French sibling of `funFacts`, same order and length when present. */
+
   funFactsFr?: string[];
 }
 
-/** The boards exactly as compiled into this build. */
 export function compiledRankingsView(): RankingsView {
   return {
     tiers: SKILL_TIERS,

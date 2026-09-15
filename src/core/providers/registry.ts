@@ -10,28 +10,16 @@ import { GoogleAdapter } from "./google.js";
 import { OllamaAdapter } from "./ollama.js";
 import { OpenAICompatibleAdapter } from "./openai-compatible.js";
 
-/** Prefix applied to custom endpoint ids so they can never shadow the catalog. */
 export const CUSTOM_PREFIX = "custom:";
 
-/**
- * Maps catalog entries (and user-supplied custom endpoints) onto adapters.
- *
- * The catalog is data; this class is the only place that decides which code
- * speaks for a given `apiStyle`.
- */
 export class ProviderRegistry {
   private readonly entries = new Map<string, ProviderCatalogEntry>();
   private readonly adapters = new Map<string, ProviderAdapter>();
 
   constructor(customEndpoints: CustomEndpointRow[] = []) {
-    // The shipped catalog lists a few services more than once. Merging first
-    // means a sparse duplicate can never erase the curated model list of the
-    // entry it duplicates, and the UI shows one card per real service.
     const canonical = mergeProviderEntries(PROVIDER_CATALOG);
     for (const entry of canonical) this.register(entry);
 
-    // Stored chains and older exports may reference a collapsed id, so every
-    // alias resolves to the same catalog entry and the same adapter.
     for (const [alias, target] of PROVIDER_ALIASES) {
       const entry = this.entries.get(target);
       const adapter = this.adapters.get(target);
@@ -43,7 +31,6 @@ export class ProviderRegistry {
     for (const row of customEndpoints) this.registerCustom(row);
   }
 
-  /** Replace the custom endpoint set without disturbing the shipped catalog. */
   syncCustomEndpoints(rows: CustomEndpointRow[]): void {
     for (const id of [...this.entries.keys()]) {
       if (id.startsWith(CUSTOM_PREFIX)) {
@@ -66,26 +53,11 @@ export class ProviderRegistry {
     return entry;
   }
 
-  /**
-   * The canonical catalog, one entry per service, aliases excluded.
-   *
-   * An alias key is registered pointing at the *same entry object* as its
-   * canonical id (see the constructor), so `entry.id` is always the canonical
-   * id no matter which key retrieved it — filtering on `entry.id` can never
-   * see the alias key and lets the object through twice. Filtering on the map
-   * key itself is what actually excludes the alias.
-   */
   getCatalog(): ProviderCatalogEntry[] {
     const aliases = new Set(PROVIDER_ALIASES.keys());
     return [...this.entries.entries()].filter(([id]) => !aliases.has(id)).map(([, entry]) => entry);
   }
 
-  /**
-   * Only providers shipped with COKEY, excluding user custom endpoints.
-   *
-   * Aliases are filtered out by map key (see `getCatalog`) so a merged
-   * service yields exactly one card instead of one per alias.
-   */
   getBuiltInCatalog(): ProviderCatalogEntry[] {
     const aliases = new Set(PROVIDER_ALIASES.keys());
     return [...this.entries.entries()]
@@ -130,7 +102,6 @@ export function createAdapter(entry: ProviderCatalogEntry): ProviderAdapter {
   }
 }
 
-/** Project a stored custom endpoint into the catalog shape. */
 export function customEndpointToCatalogEntry(row: CustomEndpointRow): ProviderCatalogEntry {
   return {
     id: `${CUSTOM_PREFIX}${row.id}`,

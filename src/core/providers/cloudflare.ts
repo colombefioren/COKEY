@@ -2,16 +2,6 @@ import type { ChainEntry, ChatCompletionRequest, Credential } from "../types.js"
 import type { ProviderRequest } from "./adapter.js";
 import { OpenAICompatibleAdapter } from "./openai-compatible.js";
 
-/**
- * Cloudflare Workers AI.
- *
- * The wire format is OpenAI-compatible, but Cloudflare's schema is stricter:
- * unknown top-level parameters (OpenAI `reasoning`, `metadata`, `store`, etc.)
- * are rejected with a 400 "oneOf at '/' not matched" error. We strip everything
- * except the fields Cloudflare actually accepts.
- *
- * The account id is a path segment, so a credential without one cannot be used.
- */
 export class CloudflareAdapter extends OpenAICompatibleAdapter {
   override resolveBaseUrl(entry: ChainEntry, credential: Credential): string {
     if (!credential.accountId) {
@@ -39,11 +29,6 @@ export class CloudflareAdapter extends OpenAICompatibleAdapter {
     return `${base}/models`;
   }
 
-  /**
-   * Whitelist the parameters Cloudflare Workers AI accepts.
-   * Everything else (OpenAI `reasoning`, `metadata`, `store`, `user`, etc.)
-   * is stripped to avoid a 400 schema-validation rejection.
-   */
   private sanitizeBody(request: ChatCompletionRequest): Record<string, unknown> {
     const out: Record<string, unknown> = {
       messages: request.messages,
@@ -67,7 +52,7 @@ export class CloudflareAdapter extends OpenAICompatibleAdapter {
         out[key] = src[key];
       }
     }
-    // stream_options is invalid when stream is false — Cloudflare returns 400.
+
     if (!request.stream) {
       delete out.stream_options;
     }

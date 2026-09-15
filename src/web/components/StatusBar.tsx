@@ -1,14 +1,6 @@
 import { CREATOR, REPO_URL } from "../links.js";
 import { useLang } from "../lang.js";
 
-/**
- * The status bar, docked at the bottom of the desktop.
- *
- * This is where the old sidebar's footer went. A status bar is the right home
- * for it: an OS puts the things you check occasionally and never interact with
- * in a strip at the bottom edge, out of the way of the work. Counts read left to
- * right; the creator links sit on the right, quiet.
- */
 export function StatusBar({
   version,
   dataDir,
@@ -19,17 +11,11 @@ export function StatusBar({
 }: {
   version: string;
   dataDir: string;
-  /** Providers with at least one connected key. */
+
   providers: number;
   keys: number;
   chains: number;
-  /**
-   * Whether the event stream is open.
-   *
-   * Worth a cell of its own: every count on this bar updates because of that
-   * stream, so a user who sees stale numbers deserves to know why rather than
-   * being left to guess whether the dashboard is slow or broken.
-   */
+
   live?: boolean;
 }) {
   const { t } = useLang();
@@ -80,7 +66,6 @@ export function StatusBar({
   );
 }
 
-/** Keep a long data path from pushing the creator links off the bar. */
 function shortenPath(path: string): string {
   const parts = path.split(/[/\\]/).filter(Boolean);
   if (parts.length <= 2) return path;

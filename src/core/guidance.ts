@@ -1,28 +1,5 @@
 import type { CredentialStatus } from "./types.js";
 
-/**
- * Guidance: turning gateway state into something a person can act on.
- *
- * COKEY knows a great deal that it never used to say. A key has been rejected
- * four times; a provider retired the model a chain's second node depends on; a
- * model list is three weeks old and the provider has shipped twice since. None
- * of that is visible in a count or a colour, and all of it has a specific,
- * small remedy.
- *
- * This module is a pure function over a plain snapshot of that state. It does
- * no I/O and knows nothing about HTTP, which is what makes the rules — which
- * condition is worth interrupting someone for, and what the remedy should be —
- * testable one at a time.
- *
- * Two principles run through every rule:
- *
- *   - Say what to do, not just what is wrong. A notice without an action is a
- *     complaint.
- *   - Prefer the cheapest fix. Re-verifying a key costs one request; replacing
- *     it costs the user a browser trip to a provider. Offer the re-verify first,
- *     because an unhealthy key is very often a rate limit that has since lifted.
- */
-
 export type GuidanceSeverity = "info" | "warn" | "critical";
 
 export type GuidanceKind =
@@ -40,26 +17,18 @@ export type GuidanceKind =
   | "egress.saturated"
   | "coverage.free-providers";
 
-/**
- * What the user can do about a notice.
- *
- * Deliberately a closed set rather than a free-form callback: these cross a JSON
- * boundary, and the UI needs to know it can render each one as a button that
- * does something real. `navigate` moves; the others call an endpoint.
- */
 export type GuidanceAction =
   | { kind: "navigate"; label: string; path: string }
   | { kind: "refresh-models"; label: string; providerId: string }
   | { kind: "reverify-credential"; label: string; credentialId: string };
 
 export interface GuidanceNotice {
-  /** Stable across snapshots, so the UI can remember a dismissal. */
   id: string;
   kind: GuidanceKind;
   severity: GuidanceSeverity;
   title: string;
   detail: string;
-  /** Ordered by preference: the first action is the one to try first. */
+
   actions: GuidanceAction[];
   providerId?: string;
   credentialId?: string;
@@ -76,7 +45,7 @@ export interface GuidanceCredential {
   cooldownUntil?: number;
   consecutiveFailures: number;
   lastVerifiedAt?: number;
-  /** True when the pool owns this key's exit; used for context, not a notice. */
+
   proxyAuto: boolean;
 }
 
@@ -86,11 +55,11 @@ export interface GuidanceProvider {
   connected: boolean;
   credentialCount: number;
   healthyCount: number;
-  /** Absent when the model list has never been fetched. */
+
   inventoryCheckedAt?: number;
-  /** Catalogued models the provider did not return last time it was asked. */
+
   staleModels: string[];
-  /** Models currently listed for this provider, after reconciliation. */
+
   modelCount: number;
 }
 
@@ -118,7 +87,7 @@ export interface GuidanceInput {
   egress: {
     enabled: boolean;
     poolSize: number;
-    /** Providers with more keys than the pool has exits. */
+
     saturatedProviders: string[];
   };
   coverage: {
@@ -128,13 +97,10 @@ export interface GuidanceInput {
   };
 }
 
-/** A cooldown longer than this is worth mentioning; anything shorter is normal. */
 const COOLDOWN_NOTICE_MS = 5 * 60 * 1000;
 
-/** A failure streak this long means the key is not coming back on its own. */
 const FAILURE_STREAK_NOTICE = 3;
 
-/** A model listing older than this is worth re-checking. */
 const OUTDATED_INVENTORY_MS = 7 * 24 * 60 * 60 * 1000;
 
 const SEVERITY_RANK: Record<GuidanceSeverity, number> = {
@@ -143,13 +109,6 @@ const SEVERITY_RANK: Record<GuidanceSeverity, number> = {
   info: 2,
 };
 
-/**
- * Derive the notices worth showing for one snapshot of gateway state.
- *
- * `max` caps the result, because a user with forty broken keys needs the first
- * five and a count, not forty rows that push the working part of the dashboard
- * off the screen.
- */
 export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[] {
   const notices: GuidanceNotice[] = [];
   const push = (notice: GuidanceNotice): void => {
@@ -159,8 +118,6 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
   const staleByProvider = new Map(
     input.providers.map((provider) => [provider.id, new Set(provider.staleModels)]),
   );
-
-  // ---- credentials --------------------------------------------------------
 
   for (const credential of input.credentials) {
     const providerName = credential.providerName || credential.providerId;
@@ -221,8 +178,6 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
       });
     }
   }
-
-  // ---- providers ----------------------------------------------------------
 
   for (const provider of input.providers) {
     if (!provider.connected) continue;
@@ -305,8 +260,6 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
     }
   }
 
-  // ---- chains -------------------------------------------------------------
-
   if (input.chains.length === 0) {
     push({
       id: "chain.none",
@@ -382,8 +335,6 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
     }
   }
 
-  // ---- egress -------------------------------------------------------------
-
   if (input.egress.enabled && input.egress.saturatedProviders.length > 0) {
     push({
       id: "egress.saturated",
@@ -396,8 +347,6 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
       actions: [{ kind: "navigate", label: "Open egress pool", path: "/settings" }],
     });
   }
-
-  // ---- coverage -----------------------------------------------------------
 
   if (
     input.coverage.connectedFree < input.coverage.target &&
@@ -421,7 +370,6 @@ export function deriveGuidance(input: GuidanceInput, max = 12): GuidanceNotice[]
     .slice(0, max);
 }
 
-/** Counts by severity, for a badge that does not have to iterate the list. */
 export function guidanceSummary(notices: GuidanceNotice[]): Record<GuidanceSeverity, number> {
   const summary: Record<GuidanceSeverity, number> = { critical: 0, warn: 0, info: 0 };
   for (const notice of notices) summary[notice.severity] += 1;

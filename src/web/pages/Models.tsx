@@ -16,27 +16,9 @@ import { Rankings } from "./Rankings.js";
 type ProbeState = { status: "running" | "ok" | "fail"; message: string; latencyMs?: number };
 
 const PROVIDERS_PER_PAGE = 6;
-/**
- * Models shown per provider before the grid pages.
- *
- * Some providers return hundreds of models. Rendering all of them made the
- * page into a wall and pushed every other provider off the screen, so each
- * provider's grid pages on its own - the provider is the unit you are browsing,
- * not the model.
- */
+
 const MODELS_PER_PROVIDER = 12;
 
-/**
- * The model catalog, with a live test and the ranking boards alongside it.
- *
- * Two rules shaped this screen:
- *
- *   1. A model is only selectable when its provider has a key COKEY verified.
- *      The rest are visible but greyed, with a signup link, so the gap between
- *      "exists" and "usable" is always visible.
- *   2. The green check is earned, not stored. The play button sends a real
- *      hello through a working key, and only a 200 turns it green.
- */
 export function Models({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
   const { route, navigate } = useRoute();
   const { t } = useLang();
@@ -87,17 +69,6 @@ export function Models({ refreshKey, onChanged }: { refreshKey: number; onChange
   );
 }
 
-/**
- * "My models": only the models this user can actually reach right now,
- * ranked by what happened the times they were asked — not by a curated tier.
- *
- * A model no chain has ever probed still appears (it is usable, after all), just
- * at the bottom and marked as untested rather than ranked zero.
- *
- * The three things anyone wants from this list are here on the row: test it,
- * ask the provider what it serves now, and put it in a chain. A ranking table
- * you cannot act from is a report, and this is meant to be a tool.
- */
 const MY_MODELS_PER_PAGE = 25;
 
 function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: () => void }) {
@@ -108,7 +79,7 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(MY_MODELS_PER_PAGE);
   const [busy, setBusy] = useState<string | null>(null);
-  /** Per-model verdict from the last test, keyed by provider/model. */
+
   const [probes, setProbes] = useState<Record<string, ProbeState>>({});
 
   const load = useCallback(async () => {
@@ -139,7 +110,6 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
   const current = Math.min(page, totalPages);
   const visible = rows.slice((current - 1) * pageSize, current * pageSize);
 
-  /** One real hello through a working key; the record only moves on a 200. */
   async function test(row: MyModelRanking) {
     const key = `${row.providerId}/${row.model}`;
     setBusy(key);
@@ -172,7 +142,6 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
     }
   }
 
-  /** Ask this row's provider what it serves now and report the drift. */
   async function research(row: MyModelRanking) {
     const key = `${row.providerId}/${row.model}`;
     setBusy(key);
@@ -201,7 +170,6 @@ function MyModels({ refreshKey, onChanged }: { refreshKey: number; onChanged: ()
     }
   }
 
-  /** Every connected provider at once — the list-wide version of the row action. */
   async function researchAll() {
     setBusy("all");
     try {
@@ -387,7 +355,7 @@ function Catalog({
   const [probes, setProbes] = useState<Record<string, ProbeState>>({});
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState<string | null>(null);
-  /** Per-provider model page, keyed by provider id. Reset by the search box. */
+
   const [modelPages, setModelPages] = useState<Record<string, number>>({});
 
   useEffect(() => {
@@ -430,14 +398,6 @@ function Catalog({
 
   const availableProviders = data?.providers.filter((provider) => provider.available).length ?? 0;
 
-  /**
-   * Re-ask one provider what it serves and reconcile.
-   *
-   * The point of this button is that a free tier is not stable. Models appear
-   * and disappear without notice, and a catalog that is a week old is a catalog
-   * that is offering things the provider retired. Running it tells you exactly
-   * what changed instead of silently redrawing.
-   */
   async function refreshModels(provider: ModelCatalogView) {
     setRefreshing(provider.providerId);
     try {
@@ -464,10 +424,6 @@ function Catalog({
     }
   }
 
-  /**
-   * Run the play button: one real completion through the healthiest key.
-   * Green only on a 200, and the reply is kept so the user can see it answered.
-   */
   async function probe(provider: ModelCatalogView, model: SelectableModel) {
     const key = `${provider.providerId}/${model.id}`;
     setBusyKey(key);
@@ -548,10 +504,7 @@ function Catalog({
         <strong>▶</strong> {t("sends one real hello and turns green only on a 200.")}
       </p>
 
-      {/*
-       * A single line naming the catalog drift, rather than making the user
-       * notice by subtraction that a model they were using is missing.
-       */}
+      {}
       {data && data.stale > 0 ? (
         <div className="hint-box" style={{ marginBottom: 14 }}>
           {data.stale} {t("model(s) were gone on the last check, so they are hidden. Use")}{" "}
@@ -582,7 +535,7 @@ function Catalog({
                 <span className="small faint">{t(provider.freeTier.summary)}</span>
                 <span className="spacer" />
 
-                {/* What the provider actually returned, versus what the catalog claims. */}
+                {}
                 <span
                   className="badge neutral"
                   title={

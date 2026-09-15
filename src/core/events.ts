@@ -1,19 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { LiveRouteSnapshot } from "./types.js";
 
-/**
- * Everything the UI needs to narrate a request as it happens.
- *
- * The gateway is a black box by design — a client sends one request and cannot
- * tell which of four keys answered, or whether a key silently rotated. These
- * events make the routing visible: which credential is live *right now*, and
- * every time the key or the model changed underneath the client.
- */
 export type CokeyEventType =
   | "route.start"
   | "route.attempt"
   | "route.switch"
-  /** A node or key changed underneath a client, phrased for a notification. */
   | "chain.state"
   | "route.success"
   | "route.failure"
@@ -23,19 +14,10 @@ export type CokeyEventType =
   | "credential.updated"
   | "chain.updated"
   | "models.updated"
-  /** A published ranking bundle was fetched successfully. */
   | "content.updated";
 
 export type CokeyEventLevel = "info" | "success" | "warn" | "error";
 
-/**
- * The coarse subject an event is about.
- *
- * `route.*` fires several times per request, while `credential.*` and
- * `models.*` are rare. A subscriber that only needs to invalidate cached reads
- * cares about the rare ones and would be woken constantly by the frequent ones,
- * so the stream can be filtered by topic.
- */
 export type CokeyEventTopic = "route" | "chains" | "credentials" | "models" | "content";
 
 export const COKEY_EVENT_TOPICS: readonly CokeyEventTopic[] = [
@@ -46,15 +28,6 @@ export const COKEY_EVENT_TOPICS: readonly CokeyEventTopic[] = [
   "content",
 ];
 
-/**
- * Which topic an event belongs to.
- *
- * Derived from the type rather than stored on the event, so a new event type
- * cannot be added without landing in a topic. `chain.state` is the one
- * deliberate exception: it is phrased for a human as a chain notification, but
- * it is emitted from the routing hot path to narrate a request, so it belongs
- * with the route.
- */
 export function topicFor(type: CokeyEventType): CokeyEventTopic {
   if (type === "chain.state") return "route";
   if (type.startsWith("content.")) return "content";
@@ -64,7 +37,6 @@ export function topicFor(type: CokeyEventType): CokeyEventTopic {
   return "route";
 }
 
-/** The routing target a switch moved away from. */
 export interface RouteTarget {
   providerId?: string;
   model?: string;
@@ -83,7 +55,7 @@ export interface CokeyEvent {
   model?: string;
   credentialId?: string;
   credentialDescription?: string;
-  /** Present on `route.switch`: what we left behind. */
+
   previous?: RouteTarget;
   classification?: string;
   status?: number;
@@ -103,13 +75,6 @@ const IDLE_ROUTE: LiveRouteSnapshot = {
   updatedAt: 0,
 };
 
-/**
- * In-process pub/sub plus the current route snapshot.
- *
- * Listeners are deliberately synchronous and never awaited: a slow SSE client
- * must not be able to stall a request that is mid-fallback. A bounded ring
- * buffer lets a UI that connects late still render recent history.
- */
 export class EventBus {
   private readonly listeners = new Set<EventListener>();
   private readonly buffer: CokeyEvent[] = [];
@@ -128,15 +93,12 @@ export class EventBus {
     for (const listener of [...this.listeners]) {
       try {
         listener(event);
-      } catch {
-        // A broken subscriber must never break routing.
-      }
+      } catch {}
     }
 
     return event;
   }
 
-  /** Most recent events, oldest first. */
   recent(limit = 50): CokeyEvent[] {
     if (limit <= 0) return [];
     return this.buffer.slice(Math.max(0, this.buffer.length - limit));
@@ -151,7 +113,6 @@ export class EventBus {
     return this.listeners.size;
   }
 
-  /** Merge a patch into the live route snapshot. */
   updateRoute(patch: Partial<LiveRouteSnapshot>): LiveRouteSnapshot {
     this.route = { ...this.route, ...patch, updatedAt: Date.now() };
     return this.route;
@@ -161,7 +122,6 @@ export class EventBus {
     return this.route;
   }
 
-  /** Return the route to idle, keeping the last model/key visible. */
   finishRoute(active = false): LiveRouteSnapshot {
     return this.updateRoute({ active, attempts: this.route.attempts });
   }

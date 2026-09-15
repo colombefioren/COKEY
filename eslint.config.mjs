@@ -1,13 +1,7 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
 
-/**
- * COKEY ESLint configuration.
- *
- * Applied as a flat config (ESLint 9+). The TypeScript recommended rules catch
- * type-aware mistakes; the rest is a minimal, opinionated set that matches the
- * project's existing conventions.
- */
+
 export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -33,6 +27,7 @@ export default tseslint.config(
       "@typescript-eslint/consistent-type-imports": "warn",
       "no-console": "off",
       "no-process-exit": "off",
+      "no-empty": ["error", { allowEmptyCatch: true }],
     },
   },
   {
@@ -67,7 +62,7 @@ export default tseslint.config(
     },
   },
   {
-    // Repository scripts run on Node, so their globals have to be declared.
+    
     files: ["scripts/**/*.mjs", "scripts/**/*.js"],
     languageOptions: {
       ecmaVersion: "latest",
@@ -76,8 +71,8 @@ export default tseslint.config(
         process: "readonly",
         console: "readonly",
         Buffer: "readonly",
-        // Node 18+ global. Declared rather than imported so the script needs no
-        // dependency to fetch a font file.
+        
+        
         fetch: "readonly",
       },
     },

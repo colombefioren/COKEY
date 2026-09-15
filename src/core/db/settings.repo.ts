@@ -1,6 +1,5 @@
 import type { DatabaseClient } from "./database.js";
 
-/** Key/value store backing the persisted half of Settings. */
 export class SettingsRepo {
   constructor(private readonly db: DatabaseClient) {}
 

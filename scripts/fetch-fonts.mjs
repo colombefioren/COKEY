@@ -1,26 +1,5 @@
 #!/usr/bin/env node
-/**
- * Vendor the dashboard's web fonts.
- *
- * COKEY is a local-first tool: it makes no outbound request on the user's
- * behalf and it ships no telemetry. Loading a font from a CDN at runtime would
- * break both of those promises for the sake of a heading, so the fonts are
- * downloaded once, committed under `src/web/public/fonts`, and served by the
- * gateway like any other asset.
- *
- * Run with `npm run fonts` when a family or weight is added. The script is
- * idempotent: unchanged files are left alone, so a re-run is a no-op.
- *
- * Two families, each with a job:
- *
- *   Work Sans        everything a person reads at length: body copy, tables,
- *                    form labels. A quiet, modern grotesque that gets out of
- *                    the way.
- *   Instrument Serif headings, page titles and stat numbers, always set in
- *                    italic. A editorial display serif — the one place the
- *                    page allows itself some personality — never for body
- *                    copy, where a display face would only slow reading down.
- */
+
 
 import { mkdir, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
@@ -31,15 +10,11 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT_DIR = join(ROOT, "src", "web", "public", "fonts");
 const CSS_OUT = join(ROOT, "src", "web", "styles", "fonts.css");
 
-/**
- * A browser-ish User-Agent is required: the Google Fonts CSS API serves woff2
- * only to clients that advertise support for it, and answers legacy clients
- * with much larger ttf links.
- */
+
 const UA =
   "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36";
 
-/** Families to vendor, with the slug used for their file names. */
+
 const FAMILIES = [
   {
     query: "Work+Sans:wght@400;500;600;700",
@@ -59,14 +34,7 @@ async function get(url) {
   return response;
 }
 
-/**
- * Pair each subset comment with the `@font-face` block that follows it.
- *
- * The API emits one block per subset and per weight, each introduced by a
- * comment naming the subset. Only `latin` is kept: the app is English-only, and
- * committing eight subsets per weight would multiply the vendored bytes for
- * glyphs nothing renders.
- */
+
 const FACE_PATTERN =
   /\/\*\s*([a-z0-9-]+)\s*\*\/\s*@font-face\s*\{([\s\S]*?)\}/g;
 
@@ -100,12 +68,12 @@ async function main() {
       continue;
     }
 
-    // A variable font answers every requested weight with the same URL: one
-    // file whose `wght` axis covers the whole range, not a distinct static
-    // instance per weight. Fetching and committing that file five times would
-    // ship identical bytes five times over; a single @font-face with a weight
-    // *range* is both smaller and the textbook-correct way to self-host it,
-    // since the browser then picks the exact instance from the one file.
+    
+    
+    
+    
+    
+    
     const byUrl = new Map();
     for (const face of faces) {
       const group = byUrl.get(face.url) ?? [];
@@ -140,7 +108,7 @@ async function main() {
     }
   }
 
-  // Group by family so the emitted sheet reads like a hand-written one.
+  
   const byFamily = new Map();
   for (const face of declarations) {
     const list = byFamily.get(face.family.slug) ?? [];

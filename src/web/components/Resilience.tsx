@@ -2,21 +2,6 @@ import type { ReactNode } from "react";
 import { IconKey, IconRoute, IconSparkle } from "./Icons.js";
 import { useLang } from "../lang.js";
 
-/**
- * The three failure scopes, drawn.
- *
- * The live route says where a request went. This says what happens when it
- * cannot go there: every failure COKEY knows about is contained at exactly one
- * scope, and a scope that was not affected is never disturbed. That is the whole
- * difference between a pool of keys and a gateway, and it is invisible from the
- * client, so it gets a picture.
- *
- * Three concrete stories — a node, a key, a model — because the scopes are
- * easier to hold in the head as a picture than as a policy table. Each is
- * written in one line and two facts; the details are in the docs, and a
- * dashboard paragraph nobody finishes is not documentation.
- */
-
 function LayerRow({
   index,
   icon,
@@ -118,9 +103,7 @@ export function Resilience() {
       >
         <span className="layer-node is-hub">
           <b>{t("node 1")}</b>
-          <small>
-            3 {t("keys bound")}
-          </small>
+          <small>3 {t("keys bound")}</small>
         </span>
         <Rail />
         <div className="layer-stack">

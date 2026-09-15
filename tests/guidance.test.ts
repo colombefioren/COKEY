@@ -8,7 +8,6 @@ import {
 
 const NOW = 1_700_000_000_000;
 
-/** A healthy, fully configured gateway: the baseline every test deviates from. */
 function input(overrides: Partial<GuidanceInput> = {}): GuidanceInput {
   return {
     now: NOW,
@@ -89,7 +88,7 @@ describe("deriveGuidance", () => {
     const notice = notices.find((entry) => entry.kind === "credential.rejected")!;
     expect(notice.severity).toBe("critical");
     expect(notice.credentialId).toBe("cred-1");
-    // Cheapest remedy first: one request beats a browser trip to the provider.
+
     expect(notice.actions[0]).toMatchObject({
       kind: "reverify-credential",
       credentialId: "cred-1",
@@ -195,7 +194,7 @@ describe("deriveGuidance", () => {
 
     const notice = notices.find((entry) => entry.kind === "provider.all-keys-unusable")!;
     expect(notice).toBeDefined();
-    // Highest failure streak first: that is the key least likely to recover.
+
     expect(notice.actions[0]).toMatchObject({ credentialId: "cred-2" });
   });
 
@@ -220,8 +219,7 @@ describe("deriveGuidance", () => {
     expect(kinds(notices)).toContain("provider.models-stale");
     const chainNotice = notices.find((entry) => entry.kind === "chain.model-retired")!;
     expect(chainNotice.entryId).toBe("entry-1");
-    // Re-checking is offered before editing the chain, because the provider may
-    // simply have had a bad minute.
+
     expect(chainNotice.actions[0]).toMatchObject({ kind: "refresh-models" });
   });
 
@@ -326,7 +324,7 @@ describe("deriveGuidance", () => {
     const notices = deriveGuidance(input({ credentials: many }), 5);
     expect(notices).toHaveLength(5);
     expect(notices.every((notice) => notice.severity === "critical")).toBe(true);
-    // Every notice carries at least one action: a notice without one is a complaint.
+
     expect(notices.every((notice) => notice.actions.length > 0)).toBe(true);
   });
 

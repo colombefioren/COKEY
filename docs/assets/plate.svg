@@ -3,7 +3,6 @@
 
   <rect x="0.5" y="0.5" width="47" height="47" rx="13" fill="#2B1A2F" stroke="#DD5C95" />
 
-  <!-- The mark, scaled out of the 212x104 drawing the UI and the CLI share. -->
   <g transform="translate(4.5 14.5) scale(0.185)">
     <path
       d="M96 52 C96 26 72 14 52 26 C32 38 32 66 52 78 C72 90 96 78 96 52 C96 26 120 14 140 26 C160 38 160 66 140 78 C120 90 96 78 96 52"

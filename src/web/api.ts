@@ -70,7 +70,6 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
   return data as T;
 }
 
-/** Serialise `page` / `pageSize` / `q` into a query string. */
 export function pageQuery(
   params: PageParams = {},
   extra: Record<string, string | number | undefined> = {},
@@ -86,41 +85,34 @@ export function pageQuery(
   return query ? `?${query}` : "";
 }
 
-/** Typed wrapper around every management endpoint the UI uses. */
 export const api = {
   health: () => request<{ ok: boolean; version: string; dataDir: string }>("GET", "/health"),
   stats: () => request<Stats>("GET", "/api/stats"),
   nudge: () => request<Nudge>("GET", "/api/nudge"),
 
-  /** Paginated provider list. Use `allProviders` when you need everything. */
   providers: (params: PageParams = {}) =>
     request<Paginated<ProviderStatus>>("GET", `/api/providers${pageQuery(params)}`),
-  /** Every provider in one response. For pickers and joins, not tables. */
+
   allProviders: async (): Promise<ProviderStatus[]> =>
     (await request<Paginated<ProviderStatus>>("GET", "/api/providers?pageSize=0")).data,
 
-  /** Provider cards with operator dossiers attached. */
   catalogProviders: (params: PageParams = {}) =>
     request<Paginated<CatalogProviderRow>>("GET", `/api/catalog/providers${pageQuery(params)}`),
 
-  /** Skill, rate-limit and combined ranking boards, with their sources. */
   rankings: () => request<RankingsResponse>("GET", "/api/catalog/rankings"),
-  /** Fetch the published ranking bundle and replace the boards with it. */
+
   refreshRankings: () =>
     request<{ changed: boolean; rankings?: RankingsResponse; message?: string }>(
       "POST",
       "/api/catalog/rankings/refresh",
     ),
 
-  /** Send a real hello through one working key. The play button. */
   probeModel: (body: { providerId: string; model: string; credentialId?: string }) =>
     request<ModelProbeResult>("POST", "/api/models/probe", body).then((result) => {
       reportInsightAttempt("model");
       if (!result.ok) reportInsightFailure(result.classification);
       return result;
     }),
-
-  // ---- automatic egress pool ------------------------------------------------
 
   proxyPool: () => request<ProxyPoolResponse>("GET", "/api/proxy-pool"),
   addProxy: (url: string) => request<ProxyPoolResponse>("POST", "/api/proxy-pool", { url }),
@@ -137,7 +129,7 @@ export const api = {
       "/api/proxy-pool/fetch-proxifly",
       { limit, verify },
     ),
-  /** Probe every enabled exit and drop the ones that no longer answer. */
+
   checkProxyPool: (body?: { concurrency?: number; timeoutMs?: number; prune?: boolean }) =>
     request<ProxyPoolCheckResponse>("POST", "/api/proxy-pool/check", body ?? {}),
 
@@ -148,9 +140,9 @@ export const api = {
       description: string;
       accountId?: string;
       proxyUrl?: string;
-      /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+
       saveAnyway?: boolean;
-      /** Route the probe through the automatic egress pool. Default true. */
+
       useProxy?: boolean;
     },
   ) =>
@@ -160,12 +152,6 @@ export const api = {
       body,
     ),
 
-  /**
-   * Verify a raw key against a provider without persisting anything.
-   *
-   * Powers the separate "Test" button: the verdict is shown inline and the key
-   * is only stored when the user then clicks "Save".
-   */
   testProviderSecret: (
     providerId: string,
     body: { secret: string; accountId?: string; model?: string; useProxy?: boolean },
@@ -180,33 +166,16 @@ export const api = {
       return result;
     }),
 
-  /**
-   * The curated free-model catalog with availability folded in.
-   *
-   * `selectable` is false for every model whose provider has no healthy key, so
-   * the UI can show the whole list while only allowing usable picks.
-   */
   models: () => request<ModelsResponse>("GET", "/api/models"),
 
-  /**
-   * "My models": every model this user can use right now, ranked by their own
-   * probe history rather than a curated tier.
-   */
   myModels: () => request<MyModelsResponse>("GET", "/api/models/mine"),
 
-  /**
-   * Ask one provider what it serves now and reconcile the inventory.
-   *
-   * Returns the change set, so the caller can say what happened — which models
-   * were added, restored or retired — rather than just redrawing the list.
-   */
   refreshProviderModels: (providerId: string) =>
     request<ModelDiscoveryReport>(
       "POST",
       `/api/providers/${encodeURIComponent(providerId)}/refresh-models`,
     ),
 
-  /** Refresh every connected provider, sequentially. */
   refreshAllProviderModels: () =>
     request<{
       reports: ModelDiscoveryReport[];
@@ -217,30 +186,16 @@ export const api = {
       stale: number;
     }>("POST", "/api/providers/refresh-models"),
 
-  /** The stored model inventory for one provider, checked-at included. */
   providerModels: (providerId: string) =>
     request<ProviderModelInventory>(
       "GET",
       `/api/providers/${encodeURIComponent(providerId)}/models`,
     ),
 
-  /**
-   * Actionable notices derived from live state: a rejected key, a chain node
-   * whose model was retired, a model list that has gone stale.
-   */
   guidance: () => request<GuidanceResponse>("GET", "/api/guidance"),
 
-  /** Current route plus recent routing events. */
   status: (limit = 30) => request<StatusResponse>("GET", `/api/status?limit=${limit}`),
 
-  /**
-   * URL of the live event stream, consumed with EventSource.
-   *
-   * With `topics`, only those subjects are streamed: a page that needs to know
-   * when stored data changed subscribes to `chains,credentials,models` and is
-   * never woken by the per-attempt chatter of requests in flight. Without it the
-   * full routing narration is streamed, which is what the live-route chip wants.
-   */
   eventsUrl: (topics?: readonly string[]) =>
     topics && topics.length > 0
       ? `/api/events?topics=${encodeURIComponent(topics.join(","))}`
@@ -262,7 +217,7 @@ export const api = {
     body: {
       providerId: string;
       model: string;
-      /** Optional user-chosen display name. */
+
       label?: string;
       credentialIds: string[];
       routingStrategy?: string;
@@ -272,7 +227,7 @@ export const api = {
     entryId: string,
     body: {
       model?: string;
-      /** `null` or an empty string clears the display name. */
+
       label?: string | null;
       enabled?: boolean;
       routingStrategy?: "sequential" | "round-robin";
@@ -295,9 +250,9 @@ export const api = {
       accountId?: string;
       proxyUrl?: string;
       addAnyway?: boolean;
-      /** Keep an unverifiable key: save it as unverified instead of rejecting. */
+
       saveAnyway?: boolean;
-      /** Route the probe through the automatic egress pool. Default true. */
+
       useProxy?: boolean;
     },
   ) =>
@@ -310,10 +265,9 @@ export const api = {
   removeEntryCredential: (entryId: string, credentialId: string) =>
     request<{ ok: boolean }>("DELETE", `/api/entries/${entryId}/credentials/${credentialId}`),
 
-  /** Paginated credential inventory. */
   credentials: (params: PageParams = {}) =>
     request<Paginated<PublicCredential>>("GET", `/api/credentials${pageQuery(params)}`),
-  /** Every credential in one response, for joins and exports. */
+
   allCredentials: async (): Promise<PublicCredential[]> =>
     (await request<Paginated<PublicCredential>>("GET", "/api/credentials?pageSize=0")).data,
   updateCredential: (
@@ -323,9 +277,9 @@ export const api = {
       accountId?: string | null;
       secret?: string;
       status?: string;
-      /** `null` clears the proxy and restores direct egress. */
+
       proxyUrl?: string | null;
-      /** Pin to a pool entry by id, or `null` to return the key to the pool. */
+
       proxyPoolId?: string | null;
     },
   ) => request<PublicCredential>("PATCH", `/api/credentials/${id}`, body),
@@ -342,7 +296,6 @@ export const api = {
       `/api/credentials/${id}/quota`,
     ),
 
-  /** Paginated request history, with the rollup stats alongside the page. */
   requests: (
     params: PageParams = { pageSize: 25 },
     filters: { outcome?: string; providerId?: string } = {},
@@ -353,7 +306,6 @@ export const api = {
     ),
   clearRequests: () => request<{ ok: boolean }>("DELETE", "/api/requests"),
 
-  /** Per provider → key → model usage, live route, and chain topology. */
   usage: () => request<UsageView>("GET", "/api/usage"),
 
   settings: () => request<Settings>("GET", "/api/settings"),
@@ -375,8 +327,6 @@ export const api = {
       `/api/custom-endpoints/${encodeURIComponent(providerId.replace(/^custom:/, ""))}`,
     ),
 
-  // ---- session --------------------------------------------------------------
-
   login: (password: string) =>
     request<{ authenticated: boolean; passwordLocked: boolean }>("POST", "/api/session", {
       password,
@@ -385,15 +335,12 @@ export const api = {
   setPassword: (password: string) =>
     request<{ ok: boolean; passwordLocked: boolean }>("POST", "/api/password", { password }),
 
-  // ---- api keys -------------------------------------------------------------
-
   apiKeys: () => request<{ data: ApiKeyView[] }>("GET", "/api/keys"),
   createApiKey: (name: string) =>
     request<{ key: string; view: ApiKeyView }>("POST", "/api/keys", { name }),
   revokeApiKey: (id: string) => request<{ ok: boolean }>("DELETE", `/api/keys/${id}`),
 };
 
-/** Human-friendly relative time for tables. */
 export function timeAgo(timestamp: number): string {
   const delta = Date.now() - timestamp;
   if (delta < 5_000) return "just now";

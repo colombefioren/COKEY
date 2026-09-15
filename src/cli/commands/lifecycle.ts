@@ -31,7 +31,6 @@ import {
 } from "../format.js";
 import { printBanner } from "../banner.js";
 
-/** Register lifecycle commands: start, stop, status, config, doctor. */
 export function registerLifecycleCommands(cli: CAC): void {
   const start = cli
     .command("[start]", "Start the COKEY gateway")
@@ -41,8 +40,6 @@ export function registerLifecycleCommands(cli: CAC): void {
     .option("--daemon", "Run in the background and return immediately");
 
   start.action(async (...raw: unknown[]) => {
-    // `[start]` declares one optional positional, so cac supplies it (possibly
-    // as undefined) before the options object.
     const last = raw[raw.length - 1];
     const options = (last && typeof last === "object" ? last : {}) as CommandContext;
     try {
@@ -323,9 +320,7 @@ async function startGateway(options: CommandContext): Promise<void> {
     console.log(dim(`\nReceived ${signal}; shutting down.`));
     try {
       await app.close();
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     cokey.stop();
     clearPidFile(dataDir);
     process.exit(0);

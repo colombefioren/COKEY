@@ -6,17 +6,6 @@ import { ConfirmModal, Modal, RateLabel, Select, StatusDot } from "./Primitives.
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
-/**
- * Edit one chain node.
- *
- * The provider is fixed: an entry's credentials belong to that provider, so
- * swapping the provider would silently detach every key. Model, display name,
- * routing strategy and enabled state are all editable.
- *
- * The display name is free text on purpose. COKEY never derives a label such as
- * "DeepSeek V4 Pro (xKiro)" from the model id; whatever the user types is what
- * clients and the UI show.
- */
 export function EditEntryModal({
   entry,
   onClose,
@@ -53,7 +42,7 @@ export function EditEntryModal({
 
   const knownModels = providers.find((p) => p.id === entry.providerId)?.knownModels ?? [];
   const known = new Set(knownModels);
-  // Keep the current model selectable even if the curated catalog has moved on.
+
   const modelOptions = known.has(model) ? knownModels : [model, ...knownModels];
 
   const trimmedLabel = label.trim();
@@ -246,7 +235,9 @@ export function EditEntryModal({
                     style={{ padding: "2px 4px", fontSize: 12 }}
                     onClick={() => void testCredential(credential)}
                     disabled={testingCredId === credential.id}
-                    title={testingCredId === credential.id ? t("Testing...") : t("Test this credential")}
+                    title={
+                      testingCredId === credential.id ? t("Testing...") : t("Test this credential")
+                    }
                   >
                     {testingCredId === credential.id ? "⟳" : "↻"}
                   </button>

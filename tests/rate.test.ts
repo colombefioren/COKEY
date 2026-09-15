@@ -18,19 +18,19 @@ describe("RateTracker", () => {
     const tracker = new RateTracker();
     tracker.record("key", T0 - 10_000);
     tracker.record("key", T0 - 30_000);
-    tracker.record("key", T0 - 90_000); // outside the minute, inside 5 minutes
-    tracker.record("key", T0 - 400_000); // outside both windows
+    tracker.record("key", T0 - 90_000);
+    tracker.record("key", T0 - 400_000);
 
     const snapshot = tracker.snapshot("key", T0);
     expect(snapshot.requestsPerMinute).toBe(2);
     expect(snapshot.requestsLast5Minutes).toBe(3);
-    // The newest observed request, even though an older one was recorded later.
+
     expect(snapshot.lastRequestAt).toBe(T0 - 10_000);
   });
 
   it("places requests in the right sparkline bucket, oldest first", () => {
     const tracker = new RateTracker();
-    // 5s buckets: index 11 is the most recent bucket, index 0 the oldest.
+
     tracker.record("key", T0 - 1_000);
     tracker.record("key", T0 - 6_000);
     tracker.record("key", T0 - 6_500);
@@ -50,7 +50,6 @@ describe("RateTracker", () => {
     expect(tracker.snapshot("limited", T0).recentlyRateLimited).toBe(true);
     expect(tracker.snapshot("other", T0).recentlyRateLimited).toBe(false);
 
-    // The flag is stale after the 5-minute window.
     expect(tracker.snapshot("limited", T0 + 6 * 60_000).recentlyRateLimited).toBe(false);
   });
 

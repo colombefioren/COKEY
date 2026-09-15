@@ -1,14 +1,5 @@
 import { isIP } from "node:net";
 
-/**
- * SSRF guard for the one place a user may supply a URL: the deliberately buried
- * "custom OpenAI-compatible endpoint" option in Settings.
- *
- * Every catalog provider bypasses this check because its base URL is vetted
- * data shipped with COKEY. Custom endpoints are treated as hostile until the
- * user explicitly opts in.
- */
-
 export interface UrlCheckResult {
   ok: boolean;
   reason?: string;
@@ -23,22 +14,9 @@ const METADATA_HOSTS = new Set([
 ]);
 
 export interface UrlGuardOptions {
-  /** User has explicitly acknowledged private/loopback targets. */
   allowPrivate?: boolean;
 }
 
-/**
- * Validate a candidate provider base URL.
- *
- * Rejects non-HTTP(S) schemes, credentials in the URL, link-local/private
- * ranges and cloud metadata endpoints unless `allowPrivate` is set.
- *
- * Note: this is a syntactic/IP-literal check. It deliberately does not resolve
- * DNS, because a name that resolves to a private address at connect time could
- * resolve elsewhere later. Callers that need full rebinding protection should
- * pin the resolved address; COKEY documents this limitation rather than
- * pretending otherwise.
- */
 export function validateEndpointUrl(raw: string, options: UrlGuardOptions = {}): UrlCheckResult {
   let url: URL;
   try {
@@ -73,7 +51,6 @@ export function validateEndpointUrl(raw: string, options: UrlGuardOptions = {}):
       : { ok: false, reason: "Internal hostname blocked; enable private endpoints to allow it" };
   }
 
-  // 169.254.169.254 and friends are link-local; block regardless of opt-in.
   if (isLinkLocal(host)) {
     return { ok: false, reason: "Link-local address blocked (cloud metadata range)" };
   }
@@ -97,7 +74,6 @@ export function validateEndpointUrl(raw: string, options: UrlGuardOptions = {}):
   return { ok: true };
 }
 
-/** Throwing form used on the write path. */
 export function assertSafeEndpoint(raw: string, options: UrlGuardOptions = {}): URL {
   const result = validateEndpointUrl(raw, options);
   if (!result.ok) throw new Error(`Unsafe endpoint: ${result.reason ?? "rejected"}`);
@@ -113,23 +89,18 @@ function isLinkLocal(host: string): boolean {
   return mapped !== undefined && isLinkLocal(mapped);
 }
 
-/**
- * The IPv4 address embedded in an IPv4-mapped IPv6 literal (`::ffff:0:0/96`),
- * in either its dotted-decimal tail (`::ffff:169.254.169.254`) or fully
- * hex-group form (`::ffff:a9fe:a9fe`) — the two encode the same address, and
- * only the first was ever recognized here, which let the second walk straight
- * past both the link-local and private-range checks below.
- */
 function mappedIPv4(host: string): string | undefined {
   const groups = expandIPv6(host);
   if (!groups) return undefined;
   if (groups.slice(0, 5).some((g) => g !== 0) || groups[5] !== 0xffff) return undefined;
-  return [(groups[6]! >> 8) & 0xff, groups[6]! & 0xff, (groups[7]! >> 8) & 0xff, groups[7]! & 0xff].join(
-    ".",
-  );
+  return [
+    (groups[6]! >> 8) & 0xff,
+    groups[6]! & 0xff,
+    (groups[7]! >> 8) & 0xff,
+    groups[7]! & 0xff,
+  ].join(".");
 }
 
-/** Expand a valid IPv6 literal to its 8 hextets, resolving `::` and an embedded IPv4 tail. */
 function expandIPv6(host: string): number[] | undefined {
   if (isIP(host) !== 6) return undefined;
 
@@ -180,15 +151,15 @@ function isPrivateV4(host: string): boolean {
   if (a === 0) return true;
   if (a === 172 && b >= 16 && b <= 31) return true;
   if (a === 192 && b === 168) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true; // carrier-grade NAT
+  if (a === 100 && b >= 64 && b <= 127) return true;
   return false;
 }
 
 function isPrivateV6(host: string): boolean {
   const h = host.toLowerCase();
   if (h === "::" || h === "::1") return true;
-  if (h.startsWith("fc") || h.startsWith("fd")) return true; // unique local
-  if (h.startsWith("fe80")) return true; // link-local
+  if (h.startsWith("fc") || h.startsWith("fd")) return true;
+  if (h.startsWith("fe80")) return true;
   const mapped = mappedIPv4(h);
   if (mapped !== undefined) return isPrivateV4(mapped);
   return false;

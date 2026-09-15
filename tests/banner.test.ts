@@ -1,14 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { bannerLines } from "../src/cli/banner.js";
 
-/**
- * The banner is a drawing, so these assert the geometry rather than the exact
- * glyphs: the wordmark has to stay in one column whatever the mark does, the
- * canvas has to stay inside a standard terminal, and no line may carry trailing
- * whitespace into a copied-and-pasted bug report.
- */
 describe("bannerLines", () => {
-  // Colour is off under vitest (stdout is not a TTY), so the lines are plain.
   const lines = bannerLines();
 
   const blank = lines.indexOf("");
@@ -34,7 +27,6 @@ describe("bannerLines", () => {
   });
 
   it("draws two loops, not one blob", () => {
-    // The widest row of the mark crosses both loops and the gap between them.
     const middle = art[Math.floor(art.length / 2)] ?? "";
     const mark = middle.slice(0, 41);
     const runs = mark.split("").reduce<number[]>((gaps, cell, index) => {
@@ -42,8 +34,6 @@ describe("bannerLines", () => {
       return gaps;
     }, []);
 
-    // A figure-eight has at least three gaps across its middle: the hollow of
-    // each loop, plus the space around them.
     expect(runs.length).toBeGreaterThanOrEqual(3);
   });
 

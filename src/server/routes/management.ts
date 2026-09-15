@@ -19,46 +19,26 @@ import { matchesQuery, paginate, parsePageQuery } from "../pagination.js";
 import { withErrors } from "./http-errors.js";
 import { z } from "zod";
 
-/**
- * Management API.
- *
- * Every response here is built from `PublicCredential` projections - there is
- * no code path in this file that can return a stored secret.
- */
 const AttachCredentialSchema = z
   .object({
     credentialId: z.string().min(1).optional(),
     secret: z.string().min(1).optional(),
     description: z.string().min(1).max(120).optional(),
     accountId: z.string().min(1).max(200).optional(),
-    /** Optional egress proxy bound to the new key. */
+
     proxyUrl: ProxyUrlSchema.optional(),
-    /** Keep an unverifiable credential when the provider is unreachable. */
+
     addAnyway: z.boolean().optional(),
-    /** Keep an unverifiable key: attach it as unverified instead of rejecting. */
+
     saveAnyway: z.boolean().optional(),
-    /** Route the probe through the automatic egress pool. Default true. */
+
     useProxy: z.boolean().optional(),
   })
   .refine((value) => Boolean(value.credentialId) || Boolean(value.secret), {
     message: "Provide either credentialId or secret",
   });
 
-/**
- * Management API.
- *
- * Every response here is built from `PublicCredential` projections - there is
- * no code path in this file that can return a stored secret.
- */
 export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): void {
-  // ---- model catalog ------------------------------------------------------
-
-  /**
-   * The curated free-model catalog, annotated with availability.
-   *
-   * A model is `selectable` only when its provider has a healthy credential,
-   * so the picker can never offer a model that has no key behind it.
-   */
   app.get(
     "/api/models",
     withErrors(() => {
@@ -67,17 +47,11 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         providers,
         total: providers.reduce((sum, view) => sum + view.models.length, 0),
         available: providers.filter((view) => view.available).length,
-        /**
-         * Catalogued models the providers no longer return, across every
-         * provider. A single number the dashboard can surface without walking
-         * the whole response, and the signal that something needs a re-check.
-         */
+
         stale: providers.reduce((sum, view) => sum + view.staleModels.length, 0),
       };
     }),
   );
-
-  // ---- providers ----------------------------------------------------------
 
   app.get(
     "/api/providers",
@@ -99,11 +73,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  /**
-   * Test a raw key against a provider without storing anything. Drives the
-   * separate "Test" button; the verdict is readable in the modal while the key
-   * is only saved once the user confirms.
-   */
   app.post(
     "/api/providers/:id/test",
     withErrors(async (request) => {
@@ -114,17 +83,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  // ---- model inventory ----------------------------------------------------
-
-  /**
-   * Ask one provider what it serves right now, and reconcile that with what
-   * COKEY believed.
-   *
-   * This is the per-provider refresh: it retires models the provider stopped
-   * returning, restores models that came back, and brings in models the curated
-   * catalog never knew about. The response is the change set, so the UI can say
-   * what happened instead of just redrawing.
-   */
   app.post(
     "/api/providers/:id/refresh-models",
     withErrors(async (request) => {
@@ -133,14 +91,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  /**
-   * Refresh every connected provider.
-   *
-   * A distinct path rather than a magic id, so the "refresh everything" action
-   * reads as what it is at the call site. Bounded concurrency and a short
-   * per-provider timeout, because these are third-party endpoints answering an
-   * administrative question — see `refreshAllProviderModels` for why.
-   */
   app.post(
     "/api/providers/refresh-models",
     withErrors(async () => {
@@ -156,10 +106,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  /**
-   * The stored model inventory for one provider: when it was checked, and one
-   * row per model with whether the provider still returns it.
-   */
   app.get(
     "/api/providers/:id/models",
     withErrors((request) => {
@@ -168,21 +114,10 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  // ---- guidance -----------------------------------------------------------
-
-  /**
-   * Actionable notices derived from live state.
-   *
-   * A rejected key, a chain node whose model a provider retired, a model list
-   * that is three weeks old — each notice names the problem, explains the
-   * consequence and carries the actions that fix it.
-   */
   app.get(
     "/api/guidance",
     withErrors(() => cokey.guidance()),
   );
-
-  // ---- chains -------------------------------------------------------------
 
   app.get(
     "/api/chains",
@@ -239,8 +174,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  // ---- entries ------------------------------------------------------------
-
   app.get(
     "/api/chains/:id/entries",
     withErrors((request) => {
@@ -258,7 +191,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       const catalogEntry = cokey.providers.findCatalogEntry(body.providerId);
       if (!catalogEntry) throw new Error(`Unknown provider: ${body.providerId}`);
 
-      // Credentials may only be bound to entries of their own provider.
       for (const credentialId of body.credentialIds) {
         const credential = cokey.credentials.getOrThrow(credentialId);
         if (credential.providerId !== body.providerId) {
@@ -341,8 +273,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  // ---- entry credentials --------------------------------------------------
-
   app.get(
     "/api/entries/:id/credentials",
     withErrors((request) => {
@@ -354,12 +284,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
     }),
   );
 
-  /**
-   * Attach a credential to an entry, creating and verifying it when a secret
-   * is supplied. This is the mandatory verification gate: an entry only gains
-   * a credential that the provider accepted (or an explicit `addAnyway` on a
-   * transient network failure).
-   */
   app.post(
     "/api/entries/:id/credentials",
     withErrors(async (request, reply) => {
@@ -410,12 +334,10 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         validation.classification === "quota_exhausted"
       ) {
         cokey.credentials.putInCooldown(credential.id);
-      } else if (validation.classification === "network_error" && body.addAnyway) {
-        // Explicit override: keep it, still marked unverified.
-      } else if (body.saveAnyway) {
-        // Explicit override: the user chose to save this key regardless of
-        // whether the probe passed. Keep it, clearly marked unverified.
-      } else {
+      } else if (
+        !(validation.classification === "network_error" && body.addAnyway) &&
+        !body.saveAnyway
+      ) {
         cokey.credentials.delete(credential.id);
         reply.code(400);
         return {
@@ -449,8 +371,6 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       return { ok: true };
     }),
   );
-
-  // ---- credentials --------------------------------------------------------
 
   app.get(
     "/api/credentials",
@@ -503,10 +423,7 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
       if (body.accountId !== undefined) cokey.credentials.updateAccountId(id, body.accountId);
       if (body.secret !== undefined) cokey.credentials.rotateSecret(id, body.secret);
       if (body.status !== undefined) cokey.credentials.setStatus(id, body.status);
-      // Proxy changes go through the facade so validation and the live event
-      // feed stay in one place. A pool id wins over a raw URL: the browser
-      // never sees a pool proxy's credentials, so assigning from the pool must
-      // be resolved server-side.
+
       if (body.proxyPoolId !== undefined) return cokey.assignCredentialProxy(id, body.proxyPoolId);
       if (body.proxyUrl !== undefined) return cokey.setCredentialProxy(id, body.proxyUrl);
 
@@ -541,14 +458,12 @@ export function registerManagementRoutes(app: FastifyInstance, cokey: Cokey): vo
         credentialId: credential.id,
         description: credential.description,
         providerId: credential.providerId,
-        // "Unknown" is a first-class answer here, not an error.
+
         quota: credential.quota ?? unknownQuota(),
         usage: credential.usage,
       };
     }),
   );
-
-  // ---- custom endpoints ---------------------------------------------------
 
   app.get(
     "/api/custom-endpoints",

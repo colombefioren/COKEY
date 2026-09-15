@@ -5,7 +5,6 @@ import { importFromFile, writeExport } from "../../core/config/export-import.js"
 import { defineCommand, emit, withCokey } from "../context.js";
 import { bold, cyan, dim, green, yellow } from "../format.js";
 
-/** Configuration portability commands. */
 export function registerConfigCommands(cli: CAC): void {
   defineCommand(cli, "export [file]", "Export config (never secrets)", async (args, context) => {
     const [file] = args;

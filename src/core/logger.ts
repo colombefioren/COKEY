@@ -2,7 +2,6 @@ import type { LogLevel } from "./types.js";
 
 const LEVELS: Record<LogLevel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
-/** Field names whose values are never printed. */
 const REDACT_KEYS = new Set([
   "authorization",
   "api_key",
@@ -17,7 +16,6 @@ const REDACT_KEYS = new Set([
   "set-cookie",
 ]);
 
-/** Value shapes that look like a bearer token or vendor key. */
 const SECRET_VALUE_RE =
   /(sk-[A-Za-z0-9_-]{8,}|gsk_[A-Za-z0-9]{8,}|xai-[A-Za-z0-9]{8,}|hf_[A-Za-z0-9]{8,}|Bearer\s+\S+)/;
 
@@ -25,13 +23,6 @@ export interface LoggerSink {
   write(line: string): void;
 }
 
-/**
- * Structured, redacting logger.
- *
- * Logs go to stderr so that the CLI's human-readable stdout stays parseable.
- * Secrets are never logged: sensitive field names are dropped entirely and
- * token-shaped values are replaced.
- */
 export class Logger {
   constructor(
     private level: LogLevel = "info",
@@ -107,7 +98,6 @@ function redactJson(value: unknown, depth = 0): string {
   return JSON.stringify(out);
 }
 
-/** A logger that discards everything; handy in tests. */
 export function silentLogger(): Logger {
   return new Logger("error", { write: () => {} });
 }

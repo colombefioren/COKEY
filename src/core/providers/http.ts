@@ -6,32 +6,14 @@ export const DEFAULT_TIMEOUT_MS = 120_000;
 
 export interface RequestOptions {
   timeoutMs?: number;
-  /** Extra signals to combine with the timeout. */
+
   signal?: AbortSignal;
-  /**
-   * Egress through this proxy instead of the process default.
-   *
-   * Defaults to the proxy declared on the request spec, so adapters that build
-   * a request from a credential get per-credential egress for free.
-   */
+
   proxyUrl?: string;
 }
 
-/**
- * `fetch` options carrying the undici `dispatcher`.
- *
- * `dispatcher` is redeclared as `unknown` because `@types/node` and the
- * `undici` package ship separate, mutually incompatible copies of its type.
- */
 type FetchInit = Omit<RequestInit, "dispatcher"> & { dispatcher?: unknown };
 
-/**
- * Execute a provider request.
- *
- * The timeout only covers the time to receive response headers. Once headers
- * arrive the timer is cleared so a long-lived streamed completion is never
- * aborted mid-flight — which would truncate a user's answer.
- */
 export async function performRequest(
   spec: ProviderRequest,
   options: RequestOptions = {},
@@ -55,12 +37,10 @@ export async function performRequest(
       headers: spec.headers,
       body: spec.body,
       signal,
-      // Never follow a redirect that would resend an Authorization header to a
-      // different origin.
+
       redirect: "manual",
     };
-    // Only set the field when a proxy is configured; otherwise the process
-    // default agent stays in charge.
+
     if (dispatcher) init.dispatcher = dispatcher;
 
     const response = await fetch(spec.url, init as unknown as RequestInit);
@@ -97,7 +77,6 @@ export async function performRequest(
   }
 }
 
-/** Normalise a thrown fetch/abort error into a ProviderError with no status. */
 export function toProviderError(error: unknown): ProviderError {
   if (error instanceof Error) {
     const cause = (error as Error & { cause?: unknown }).cause;
@@ -158,7 +137,6 @@ export function headersToObject(headers: Headers): Record<string, string> {
   return out;
 }
 
-/** Case-insensitive header lookup for a plain record. */
 export function getHeader(
   headers: Record<string, string> | undefined,
   name: string,

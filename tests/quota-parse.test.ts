@@ -52,9 +52,6 @@ describe("parseResetValue", () => {
   });
 
   it("sums a compound duration across mixed units", () => {
-    // A provider is free to combine units in one value ("1m30s" = 90s), and
-    // the header contract this parser advertises explicitly promises this
-    // shape works, not just a single unit.
     expect(parseResetValue("1m30s")).toBe(Date.now() + 90_000);
     expect(parseResetValue("1h30m")).toBe(Date.now() + 90 * 60_000);
   });

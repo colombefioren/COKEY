@@ -6,13 +6,6 @@ import { Modal, Select } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
-/**
- * Add a key to a chain entry.
- *
- * The verification gate lives on the server: a new key is only attached if the
- * provider accepts it for this specific model. Failures are reported inline
- * with the classification that caused them.
- */
 export function AddCredentialModal({
   entry,
   onClose,
@@ -77,7 +70,6 @@ export function AddCredentialModal({
     setError(undefined);
     setResult(undefined);
     try {
-      // Probes against the exact model of this entry, but stores nothing.
       const validation = await api.testProviderSecret(entry.providerId, {
         secret: secret.trim(),
         ...(needsAccountId && accountId.trim() ? { accountId: accountId.trim() } : {}),
@@ -113,11 +105,9 @@ export function AddCredentialModal({
         description: description.trim(),
         secret: secret.trim(),
         ...(needsAccountId && accountId.trim() ? { accountId: accountId.trim() } : {}),
-        // A distinct proxy per key is what makes several keys from one provider
-        // fail over independently instead of sharing an IP-level limit.
+
         ...(proxyUrl.trim() ? { proxyUrl: proxyUrl.trim() } : {}),
-        // The user asked for this key explicitly: save it even if the probe
-        // rejects it, clearly marked unverified.
+
         saveAnyway: true,
         useProxy,
       });

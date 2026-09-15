@@ -4,14 +4,6 @@ import type { ChainEntry } from "../../core/types.js";
 import { defineCommand, emit, withCokey, type CommandContext } from "../context.js";
 import { bold, dim, green, red } from "../format.js";
 
-/**
- * Chain commands.
- *
- * cac matches a command by its first token, so `cokey chains reorder …` cannot
- * be a multi-word command name. One `chains` command therefore takes a
- * subcommand argument and dispatches here, which also makes the bare
- * `cokey chains` listing the default.
- */
 export function registerChainCommands(cli: CAC): void {
   defineCommand(
     cli,
@@ -73,8 +65,6 @@ export function registerChainCommands(cli: CAC): void {
     });
   });
 }
-
-// ---- actions ---------------------------------------------------------------
 
 function listChains(cokey: Cokey, context: CommandContext): void {
   const chains = cokey.listChains();
@@ -142,8 +132,6 @@ function addEntry(cokey: Cokey, context: CommandContext, alias?: string, referen
     );
   }
 
-  // Bind every credential already stored for this provider so the entry is
-  // immediately usable, matching the UI's default selection.
   const credentialIds = cokey.credentials.listByProvider(ref.providerId).map((c) => c.id);
 
   const entry = cokey.chains.addEntry({
@@ -280,8 +268,6 @@ function setStrategy(
   );
 }
 
-// ---- helpers ---------------------------------------------------------------
-
 function requireArg(value: unknown, usage: string): string {
   if (typeof value !== "string" || value.trim() === "") throw new Error(usage);
   return value.trim();
@@ -293,12 +279,6 @@ export function resolveChain(cokey: Cokey, alias: string) {
   return chain;
 }
 
-/**
- * Resolve `provider` or `provider:model` to an entry.
- *
- * Model ids may themselves contain colons (`openrouter:deepseek/x:free`), so
- * only the first colon separates the provider from the model.
- */
 export function parseEntryRef(reference: string): { providerId: string; model?: string } {
   const index = reference.indexOf(":");
   if (index === -1) return { providerId: reference };

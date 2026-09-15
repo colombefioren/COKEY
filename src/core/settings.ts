@@ -21,21 +21,10 @@ export class InvalidSettingError extends Error {
   }
 }
 
-/**
- * A settings patch may touch individual fallback knobs without replacing the
- * whole policy object, which is what the Settings screen sends.
- */
 export type SettingsPatch = Partial<Omit<Settings, "fallback">> & {
   fallback?: Partial<FallbackPolicy>;
 };
 
-/**
- * Owns the gateway configuration.
- *
- * Precedence, lowest to highest: built-in defaults → persisted row →
- * environment variables. Environment variables win so a container can pin the
- * port without rewriting the database.
- */
 export class SettingsService {
   private current: Settings;
 
@@ -50,13 +39,11 @@ export class SettingsService {
     return { ...this.current, fallback: { ...this.current.fallback } };
   }
 
-  /** Recompute from storage and environment. */
   reload(): Settings {
     this.current = this.compute();
     return this.get();
   }
 
-  /** Merge a validated patch and persist it. */
   update(patch: SettingsPatch): Settings {
     const merged = validateSettings({
       ...this.current,
@@ -72,40 +59,28 @@ export class SettingsService {
     return this.update({ fallback: { ...this.current.fallback, ...patch } });
   }
 
-  /** Restore defaults, discarding the persisted row. */
   reset(): Settings {
     this.repo.delete(SETTINGS_KEY);
     this.current = this.compute();
     return this.get();
   }
 
-  /** The admin password. Defaults to `coco-the-best` until the user sets one. */
   password(): string {
     return this.repo.get(PASSWORD_KEY) ?? DEFAULT_ADMIN_PASSWORD;
   }
 
-  /**
-   * True once the user has chosen their own password. From that point the
-   * password is permanent — there is no UI or API path to change it again.
-   */
   passwordLocked(): boolean {
     return this.repo.get(PASSWORD_LOCKED_KEY) === "1";
   }
 
   verifyPassword(candidate: string): boolean {
     if (candidate.length === 0) return false;
-    // Compared as fixed-length digests, not the raw strings: timingSafeEqual
-    // throws on a length mismatch, and a wrong-length guess is exactly the
-    // kind of early-exit a timing check exists to close off.
+
     const expected = createHash("sha256").update(this.password()).digest();
     const actual = createHash("sha256").update(candidate).digest();
     return timingSafeEqual(actual, expected);
   }
 
-  /**
-   * Set the admin password. Only allowed while the default is still in place;
-   * afterwards the stored password is immutable.
-   */
   setPassword(password: string): void {
     if (this.passwordLocked()) {
       throw new InvalidSettingError(
@@ -182,16 +157,9 @@ export function validateSettings(settings: Settings): Settings {
   };
 }
 
-/** Environment overrides, applied last so they always win. */
 export function applyEnvOverrides(settings: Settings, env: NodeJS.ProcessEnv): Settings {
   const next: Settings = { ...settings, fallback: { ...settings.fallback } };
 
-  // `PORT` is the convention most hosting platforms (Render, Heroku, Fly, …)
-  // inject to say which port a web service must listen on — it is assigned by
-  // the platform, not chosen by whoever deploys, so COKEY has to read it on
-  // its own rather than expect a `COKEY_PORT` someone remembered to set to
-  // match. The COKEY-prefixed variable still wins when both are present, for
-  // a setup that deliberately pins its own port.
   const portOverride = env.COKEY_PORT ?? env.PORT;
   if (portOverride) {
     const port = Number(portOverride);

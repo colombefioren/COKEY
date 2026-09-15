@@ -1,18 +1,5 @@
 import type { ReactNode } from "react";
 
-/**
- * A small Markdown renderer for the terms text.
- *
- * The terms are written as Markdown strings so the source stays readable
- * with real lists and emphasis. This covers the subset that text actually
- * uses — paragraphs, `##` headings, `-` lists, bold, italic, inline code and
- * links — and nothing else.
- *
- * It deliberately does not support raw HTML: rendering arbitrary markup here
- * is how a text edit turns into a script injection, and nothing here needs it.
- */
-
-/** Split on the inline constructs that need wrapping, keeping the separators. */
 const INLINE = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g;
 
 function renderInline(text: string, keyPrefix: string): ReactNode[] {

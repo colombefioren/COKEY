@@ -44,7 +44,7 @@ export interface AddEntryInput {
   chainId: string;
   providerId: string;
   model: string;
-  /** Optional display name. Never derived from the model id automatically. */
+
   label?: string;
   baseUrl: string;
   credentialIds: string[];
@@ -53,16 +53,8 @@ export interface AddEntryInput {
   priority?: number;
 }
 
-/**
- * Owns chains and their ordered entries.
- *
- * Priority is user-owned: `reorder` rewrites it wholesale, and every read
- * returns entries already sorted by priority so callers never re-sort.
- */
 export class ChainManager {
   constructor(private readonly repo: ChainsRepo) {}
-
-  // ---- chains -------------------------------------------------------------
 
   createChain(input: CreateChainInput): Chain {
     validateAlias(input.alias);
@@ -124,8 +116,6 @@ export class ChainManager {
     return this.repo.getChainByAlias(alias) !== undefined;
   }
 
-  // ---- entries ------------------------------------------------------------
-
   addEntry(input: AddEntryInput): ChainEntry {
     const chain = this.getChainOrThrow(input.chainId);
     const priority = input.priority ?? this.repo.maxPriority(chain.id) + 1;
@@ -164,7 +154,6 @@ export class ChainManager {
     return this.repo.listEntries(chainId).map((row) => this.entryFromRow(row));
   }
 
-  /** Entries eligible for routing, in priority order. */
   listEnabledEntries(chainId: string): ChainEntry[] {
     return this.listEntries(chainId).filter((entry) => entry.enabled);
   }
@@ -189,13 +178,6 @@ export class ChainManager {
     });
   }
 
-  /**
-   * Set or clear the node's display name.
-   *
-   * An empty string clears it, which makes clients fall back to the raw model
-   * id. COKEY never invents a label such as "DeepSeek V4 Pro (xKiro)": the
-   * user decides what each node is called.
-   */
   updateEntryLabel(id: string, label: string | null): void {
     const trimmed = label?.trim();
     this.repo.updateEntry(id, {
@@ -208,7 +190,6 @@ export class ChainManager {
     this.repo.deleteEntry(id);
   }
 
-  /** Copy an entry (and its credential bindings) directly below the original. */
   duplicateEntry(id: string): ChainEntry {
     const source = this.getEntryOrThrow(id);
     const siblings = this.listEntries(source.chainId);
@@ -250,7 +231,6 @@ export class ChainManager {
     });
   }
 
-  /** Detach a credential from every entry of every chain. */
   detachCredentialEverywhere(credentialId: string): void {
     for (const chain of this.listChains()) {
       for (const entry of this.listEntries(chain.id)) {
@@ -261,12 +241,6 @@ export class ChainManager {
     }
   }
 
-  /**
-   * Rewrite the priority of every entry in a chain.
-   *
-   * Ids not belonging to the chain are ignored, and entries missing from
-   * `orderedEntryIds` are appended so a partial ordering can never lose rows.
-   */
   reorder(chainId: string, orderedEntryIds: string[]): void {
     const existing = this.listEntries(chainId);
     const valid = new Set(existing.map((entry) => entry.id));
@@ -282,7 +256,6 @@ export class ChainManager {
     this.repo.reorder(chainId, filtered);
   }
 
-  /** Move one entry to a zero-based position within its chain. */
   moveEntry(chainId: string, entryId: string, toIndex: number): void {
     const ordered = this.listEntries(chainId).map((entry) => entry.id);
     const from = ordered.indexOf(entryId);

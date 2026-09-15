@@ -46,16 +46,15 @@ describe("validateEndpointUrl", () => {
 
   it("blocks an IPv4-mapped IPv6 address written in dotted-decimal form", () => {
     expect(validateEndpointUrl("http://[::ffff:192.168.1.1]/").ok).toBe(false);
-    expect(validateEndpointUrl("http://[::ffff:192.168.1.1]/", { allowPrivate: true }).ok).toBe(true);
+    expect(validateEndpointUrl("http://[::ffff:192.168.1.1]/", { allowPrivate: true }).ok).toBe(
+      true,
+    );
   });
 
-  // Regression: ::ffff:a9fe:a9fe and ::ffff:192.168.1.1 encode the same
-  // addresses as 169.254.169.254 and 192.168.1.1 respectively, but in the
-  // fully hex-group form of an IPv4-mapped IPv6 literal. The guard used to
-  // recognize only the dotted-decimal tail, so this encoding walked straight
-  // past both the unconditional link-local block and the private-range check.
   it("blocks an IPv4-mapped IPv6 address written in hex-group form", () => {
-    expect(validateEndpointUrl("http://[::ffff:a9fe:a9fe]/", { allowPrivate: true }).ok).toBe(false);
+    expect(validateEndpointUrl("http://[::ffff:a9fe:a9fe]/", { allowPrivate: true }).ok).toBe(
+      false,
+    );
     expect(validateEndpointUrl("http://[::ffff:c0a8:101]/").ok).toBe(false);
     expect(validateEndpointUrl("http://[::ffff:c0a8:101]/", { allowPrivate: true }).ok).toBe(true);
   });

@@ -5,11 +5,6 @@ import { useToast } from "./Toast.js";
 
 export type RefreshState = "idle" | "testing" | "ok" | "fail";
 
-/**
- * One node's verdict during a chain sweep. Exposed so diagrams can paint the
- * exact animation the user described: node 1 turns green, then node 2, then
- * node 3, and the "current" node is the first one that answered OK.
- */
 export interface ChainRefresh {
   states: Record<string, RefreshState>;
   winnerId: string | null;
@@ -17,14 +12,6 @@ export interface ChainRefresh {
   refresh: () => Promise<void>;
 }
 
-/**
- * Sweep a chain from the browser, probing each enabled node with its own key.
- *
- * Nodes are tested in priority order, one at a time, so the results land in
- * the same left-to-right cadence the user sees. The first node to answer OK
- * is crowned the winner and promoted to the top of the chain, so the router
- * really does "go to the first that is 200 OK" on the next request.
- */
 export function useChainRefresh(chain: ChainView | null, onChanged: () => void): ChainRefresh {
   const toast = useToast();
   const [states, setStates] = useState<Record<string, RefreshState>>({});

@@ -42,7 +42,6 @@ jobs:
             echo "platforms=linux/amd64,linux/arm64"
             echo "tags<<EOF"
             if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-              # A tag publishes the pinned version and moves latest.
               printf '%s\n' "${IMAGE}:${VERSION}" "${IMAGE}:latest"
             elif [[ "${GITHUB_REF}" == "refs/heads/prod" ]]; then
               printf '%s\n' "${IMAGE}:nightly"
@@ -60,16 +59,12 @@ jobs:
   publish:
     name: Publish multi-arch manifests
     needs: metadata
-    # Image pushes only happen for real releases, never for pull requests.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
-      # `secrets` cannot be read from an `if` expression, so the presence of
-      # the credentials is detected in a step and the result is published as an
-      # output that later steps can branch on.
       - name: Detect Docker Hub credentials
         id: creds
         env:

@@ -15,13 +15,6 @@ import { OpenAICompatibleAdapter, num } from "./openai-compatible.js";
 import { iterateSse, sseFrame, SSE_DONE, streamFrom } from "./sse.js";
 import { flattenContent, mapFinishReason, openAiChunk, openAiCompletion } from "./transform.js";
 
-/**
- * Google Generative Language (`generateContent`) adapter.
- *
- * Gemini speaks a genuinely different dialect: roles are `user`/`model`,
- * messages are `contents` with typed `parts`, and the model id is a path
- * segment. Both directions are translated here, including SSE deltas.
- */
 export class GoogleAdapter extends OpenAICompatibleAdapter {
   override createRequest(
     entry: ChainEntry,
@@ -340,7 +333,6 @@ function geminiToOpenAi(body: unknown, context: TransformContext): unknown {
   });
 }
 
-/** Re-exported for tests that exercise the message translation directly. */
 export { toGeminiRequest };
 
 export type { ChatMessage };

@@ -5,16 +5,6 @@ import { Panel } from "../components/Primitives.js";
 import { CREATOR } from "../links.js";
 import { useLang } from "../lang.js";
 
-/**
- * Terms of service.
- *
- * Plain language on purpose. The short version is that COKEY is a local tool
- * that holds your own keys, and that what you do with those keys is your
- * responsibility rather than the author's. This text used to live in a
- * separate content repository so it could be edited without a release; in
- * practice terms are not something that should change without one, so it is
- * back in the app it describes.
- */
 const TERMS_SECTIONS: Array<{ order: number; title: string; body: string }> = [
   {
     order: 1,

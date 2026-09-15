@@ -41,9 +41,6 @@ jobs:
         id: pkg
         run: echo "version=$(node -p "require('./package.json').version")" >> "${GITHUB_OUTPUT}"
 
-      # `secrets` cannot be read from an `if` expression, so the presence of
-      # the token is detected in a step and the result published as an output
-      # that later steps can branch on - same pattern as docker-publish.yml.
       - name: Detect npm credentials
         id: creds
         env:

@@ -5,14 +5,6 @@ import { Modal } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
-/**
- * Paste a vendor's whole endpoint list at once.
- *
- * Residential and datacenter vendors hand out 20-100 sticky endpoints; adding
- * them one box at a time is the only thing the single-line input cannot do.
- * Each line is validated and deduplicated on the server, so a bad row is
- * skipped rather than failing the batch.
- */
 export function BulkProxyModal({
   onClose,
   onChanged,

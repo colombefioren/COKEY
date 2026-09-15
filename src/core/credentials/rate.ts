@@ -1,48 +1,32 @@
 import { emptyRate, type CredentialRate } from "../types.js";
 
-/** How long raw request timestamps are retained. */
 const WINDOW_MS = 5 * 60_000;
-/** Sparkline resolution: 12 buckets × 5s = the trailing minute. */
+
 const BUCKET_MS = 5_000;
 const BUCKETS = 12;
 
 interface RateEntry {
-  /** Request timestamps, newest last, pruned to {@link WINDOW_MS}. */
   stamps: number[];
   lastRateLimitedAt?: number;
   lastRequestAt?: number;
 }
 
-/**
- * In-memory, per-credential throughput.
- *
- * Declared provider quotas are frequently absent or a lie, and two keys from
- * the same provider look identical in every other view. This tracker is what
- * makes each key distinguishable: it measures what COKEY actually sent through
- * it, so a user can see which of their three Groq keys is carrying the load and
- * which one is idle.
- *
- * Deliberately bounded and never persisted: it is a live gauge, not billing.
- */
 export class RateTracker {
   private readonly entries = new Map<string, RateEntry>();
 
-  /** Record one outbound attempt through a credential. */
   record(credentialId: string, at = Date.now()): void {
     const entry = this.entryFor(credentialId);
     entry.stamps.push(at);
-    // Track the newest observed time, not merely the last call to record().
+
     entry.lastRequestAt = Math.max(entry.lastRequestAt ?? 0, at);
     this.prune(entry, at);
   }
 
-  /** Note that a provider rejected this credential for rate/quota reasons. */
   recordRateLimited(credentialId: string, at = Date.now()): void {
     const entry = this.entryFor(credentialId);
     entry.lastRateLimitedAt = at;
   }
 
-  /** Current throughput for one credential. */
   snapshot(credentialId: string, now = Date.now()): CredentialRate {
     const entry = this.entries.get(credentialId);
     if (!entry) return emptyRate();
@@ -56,7 +40,7 @@ export class RateTracker {
     for (const at of entry.stamps) {
       const age = now - at;
       if (age < 0 || age >= BUCKETS * BUCKET_MS) continue;
-      // Oldest bucket first, so the array reads left-to-right in time.
+
       const index = BUCKETS - 1 - Math.floor(age / BUCKET_MS);
       if (index >= 0 && index < BUCKETS) sparkline[index] += 1;
     }
@@ -71,12 +55,10 @@ export class RateTracker {
     };
   }
 
-  /** Drop tracking for a credential that no longer exists. */
   forget(credentialId: string): void {
     this.entries.delete(credentialId);
   }
 
-  /** Clear everything, optionally for one credential. Mostly for tests. */
   reset(credentialId?: string): void {
     if (credentialId) this.entries.delete(credentialId);
     else this.entries.clear();
@@ -94,9 +76,7 @@ export class RateTracker {
   private prune(entry: RateEntry, now: number): void {
     if (entry.stamps.length === 0) return;
     const cutoff = now - WINDOW_MS;
-    // Timestamps are normally appended in order, but filter rather than
-    // head-trim so an out-of-order or clock-adjusted value cannot leave the
-    // window silently over-counted.
+
     const kept = entry.stamps.filter((at) => at > cutoff);
     if (kept.length !== entry.stamps.length) entry.stamps = kept;
   }

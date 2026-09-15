@@ -1,12 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 128" role="img" aria-label="COKEY">
   <title>COKEY</title>
 
-  <!--
-    One continuous line: it starts at the open terminal of the C, sweeps the
-    left loop, crosses itself, closes the O, and returns to the crossing. The
-    gap where the C stops short of the crossing is what makes the left glyph a
-    C and the right one an O, instead of a symmetrical infinity.
-  -->
   <path
     d="M84 50 C75 44 63 43 52 50 C32 62 32 90 52 102 C72 114 96 102 96 76 C96 50 120 38 140 50 C160 62 160 90 140 102 C120 114 96 102 96 76"
     fill="none"
@@ -16,11 +10,9 @@
     stroke-linejoin="round"
   />
 
-  <!-- two leaves, the "broke princess" sprout -->
   <path d="M148 46 C152 24 168 6 194 4 C192 30 172 48 148 46 Z" fill="#F482B4" />
   <path d="M166 56 C170 36 186 24 212 22 C206 44 188 58 166 56 Z" fill="#F482B4" opacity="0.6" />
 
-  <!-- KEY, drawn as strokes so it stays crisp at any size -->
   <g fill="none" stroke="#F482B4" stroke-width="11" stroke-linecap="round" stroke-linejoin="round">
     <path d="M246 40 V114 M294 40 L250 74 L294 114" />
     <path d="M348 40 H314 V114 H348 M314 74 H340" />

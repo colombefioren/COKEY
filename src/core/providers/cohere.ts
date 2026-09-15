@@ -14,13 +14,6 @@ import { OpenAICompatibleAdapter, num } from "./openai-compatible.js";
 import { iterateSse, sseFrame, SSE_DONE, streamFrom } from "./sse.js";
 import { flattenContent, mapFinishReason, openAiChunk, openAiCompletion } from "./transform.js";
 
-/**
- * Cohere v2 (`/chat`) adapter.
- *
- * v2 is close to OpenAI in spirit but differs in field names (`message.content`
- * is an array of typed blocks, usage nests under `tokens`) and in its streamed
- * event vocabulary (`content-delta`, `message-end`, …).
- */
 export class CohereAdapter extends OpenAICompatibleAdapter {
   override createRequest(
     entry: ChainEntry,

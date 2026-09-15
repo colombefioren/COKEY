@@ -1,5 +1,3 @@
-/** Terminal output helpers. No dependencies: just ANSI codes. */
-
 const useColor =
   Boolean(process.stdout.isTTY) && !process.env.NO_COLOR && process.env.TERM !== "dumb";
 
@@ -17,7 +15,6 @@ export const cyan = wrap(36);
 export const magenta = wrap(35);
 export const brightMagenta = wrap(95);
 
-/** A coloured status glyph for a credential. */
 export function statusGlyph(status: string): string {
   switch (status) {
     case "healthy":
@@ -33,7 +30,6 @@ export function statusGlyph(status: string): string {
   }
 }
 
-/** Render an aligned table; ANSI codes are ignored when measuring widths. */
 export function table(headers: string[], rows: string[][]): string {
   const all = [headers, ...rows];
   const widths = headers.map((_, column) =>
@@ -60,7 +56,6 @@ function visibleLength(value: string): number {
   return value.replace(/\x1b\[[0-9;]*m/g, "").length;
 }
 
-/** "1.4s", "12m", "3h" — coarse but readable. */
 export function humanizeDuration(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return "-";
   if (ms < 1000) return `${Math.round(ms)}ms`;

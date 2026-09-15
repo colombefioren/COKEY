@@ -4,14 +4,6 @@ import { EgressPoolPanel } from "../components/EgressPoolPanel.js";
 import { Empty } from "../components/Primitives.js";
 import { useLang } from "../lang.js";
 
-/**
- * The egress proxy pool, on its own screen.
- *
- * It used to live at the bottom of Settings, which buried a whole pool of
- * addresses — with its own health checks, bulk paste and per-provider
- * pinning — under a page named for gateway ports and fallback policy. It is
- * its own concern, so it gets its own tab.
- */
 export function Proxies({
   settings,
   onSaved,

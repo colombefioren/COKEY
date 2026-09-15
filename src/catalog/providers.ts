@@ -2,24 +2,6 @@ import type { ProviderCatalogEntry } from "./types.js";
 import { modelsForProvider } from "./models.js";
 import { catalogAliases, mergeProviderEntries } from "./dedupe.js";
 
-/**
- * The COKEY provider catalog.
- *
- * Design rules, enforced by review rather than by types:
- *
- * 1. A user never types a provider name, base URL or auth scheme. They pick a
- *    card from this list.
- * 2. `freeTier.advertised` is only `true` when the provider itself advertises a
- *    free tier. Trial credits do not count.
- * 3. `knownModels` lists only models reachable on the free tier. If a model is
- *    not free it does not appear in the Add-Chain picker.
- * 4. Model lists are a curated seed. For providers verified via `method:
- *    "models"`, COKEY reconciles the seed against the provider's live list when
- *    a credential is connected or tested.
- *
- * Adding a provider is a data change: append an entry here. No router, adapter
- * or UI code needs to change for another OpenAI-compatible service.
- */
 export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
   {
     id: "aion",
@@ -964,13 +946,6 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
       "Alibaba's official inference API with canonical DeepSeek model names. All four DeepSeek models verified. Requires an Alibaba Cloud account bound to the ModelScope token before requests work. Paid per-token.",
   },
 
-  // -------------------------------------------------------------------------
-  // Further free hubs.
-  //
-  // Same rules as above: the provider itself advertises a self-replenishing
-  // free tier, no credit card is required, and the endpoint is a standard
-  // OpenAI-compatible call.
-  // -------------------------------------------------------------------------
   {
     id: "aion-labs",
     displayName: "AION Labs",
@@ -1320,41 +1295,21 @@ export const PROVIDER_CATALOG: ProviderCatalogEntry[] = [
   },
 ];
 
-/**
- * Keep `knownModels` in lockstep with the curated model catalog.
- *
- * One source of truth means the provider list, credential verification and the
- * chain validator can never disagree about which models a provider serves.
- */
 for (const provider of PROVIDER_CATALOG) {
   const curated = modelsForProvider(provider.id);
   if (curated.length > 0) provider.knownModels = curated.map((model) => model.id);
 }
 
-/**
- * The catalog with duplicates collapsed.
- *
- * Consumers must use this rather than `PROVIDER_CATALOG`: the raw list carries
- * a handful of services listed twice, and reading it directly means a sparse
- * duplicate silently wins over the curated entry it duplicates.
- */
 const CANONICAL = mergeProviderEntries(PROVIDER_CATALOG);
 
-/**
- * Raw ids that were collapsed into a surviving entry, for example
- * `aion-labs` into `aion`. Stored chains still reference the old id, so it has
- * to keep resolving.
- */
 export const PROVIDER_ALIASES: Map<string, string> = catalogAliases(PROVIDER_CATALOG, CANONICAL);
 
-/** Catalog index for O(1) lookups, including deprecated aliases. */
 const BY_ID = new Map(CANONICAL.map((p) => [p.id, p]));
 for (const [alias, target] of PROVIDER_ALIASES) {
   const entry = BY_ID.get(target);
   if (entry) BY_ID.set(alias, entry);
 }
 
-/** Deduplicated catalog, one entry per real service. */
 export function providerCatalog(): ProviderCatalogEntry[] {
   return CANONICAL;
 }
@@ -1363,7 +1318,6 @@ export function findProvider(id: string): ProviderCatalogEntry | undefined {
   return BY_ID.get(id);
 }
 
-/** Providers that explicitly advertise a free tier. */
 export function freeProviders(): ProviderCatalogEntry[] {
   return CANONICAL.filter((p) => p.freeTier.advertised);
 }
@@ -1376,7 +1330,6 @@ export function isFreeProvider(id: string): boolean {
   return findProvider(id)?.freeTier.advertised ?? false;
 }
 
-/** Case-insensitive search across id, display name and summary. */
 export function searchProviders(query: string): ProviderCatalogEntry[] {
   const q = query.trim().toLowerCase();
   if (!q) return [...CANONICAL];

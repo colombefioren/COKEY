@@ -11,14 +11,6 @@ import { Keys } from "./Keys.js";
 
 const CHAINS_PER_PAGE = 10;
 
-/**
- * Chains are the whole product, so everything about them lives on one screen:
- * create, order, and the keys each node can use.
- *
- * There is no separate "add chain" page any more. Adding a node reuses the
- * existing chain, and the Keys tab is the credential inventory filtered to the
- * chains you actually run.
- */
 export function Chains({
   refreshKey,
   onChanged,

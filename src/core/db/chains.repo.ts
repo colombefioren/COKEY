@@ -65,8 +65,6 @@ const ENTRY_COLUMNS: Record<keyof EntryPatch, string> = {
 export class ChainsRepo {
   constructor(private readonly db: DatabaseClient) {}
 
-  // ---- chains -------------------------------------------------------------
-
   insertChain(input: InsertChainInput): void {
     this.db
       .prepareCached(
@@ -84,7 +82,8 @@ export class ChainsRepo {
   }
 
   getChain(id: string): ChainRow | undefined {
-    return this.db.prepareCached(`SELECT * FROM chains WHERE id = ?`).get(id) as ChainRow | undefined;
+    return this.db.prepareCached(`SELECT * FROM chains WHERE id = ?`).get(id) as
+      ChainRow | undefined;
   }
 
   getChainByAlias(alias: string): ChainRow | undefined {
@@ -93,7 +92,9 @@ export class ChainsRepo {
   }
 
   listChains(): ChainRow[] {
-    return this.db.prepareCached(`SELECT * FROM chains ORDER BY created_at ASC`).all() as ChainRow[];
+    return this.db
+      .prepareCached(`SELECT * FROM chains ORDER BY created_at ASC`)
+      .all() as ChainRow[];
   }
 
   updateChain(id: string, patch: ChainPatch): void {
@@ -103,8 +104,6 @@ export class ChainsRepo {
   deleteChain(id: string): void {
     this.db.prepareCached(`DELETE FROM chains WHERE id = ?`).run(id);
   }
-
-  // ---- entries ------------------------------------------------------------
 
   insertEntry(input: InsertEntryInput): void {
     this.db
@@ -159,7 +158,6 @@ export class ChainsRepo {
     this.db.prepareCached(`DELETE FROM chain_entries WHERE chain_id = ?`).run(chainId);
   }
 
-  /** Apply an explicit priority ordering in one transaction. */
   reorder(chainId: string, orderedEntryIds: string[]): void {
     const statement = this.db.prepareCached(
       `UPDATE chain_entries SET priority = ?, updated_at = ? WHERE id = ? AND chain_id = ?`,
