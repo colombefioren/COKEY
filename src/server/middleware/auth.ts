@@ -1,6 +1,12 @@
 import type { FastifyReply, FastifyRequest, onRequestHookHandler } from "fastify";
 import type { SessionStore } from "../session.js";
 
+declare module "fastify" {
+  interface FastifyContextConfig {
+    public?: boolean;
+  }
+}
+
 const SESSION_COOKIE = "cokey_session";
 
 export interface AuthDependencies {
@@ -8,14 +14,6 @@ export interface AuthDependencies {
 
   verifyApiKey: (presented: string) => { name: string } | undefined;
   verifyPassword: (password: string) => boolean;
-}
-
-function isPublic(url: string): boolean {
-  if (url === "/" || url === "/health") return true;
-  if (url.startsWith("/assets/")) return true;
-  if (url === "/favicon.ico" || url === "/logo.svg" || url === "/favicon.svg") return true;
-  if (url === "/api/session" || url.startsWith("/api/session/")) return true;
-  return false;
 }
 
 function readCookie(header: string | undefined, name: string): string | undefined {
@@ -36,7 +34,7 @@ function bearerToken(request: FastifyRequest): string | undefined {
 
 export function makeAuthHook(deps: AuthDependencies): onRequestHookHandler {
   return async function authHook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
-    if (isPublic(request.url)) return;
+    if (request.routeOptions?.config?.public === true) return;
 
     const cookieSession = readCookie(request.headers.cookie, SESSION_COOKIE);
     if (deps.sessions.has(cookieSession)) return;

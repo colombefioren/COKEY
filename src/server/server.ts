@@ -1,7 +1,16 @@
 import { existsSync, readFileSync } from "node:fs";
-import { dirname, extname, join, normalize, resolve, sep } from "node:path";
+import {
+  dirname,
+  extname,
+  isAbsolute,
+  join,
+  normalize,
+  relative as pathRelative,
+  resolve,
+} from "node:path";
 import { fileURLToPath } from "node:url";
 import Fastify, { type FastifyInstance, type FastifyReply } from "fastify";
+import rateLimit from "@fastify/rate-limit";
 import type { Cokey } from "../core/cokey.js";
 import { makeAuthHook } from "./middleware/auth.js";
 import { registerCatalogRoutes } from "./routes/catalog.js";
@@ -49,6 +58,11 @@ export async function createServer(
 
   const sessions = new SessionStore();
 
+  await app.register(rateLimit, {
+    max: 300,
+    timeWindow: "1 minute",
+  });
+
   app.addHook(
     "onRequest",
     makeAuthHook({
@@ -89,24 +103,28 @@ export async function createServer(
 }
 
 function registerSessionRoutes(app: FastifyInstance, cokey: Cokey, sessions: SessionStore): void {
-  app.post("/api/session", async (request, reply) => {
-    const body = request.body as { password?: unknown } | undefined;
-    const password = typeof body?.password === "string" ? body.password : "";
-    if (!cokey.verifyPassword(password)) {
-      await reply
-        .code(401)
-        .send({ error: { message: "Incorrect password", type: "unauthorized" } });
-      return reply;
-    }
-    const token = sessions.create();
-    reply.header(
-      "set-cookie",
-      `cokey_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800`,
-    );
-    return { authenticated: true, passwordLocked: cokey.passwordLocked() };
-  });
+  app.post(
+    "/api/session",
+    { config: { public: true, rateLimit: { max: 10, timeWindow: "1 minute" } } },
+    async (request, reply) => {
+      const body = request.body as { password?: unknown } | undefined;
+      const password = typeof body?.password === "string" ? body.password : "";
+      if (!cokey.verifyPassword(password)) {
+        await reply
+          .code(401)
+          .send({ error: { message: "Incorrect password", type: "unauthorized" } });
+        return reply;
+      }
+      const token = sessions.create();
+      reply.header(
+        "set-cookie",
+        `cokey_session=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=604800`,
+      );
+      return { authenticated: true, passwordLocked: cokey.passwordLocked() };
+    },
+  );
 
-  app.delete("/api/session", async (request) => {
+  app.delete("/api/session", { config: { public: true } }, async (request) => {
     const header = request.headers.cookie;
     const token = header
       ?.split(";")
@@ -121,13 +139,13 @@ function registerSessionRoutes(app: FastifyInstance, cokey: Cokey, sessions: Ses
 function registerUi(app: FastifyInstance): void {
   const uiDir = resolveUiDirectory();
 
-  app.get("/", async (_request, reply) => {
+  app.get("/", { config: { public: true } }, async (_request, reply) => {
     const raw = readUiFile("index.html");
     if (!raw) return notBuilt(reply);
     return reply.type(MIME_TYPES[".html"]!).send(raw);
   });
 
-  app.get("/assets/*", async (request, reply) => {
+  app.get("/assets/*", { config: { public: true } }, async (request, reply) => {
     const relative = (request.params as { "*": string })["*"];
     const file = readUiFile(join("assets", relative), uiDir);
     if (!file) return reply.code(404).send({ error: { message: "Asset not found" } });
@@ -135,7 +153,7 @@ function registerUi(app: FastifyInstance): void {
   });
 
   for (const asset of ["favicon.ico", "favicon.svg", "logo.svg", "vite.svg"]) {
-    app.get(`/${asset}`, async (_request, reply) => {
+    app.get(`/${asset}`, { config: { public: true } }, async (_request, reply) => {
       const file = readUiFile(asset, uiDir);
       if (!file) return reply.code(404).send({ error: { message: "Not found" } });
       return reply.type(MIME_TYPES[extname(asset)] ?? "application/octet-stream").send(file);
@@ -143,9 +161,10 @@ function registerUi(app: FastifyInstance): void {
   }
 }
 
-function readUiFile(relative: string, uiDir = resolveUiDirectory()): Buffer | undefined {
-  const target = resolve(uiDir, normalize(relative));
-  if (target !== uiDir && !target.startsWith(uiDir + sep)) return undefined;
+function readUiFile(relativePath: string, uiDir = resolveUiDirectory()): Buffer | undefined {
+  const target = resolve(uiDir, normalize(relativePath));
+  const fromUiDir = pathRelative(uiDir, target);
+  if (fromUiDir.startsWith("..") || isAbsolute(fromUiDir)) return undefined;
   if (!existsSync(target)) return undefined;
   try {
     return readFileSync(target);

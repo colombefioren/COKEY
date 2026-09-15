@@ -61,6 +61,7 @@
     "export:catalog": "tsx scripts/export-catalog-snapshot.mjs"
   },
   "dependencies": {
+    "@fastify/rate-limit": "9.1.0",
     "better-sqlite3": "^12.11.1",
     "cac": "^6.7.14",
     "fastify": "^4.28.1",
