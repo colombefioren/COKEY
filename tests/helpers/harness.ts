@@ -20,7 +20,7 @@ import type {
 } from "../../src/core/providers/adapter.js";
 import type { ProviderRegistry } from "../../src/core/providers/registry.js";
 import { RouterEngine } from "../../src/core/router/engine.js";
-import { DEFAULT_FALLBACK_POLICY, type Credential } from "../../src/core/types.js";
+import { DEFAULT_FALLBACK_POLICY, type Credential, type FallbackPolicy } from "../../src/core/types.js";
 
 /** A scripted upstream answer. `status` below 300 (or absent) means success. */
 export interface StubResponse {
@@ -146,7 +146,7 @@ export interface Harness {
 }
 
 /** Build an isolated COKEY core around a throwaway data directory. */
-export function createHarness(): Harness {
+export function createHarness(policyOverrides: Partial<FallbackPolicy> = {}): Harness {
   const dir = mkdtempSync(join(tmpdir(), "cokey-test-"));
   const db = new DatabaseClient(join(dir, "cokey.db"));
   const vault = new SecretVault({ dataDir: dir, disableKeychain: true });
@@ -167,7 +167,7 @@ export function createHarness(): Harness {
     silentLogger(),
     events,
     rates,
-    () => ({ ...DEFAULT_FALLBACK_POLICY, maxRetriesPerCredential: 0 }),
+    () => ({ ...DEFAULT_FALLBACK_POLICY, maxRetriesPerCredential: 0, ...policyOverrides }),
     { sleep: async () => {} },
   );
 
