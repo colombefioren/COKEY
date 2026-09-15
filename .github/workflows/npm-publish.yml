@@ -98,4 +98,5 @@ jobs:
             --title "${TAG}" \
             --generate-notes \
             --verify-tag \
-            --latest
+            --latest \
+            --draft=false
