@@ -48,11 +48,6 @@ jobs:
           build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
 
-      # Uploading SARIF requires code scanning to be enabled for the repository
-      # (Settings -> Code security -> Code scanning). Until it is, the analysis
-      # still runs and still reports locally, but the upload would fail, so this
-      # step is allowed to fail without blocking the branch. Once code scanning
-      # is on, remove `continue-on-error` to make real alerts fail the check.
       - name: Perform CodeQL analysis
         continue-on-error: true
         uses: github/codeql-action/analyze@v3

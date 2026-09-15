@@ -5,12 +5,11 @@ const SESSION_COOKIE = "cokey_session";
 
 export interface AuthDependencies {
   sessions: SessionStore;
-  /** Verify a named API key; returns the key name when valid. */
+
   verifyApiKey: (presented: string) => { name: string } | undefined;
   verifyPassword: (password: string) => boolean;
 }
 
-/** Paths reachable without any authentication. */
 function isPublic(url: string): boolean {
   if (url === "/" || url === "/health") return true;
   if (url.startsWith("/assets/")) return true;
@@ -35,14 +34,6 @@ function bearerToken(request: FastifyRequest): string | undefined {
   return value || undefined;
 }
 
-/**
- * Gate for the management API and the OpenAI-compatible surface.
- *
- * The browser gets in with a session cookie issued after a password login; a
- * program (OpenCode, KiloCode, the CLI) gets in with a named API key. The UI
- * itself is public so the login form can render — every `/api/*` and `/v1/*`
- * call it makes is not.
- */
 export function makeAuthHook(deps: AuthDependencies): onRequestHookHandler {
   return async function authHook(request: FastifyRequest, reply: FastifyReply): Promise<void> {
     if (isPublic(request.url)) return;

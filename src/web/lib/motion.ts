@@ -1,45 +1,16 @@
-/*
- * Motion helpers.
- *
- * A deliberate split of responsibility:
- *
- *   CSS    declares the states a control can be in — the hard offset shadow,
- *          the pressed position, the window-pop keyframe. These must work
- *          before a single byte of JavaScript has run, and they must survive a
- *          re-render without a library holding a reference to the node.
- *
- *   GSAP   orchestrates the few moments that are genuinely a sequence: a route
- *          being walked node by node, a board re-ranking itself, a burst of
- *          stars when something succeeds. None of it belongs in a stylesheet
- *          because the timing depends on data.
- *
- * `gsap/registerEffect` is not used on purpose: these are plain functions, so
- * there is no global plugin state to keep in sync and nothing to unregister.
- */
-
 import gsap from "gsap";
 
-/** True when the user has asked the OS for reduced motion. */
 export function prefersReducedMotion(): boolean {
   if (typeof window === "undefined" || !window.matchMedia) return false;
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** Guard every helper: a test renderer and a headless render have no layout. */
 function canAnimate(target: unknown): boolean {
   if (typeof window === "undefined") return false;
   if (prefersReducedMotion()) return false;
   return Boolean(target);
 }
 
-/**
- * Walk a chain diagram from left to right.
- *
- * Called when a request begins routing. Each node lifts a few pixels in turn,
- * which communicates *order*: the diagram is telling you which entry was
- * reached, not merely that something is happening. The returned function kills
- * the tween so a fast successive request cannot leave two walks overlapping.
- */
 export function animateRouteWalk(nodes: HTMLElement[]): () => void {
   if (!canAnimate(nodes.length)) return () => undefined;
 
@@ -53,7 +24,7 @@ export function animateRouteWalk(nodes: HTMLElement[]): () => void {
       stagger: 0.14,
       repeat: 1,
       yoyo: true,
-      // The shadow rides along so the lift reads as physical.
+
       onStart: () => {
         for (const node of nodes) node.style.zIndex = "2";
       },
@@ -66,13 +37,6 @@ export function animateRouteWalk(nodes: HTMLElement[]): () => void {
   return () => tween.kill();
 }
 
-/**
- * Choreograph a board that has just re-ranked.
- *
- * Ranking boards change underneath the reader whenever a provider adds or drops
- * a model. Rather than the row teleporting, rows settle into their new order
- * with a short stagger, so the change is legible as a change.
- */
 export function animateRankedRows(rows: HTMLElement[]): () => void {
   if (!canAnimate(rows.length)) return () => undefined;
 
@@ -92,14 +56,6 @@ export function animateRankedRows(rows: HTMLElement[]): () => void {
   return () => tween.kill();
 }
 
-/**
- * A small burst of stars, tied to the theme rather than a generic confetti.
- *
- * Anchored to the element that succeeded: the check that just turned green, the
- * key that just verified. Cleanup is guaranteed by the tween's own onComplete,
- * and the particles are `position: absolute` blocks with no blur, matching the
- * rest of the surface language.
- */
 export function burstSparkles(
   anchor: HTMLElement,
   options: { count?: number; hue?: "butter" | "pink" | "mint" } = {},
@@ -126,7 +82,7 @@ export function burstSparkles(
   for (let index = 0; index < count; index += 1) {
     const bit = document.createElement("span");
     bit.className = "sparkle-bit";
-    // Alternate sizes so the burst does not look stamped.
+
     const size = index % 3 === 0 ? 9 : 6;
     bit.style.width = `${size}px`;
     bit.style.height = `${size}px`;
@@ -137,7 +93,6 @@ export function burstSparkles(
   }
 
   gsap.to(bits, {
-    // A full circle of directions, biased upward so it reads as a burst.
     x: () => gsap.utils.random(-42, 42),
     y: () => gsap.utils.random(-52, 18),
     rotate: () => gsap.utils.random(-180, 180),
@@ -150,13 +105,6 @@ export function burstSparkles(
   });
 }
 
-/**
- * Count a number up to its new value.
- *
- * Used only where the number is the point — a total, a success rate — and only
- * when the value actually changed, so a poll that returns the same figure does
- * not re-animate and waste the reader's attention.
- */
 export function countUp(
   element: HTMLElement,
   to: number,
@@ -185,13 +133,6 @@ export function countUp(
   });
 }
 
-/**
- * Press feedback for an element that is not a `<button>`.
- *
- * Chain nodes and model chips are clickable divs, so they do not inherit the
- * browser's `:active` handling. This gives them the same physical push the CSS
- * gives a real button.
- */
 export function pressFeedback(element: HTMLElement): void {
   if (!canAnimate(element)) return;
   gsap.fromTo(
@@ -209,11 +150,10 @@ export function pressFeedback(element: HTMLElement): void {
   );
 }
 
-/** One-shot flash on an element, used for success and failure confirmations. */
 export function flash(element: HTMLElement, kind: "ok" | "bad"): void {
   const className = kind === "ok" ? "flash-ok" : "flash-bad";
   element.classList.remove(className);
-  // Force a reflow so the animation restarts when the same class is re-applied.
+
   void element.offsetWidth;
   element.classList.add(className);
   window.setTimeout(() => element.classList.remove(className), 1400);

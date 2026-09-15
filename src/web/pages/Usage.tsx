@@ -19,14 +19,6 @@ const HISTORY_PAGE_SIZE = 25;
 const DAILY_PAGE_SIZE = 10;
 const MODEL_PAGE_SIZE = 8;
 
-/**
- * Everything the gateway observed, in one place.
- *
- * Usage and requests used to be two screens, which meant the number and the
- * evidence for it lived apart. They are one screen now: the rollup answers "how
- * much", the history answers "and what exactly happened", and the filters apply
- * to both.
- */
 type UsageTab = "overview" | "providers" | "requests";
 
 export function Usage({ refreshKey }: { refreshKey: number }) {
@@ -76,7 +68,6 @@ export function Usage({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-/** The chain, node and key serving the current request. */
 function ServingNow({
   refreshKey,
   onError,
@@ -140,7 +131,6 @@ function ServingNow({
   );
 }
 
-/** Per-provider, per-key, per-model rollup with the daily table. */
 function UsageRollup({
   refreshKey,
   onError,
@@ -429,7 +419,6 @@ function UsageRollup({
   );
 }
 
-/** Local request history with filters and a real pager. */
 function RequestHistory({ refreshKey }: { refreshKey: number }) {
   const toast = useToast();
   const { t } = useLang();
@@ -603,12 +592,6 @@ function RequestHistory({ refreshKey }: { refreshKey: number }) {
   );
 }
 
-/**
- * Remaining quota against the declared limit, or an honest "unknown".
- *
- * Providers rarely expose limits, so a missing number is reported as unknown
- * rather than drawn as a fabricated bar.
- */
 function QuotaVsLimit({
   quota,
 }: {

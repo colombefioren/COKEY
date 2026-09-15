@@ -46,9 +46,7 @@ export class ProxyPool {
   append(line: string): void {
     try {
       this._addresses.push(parseAddress(line.trim()));
-    } catch {
-      // ignore malformed line
-    }
+    } catch {}
   }
 
   next(): ProxyPoolAddress | undefined {

@@ -3,14 +3,6 @@ import { Panel } from "../components/Primitives.js";
 import { CREATOR, DATA_CREDIT, PROXY_CREDIT, REPO_URL } from "../links.js";
 import { useLang } from "../lang.js";
 
-/**
- * About and credits.
- *
- * COKEY is a local tool made by one person, so the about page says who and
- * links where the model data came from. Nothing here fetches anything: it is a
- * static signpost.
- */
-
 export function About() {
   const { t } = useLang();
   return (
@@ -48,7 +40,10 @@ export function About() {
           <a href={DATA_CREDIT.url} target="_blank" rel="noreferrer">
             {DATA_CREDIT.label}
           </a>
-          , {t("with thanks. Rate limits change constantly, so the ranking boards always name their source and let you decide.")}
+          ,{" "}
+          {t(
+            "with thanks. Rate limits change constantly, so the ranking boards always name their source and let you decide.",
+          )}
         </p>
         <p className="small muted">
           {t("The automatic egress pool's free-proxy import pulls its list from")}{" "}

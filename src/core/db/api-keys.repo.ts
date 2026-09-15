@@ -8,7 +8,6 @@ export interface InsertApiKeyInput {
   createdAt: number;
 }
 
-/** Storage for named management API keys. Only the hash is ever persisted. */
 export class ApiKeysRepo {
   constructor(private readonly db: DatabaseClient) {}
 

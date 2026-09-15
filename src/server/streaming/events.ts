@@ -8,17 +8,8 @@ import {
   type EventBus,
 } from "../../core/events.js";
 
-/** How often a comment frame is written to keep intermediaries from idling us out. */
 const HEARTBEAT_MS = 15_000;
 
-/**
- * Read a `?topics=` query value into the set of topics to stream.
- *
- * Returns `undefined` for "everything", which is the default, so a client that
- * has not been updated keeps working. Unknown names are dropped rather than
- * rejected: a subscriber asking for a topic this build does not have should get
- * its other topics, not a 400.
- */
 export function parseTopics(raw: unknown): Set<CokeyEventTopic> | undefined {
   if (typeof raw !== "string" || raw.trim() === "") return undefined;
   const known = new Set<string>(COKEY_EVENT_TOPICS);
@@ -29,23 +20,6 @@ export function parseTopics(raw: unknown): Set<CokeyEventTopic> | undefined {
   return wanted.length > 0 ? new Set(wanted) : undefined;
 }
 
-/**
- * Stream routing events to a browser.
- *
- * The first frame is a snapshot of the current route plus recent history, so a
- * client that connects mid-request still renders the right thing immediately
- * instead of waiting for the next event. Every later frame is one routing
- * event: an attempt, a key change, a model change, a cooldown.
- *
- * `topics` narrows the stream. A UI that only needs to know when stored data
- * changed subscribes to `credentials,models,chains` and is never woken by the
- * per-attempt chatter of a request in flight, which is what makes a single
- * always-open connection cheap enough to leave running.
- *
- * The response is deliberately unwritable by the router: a listener writes to
- * this socket from the routing hot path, so failures here are swallowed rather
- * than allowed to bubble into a request.
- */
 export async function streamEvents(
   reply: FastifyReply,
   bus: EventBus,
@@ -70,8 +44,6 @@ export async function streamEvents(
     return raw.write(`data: ${JSON.stringify(payload)}\n\n`);
   };
 
-  // The snapshot is filtered with the same rule as live events, so a
-  // topic-scoped subscriber is not handed a backlog it did not ask for.
   write({
     kind: "snapshot",
     route: bus.routeSnapshot(),
@@ -83,9 +55,7 @@ export async function streamEvents(
     if (!wanted(event)) return;
     try {
       write({ kind: "event", event });
-    } catch {
-      // The client went away; the close handler will clean up.
-    }
+    } catch {}
   });
 
   const heartbeat = setInterval(() => {
@@ -103,10 +73,8 @@ export async function streamEvents(
   raw.on("error", cleanup);
 
   try {
-    // Hold the connection open until the client disconnects.
     await once(raw, "close");
   } catch {
-    /* already gone */
   } finally {
     cleanup();
     if (!raw.writableEnded) raw.end();

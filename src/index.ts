@@ -1,28 +1,5 @@
-/**
- * COKEY — local LLM credential pool and chain-fallback gateway.
- *
- * Programmatic entry point:
- *
- * ```ts
- * import { Cokey } from "cokey";
- *
- * const cokey = new Cokey({ port: 8787 });
- * await cokey.addChain({
- *   alias: "cokey-best",
- *   entries: [
- *     {
- *       provider: "groq",
- *       model: "qwen/qwen3.8-27b",
- *       credentials: [{ env: "GROQ_KEY_1", description: "Main" }],
- *     },
- *   ],
- * });
- * ```
- */
-
 export { COKEY_VERSION } from "./version.js";
 
-// Application facade
 export { Cokey, BadCredentialError } from "./core/cokey.js";
 export type {
   CokeyOptions,
@@ -35,11 +12,9 @@ export type {
   FreeProviderNudge,
 } from "./core/cokey.js";
 
-// HTTP server
 export { createServer, startServer, resolveUiDirectory } from "./server/server.js";
 export type { ServerOptions, StartedServer } from "./server/server.js";
 
-// Routing
 export {
   RouterEngine,
   AllChainsExhaustedError,
@@ -54,7 +29,6 @@ export type {
   RouterOptions,
 } from "./core/router/engine.js";
 
-// Managers
 export { CredentialManager, CredentialNotFoundError } from "./core/credentials/manager.js";
 export { CredentialSelector } from "./core/credentials/selector.js";
 export {
@@ -65,7 +39,6 @@ export {
   validateAlias,
 } from "./core/chains/manager.js";
 
-// Classification and policy primitives
 export {
   classifyError,
   extractMessage,
@@ -83,21 +56,17 @@ export type { CooldownPolicy } from "./core/credentials/cooldown.js";
 export { parseQuota, parseResetValue } from "./core/quota/parse.js";
 export { maskAccountId, maskSecret } from "./core/credentials/masking.js";
 
-// Crypto
 export { SecretVault } from "./core/crypto/secrets.js";
 export { resolveMasterKey, deriveFromPassphrase } from "./core/crypto/keyring.js";
 export type { MasterKey, MasterKeyKind } from "./core/crypto/keyring.js";
 
-// Security
 export { assertSafeEndpoint, validateEndpointUrl } from "./core/security/ssrf.js";
 export type { UrlCheckResult, UrlGuardOptions } from "./core/security/ssrf.js";
 
-// Settings and history
 export { SettingsService, validateSettings, applyEnvOverrides } from "./core/settings.js";
 export { RequestHistory } from "./core/history.js";
 export type { HistoryStats, RecordRequestInput } from "./core/history.js";
 
-// Configuration portability
 export {
   exportConfig,
   serializeExport,
@@ -118,7 +87,6 @@ export {
 } from "./core/config/credentials-file.js";
 export { parseMiniYaml, MiniYamlError } from "./core/config/mini-yaml.js";
 
-// Provider catalog
 export {
   PROVIDER_CATALOG,
   findProvider,
@@ -151,7 +119,6 @@ export type {
   TransformContext,
 } from "./core/providers/adapter.js";
 
-// Egress proxies and live routing feedback
 export {
   parseProxyUrl,
   dispatcherFor,
@@ -169,11 +136,9 @@ export type {
 } from "./core/events.js";
 export { RateTracker } from "./core/credentials/rate.js";
 
-// Logging
 export { Logger, silentLogger } from "./core/logger.js";
 export type { LoggerSink } from "./core/logger.js";
 
-// Domain types
 export {
   emptyUsage,
   unknownQuota,

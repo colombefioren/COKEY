@@ -12,7 +12,6 @@ import { registerStatsRoutes } from "./routes/stats.js";
 import { SessionStore } from "./session.js";
 
 export interface ServerOptions {
-  /** Serve the built web UI. Disabled in tests. */
   serveUi?: boolean;
 }
 
@@ -29,7 +28,6 @@ const MIME_TYPES: Record<string, string> = {
   ".map": "application/json; charset=utf-8",
 };
 
-/** Locate the built UI, whether running from `dist/` or from source. */
 export function resolveUiDirectory(): string {
   const here = dirname(fileURLToPath(import.meta.url));
   const candidates = [join(here, "..", "..", "dist", "web"), join(here, "..", "web")];
@@ -39,17 +37,6 @@ export function resolveUiDirectory(): string {
   return resolve(candidates[0]!);
 }
 
-/**
- * Build the COKEY HTTP server.
- *
- * Three surfaces live here:
- *   - `/v1/*`  the OpenAI-compatible gateway
- *   - `/api/*` the management API used by the UI and the CLI
- *   - `/`      the built React UI (when present)
- *
- * The UI is public so the login form can render; every API call it makes is
- * gated by a session cookie or an API key.
- */
 export async function createServer(
   cokey: Cokey,
   options: ServerOptions = {},
@@ -131,12 +118,6 @@ function registerSessionRoutes(app: FastifyInstance, cokey: Cokey, sessions: Ses
   });
 }
 
-/**
- * Serve the built single-page app.
- *
- * Only files under the UI directory are reachable: the resolved path is
- * checked against the root after normalisation, which blocks `../` traversal.
- */
 function registerUi(app: FastifyInstance): void {
   const uiDir = resolveUiDirectory();
 
@@ -191,7 +172,6 @@ export interface StartedServer {
   url: string;
 }
 
-/** Create and listen, returning the bound URL. */
 export async function startServer(
   cokey: Cokey,
   options: ServerOptions = {},

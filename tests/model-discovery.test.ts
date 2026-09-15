@@ -35,8 +35,6 @@ describe("normaliseModelIds", () => {
 
 describe("isTrustworthyListing", () => {
   it("refuses an empty listing", () => {
-    // A 200 with [] is a scoped key, a deploy or a cached edge answer — never
-    // evidence that a provider retired everything.
     expect(isTrustworthyListing([])).toBe(false);
   });
 
@@ -58,7 +56,6 @@ describe("eligibleModels", () => {
   });
 
   it("drops only entries explicitly priced when the provider is free-models-only", () => {
-    // A model with no pricing signal is kept — this never fabricates "paid".
     expect(eligibleModels(listing, true)).toEqual([listing[0], listing[1]]);
   });
 });
@@ -115,7 +112,7 @@ describe("reconcileModels", () => {
 
     const retired = records.find((entry) => entry.model === "model-b")!;
     expect(retired.available).toBe(false);
-    // Remembered, not forgotten: the original first-seen survives.
+
     expect(retired.firstSeen).toBe(NOW - 10_000);
     expect(retired.lastChecked).toBe(NOW);
   });
@@ -181,7 +178,7 @@ describe("reconcileModels", () => {
     expect(second.changes.removed).toEqual([]);
     expect(second.changes.pruned).toBe(0);
     expect(second.changes.unchanged).toBe(3);
-    // firstSeen is set once and never moves.
+
     expect(second.records.every((entry) => entry.firstSeen === NOW)).toBe(true);
   });
 

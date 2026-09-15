@@ -6,13 +6,6 @@ import { useToast } from "../components/Toast.js";
 import { useRoute } from "../router.js";
 import { useLang } from "../lang.js";
 
-/**
- * Rankings are fetchable content, not static UI copy, so they carry their own
- * French sibling field (`xFr`) instead of going through the `t()` dictionary -
- * a published bundle's exact English text can never be known ahead of time,
- * but its own French field always can. Falls back to English when a bundle
- * (or an older one) has not filled the French field in.
- */
 function loc(en: string, fr: string | undefined, lang: string): string {
   return lang === "fr" && fr ? fr : en;
 }
@@ -26,13 +19,6 @@ const BOARDS: Array<{ id: Board; label: string; hint: string }> = [
   { id: "redundancy", label: "Redundancy", hint: "What is a re-export of what" },
 ];
 
-/**
- * The ranking boards.
- *
- * Three questions, three boards, because they do not have the same answer. Every
- * quota number carries its provenance so nobody mistakes a third-party blog post
- * for a provider's own documentation.
- */
 export function Rankings({ refreshKey }: { refreshKey: number }) {
   const { route, navigate } = useRoute();
   const toast = useToast();
@@ -96,10 +82,7 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
         <p className="small muted" style={{ margin: 0 }}>
           {loc(data.disclaimer, data.disclaimerFr, lang)}
         </p>
-        {/*
-         * Provenance for the boards themselves. Fetched only when a person
-         * clicks the button below — never on a timer, never on startup.
-         */}
+        {}
         <div className="row between center" style={{ marginTop: 8, flexWrap: "wrap", gap: 8 }}>
           <p className="small faint" style={{ margin: 0 }}>
             {data.source === "remote"

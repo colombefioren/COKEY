@@ -30,13 +30,6 @@ export interface HistoryStats {
   byClassification: Record<string, number>;
 }
 
-/**
- * Bounded, local-only request history.
- *
- * This backs the observability view (`16:42:31  qwen3.8-27b  Main account  429 →
- * Backup  200  1.4s`). It is capped so it can never grow without limit, and it
- * is never transmitted anywhere.
- */
 export class RequestHistory {
   constructor(
     private readonly repo: RequestsRepo,
@@ -101,7 +94,6 @@ export class RequestHistory {
     return this.repo.count();
   }
 
-  /** Per-day/per-provider/per-key/per-model rollup since `sinceDay` (YYYY-MM-DD). */
   rollup(sinceDay: string): UsageRollupRow[] {
     return this.repo.rollupSince(sinceDay);
   }

@@ -1,11 +1,3 @@
-/*
- * Breakpoints.
- *
- * Every media query lives here so the mobile behaviour of the rail, the tables
- * and the flow diagram can be read in one place instead of being scattered
- * across the sheets that happen to style the element.
- */
-
 @media (max-width: 860px) {
   .shell {
     grid-template-columns: minmax(0, 1fr);
@@ -23,8 +15,6 @@
     transform: translateX(0);
   }
 
-  /* A dim scrim behind the open drawer: tapping it closes the drawer, and it
-     visually separates the rail from the page it is covering. */
   .nav-backdrop {
     position: fixed;
     inset: 0;
@@ -105,20 +95,6 @@
     display: none;
   }
 
-  /*
-   * The topbar packs a hamburger, a kinetic (per-glyph) title, a language
-   * toggle, the guide button, notifications, the live-route chip and the
-   * /v1/models link into one row - more controls than a phone's width can
-   * hold. Left alone, the title (the only item willing to shrink) was
-   * squeezed down to a sliver, and since its letters are individually
-   * wrappable inline-blocks, that read as its text raining down in a
-   * vertical column instead of overflowing sideways.
-   *
-   * The topbar's own `.spacer` already sits right after the title in the
-   * DOM - forcing it to the full line width is the standard flexbox
-   * full-width-break trick, so it pushes every control after it onto a
-   * second row without touching the markup.
-   */
   .topbar {
     flex-wrap: wrap;
     row-gap: 6px;
@@ -127,9 +103,7 @@
     flex-basis: 100%;
     height: 0;
   }
-  /* `.live` (not `.live-chip`) is the actual flex child here, so it is the
-     one that needs `min-width: 0` before a `max-width` on the chip inside
-     it can have any effect on how much room the row gives it. */
+
   .topbar .live {
     min-width: 0;
   }
@@ -137,15 +111,6 @@
     max-width: 150px;
   }
 
-  /*
-   * The live-route graph is fixed-coordinate by design (see views.css) so it
-   * can scroll sideways on a narrow screen rather than collapse - but on a
-   * phone that just means the dashboard's default tab opens on a diagram
-   * that needs to be dragged 2x its own width before any node is visible.
-   * Below this width it collapses into the same client -> hub -> node
-   * story, read top to bottom instead of left to right - the DOM order
-   * already matches, so this is a position override, not a restructure.
-   */
   .flow-graph {
     min-width: 0;
     height: auto !important;

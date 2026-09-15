@@ -8,7 +8,6 @@ import { DuplicateAliasError, InvalidAliasError } from "../../core/chains/manage
 import { InvalidSettingError } from "../../core/settings.js";
 import { MiniYamlError } from "../../core/config/mini-yaml.js";
 
-/** Map a thrown error onto a status code. Unknown errors become 500. */
 export function statusFor(error: unknown): number {
   if (error instanceof BadCredentialError) return 400;
   if (error instanceof InvalidAliasError) return 400;
@@ -51,18 +50,11 @@ export function errorPayload(error: unknown): Record<string, unknown> {
   return { error: { message, type } };
 }
 
-/**
- * Wrap a route handler so domain errors become well-shaped JSON responses
- * instead of 500s with stack traces.
- */
 export function withErrors(
   handler: (request: FastifyRequest, reply: FastifyReply) => Promise<unknown> | unknown,
 ): RouteHandlerMethod {
   return async function wrapped(request, reply) {
     try {
-      // The returned value IS the response body: Fastify only serialises what
-      // an async handler returns, so dropping it would answer 200 with an
-      // empty payload.
       return await handler(request, reply);
     } catch (error) {
       const status = statusFor(error);

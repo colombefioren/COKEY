@@ -5,12 +5,6 @@ import { ConfirmModal, Empty, Panel, Select } from "../components/Primitives.js"
 import { useToast } from "../components/Toast.js";
 import { useLang } from "../lang.js";
 
-/**
- * Gateway settings.
- *
- * Changes apply immediately and persist in SQLite. The fallback policy mirrors
- * spec §36 so the routing knobs are visible rather than implicit.
- */
 export function Settings({
   settings,
   onSaved,
@@ -57,9 +51,7 @@ export function Settings({
     void (async () => {
       try {
         setEndpoints(await api.customEndpoints());
-      } catch {
-        /* surfaced elsewhere */
-      }
+      } catch {}
     })();
   }, [refreshKey]);
 

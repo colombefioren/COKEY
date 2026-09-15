@@ -1,13 +1,6 @@
 import type { Nudge } from "../types.js";
 import { useLang } from "../lang.js";
 
-/**
- * The free-provider nudger.
- *
- * Purely local: it counts connected advertised-free providers and suggests more
- * so a single rate limit cannot block the user. It never claims a provider is
- * free unless that provider advertises it.
- */
 export function Nudger({
   nudge,
   onDismiss,

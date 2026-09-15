@@ -14,13 +14,6 @@ import type {
 import type { ProviderAdapter, ProviderRequest, SendResult, TokenUsage } from "./adapter.js";
 import { performRequest } from "./http.js";
 
-/**
- * Adapter for every provider that speaks the OpenAI chat-completions dialect,
- * which is the overwhelming majority of the catalog.
- *
- * Behaviour is entirely driven by the catalog entry: auth scheme, extra
- * headers and the verification strategy are data, not code.
- */
 export class OpenAICompatibleAdapter implements ProviderAdapter {
   readonly id: string;
   readonly apiStyle: string;
@@ -48,7 +41,6 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
         headers["x-api-key"] = credential.secret;
         break;
       case "query-param":
-        // Google-style keys travel in the URL; no auth header.
         break;
       case "custom-header":
         headers["authorization"] = credential.secret;
@@ -69,10 +61,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       ...request,
       model: entry.model,
       stream: streaming,
-      // Ask for the trailing usage chunk OpenAI's own streaming dialect
-      // supports, so per-key quota tracking isn't blind to streamed
-      // requests - the majority of real traffic. Left alone if the caller
-      // already has an opinion on it.
+
       ...(streaming && request.stream_options === undefined
         ? { stream_options: { include_usage: true } }
         : {}),
@@ -84,7 +73,7 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       headers,
       body,
       stream: request.stream === true,
-      // Egress through this key's own proxy, if it has one.
+
       proxyUrl: credential.proxyUrl,
     };
   }
@@ -128,54 +117,21 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     return parseModelList(body, this.id);
   }
 
-  /**
-   * Prove a credential works.
-   *
-   * Always prefers a real inference call over a model listing, because
-   * GET /models succeeds even when the key's quota is fully depleted.
-   * Falls back to the models endpoint only when no model id is available.
-   */
   async validateCredential(credential: Credential): Promise<ValidationResult> {
     const started = Date.now();
 
-    // 1. Catalog-declared chat verification model (e.g. cloudflare, groq).
     if (this.catalog.verification.method === "chat" && this.catalog.verification.model) {
       return this.validateViaChat(credential, this.catalog.verification.model, started);
     }
 
-    // 2. Even when the catalog says "models", exercise a real chat request
-    //    using a known model — so quota exhaustion is detected — but only one
-    //    this provider still actually serves. The curated list is a hand-
-    //    written default that drifts as free tiers churn their model lineup,
-    //    and blindly chatting with `knownModels[0]` meant a retired model made
-    //    every key look invalid even though the key itself was fine.
     if (this.catalog.knownModels.length > 0) {
       const model = await this.pickVerificationModel(credential);
       return this.validateViaChat(credential, model, started);
     }
 
-    // 3. Last resort: just prove the key authenticates.
     return this.validateViaModels(credential, started);
   }
 
-  /**
-   * The curated model to verify with, preferring one this key can currently
-   * see and actually use for free. Lists live models first; among the
-   * curated ids still served, one the listing itself marks free (an
-   * `access_tier` of `"free"`, or zeroed `pricing`) wins over any other,
-   * because several aggregators mix metered models into the same `/models`
-   * response their free ones come from — a curated id can still be "in the
-   * listing" while requiring a deposited balance to chat with, which made
-   * verification report a perfectly good key as failing on a bill it was
-   * never meant to pay. A `:free`-suffixed id is the fallback signal for a
-   * listing that carries no such field at all. When no curated id survives,
-   * the same preference applies to whatever the provider does list, so
-   * verification never chats with a name the provider has already retired
-   * nor one it never intended to give away. A listing failure (network, or a
-   * provider that cannot list at all) falls back to the curated guess
-   * unchanged — the chat probe right after this still reports the real
-   * failure either way.
-   */
   protected async pickVerificationModel(credential: Credential): Promise<string> {
     const fallback = this.catalog.knownModels[0]!;
     try {
@@ -185,15 +141,8 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
       const stillCurated = this.catalog.knownModels.filter((id) => liveById.has(id));
       const liveIds = live.map((entry) => entry.id);
       return (
-        // A curated id the listing itself vouches for as free: the best case,
-        // since it is both hand-picked and provably costs nothing.
         stillCurated.find(isFree) ??
-        // Any live model at all that is provably free beats a curated one
-        // whose price is simply unknown to the listing — a curated id that
-        // still appears is not proof it did not start being billed.
         liveIds.find(isFree) ??
-        // Nothing on this provider could be confirmed free; fall back to the
-        // curated guess, then to whatever is live at all.
         stillCurated[0] ??
         liveIds[0] ??
         fallback
@@ -290,7 +239,6 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
     return `${base}/models`;
   }
 
-  /** Google-style providers authenticate with a `?key=` query parameter. */
   protected withAuthQuery(url: string, credential: Credential): string {
     if (this.catalog.authScheme !== "query-param") return url;
     const separator = url.includes("?") ? "&" : "?";
@@ -298,7 +246,6 @@ export class OpenAICompatibleAdapter implements ProviderAdapter {
   }
 }
 
-/** Read an OpenAI-style `usage` object. */
 export function openAiUsage(body: unknown): TokenUsage {
   if (!body || typeof body !== "object") return {};
   const usage = (body as { usage?: unknown }).usage;
@@ -309,14 +256,6 @@ export function openAiUsage(body: unknown): TokenUsage {
   return { inputTokens: input, outputTokens: output };
 }
 
-/**
- * Whether a listed model's own entry says it costs nothing.
- *
- * Two shapes cover the aggregators that bother to say: an explicit
- * `access_tier` of `"free"`, or a `pricing` block whose input and output
- * rates are both zero. Anything else — no such field, a non-zero rate, a
- * tier of "paid"/"premium" — is left `undefined` rather than guessed at.
- */
 function isFreeListing(item: Record<string, unknown>): boolean | undefined {
   const tier = item.access_tier;
   if (typeof tier === "string") return tier.toLowerCase() === "free";

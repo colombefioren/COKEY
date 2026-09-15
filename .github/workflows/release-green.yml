@@ -65,7 +65,6 @@ jobs:
 
   baseline-headroom:
     name: Baseline headroom
-    # Only meaningful when the budget file itself moves.
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 30

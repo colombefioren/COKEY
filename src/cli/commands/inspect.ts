@@ -14,7 +14,6 @@ import {
   yellow,
 } from "../format.js";
 
-/** Read-only inspection commands. */
 export function registerInspectCommands(cli: CAC): void {
   defineCommand(
     cli,

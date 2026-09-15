@@ -3,32 +3,13 @@ import type { ProxyPoolRepo, ProxyPoolRow } from "../db/proxy-pool.repo.js";
 import { mapWithConcurrency } from "./proxy-health.js";
 import { parseProxyUrl } from "./proxy.js";
 
-/**
- * Automatic egress pool.
- *
- * Provider limits are usually tracked per IP *and* per key, so three keys of
- * one provider leaving through the same address still trip the same limit.
- * The pool fixes that without any manual wiring:
- *
- *   - every credential of a provider gets a different pool entry, so two keys
- *     of one provider never share an exit IP;
- *   - two credentials of *different* providers may share an entry, because
- *     nothing correlates them upstream;
- *   - the mapping is derived only from the provider id and the pool order, so
- *     it is stable across restarts and does not move a key to a new IP on
- *     every boot (which would look like an account takeover to some providers).
- *
- * Assignment is a plan, not a mutation: `plan()` returns the mapping and the
- * caller applies it to credentials it owns. Manual proxies are never touched.
- */
-
 export interface ProxyPoolView {
   id: string;
-  /** `host:port` only. The proxy's own credentials never leave the process. */
+
   label: string;
   enabled: boolean;
   createdAt: number;
-  /** Credentials currently pinned to this exit. */
+
   assignedTo: number;
 }
 
@@ -37,7 +18,7 @@ export interface ProxyPlanEntry {
   providerId: string;
   proxyUrl: string;
   proxyLabel: string;
-  /** True when another credential of the same provider already claimed it. */
+
   sharedWithinProvider: boolean;
 }
 
@@ -47,7 +28,7 @@ export interface ProxyPoolStatus {
   enabledCount: number;
   providerCount: number;
   assignments: number;
-  /** Providers whose key count exceeds the pool, so sharing is unavoidable. */
+
   saturatedProviders: string[];
   strategy: "per-provider" | "round-robin";
 }
@@ -57,13 +38,6 @@ export interface CredentialRef {
   providerId: string;
 }
 
-/**
- * Stable per-provider offset into the pool.
- *
- * FNV-1a over the provider id keeps the assignment deterministic without
- * pulling in a hashing dependency, and spreads providers across the pool so
- * two providers are not permanently pinned to the same entry.
- */
 export function providerOffset(providerId: string): number {
   let hash = 0x811c9dc5;
   for (let index = 0; index < providerId.length; index += 1) {
@@ -76,8 +50,6 @@ export function providerOffset(providerId: string): number {
 export class ProxyPoolService {
   constructor(private readonly repo: ProxyPoolRepo) {}
 
-  // ---- inventory ----------------------------------------------------------
-
   list(): ProxyPoolRow[] {
     return this.repo.list();
   }
@@ -86,7 +58,6 @@ export class ProxyPoolService {
     return this.repo.count();
   }
 
-  /** Look one entry up by id, for the UI's assign-by-id flow. */
   find(id: string): ProxyPoolRow | undefined {
     return this.repo.get(id);
   }
@@ -100,7 +71,6 @@ export class ProxyPoolService {
     }));
   }
 
-  /** Add a proxy to the pool. Idempotent: the same URL is never stored twice. */
   add(rawUrl: string): { row: ProxyPoolRow; created: boolean } {
     const parsed = parseProxyUrl(rawUrl);
     if (!parsed) throw new Error("A proxy URL is required");
@@ -125,7 +95,6 @@ export class ProxyPoolService {
     return { row, created: true };
   }
 
-  /** Seed from a comma or newline separated list. Used by `COKEY_PROXY_POOL`. */
   addMany(rawList: string | undefined): { added: number; skipped: number } {
     if (!rawList) return { added: 0, skipped: 0 };
     let added = 0;
@@ -137,7 +106,6 @@ export class ProxyPoolService {
         if (this.add(value).created) added += 1;
         else skipped += 1;
       } catch {
-        // A malformed entry is skipped rather than breaking startup.
         skipped += 1;
       }
     }
@@ -152,15 +120,6 @@ export class ProxyPoolService {
     this.repo.delete(id);
   }
 
-  // ---- health -------------------------------------------------------------
-
-  /**
-   * Probe every enabled entry and remove the ones that fail.
-   *
-   * The probe is injected so tests can make a verdict without touching the
-   * network. When `prune` is false the summary is returned but nothing is
-   * deleted, which lets a caller preview a sweep before committing to it.
-   */
   async verify(
     probe: (url: string) => Promise<{ ok: boolean }>,
     options: { concurrency?: number; prune?: boolean } = {},
@@ -188,16 +147,6 @@ export class ProxyPoolService {
     return { checked: rows.length, healthy: rows.length - dead.length, dead, removed };
   }
 
-  // ---- assignment ---------------------------------------------------------
-
-  /**
-   * Build the assignment plan for a set of credentials.
-   *
-   * Credentials are grouped by provider and each provider walks the enabled
-   * pool from its own offset. Within a provider every credential lands on a
-   * distinct entry until the pool runs out; across providers reuse is
-   * expected and harmless.
-   */
   plan(
     credentials: CredentialRef[],
     strategy: "per-provider" | "round-robin" = "per-provider",
@@ -270,7 +219,6 @@ export class ProxyPoolService {
     };
   }
 
-  /** Pool entries annotated with how many credentials currently use them. */
   view(
     credentials: CredentialRef[],
     strategy: "per-provider" | "round-robin" = "per-provider",

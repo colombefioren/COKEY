@@ -1,15 +1,5 @@
 #!/usr/bin/env node
-/**
- * Build budget guard.
- *
- * COKEY ships a gateway and a dashboard. Both are measured after a production
- * build and compared against a checked-in baseline, so a change that quietly
- * doubles the bundle fails in CI instead of on a user's machine.
- *
- *   node scripts/budgets.mjs check    fail when the build exceeds the baseline
- *   node scripts/budgets.mjs ratchet  rewrite the baseline with the smaller of
- *                                     the measured value and the recorded floor
- */
+
 import { readFileSync, statSync, readdirSync, writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";

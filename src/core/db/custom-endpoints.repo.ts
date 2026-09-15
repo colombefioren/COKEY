@@ -11,11 +11,6 @@ export interface InsertCustomEndpointInput {
   updatedAt: number;
 }
 
-/**
- * Storage for the deliberately buried "custom OpenAI-compatible endpoint"
- * option. These rows are merged into the provider catalog at runtime, after
- * passing the SSRF guard.
- */
 export class CustomEndpointsRepo {
   constructor(private readonly db: DatabaseClient) {}
 

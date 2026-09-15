@@ -50,7 +50,6 @@ const NUDGER_KEY = "cokey.nudger.dismissed";
 
 const NAV_COLLAPSED_KEY = "cokey.nav.collapsed";
 
-/** The whole navigation, in one place. Labels and hints follow the toggle. */
 function navItems(
   counts: { chains: number; keys: number; providers: number },
   lang: Lang,
@@ -94,14 +93,8 @@ function Shell() {
   const [tourOpen, setTourOpen] = useState(false);
   const { lang, toggleLang, t } = useLang();
 
-  // The gateway always requires a session cookie, so the first authenticated
-  // call decides whether to render the login form.
   const [authed, setAuthed] = useState<boolean | null>(null);
 
-  // First authenticated paint, and only if this browser has never finished or
-  // skipped the tour before. A short delay lets the shell settle - the tour's
-  // own spotlight measurement is already resilient to a late layout, but there
-  // is no reason to race it.
   useEffect(() => {
     if (authed !== true) return;
     if (window.localStorage.getItem(TOUR_SEEN_KEY) === "1") return;
@@ -145,23 +138,11 @@ function Shell() {
       setProviders(providerList);
       setCredentials(credentialList);
       setChainCount(chainList.length);
-    } catch {
-      // The gateway may be restarting; the next refresh picks it up.
-    }
+    } catch {}
   }, [authed]);
 
-  /**
-   * Ask every page to refetch.
-   *
-   * This is what the live event stream calls the moment the gateway reports a
-   * change, so there is no polling interval to tune and nothing goes stale:
-   * a key that verifies in one tab updates the counts in another.
-   */
   const bump = useCallback(() => setRefreshKey((value) => value + 1), []);
 
-  // The gateway's event bus is the source of truth. Every stored-state change
-  // arrives here and invalidates the reads, coalesced so a burst of events
-  // causes one refetch rather than one per event.
   const live = useLive();
   useLiveInvalidation(bump);
 
@@ -169,13 +150,6 @@ function Shell() {
     void reload();
   }, [reload, refreshKey]);
 
-  /*
-   * A slow safety net, and nothing more. Cooldown expiry and throughput buckets
-   * both emit events, so this is not how the UI stays current — it is the floor
-   * for the case where the stream cannot connect at all (a proxy that buffers
-   * SSE, a browser with EventSource disabled). A dashboard should degrade to
-   * being a minute behind, not to being wrong forever.
-   */
   useEffect(() => {
     const timer = window.setInterval(() => void reload(), 60_000);
     return () => window.clearInterval(timer);
@@ -204,17 +178,10 @@ function Shell() {
     });
   }, []);
 
-  // Close the mobile drawer on every navigation, otherwise it stays open over
-  // the page it was just used to reach. This alone misses a tap on the
-  // already-active item (`navigate` no-ops when the hash does not change, so
-  // `route.path` never changes either), which is why `closeNav` below also
-  // closes it directly from the click that triggered the navigation.
   useEffect(() => {
     setNavOpen(false);
   }, [route.path]);
 
-  // Escape closes the drawer from anywhere, matching every other overlay in
-  // the app (modals included).
   useEffect(() => {
     if (!navOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
@@ -329,10 +296,7 @@ function Shell() {
           onRequestNavOpen={setNavOpen}
         />
 
-        {/*
-         * Keyed on the route so each page remounts: the windows pop in on a real
-         * navigation, and the pages already refetch on mount.
-         */}
+        {}
         <main>
           <div className="page" key={route.path}>
             {page}

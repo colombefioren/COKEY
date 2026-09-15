@@ -9,21 +9,6 @@ import { useLang } from "../lang.js";
 
 const POOL_PAGE_SIZE = 10;
 
-/**
- * The automatic egress pool.
- *
- * Provider limits are tracked per key *and* per IP, so five keys of one provider
- * leaving through one address still trip the same limit. Fill this pool once and
- * COKEY spreads the exits for you:
- *
- *   - every key of a provider gets a different entry;
- *   - keys of different providers may share one, because nothing correlates them;
- *   - the mapping is stable across restarts;
- *   - a proxy pinned by hand is never reassigned.
- *
- * The pool needs real proxies to be useful. COKEY cannot invent an exit IP, so an
- * empty pool means direct egress and the panel says so rather than pretending.
- */
 export function EgressPoolPanel({
   settings,
   onSettingsChanged,

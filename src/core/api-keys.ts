@@ -25,12 +25,6 @@ export class ApiKeyNotFoundError extends Error {
 
 const TOUCH_INTERVAL_MS = 60_000;
 
-/**
- * Named management API keys.
- *
- * The plaintext secret is returned exactly once, at creation. Only a SHA-256
- * hash is persisted, so a database read can never reveal a usable key.
- */
 export class ApiKeyService {
   constructor(private readonly repo: ApiKeysRepo) {}
 

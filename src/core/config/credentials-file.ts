@@ -3,21 +3,6 @@ import { z } from "zod";
 import { parseMiniYaml } from "./mini-yaml.js";
 import type { Cokey } from "../cokey.js";
 
-/**
- * Environment-variable credentials.
- *
- * Lets a headless machine declare where its keys live instead of pasting them
- * into the UI:
- *
- *     credentials:
- *       - description: Main Groq
- *         provider: groq
- *         model: qwen/qwen3.8-27b
- *         env: GROQ_KEY_1
- *
- * The file never contains the secret itself — only the name of the environment
- * variable that does.
- */
 export const CredentialFileSchema = z.object({
   credentials: z
     .array(
@@ -59,11 +44,6 @@ export function loadCredentialFile(path: string): CredentialFileEntry[] {
   return result.data.credentials;
 }
 
-/**
- * Create credentials declared in a file and bind them to matching chain
- * entries. Secrets are read from the environment at this moment and stored
- * encrypted; they are never written back to the file.
- */
 export function applyCredentialFile(
   cokey: Cokey,
   entries: CredentialFileEntry[],
@@ -84,8 +64,6 @@ export function applyCredentialFile(
       continue;
     }
 
-    // Avoid duplicating a credential that is already stored under the same
-    // provider and description.
     const existing = cokey.credentials
       .listByProvider(entry.provider)
       .find((credential) => credential.description === entry.description);

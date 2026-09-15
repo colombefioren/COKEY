@@ -10,12 +10,6 @@ import { useToast } from "./Toast.js";
 import { useChainRefresh, type RefreshState } from "./useChainRefresh.js";
 import { useLang } from "../lang.js";
 
-/**
- * One chain: a user-ordered list of provider+model entries.
- *
- * Order is the user's, expressed three ways (drag, keyboard, buttons) and
- * persisted immediately. The router always follows this order.
- */
 export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: () => void }) {
   const toast = useToast();
   const { t } = useLang();
@@ -74,8 +68,6 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
       const [moved] = next.splice(from, 1);
       next.splice(to, 0, moved!);
 
-      // Keep the drop target's midpoint in mind so the row lands where the
-      // cursor is, not always above the target.
       const box = (event.target as HTMLElement).closest(".entry")?.getBoundingClientRect();
       if (box && event.clientY > box.top + box.height / 2) {
         const index = next.findIndex((entry) => entry.id === draggingId);
@@ -203,9 +195,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
           onClick={() => void sweep.refresh()}
           disabled={sweep.busy}
           title={
-            sweep.busy
-              ? t("Testing nodes…")
-              : t("Test every node and go to the first that answers")
+            sweep.busy ? t("Testing nodes…") : t("Test every node and go to the first that answers")
           }
         >
           {sweep.busy ? t("testing…") : `⟳ ${t("refresh")}`}
@@ -254,7 +244,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             }}
             title={t("Drag to reorder, or Alt+↑ / Alt+↓")}
           >
-            {/* Left: reorder buttons */}
+            {}
             <div className="entry-reorder">
               <button
                 className="ghost"
@@ -272,7 +262,7 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               </button>
             </div>
 
-            {/* Center: model name */}
+            {}
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
               <button
@@ -295,14 +285,17 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               )}
               {sweepStateBadge(sweep.states[entry.id], sweep.winnerId === entry.id, t)}
               {entry.credentials.some((credential) => credential.proxy.auto) ? (
-                <span className="badge neutral" title={t("Automatic egress pool is assigning exits")}>
+                <span
+                  className="badge neutral"
+                  title={t("Automatic egress pool is assigning exits")}
+                >
                   {t("auto proxy")}
                 </span>
               ) : null}
               {!entry.enabled && <span className="badge warn">{t("disabled")}</span>}
             </div>
 
-            {/* Right: action buttons */}
+            {}
             <div className="entry-actions">
               <Tooltip label={t("View details")}>
                 <button

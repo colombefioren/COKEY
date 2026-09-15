@@ -1,50 +1,24 @@
-/**
- * Provider dossiers.
- *
- * The catalog tells COKEY where a provider lives; a dossier tells a person
- * whether they want to depend on it. Two things matter and are almost never
- * written down in one place:
- *
- *   1. Who runs it and from where, because that decides the jurisdiction your
- *      prompts travel to.
- *   2. Whether the free tier is infrastructure or a novelty, because a $0.25
- *      weekly credit cap is not a fallback, it is a demo.
- *
- * `origin` is only filled in when the operator is publicly identifiable.
- * Everything else says `undisclosed` rather than guessing a country from a
- * domain name.
- */
-
 export type ProviderKind = "lab" | "inference-cloud" | "aggregator" | "gateway" | "local";
 
-export type ProviderVerdict =
-  /** Dependable enough to be a chain's first entry. */
-  | "recommended"
-  /** Works, keep it as a fallback. */
-  | "usable"
-  /** Real, but rate-limited or credit-capped past the point of usefulness. */
-  | "limited"
-  /** Structural trap: re-exports, broken schemas, or unreachable. */
-  | "avoid";
+export type ProviderVerdict = "recommended" | "usable" | "limited" | "avoid";
 
 export interface ProviderDossier {
-  /** Company, lab or project operating the endpoint. */
   operator: string;
-  /** Country or region the operator is based in, when it is public. */
+
   origin: string;
   kind: ProviderKind;
-  /** One or two sentences: what this actually is. */
+
   summary: string;
   verdict: ProviderVerdict;
-  /** Why that verdict, in one line. */
+
   verdictReason: string;
-  /** Public source for the operator/origin claim, when one exists. */
+
   sourceUrl?: string;
-  /** ISO date this dossier was last checked against reality. */
+
   reviewedAt?: string;
-  /** One-line free-tier summary, when it differs from the catalog's own. */
+
   freeTierSummary?: string;
-  /** A caveat worth keeping next to the verdict. */
+
   notes?: string;
 }
 
@@ -739,7 +713,6 @@ const DOSSIERS: Record<string, ProviderDossier> = {
   },
 };
 
-/** Dossier for a provider, or a neutral one for custom endpoints. */
 export function providerDossier(providerId: string): ProviderDossier {
   const found = DOSSIERS[providerId];
   if (found) return found;
@@ -770,7 +743,6 @@ export function providerDossiers(): Record<string, ProviderDossier> {
   return DOSSIERS;
 }
 
-/** Providers worth wiring up first, best first. */
 export const PREFERRED_PROVIDERS = [
   "groq",
   "cloudflare",

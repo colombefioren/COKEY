@@ -1,19 +1,9 @@
-/**
- * Inline icons.
- *
- * The dashboard ships no icon font and no icon package: every glyph here is a
- * stroked path drawn with `currentColor`, so it takes the surrounding text
- * colour, stays crisp at any size, and costs one small React element instead of
- * a network request. They share a 24px grid and a 1.7 stroke so a row of them
- * looks drawn by one hand.
- */
-
 import type { ReactNode } from "react";
 
 export interface IconProps {
   size?: number;
   className?: string;
-  /** Decorative by default: hidden from assistive tech unless labelled. */
+
   label?: string;
 }
 

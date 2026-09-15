@@ -33,18 +33,10 @@ export interface UsageRollupRow {
   latency_ms_sum: number;
 }
 
-/** How often `insert()` prunes, in number of inserts. Pruning runs a
- * `DELETE ... ORDER BY ... LIMIT` scan that only matters once the table is
- * already near its cap, so paying for it on every single proxied request
- * would tax the hot path for no benefit between prunes. */
 const PRUNE_EVERY = 50;
 
-/** How many days of `usage_daily` rollups to retain. The dashboard's own
- * rollup query never looks back further than 29 days, so this is already
- * generous headroom rather than a tight cutoff. */
 const USAGE_DAILY_RETENTION_DAYS = 90;
 
-/** Local, bounded request history powering the observability view. */
 export class RequestsRepo {
   private insertsSincePrune = 0;
 
@@ -95,7 +87,6 @@ export class RequestsRepo {
     }
   }
 
-  /** Fold one request into the per-day/per-key/per-model rollup. */
   private rollup(input: InsertRequestLogInput, inputTokens: number, outputTokens: number): void {
     const day = new Date(input.at).toISOString().slice(0, 10);
     const success = input.outcome === "success" ? 1 : 0;
@@ -127,7 +118,6 @@ export class RequestsRepo {
       );
   }
 
-  /** Daily rollup rows in [sinceDay, today], newest first. */
   rollupSince(sinceDay: string): UsageRollupRow[] {
     return this.db
       .prepareCached(`SELECT * FROM usage_daily WHERE day >= ? ORDER BY day DESC`)
@@ -141,7 +131,9 @@ export class RequestsRepo {
   }
 
   count(): number {
-    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM request_log`).get() as { n: number };
+    const row = this.db.prepareCached(`SELECT COUNT(*) AS n FROM request_log`).get() as {
+      n: number;
+    };
     return row.n;
   }
 
@@ -149,7 +141,6 @@ export class RequestsRepo {
     this.db.prepareCached(`DELETE FROM request_log`).run();
   }
 
-  /** Keep only the newest `maxRows` records. */
   prune(): void {
     this.db
       .prepareCached(
@@ -160,9 +151,6 @@ export class RequestsRepo {
       .run(this.maxRows);
   }
 
-  /** Drop rollup rows older than the retention window - unlike `request_log`,
-   * this table is only ever appended to via upserts, so it grows forever
-   * without this. */
   pruneUsageDaily(retainDays = USAGE_DAILY_RETENTION_DAYS): void {
     const cutoff = new Date(Date.now() - retainDays * 86_400_000).toISOString().slice(0, 10);
     this.db.prepareCached(`DELETE FROM usage_daily WHERE day < ?`).run(cutoff);

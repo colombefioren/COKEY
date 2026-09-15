@@ -1,14 +1,3 @@
-/**
- * The navbar's own two languages.
- *
- * This does not translate the app — every page still speaks English. It
- * covers exactly the chrome that never changes screen to screen: the
- * sidebar's labels and hints, its footer, and the page title in the topbar.
- * A toggle for the rest of the app is a much larger project than "the
- * navbar," and pretending otherwise here would just leave half-translated
- * pages behind it.
- */
-
 export type Lang = "en" | "fr";
 
 const LANG_KEY = "cokey.lang";
@@ -24,10 +13,7 @@ export function getStoredLang(): Lang {
 export function setStoredLang(lang: Lang): void {
   try {
     window.localStorage.setItem(LANG_KEY, lang);
-  } catch {
-    // Private browsing or a blocked store: the toggle still works for the
-    // session, it just forgets the choice next time.
-  }
+  } catch {}
 }
 
 export const PAGE_TITLES: Record<Lang, Record<string, string>> = {

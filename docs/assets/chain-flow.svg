@@ -32,14 +32,12 @@
   <rect width="980" height="380" fill="#fffaf7" />
   <rect width="980" height="380" fill="url(#dotgrid)" />
 
-  <!-- connectors -->
   <path d="M 220 190 C 255 190, 255 190, 290 190" fill="none" stroke="#e3c6dc" stroke-width="2.5" stroke-linecap="round" />
   <path d="M 460 190 C 520 190, 520 100, 600 100" fill="none" stroke="#e3c6dc" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="2 7" opacity="0.5" />
   <path d="M 460 190 C 520 190, 520 280, 600 280" fill="none" stroke="#2f9d74" stroke-width="3" stroke-linecap="round" stroke-dasharray="9 9">
     <animate attributeName="stroke-dashoffset" from="0" to="-36" dur="1.1s" repeatCount="indefinite" />
   </path>
 
-  <!-- client card -->
   <g filter="url(#lift)">
     <rect x="0" y="141" width="220" height="98" rx="20" fill="#ffffff" />
   </g>
@@ -48,12 +46,10 @@
   <text x="22" y="192" class="title-sm">your editor</text>
   <text x="22" y="212" class="sub">one base URL</text>
 
-  <!-- hub -->
   <circle cx="375" cy="190" r="85" fill="#f482b4" />
   <text x="375" y="184" text-anchor="middle" class="kicker" fill="#ffffff" opacity="0.85">alias</text>
   <text x="375" y="206" text-anchor="middle" class="mono" fill="#ffffff">cokey-best</text>
 
-  <!-- node one: exhausted, fallen back from -->
   <g filter="url(#lift)">
     <rect x="600" y="52" width="270" height="96" rx="20" fill="#ffffff" opacity="0.88" />
   </g>
@@ -68,7 +64,6 @@
   <circle cx="658" cy="122" r="7" fill="#e2565a" />
   <text x="674" y="126" class="sub">3 keys, all cooling down</text>
 
-  <!-- node two: live -->
   <g filter="url(#lift)">
     <rect x="600" y="232" width="270" height="96" rx="20" fill="#ffffff" />
   </g>

@@ -16,14 +16,6 @@ const TABS: Array<{ id: DashboardTab; label: string }> = [
   { id: "activity", label: "Activity" },
 ];
 
-/**
- * One section at a time, not the whole dashboard stacked.
- *
- * The live route, the resilience explainer and the activity tables each
- * answer a different question — stacking all three made every visit feel
- * like scrolling past two sections to get to the one that
- * actually changed since yesterday.
- */
 export function Dashboard({
   nudge,
   onDismissNudge,
@@ -81,10 +73,7 @@ export function Dashboard({
 
   return (
     <>
-      {/*
-       * "Needs attention" moved to the notification bell in the topbar — it is
-       * reachable from every screen there, not just this one.
-       */}
+      {}
       {nudgeBlock}
 
       <div className="tabs tabs-inline" data-tour="dashboard-tabs">
@@ -113,7 +102,11 @@ export function Dashboard({
         <>
           <Panel title={t("Gateway")}>
             <div className="grid cards">
-              <Stat label={t("Chains")} value={stats?.chains ?? "-"} hint={t("aliases clients call")} />
+              <Stat
+                label={t("Chains")}
+                value={stats?.chains ?? "-"}
+                hint={t("aliases clients call")}
+              />
               <Stat
                 label={t("Credentials")}
                 value={stats?.credentials ?? "-"}

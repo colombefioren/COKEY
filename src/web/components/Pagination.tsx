@@ -4,13 +4,6 @@ import { Select } from "./Primitives.js";
 
 const PAGE_SIZES = [10, 25, 50, 100];
 
-/**
- * The one pager every list in the dashboard uses.
- *
- * It reports a true total rather than "load more", because knowing that there
- * are 4,120 requests and you are on page 3 is the difference between a tool and
- * a scroll bar. Windowed page numbers keep it usable at any length.
- */
 export function Pagination({
   page,
   totalPages,
@@ -108,7 +101,6 @@ export function Pagination({
   );
 }
 
-/** Five page numbers centred on the current page, clamped to the ends. */
 function pageWindow(page: number, totalPages: number): number[] {
   const size = Math.min(5, totalPages);
   let start = Math.max(1, page - Math.floor(size / 2));

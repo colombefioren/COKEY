@@ -57,7 +57,7 @@ describe("modelAvailability", () => {
 
   it("skips catalog providers that have no curated free models", () => {
     const noModels = findProvider("cerebras");
-    if (!noModels) return; // Cerebras is optional in the catalog.
+    if (!noModels) return;
     const views = modelAvailability([noModels], new Map(), new Map());
     expect(views).toEqual([]);
   });
@@ -80,7 +80,6 @@ describe("modelAvailability", () => {
   });
 
   it("keeps the shipped catalog free-tier honest", () => {
-    // Every provider in the catalog must be one a user can actually connect.
     for (const provider of PROVIDER_CATALOG) {
       expect(provider.baseUrl).toMatch(/^https?:\/\//);
       expect(provider.credentialFields).toContain("secret");
@@ -90,8 +89,6 @@ describe("modelAvailability", () => {
 
 describe("staleCuratedModels", () => {
   it("says nothing when the provider has never been checked", () => {
-    // "Never asked" and "asked and gone" are different answers. Conflating them
-    // would mark an entire catalog retired the first time a provider is seen.
     expect(staleCuratedModels(["a", "b"], [])).toEqual([]);
   });
 
@@ -109,7 +106,6 @@ describe("modelAvailability with an observed inventory", () => {
     const curated = modelsForProvider("groq");
     const retired = curated[1]!;
 
-    // The provider returned everything except the second model.
     const inventory = new Map([
       ["groq", curated.map((spec) => observed(spec.id, spec.id !== retired.id))],
     ]);
@@ -135,7 +131,7 @@ describe("modelAvailability with an observed inventory", () => {
     expect(discovered.curated).toBe(false);
     expect(discovered.live).toBe(true);
     expect(groq.counts.discovered).toBe(1);
-    // Everything else in the curated list was not observed, so it is stale.
+
     expect(groq.staleModels.length).toBe(modelsForProvider("groq").length);
   });
 

@@ -7,12 +7,6 @@ import { registerConfigCommands } from "./commands/config.js";
 import { registerInspectCommands } from "./commands/inspect.js";
 import { registerLifecycleCommands } from "./commands/lifecycle.js";
 
-/**
- * COKEY CLI.
- *
- * Running `cokey` with no arguments starts the gateway, matching the
- * `npm install -g cokey && cokey` quick start.
- */
 const cli = cac("cokey");
 
 registerLifecycleCommands(cli);

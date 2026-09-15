@@ -8,14 +8,13 @@ import { parseTopics, streamEvents } from "../streaming/events.js";
 import { matchesQuery, paginate, parsePageQuery } from "../pagination.js";
 import { withErrors } from "./http-errors.js";
 
-/** Reporting, configuration and health endpoints. */
 export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
   app.get(
     "/health",
     withErrors(() => ({
       ok: true,
       version: COKEY_VERSION,
-      // Never include secrets or key material here.
+
       dataDir: cokey.dataDir,
     })),
   );
@@ -25,13 +24,6 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     withErrors(() => cokey.stats()),
   );
 
-  /**
-   * What the router is doing right now.
-   *
-   * The route snapshot names the model, the key and the proxy currently in
-   * use; `recent` carries the last switch/cooldown notifications so a UI that
-   * reloads does not lose the story.
-   */
   app.get(
     "/api/status",
     withErrors((request) => {
@@ -41,42 +33,23 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  /**
-   * Server-sent events for live routing feedback.
-   *
-   * `?topics=credentials,models,chains` narrows the stream to the events that
-   * mean stored data changed, which is what a page uses to know it should
-   * refetch. With no `topics` the full routing narration is streamed, which is
-   * what the live-route chip wants. Both are one endpoint because they are one
-   * bus and one connection per client either way.
-   */
   app.get("/api/events", async (request, reply) => {
     const topics = parseTopics((request.query as { topics?: unknown } | undefined)?.topics);
     await streamEvents(reply, cokey.events, topics);
     return reply;
   });
 
-  /** Per provider → key → model usage, plus the live route and chain topology. */
   app.get(
     "/api/usage",
     withErrors(() => cokey.usageView()),
   );
 
-  /**
-   * Request history, paginated and filterable.
-   *
-   * `page`/`pageSize` is the supported interface. `limit` still works for older
-   * callers and is read as a page size, and `pageSize=0` returns everything for
-   * the CLI and the export path.
-   */
   app.get(
     "/api/requests",
     withErrors((request) => {
       const query = request.query as { outcome?: string; providerId?: string };
       const page = parsePageQuery(request.query, { pageSize: 25 });
 
-      // The full history is fetched once and paginated in memory, so the pager
-      // always reports a total that matches the filters the user applied.
       const rows = cokey.history.list(cokey.history.count()).filter((entry) => {
         if (query.outcome && entry.outcome !== query.outcome) return false;
         if (query.providerId && entry.providerId !== query.providerId) return false;
@@ -136,12 +109,6 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  /**
-   * Portable configuration export.
-   *
-   * Built from `exportConfig`, which deliberately contains no secrets — the
-   * Settings screen links straight to this endpoint.
-   */
   app.get(
     "/api/config/export",
     withErrors((_request, reply) => {
@@ -150,7 +117,6 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
     }),
   );
 
-  /** The local free-provider "incite" payload. */
   app.get(
     "/api/nudge",
     withErrors(() => {
@@ -168,8 +134,6 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
       };
     }),
   );
-
-  // ---- api keys -------------------------------------------------------------
 
   app.get(
     "/api/keys",
@@ -197,7 +161,6 @@ export function registerStatsRoutes(app: FastifyInstance, cokey: Cokey): void {
   );
 }
 
-/** Settings projection that never leaks the auth token. */
 function publicSettings(cokey: Cokey): Record<string, unknown> {
   const settings = cokey.settings;
   return {

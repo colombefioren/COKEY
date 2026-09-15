@@ -5,12 +5,6 @@ import { Modal, Select } from "./Primitives.js";
 import { useToast } from "./Toast.js";
 import { useLang } from "../lang.js";
 
-/**
- * Append an entry to an existing chain.
- *
- * Flow is provider → model → keys. Only models present in the curated catalog
- * are offered, so a paid-only model can never be selected by accident.
- */
 export function AddEntryModal({
   chain,
   onClose,
@@ -57,7 +51,6 @@ export function AddEntryModal({
     [credentials, providerId],
   );
 
-  // Pre-select every credential of the chosen provider, matching the CLI.
   useEffect(() => {
     setSelected(providerCredentials.map((credential) => credential.id));
   }, [providerCredentials]);
@@ -87,7 +80,9 @@ export function AddEntryModal({
         label: label.trim() || undefined,
         credentialIds: selected,
       });
-      toast.ok(`${t("Added")} ${label.trim() || `${providerId}/${model}`} ${t("to")} ${chain.alias}`);
+      toast.ok(
+        `${t("Added")} ${label.trim() || `${providerId}/${model}`} ${t("to")} ${chain.alias}`,
+      );
       onChanged();
       onClose();
     } catch (err) {
@@ -136,9 +131,7 @@ export function AddEntryModal({
           {providers.map((option) => (
             <option key={option.id} value={option.id}>
               {option.displayName} {option.freeTier.advertised ? `(${t("free")})` : ""} ·{" "}
-              {option.connected
-                ? `${option.credentialCount} ${t("keys")}`
-                : t("not connected")}
+              {option.connected ? `${option.credentialCount} ${t("keys")}` : t("not connected")}
             </option>
           ))}
         </Select>
@@ -187,7 +180,10 @@ export function AddEntryModal({
         <label>{t("Credentials")}</label>
         {providerCredentials.length === 0 ? (
           <div className="hint-box">
-            {t("No credentials for")} {provider?.displayName ?? providerId} {t("yet. Connect one from the Providers tab first — COKEY will not create an entry with an unverified key.")}
+            {t("No credentials for")} {provider?.displayName ?? providerId}{" "}
+            {t(
+              "yet. Connect one from the Providers tab first — COKEY will not create an entry with an unverified key.",
+            )}
           </div>
         ) : (
           <div className="selected-list">

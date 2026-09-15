@@ -1,17 +1,3 @@
-/**
- * A deliberately small YAML reader.
- *
- * COKEY's config and credential files have a fixed, shallow shape — nested
- * mappings, lists of mappings and scalar values. Supporting the whole YAML
- * specification would mean a dependency; supporting exactly what the docs show
- * means ~120 lines that can be tested and reasoned about.
- *
- * Supported: nested maps, `- ` lists (of scalars or maps), quoted strings,
- * numbers, booleans, null, comments, and blank lines.
- * Not supported: anchors, aliases, multi-line scalars, flow collections, tags.
- * Anything unsupported raises a `MiniYamlError` rather than being guessed at.
- */
-
 export class MiniYamlError extends Error {
   constructor(
     message: string,
@@ -144,8 +130,6 @@ function parseSequence(lines: SourceLine[], start: number, indent: number): [unk
       continue;
     }
 
-    // The `- key: value` form starts a mapping whose subsequent keys are
-    // indented to align with the first key.
     const itemIndent = line.indent + 2;
     const firstLine: SourceLine = {
       indent: itemIndent,
@@ -154,9 +138,7 @@ function parseSequence(lines: SourceLine[], start: number, indent: number): [unk
     };
     const [value, consumed] = parseMapping([firstLine, ...lines.slice(index + 1)], 0, itemIndent);
     result.push(value);
-    // The combined array prepended one synthetic line, so the number of real
-    // lines consumed equals `consumed - 1`; advance past the `- ` line itself
-    // plus those, which is exactly `consumed`.
+
     index += consumed;
   }
 
@@ -164,8 +146,6 @@ function parseSequence(lines: SourceLine[], start: number, indent: number): [unk
 }
 
 function findKeySeparator(content: string): number {
-  // Only a colon followed by a space (or end of line) separates a key; this
-  // keeps values such as `https://api.example.com` intact.
   const index = content.indexOf(":");
   if (index === -1) return -1;
   const after = content[index + 1];

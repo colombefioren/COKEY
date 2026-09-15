@@ -1,14 +1,5 @@
 import { isIP } from "node:net";
 
-/**
- * SSRF guard for the one place a user may supply a URL: the deliberately buried
- * "custom OpenAI-compatible endpoint" option in Settings.
- *
- * Every catalog provider bypasses this check because its base URL is vetted
- * data shipped with COKEY. Custom endpoints are treated as hostile until the
- * user explicitly opts in.
- */
-
 export interface UrlCheckResult {
   ok: boolean;
   reason?: string;
@@ -23,22 +14,9 @@ const METADATA_HOSTS = new Set([
 ]);
 
 export interface UrlGuardOptions {
-  /** User has explicitly acknowledged private/loopback targets. */
   allowPrivate?: boolean;
 }
 
-/**
- * Validate a candidate provider base URL.
- *
- * Rejects non-HTTP(S) schemes, credentials in the URL, link-local/private
- * ranges and cloud metadata endpoints unless `allowPrivate` is set.
- *
- * Note: this is a syntactic/IP-literal check. It deliberately does not resolve
- * DNS, because a name that resolves to a private address at connect time could
- * resolve elsewhere later. Callers that need full rebinding protection should
- * pin the resolved address; COKEY documents this limitation rather than
- * pretending otherwise.
- */
 export function validateEndpointUrl(raw: string, options: UrlGuardOptions = {}): UrlCheckResult {
   let url: URL;
   try {
@@ -73,7 +51,6 @@ export function validateEndpointUrl(raw: string, options: UrlGuardOptions = {}):
       : { ok: false, reason: "Internal hostname blocked; enable private endpoints to allow it" };
   }
 
-  // 169.254.169.254 and friends are link-local; block regardless of opt-in.
   if (isLinkLocal(host)) {
     return { ok: false, reason: "Link-local address blocked (cloud metadata range)" };
   }
@@ -97,7 +74,6 @@ export function validateEndpointUrl(raw: string, options: UrlGuardOptions = {}):
   return { ok: true };
 }
 
-/** Throwing form used on the write path. */
 export function assertSafeEndpoint(raw: string, options: UrlGuardOptions = {}): URL {
   const result = validateEndpointUrl(raw, options);
   if (!result.ok) throw new Error(`Unsafe endpoint: ${result.reason ?? "rejected"}`);
@@ -105,9 +81,63 @@ export function assertSafeEndpoint(raw: string, options: UrlGuardOptions = {}): 
 }
 
 function isLinkLocal(host: string): boolean {
-  if (isIP(host) !== 4) return false;
-  const [a, b] = host.split(".").map(Number);
-  return a === 169 && b === 254;
+  if (isIP(host) === 4) {
+    const [a, b] = host.split(".").map(Number);
+    return a === 169 && b === 254;
+  }
+  const mapped = mappedIPv4(host);
+  return mapped !== undefined && isLinkLocal(mapped);
+}
+
+function mappedIPv4(host: string): string | undefined {
+  const groups = expandIPv6(host);
+  if (!groups) return undefined;
+  if (groups.slice(0, 5).some((g) => g !== 0) || groups[5] !== 0xffff) return undefined;
+  return [
+    (groups[6]! >> 8) & 0xff,
+    groups[6]! & 0xff,
+    (groups[7]! >> 8) & 0xff,
+    groups[7]! & 0xff,
+  ].join(".");
+}
+
+function expandIPv6(host: string): number[] | undefined {
+  if (isIP(host) !== 6) return undefined;
+
+  let addr = host;
+  let ipv4Tail: string | undefined;
+  const lastColon = addr.lastIndexOf(":");
+  const tail = addr.slice(lastColon + 1);
+  if (tail.includes(".")) {
+    ipv4Tail = tail;
+    addr = addr.slice(0, lastColon + 1);
+  }
+
+  const [head, tailPart] = addr.split("::");
+  const headGroups = head ? head.split(":").filter(Boolean) : [];
+  const tailGroups = tailPart !== undefined ? tailPart.split(":").filter(Boolean) : [];
+
+  let hex: string[];
+  if (tailPart !== undefined) {
+    const known = headGroups.length + tailGroups.length + (ipv4Tail ? 2 : 0);
+    const missing = 8 - known;
+    if (missing < 0) return undefined;
+    hex = [...headGroups, ...Array(missing).fill("0"), ...tailGroups];
+  } else {
+    hex = [...headGroups, ...tailGroups];
+  }
+
+  if (ipv4Tail) {
+    const parts = ipv4Tail.split(".").map(Number);
+    if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) {
+      return undefined;
+    }
+    hex.push((((parts[0]! << 8) | parts[1]!) >>> 0).toString(16));
+    hex.push((((parts[2]! << 8) | parts[3]!) >>> 0).toString(16));
+  }
+
+  if (hex.length !== 8) return undefined;
+  return hex.map((g) => parseInt(g, 16));
 }
 
 function isPrivateV4(host: string): boolean {
@@ -121,15 +151,16 @@ function isPrivateV4(host: string): boolean {
   if (a === 0) return true;
   if (a === 172 && b >= 16 && b <= 31) return true;
   if (a === 192 && b === 168) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true; // carrier-grade NAT
+  if (a === 100 && b >= 64 && b <= 127) return true;
   return false;
 }
 
 function isPrivateV6(host: string): boolean {
   const h = host.toLowerCase();
   if (h === "::" || h === "::1") return true;
-  if (h.startsWith("fc") || h.startsWith("fd")) return true; // unique local
-  if (h.startsWith("fe80")) return true; // link-local
-  if (h.startsWith("::ffff:")) return isPrivateV4(h.slice(7));
+  if (h.startsWith("fc") || h.startsWith("fd")) return true;
+  if (h.startsWith("fe80")) return true;
+  const mapped = mappedIPv4(h);
+  if (mapped !== undefined) return isPrivateV4(mapped);
   return false;
 }

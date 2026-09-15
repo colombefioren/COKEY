@@ -34,9 +34,7 @@ function entry(at: number): InsertRequestLogInput {
 describe("RequestsRepo pruning", () => {
   it("does not prune on every single insert, only every Nth", () => {
     const repo = new RequestsRepo(h.db, 5);
-    // maxRows=5 would normally cap the table at 5 rows if prune ran on every
-    // insert; with periodic pruning it should be allowed to grow past that
-    // in between prune cycles.
+
     for (let i = 0; i < 10; i++) repo.insert(entry(Date.now() + i));
 
     expect(repo.count()).toBeGreaterThan(5);

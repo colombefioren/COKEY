@@ -84,7 +84,6 @@ export class ProviderProxy {
     return address;
   }
 
-  /** Return a dispatcher for the address the provider would use next. */
   dispatcherForNext(providerId: string): ProxyPoolAddress | undefined {
     const state = this.byProvider.get(providerId) ?? EMPTY;
     if (state.config.source.kind === "off") return undefined;
@@ -111,7 +110,6 @@ export class ProviderProxy {
     return this.byProvider.get(providerId) ?? EMPTY;
   }
 
-  /** Snapshot plus the rotor's next label. */
   inspect(providerId: string): ProviderProxyState & { nextLabel?: string } {
     const state = this.byProvider.get(providerId) ?? EMPTY;
     return {

@@ -17,13 +17,6 @@ import { flattenContent, mapFinishReason, openAiChunk, openAiCompletion } from "
 const ANTHROPIC_VERSION = "2023-06-01";
 const DEFAULT_MAX_TOKENS = 4096;
 
-/**
- * Anthropic Messages adapter.
- *
- * Anthropic is not in the free-tier catalog, so this adapter is reachable only
- * through a custom endpoint — but the translation is complete, including
- * streamed `content_block_delta` events and tool-use blocks.
- */
 export class AnthropicAdapter extends OpenAICompatibleAdapter {
   override createRequest(
     entry: ChainEntry,
@@ -179,7 +172,7 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
     context: TransformContext,
   ): AsyncGenerator<string, void, void> {
     let roleSent = false;
-    // Tool-use blocks stream their JSON arguments in fragments.
+
     let pendingTool: { id: string; name: string; json: string } | undefined;
 
     for await (const event of iterateSse(body)) {
@@ -285,7 +278,6 @@ export class AnthropicAdapter extends OpenAICompatibleAdapter {
   }
 }
 
-/** Translate OpenAI chat messages into Anthropic `system` + `messages`. */
 export function toAnthropicMessages(request: ChatCompletionRequest): {
   system: string | undefined;
   messages: Array<Record<string, unknown>>;

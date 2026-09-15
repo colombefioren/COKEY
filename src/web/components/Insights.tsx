@@ -9,13 +9,12 @@ interface Card {
   text: string;
 }
 
-/** How long a card stays up before it dismisses itself. Tips get longer than a toast; there is more to read. */
 const CARD_MS = 10_000;
-/** Do not repeat the same reactive tip within this window. */
+
 const TIP_COOLDOWN_MS = 30_000;
-/** Wait this long after mount before the first fun fact can appear. */
+
 const FIRST_FACT_DELAY_MS = 40_000;
-/** Then space fun facts out randomly between these two bounds. */
+
 const FACT_INTERVAL_MIN_MS = 4 * 60_000;
 const FACT_INTERVAL_MAX_MS = 8 * 60_000;
 
@@ -29,7 +28,7 @@ function tipTextFor(classification: string, t: (s: string) => string): string | 
   switch (classification) {
     case "credential_invalid":
       return t(
-        "That key came back invalid. Worth a double-check for a stray trailing space or newline from a copy-paste - a surprising number of \"invalid key\" errors are exactly that.",
+        'That key came back invalid. Worth a double-check for a stray trailing space or newline from a copy-paste - a surprising number of "invalid key" errors are exactly that.',
       );
     case "credential_rate_limited":
       return t(
@@ -74,39 +73,17 @@ function bulkTextFor(area: "credential" | "model", t: (s: string) => string): st
       );
 }
 
-/**
- * Bottom-right contextual flash cards.
- *
- * Two kinds of card share one small queue: a reactive tip the moment a
- * credential test or model probe fails in a way that has a known, likely
- * cause, and an occasional fun fact so the corner is not only ever bad news.
- * Facts come from the same on-demand ranking bundle as the Rankings screen
- * (`/api/catalog/rankings`), so a published update can refresh them without a
- * release, exactly like the ranking boards themselves.
- *
- * Only one card is ever on screen. It self-dismisses; a click dismisses it
- * immediately. The container sits above the toast stack so the two never
- * overlap when both have something to say at once.
- */
 export function Insights() {
   const { t, lang } = useLang();
   const [card, setCard] = useState<Card | null>(null);
   const queue = useRef<Card[]>([]);
   const nextId = useRef(0);
   const lastTipAt = useRef<Map<string, number>>(new Map());
-  // English facts plus an optional, index-aligned French sibling. The bundled
-  // fallback has no French sibling array of its own - its three lines are
-  // short enough to live in the ordinary `t()` dictionary instead, so `t()` is
-  // still tried below even when `factsFr` is null.
+
   const facts = useRef<string[]>(FALLBACK_FACTS);
   const factsFr = useRef<string[] | null>(null);
   const dismissTimer = useRef<number | undefined>(undefined);
 
-  // Set synchronously inside `advance` itself, not via an effect on `card`:
-  // two signals emitted back-to-back in the same tick (a bulk warning and a
-  // failure from the same probe, say) must not both see "nothing showing" and
-  // both call `advance`, which would silently drop whichever card lost the
-  // race for `queue.current.shift()`.
   const active = useRef(false);
 
   const advance = useCallback(() => {
@@ -132,8 +109,6 @@ export function Insights() {
     advance();
   }, [advance]);
 
-  // Fun facts come from the same bundle Rankings can refresh. A failed fetch
-  // just leaves the small bundled fallback list in place.
   useEffect(() => {
     let cancelled = false;
     void api
@@ -147,9 +122,7 @@ export function Insights() {
               : null;
         }
       })
-      .catch(() => {
-        // Keep the fallback list.
-      });
+      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -205,7 +178,9 @@ export function Insights() {
         >
           ×
         </button>
-        <span className="insight-kicker">{card.kind === "fact" ? t("Fun fact") : t("Insight")}</span>
+        <span className="insight-kicker">
+          {card.kind === "fact" ? t("Fun fact") : t("Insight")}
+        </span>
         <p className="insight-text">{card.text}</p>
       </div>
     </div>

@@ -1,6 +1,11 @@
 import { useMemo, useState } from "react";
 import { api, timeAgo } from "../api.js";
-import type { GuidanceAction, GuidanceNotice, GuidanceResponse, GuidanceSeverity } from "../types.js";
+import type {
+  GuidanceAction,
+  GuidanceNotice,
+  GuidanceResponse,
+  GuidanceSeverity,
+} from "../types.js";
 import { Empty, Panel } from "./Primitives.js";
 import { IconInfo } from "./Icons.js";
 import { useToast } from "./Toast.js";
@@ -8,7 +13,6 @@ import { useSparkle } from "./Window.js";
 import { useRoute } from "../router.js";
 import { useLang } from "../lang.js";
 
-/** Chips read as words, not symbols: "needs a fix" beats a red triangle. */
 const SEVERITY_LABEL: Record<GuidanceSeverity, string> = {
   critical: "needs a fix",
   warn: "worth a look",
@@ -21,25 +25,6 @@ const SEVERITY_TONE: Record<GuidanceSeverity, string> = {
   info: "neutral",
 };
 
-/**
- * What needs attention, and what to do about it.
- *
- * COKEY knows a lot it historically never said: which key keeps failing, which
- * chain node depends on a model a provider retired, which model list is three
- * weeks old. None of that fits in a count, and all of it has a specific, small
- * remedy — so each notice names the problem, explains the consequence, and
- * carries the buttons that fix it.
- *
- * The remedies run from here rather than sending the user to another screen to
- * find the right control. Re-verifying a key is one request; making someone
- * navigate to Keys, find the row, and press test would mean the notice is
- * cheaper to ignore than to act on.
- *
- * The data and the dismissed set are both owned by the notification bell, one
- * level up — this component only renders them and reports intent (dismiss
- * this, dismiss all, restore, reload) back to whoever holds the state, so the
- * bell's badge and this panel can never disagree about what is still visible.
- */
 export function Guidance({
   data,
   dismissed,
@@ -105,7 +90,7 @@ export function Guidance({
         const result = await api.testCredential(action.credentialId);
         if (result.ok) {
           toast.ok(t("Key verified"));
-          // The one place a reward belongs: a remedy actually worked.
+
           celebrate();
         } else {
           toast.err(result.message ?? t("Still failing"));

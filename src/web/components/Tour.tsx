@@ -3,7 +3,6 @@ import { TOUR_STEPS } from "../tour-steps.js";
 import { CokeyLogo } from "./Logo.js";
 import { useLang } from "../lang.js";
 
-/** Persisted once the tour is skipped or finished, so it never auto-opens again. */
 export const TOUR_SEEN_KEY = "cokey.tour.seen";
 
 interface SpotRect {
@@ -13,7 +12,6 @@ interface SpotRect {
   height: number;
 }
 
-/** Loose margin around the real element, so the spotlight has room to breathe. */
 const SPOT_PADDING = 8;
 
 function measureTarget(target: string | undefined): SpotRect | null {
@@ -25,9 +23,6 @@ function measureTarget(target: string | undefined): SpotRect | null {
   return { top: box.top, left: box.left, width: box.width, height: box.height };
 }
 
-/** How far the sidebar's own right edge sits from the left of the screen, so
- * the scrim can start after it and leave it fully lit - `0` once it is off
- * canvas (a closed mobile drawer) or not found at all. */
 function measureSidebarEdge(): number {
   const el = document.querySelector<HTMLElement>(".sidebar");
   if (!el) return 0;
@@ -35,16 +30,6 @@ function measureSidebarEdge(): number {
   return right > 0 ? right : 0;
 }
 
-/**
- * The onboarding tour: a real walk through every page, not a tooltip parade
- * over the sidebar. A step whose data names a `route` navigates there first -
- * the tour is the one place in the app that drives the router on the user's
- * behalf - and only measures its spotlight once that page has actually
- * mounted, so the highlight is never drawn against the page that used to be
- * there. Steps with no target (the welcome and closing cards) render as a
- * plain centred card over whatever page is already open. The sidebar itself
- * is never dimmed, so which page is current stays visible throughout.
- */
 export function Tour({
   open,
   onClose,
@@ -54,7 +39,7 @@ export function Tour({
 }: {
   open: boolean;
   onClose: () => void;
-  /** The router's current path, so a step can tell whether it still needs to navigate. */
+
   currentPath: string;
   navigate: (path: string) => void;
   onRequestNavOpen: (open: boolean) => void;
@@ -69,9 +54,6 @@ export function Tour({
     if (open) setStepIndex(0);
   }, [open]);
 
-  // A mobile drawer left open from before the tour started would otherwise
-  // float over every page the tour visits; none of the tour's own targets
-  // live inside it, so it only ever needs to be closed, never opened.
   useEffect(() => {
     if (open) onRequestNavOpen(false);
   }, [open, onRequestNavOpen]);
@@ -80,38 +62,17 @@ export function Tour({
     if (!open || !step) return;
 
     if (step.route && currentPath !== step.route) {
-      // Yesterday's rectangle belongs to a page we're about to leave - null
-      // it before navigating so it can never be drawn, even briefly, against
-      // the page that replaces it.
       setRect(null);
       navigate(step.route);
       return;
     }
 
-    // Already on the right page: the target is already mounted, so there is
-    // nothing to wait for. Measuring synchronously - rather than nulling the
-    // rect and waiting out an artificial delay - matters most for a step
-    // that only changes *target* on the same page (two steps sharing a
-    // route): without it, the previous target's rectangle would flash under
-    // the new step's copy for that whole delay. It also means `rect` moves
-    // directly from the old value to the new one, so the spotlight's own
-    // CSS transition actually gets to glide between them instead of
-    // vanishing and reappearing.
     const measure = () => {
       setRect(measureTarget(step.target));
       setSidebarEdge(measureSidebarEdge());
     };
     measure();
 
-    // The target can keep moving well after this first pass: a page whose
-    // panel title includes a fetched count (`Egress pool (69)`) renders once
-    // with no count and again once the request resolves, a self-hosted font
-    // swapping in reflows whatever text sits above the target, images finish
-    // loading, and so on - there is no single moment "layout has settled" is
-    // guaranteed. A MutationObserver on the whole page re-measures on every
-    // one of those, for as long as this step is showing, which is the only
-    // way to be right regardless of *why* something moved rather than
-    // guessing which specific cause to wait for.
     let queued = false;
     const remeasure = () => {
       if (queued) return;
@@ -182,13 +143,7 @@ export function Tour({
       aria-label={t("Guided tour")}
       style={{ left: sidebarEdge }}
     >
-      {/*
-       * Positioned `absolute` against the scrim, not `fixed` against the
-       * viewport like the card below: the scrim clips its own overflow so the
-       * spot's 9999px box-shadow never bleeds past its left edge onto the
-       * sidebar, and clipping only ever applies to a descendant whose
-       * containing block is the clipped box itself.
-       */}
+      {}
       {spot ? (
         <div
           className="tour-spot"
@@ -279,12 +234,6 @@ function TourCard({
   );
 }
 
-/**
- * Fixed-position pixel coordinates for the card, clamped to stay on screen.
- * `spot` here is viewport-relative, matching `.tour-card`'s own
- * `position: fixed` - unlike `.tour-spot`, which is `position: absolute`
- * against the scrim and needs the sidebar offset subtracted separately.
- */
 function cardPosition(
   spot: SpotRect | null,
   placement: "right" | "bottom" | "left" | "top" | "center",
@@ -297,10 +246,7 @@ function cardPosition(
   }
 
   if (placement === "right") {
-    const top = Math.min(
-      Math.max(spot.top, margin),
-      window.innerHeight - margin - 40, // leaves room for a short card near the bottom
-    );
+    const top = Math.min(Math.max(spot.top, margin), window.innerHeight - margin - 40);
     return {
       top,
       left: Math.min(spot.left + spot.width + 22, window.innerWidth - cardWidth - margin),
@@ -308,7 +254,6 @@ function cardPosition(
     };
   }
 
-  // bottom
   const left = Math.min(
     Math.max(spot.left + spot.width / 2 - cardWidth / 2, margin),
     window.innerWidth - cardWidth - margin,

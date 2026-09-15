@@ -4,6 +4,7 @@ import { createServer as createNetServer } from "node:net";
 import { platform } from "node:os";
 import type { CAC } from "cac";
 import { Cokey } from "../../core/cokey.js";
+import { DEFAULT_ADMIN_PASSWORD } from "../../core/settings.js";
 import { startServer } from "../../server/server.js";
 import { freeProviders } from "../../catalog/providers.js";
 import {
@@ -30,7 +31,6 @@ import {
 } from "../format.js";
 import { printBanner } from "../banner.js";
 
-/** Register lifecycle commands: start, stop, status, config, doctor. */
 export function registerLifecycleCommands(cli: CAC): void {
   const start = cli
     .command("[start]", "Start the COKEY gateway")
@@ -40,8 +40,6 @@ export function registerLifecycleCommands(cli: CAC): void {
     .option("--daemon", "Run in the background and return immediately");
 
   start.action(async (...raw: unknown[]) => {
-    // `[start]` declares one optional positional, so cac supplies it (possibly
-    // as undefined) before the options object.
     const last = raw[raw.length - 1];
     const options = (last && typeof last === "object" ? last : {}) as CommandContext;
     try {
@@ -102,7 +100,7 @@ export function registerLifecycleCommands(cli: CAC): void {
           console.log(`  data dir:     ${stats.dataDir}`);
           console.log(`  master key:   ${stats.keySource}`);
           console.log(
-            `  password:     ${cokey.passwordLocked() ? green("set") : yellow("default (coco-the-best)")}`,
+            `  password:     ${cokey.passwordLocked() ? green("set") : yellow(`default (${DEFAULT_ADMIN_PASSWORD})`)}`,
           );
           console.log(
             `  credentials:  ${stats.credentials} (${stats.healthyCredentials} healthy, ${stats.cooldownCredentials} cooldown, ${stats.invalidCredentials} invalid)`,
@@ -322,9 +320,7 @@ async function startGateway(options: CommandContext): Promise<void> {
     console.log(dim(`\nReceived ${signal}; shutting down.`));
     try {
       await app.close();
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     cokey.stop();
     clearPidFile(dataDir);
     process.exit(0);

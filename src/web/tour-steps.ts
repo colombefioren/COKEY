@@ -1,24 +1,10 @@
-/**
- * The onboarding tour's script.
- *
- * Steps that name a `route` have the tour navigate there first, so most of
- * this walk is the real, live page - not a tooltip pasted over a screenshot
- * of it. A step's `target` is a `data-tour` attribute on a real, always-
- * rendered element of that page (a search box, a named field, a panel
- * title) - never something that only exists once a modal is opened, since
- * the tour does not drive anything but navigation on the user's behalf.
- * `placement` is fixed per step rather than computed from viewport space:
- * every target here sits in a predictable part of its page's layout, so
- * there is nothing to flip.
- */
-
 export type TourPlacement = "right" | "bottom" | "left" | "top" | "center";
 
 export interface TourStep {
   id: string;
-  /** Route to navigate to before this step, when it differs from the current one. */
+
   route?: string;
-  /** `data-tour` selector to spotlight. Omitted for the welcome/closing cards. */
+
   target?: string;
   placement: TourPlacement;
   title: string;
@@ -54,7 +40,7 @@ export const TOUR_STEPS: TourStep[] = [
     target: "chain-alias-field",
     placement: "bottom",
     title: "A chain's name IS the model id",
-    body: "Whatever you type here - say cokey-best - is exactly what your client should request as \"model\". COKEY resolves that alias to a node, a model and a key on every single request, and moves to the next one the moment any of those runs out.",
+    body: 'Whatever you type here - say cokey-best - is exactly what your client should request as "model". COKEY resolves that alias to a node, a model and a key on every single request, and moves to the next one the moment any of those runs out.',
   },
   {
     id: "no-chain-needed",

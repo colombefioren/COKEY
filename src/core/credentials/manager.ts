@@ -30,15 +30,9 @@ export interface CreateCredentialInput {
   accountId?: string;
   secret: string;
   description: string;
-  /**
-   * Optional egress proxy for this key (`socks5://…` or `http://…`).
-   *
-   * Set a different proxy per credential to rotate exit IPs alongside keys.
-   * Without it, several keys from one provider share an IP and therefore share
-   * the provider's IP-level limit.
-   */
+
   proxyUrl?: string;
-  /** True when the proxy was chosen by the automatic pool. */
+
   proxyAuto?: boolean;
 }
 
@@ -47,20 +41,12 @@ export interface TokenDelta {
   outputTokens?: number;
 }
 
-/**
- * Owns the credential lifecycle: creation, verification state, usage counters
- * and cooldowns.
- *
- * Secrets are decrypted on the way out of the database and are never part of a
- * `PublicCredential`. Every method that can be reached from HTTP returns either
- * a domain object or a masked projection.
- */
 export class CredentialManager {
   constructor(
     private readonly repo: CredentialsRepo,
     private readonly vault: SecretVault,
     private readonly cooldown: CooldownManager,
-    /** Live per-credential throughput gauge. Defaults to a private tracker. */
+
     readonly rates: RateTracker = new RateTracker(),
   ) {}
 
@@ -103,7 +89,6 @@ export class CredentialManager {
   }
 
   listByIds(ids: string[]): Credential[] {
-    // Preserve the caller's ordering, which encodes credential priority.
     const byId = new Map(this.repo.listByIds(ids).map((row) => [row.id, row]));
     const out: Credential[] = [];
     for (const id of ids) {
@@ -121,17 +106,10 @@ export class CredentialManager {
     this.repo.update(id, { accountId, updatedAt: Date.now() });
   }
 
-  /** Attach, move or clear the egress proxy of a credential. */
   updateProxyUrl(id: string, proxyUrl: string | null): void {
     this.repo.update(id, { proxyUrl, updatedAt: Date.now() });
   }
 
-  /**
-   * Record the proxy chosen by the automatic pool.
-   *
-   * `proxy_auto = 1` is what lets a later pool change move this credential to a
-   * different exit while leaving a hand-picked proxy alone.
-   */
   setAutoProxyUrl(id: string, proxyUrl: string | null): void {
     this.repo.update(id, {
       proxyUrl,
@@ -140,22 +118,14 @@ export class CredentialManager {
     });
   }
 
-  /**
-   * Attach a user-chosen proxy, taking the credential out of the pool.
-   *
-   * The pool only ever rewrites credentials it owns, so pinning a key here is
-   * how a user opts one credential out of automatic egress for good.
-   */
   markProxyManual(id: string, proxyUrl: string | null): void {
     this.repo.update(id, { proxyUrl, proxyAuto: 0, updatedAt: Date.now() });
   }
 
-  /** Credentials whose egress is currently owned by the pool. */
   listAutoProxy(): Credential[] {
     return this.listAll().filter((credential) => credential.proxyAuto);
   }
 
-  /** Re-encrypt with a rotated secret. */
   rotateSecret(id: string, secret: string): void {
     this.repo.update(id, {
       secretEncrypted: this.vault.encrypt(secret),
@@ -224,12 +194,6 @@ export class CredentialManager {
     });
   }
 
-  /**
-   * Add upstream-reported token usage to a credential's counters.
-   *
-   * Called after a successful non-streamed response is parsed, because the
-   * counts only exist in the response body.
-   */
   recordTokens(id: string, tokens: TokenDelta): void {
     const inputTokens = tokens.inputTokens ?? 0;
     const outputTokens = tokens.outputTokens ?? 0;
@@ -271,7 +235,6 @@ export class CredentialManager {
     });
   }
 
-  /** Returns the timestamp the credential becomes eligible again. */
   putInCooldown(id: string, retryAfterHeader?: string): number {
     const credential = this.getOrThrow(id);
     const until = this.cooldown.cooldownUntil(credential, retryAfterHeader);
@@ -295,7 +258,6 @@ export class CredentialManager {
     });
   }
 
-  /** Expire elapsed cooldowns so the UI and router see fresh state. */
   refreshCooldowns(now = Date.now()): number {
     let changed = 0;
     for (const credential of this.listAll()) {
@@ -323,7 +285,6 @@ export class CredentialManager {
     return out;
   }
 
-  /** The only credential projection allowed to leave the process. */
   toPublic(credential: Credential): PublicCredential {
     return {
       id: credential.id,
@@ -365,12 +326,10 @@ export class CredentialManager {
   }
 }
 
-/** Proxy state safe to display: never the proxy's own username or password. */
 export function describeProxy(proxyUrl: string | undefined, auto = false): CredentialProxyInfo {
   if (!proxyUrl) return { configured: false, auto: false };
   const label = proxyLabel(proxyUrl);
   return label ? { configured: true, auto, label } : { configured: true, auto };
 }
 
-/** Re-export so callers can build an empty gauge without importing the types. */
 export { emptyRate };

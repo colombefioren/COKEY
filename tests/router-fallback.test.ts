@@ -16,8 +16,6 @@ afterEach(() => {
 
 describe("router fallback order", () => {
   it("rotates every credential of an entry before touching the next entry", async () => {
-    // Test A: Groq Key1 → 429, Key2 → 429, Key3 → 200.
-    // Expected order is Key1, Key2, Key3 — never Key1, Model2.
     const key1 = addCredential(h, "groq", "key-1");
     const key2 = addCredential(h, "groq", "key-2");
     const key3 = addCredential(h, "groq", "key-3");
@@ -47,7 +45,6 @@ describe("router fallback order", () => {
   });
 
   it("falls back across entries only once the first entry is exhausted", async () => {
-    // Test B: E1K1 → 401, E1K2 → 429, E1K3 → 429, E2K1 → 200.
     const e1k1 = addCredential(h, "groq", "e1-key-1");
     const e1k2 = addCredential(h, "groq", "e1-key-2");
     const e1k3 = addCredential(h, "groq", "e1-key-3");
@@ -92,7 +89,6 @@ describe("router fallback order", () => {
   });
 
   it("skips to the next entry on context_too_large instead of halting", async () => {
-    // Test C: a context-too-large 400 on entry 1 must skip to entry 2.
     const key1 = addCredential(h, "groq", "key-1");
     const e2key = addCredential(h, "openrouter", "e2-key-1");
 
@@ -130,7 +126,6 @@ describe("router fallback order", () => {
   });
 
   it("follows the user's order after a reorder", async () => {
-    // Test D: reordering an entry above another changes the first model tried.
     const key = addCredential(h, "groq", "shared-key");
     const adapter = new StubAdapter((_credential, model) =>
       model === "model-one"
@@ -186,7 +181,6 @@ describe("router fallback order", () => {
     adapter.calls.length = 0;
     await h.router.route("best", REQUEST);
 
-    // key-1 is cooling down, so the second request must start at key-2.
     expect(adapter.calls.map((call) => call.description)).toEqual(["key-2"]);
     expect(h.credentials.get(key1.id)?.status).toBe("cooldown");
   });
@@ -216,9 +210,6 @@ describe("credentialFallback: false", () => {
 
     await expect(h.router.route("best", REQUEST)).rejects.toThrow();
 
-    // The router must not rotate to key-2, but key-1 must still be put in
-    // cooldown - otherwise the very next request retries the same
-    // still-rate-limited key as if this attempt never happened.
     expect(adapter.calls).toHaveLength(1);
     expect(h.credentials.get(key1.id)?.status).toBe("cooldown");
   });
@@ -329,9 +320,6 @@ describe("live routing feedback", () => {
 
     const result = await h.router.route("best", REQUEST);
 
-    // The response has resolved, but nothing has read its body yet - the
-    // credential must still look busy, not free, so a concurrent request
-    // doesn't pile onto it under the illusion that it's idle.
     expect(h.selector.inFlightCount(entry.id, key1.id)).toBe(1);
 
     result.release();

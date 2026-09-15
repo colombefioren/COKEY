@@ -2,10 +2,6 @@ import Database from "better-sqlite3";
 
 export type SqliteDatabase = Database.Database;
 
-/**
- * An additive schema change. Migrations are applied in ascending version order
- * inside a single transaction each, and recorded in `schema_migrations`.
- */
 export interface Migration {
   version: number;
   name: string;
@@ -234,12 +230,6 @@ export const MIGRATIONS: Migration[] = [
   },
 ];
 
-/**
- * Opens (and if necessary creates) the COKEY database.
- *
- * WAL mode keeps the CLI's short-lived readers from blocking the running
- * gateway, and foreign keys are enforced so deleting a chain cleans up entries.
- */
 export class DatabaseClient {
   readonly db: SqliteDatabase;
   readonly path: string;
@@ -251,20 +241,11 @@ export class DatabaseClient {
     this.db.pragma("journal_mode = WAL");
     this.db.pragma("foreign_keys = ON");
     this.db.pragma("busy_timeout = 5000");
-    // Recover from a crashed writer: checkpoint any leftover WAL frames so
-    // the main database file stays tidy and reads from an external connection
-    // (e.g. `sqlite3 .cokey/cokey.db`) always see committed data.
+
     this.db.pragma("wal_checkpoint(TRUNCATE)");
     runMigrations(this.db);
   }
 
-  /**
-   * `db.prepare()` compiles the SQL every time it's called - better-sqlite3
-   * does not cache by source text on its own. Every repo runs the same
-   * handful of statements over and over on the request-handling hot path, so
-   * this keeps one compiled `Statement` per distinct SQL string for the
-   * lifetime of the connection instead of recompiling it on every call.
-   */
   prepareCached(sql: string): Database.Statement {
     let statement = this.statementCache.get(sql);
     if (!statement) {
@@ -274,7 +255,6 @@ export class DatabaseClient {
     return statement;
   }
 
-  /** Run a function inside a SQLite transaction. */
   transaction<T>(fn: () => T): T {
     return this.db.transaction(fn)();
   }
@@ -325,11 +305,6 @@ export function runMigrations(db: SqliteDatabase, migrations: Migration[] = MIGR
   return applied;
 }
 
-// ---------------------------------------------------------------------------
-// Row shapes. These mirror the columns exactly; repositories own the mapping
-// to domain types so nothing else has to know about snake_case.
-// ---------------------------------------------------------------------------
-
 export interface CredentialRow {
   id: string;
   provider_id: string;
@@ -362,7 +337,7 @@ export interface ChainEntryRow {
   chain_id: string;
   provider_id: string;
   model: string;
-  /** Optional user-chosen display name. Falls back to the model id. */
+
   label: string | null;
   base_url: string;
   credential_ids: string;
@@ -417,9 +392,9 @@ export interface ApiKeyRow {
 export interface ProviderModelRow {
   provider_id: string;
   model: string;
-  /** 1 when the shipped catalog also lists this model. */
+
   curated: number;
-  /** 1 when the provider returned it on the most recent check. */
+
   available: number;
   first_seen: number;
   last_seen: number;

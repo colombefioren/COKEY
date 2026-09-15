@@ -11,21 +11,12 @@ const ALGORITHM = "aes-256-gcm";
 const IV_LENGTH = 12;
 const TAG_LENGTH = 16;
 
-/** Prefix so the on-disk format is self-describing and versionable. */
 const PAYLOAD_PREFIX = "v1:";
 
 export interface SecretVaultOptions extends ResolveOptions {
-  /** Defaults to the OS keychain unless disabled. */
   disableKeychain?: boolean;
 }
 
-/**
- * Encrypts credential secrets at rest with AES-256-GCM.
- *
- * Layout of an encrypted value: `v1:` + base64( iv || authTag || ciphertext ).
- * Plaintext secrets exist only inside this process, and only for the duration
- * of a request.
- */
 export class SecretVault {
   private readonly key: Buffer;
   readonly keyKind: MasterKeyKind;
@@ -63,17 +54,14 @@ export class SecretVault {
     try {
       return Buffer.concat([decipher.update(ciphertext), decipher.final()]).toString("utf8");
     } catch {
-      // GCM authentication failure: wrong key, or the value was tampered with.
       throw new Error("Unable to decrypt secret (wrong master key or corrupted data)");
     }
   }
 
-  /** Stable, non-reversible identifier for the active key. Safe to log. */
   keyFingerprint(): string {
     return createHash("sha256").update(this.key).digest("hex").slice(0, 12);
   }
 
-  /** Constant-time comparison used by tests and diagnostics. */
   static sameSecret(a: string, b: string): boolean {
     const ab = Buffer.from(a);
     const bb = Buffer.from(b);

@@ -1,6 +1,5 @@
 import { randomBytes } from "node:crypto";
 
-/** In-memory browser sessions. A restart invalidates every cookie. */
 export class SessionStore {
   private readonly sessions = new Map<string, number>();
 

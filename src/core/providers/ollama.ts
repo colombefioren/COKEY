@@ -14,12 +14,6 @@ import { OpenAICompatibleAdapter, num } from "./openai-compatible.js";
 import { iterateLines, sseFrame, SSE_DONE, streamFrom } from "./sse.js";
 import { flattenContent, mapFinishReason, openAiChunk, openAiCompletion } from "./transform.js";
 
-/**
- * Ollama adapter, using the native `/api/chat` endpoint.
- *
- * Ollama streams newline-delimited JSON rather than SSE, so the translation is
- * line-oriented: each `{ message: { content } }` line becomes an OpenAI chunk.
- */
 export class OllamaAdapter extends OpenAICompatibleAdapter {
   override createRequest(
     entry: ChainEntry,

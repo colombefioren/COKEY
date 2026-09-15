@@ -1,12 +1,3 @@
-/**
- * Minimal stream plumbing shared by the adapters that must translate a
- * provider's wire format into OpenAI `text/event-stream` framing.
- *
- * Everything here is lazy: chunks are forwarded as they arrive, so a streamed
- * answer is never buffered in full.
- */
-
-/** A decoded server-sent event. */
 export interface SseEvent {
   event?: string;
   data: string;
@@ -14,7 +5,6 @@ export interface SseEvent {
 
 const decoder = new TextDecoder();
 
-/** Iterate SSE frames from a byte stream, handling multi-line `data:` fields. */
 export async function* iterateSse(
   body: ReadableStream<Uint8Array>,
 ): AsyncGenerator<SseEvent, void, void> {
@@ -43,7 +33,6 @@ export async function* iterateSse(
   }
 }
 
-/** Iterate newline-delimited JSON lines (Ollama and friends). */
 export async function* iterateLines(
   body: ReadableStream<Uint8Array>,
 ): AsyncGenerator<string, void, void> {
@@ -99,7 +88,6 @@ function parseFrame(raw: string): SseEvent | undefined {
   return { event, data: dataParts.join("\n") };
 }
 
-/** Encode a single OpenAI-style SSE frame. */
 export function sseFrame(data: unknown, event?: string): string {
   const payload = typeof data === "string" ? data : JSON.stringify(data);
   const prefix = event ? `event: ${event}\n` : "";
@@ -108,7 +96,6 @@ export function sseFrame(data: unknown, event?: string): string {
 
 export const SSE_DONE = "data: [DONE]\n\n";
 
-/** Wrap an async generator of already-encoded SSE strings into a byte stream. */
 export function streamFrom(
   generator: AsyncGenerator<string, void, void>,
 ): ReadableStream<Uint8Array> {
@@ -132,7 +119,6 @@ export function streamFrom(
   });
 }
 
-/** A monotonically increasing id generator for synthesised OpenAI chunks. */
 export function chunkIdFactory(prefix = "chatcmpl-cokey"): () => string {
   let counter = 0;
   const seed = Math.random().toString(36).slice(2, 10);

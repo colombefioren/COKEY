@@ -3,15 +3,6 @@ import { z } from "zod";
 import type { Cokey } from "../cokey.js";
 import type { RoutingStrategy } from "../types.js";
 
-/**
- * Portable configuration export.
- *
- * Exports everything needed to recreate a COKEY setup *except the secrets*:
- * chain order, descriptions, priorities, routing strategies and credential
- * descriptions (which are labels, not keys). Importing therefore rebinds
- * existing credentials rather than restoring them.
- */
-
 export const EXPORT_VERSION = 1;
 
 export interface ExportedEntry {
@@ -120,8 +111,7 @@ export function serializeExport(cokey: Cokey): string {
 
 export function writeExport(cokey: Cokey, path: string): string {
   const payload = serializeExport(cokey);
-  // Guard against ever writing a key by accident: the export must not contain
-  // anything that looks like a bearer token.
+
   if (/(sk-[A-Za-z0-9]{16,}|gsk_[A-Za-z0-9]{16,}|Bearer\s+\S{16,})/.test(payload)) {
     throw new Error("Refusing to write export: it appears to contain a secret");
   }
@@ -139,16 +129,9 @@ export interface ImportSummary {
 }
 
 export interface ImportOptions {
-  /** Import settings carried in the file. Defaults to false. */
   settings?: boolean;
 }
 
-/**
- * Merge an exported configuration into an existing database.
- *
- * Chains are matched by alias, entries by provider+model. Existing entries are
- * left alone and reported as skipped rather than being overwritten.
- */
 export function importConfig(
   cokey: Cokey,
   data: unknown,
@@ -202,8 +185,6 @@ export function importConfig(
         continue;
       }
 
-      // Rebind whatever credentials already exist on this machine that match
-      // the exported labels; secrets cannot travel in an export.
       const wanted = new Set(exportedEntry.credentialDescriptions ?? []);
       const available = cokey.credentials
         .listByProvider(exportedEntry.providerId)

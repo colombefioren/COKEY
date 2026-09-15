@@ -16,15 +16,10 @@ import { Window, type WindowHue } from "./Window.js";
 import { useLang } from "../lang.js";
 import { IconCheck, IconChevron } from "./Icons.js";
 
-/** Coloured status indicator for a credential. */
 export function StatusDot({ status, title }: { status: CredentialStatus; title?: string }) {
   return <span className={`dot ${status}`} title={title ?? status} />;
 }
 
-/**
- * One word for each state, in the reader's language rather than the database's.
- * "Cooling" is something a person can be; "cooldown" is a field name.
- */
 const STATUS_WORD: Record<CredentialStatus, string> = {
   healthy: "healthy",
   cooldown: "cooling",
@@ -33,18 +28,6 @@ const STATUS_WORD: Record<CredentialStatus, string> = {
   unverified: "new",
 };
 
-/**
- * A credential's state, as a pill with its own silhouette.
- *
- * Every state is drawn differently, not merely tinted differently: a burst for
- * healthy, a crescent for cooling, a crack for invalid, a dotted ring for one
- * that has never been proven, a bar for paused. Shape survives a colourblind
- * reader and a greyscale screenshot — which a row of identical dots does not,
- * and a row of identical dots was the whole problem.
- *
- * `compact` drops the word and keeps the mark, for places already labelled by
- * their column or legend.
- */
 export function StatusPill({ status, compact }: { status: CredentialStatus; compact?: boolean }) {
   const { t } = useLang();
   const word = t(STATUS_WORD[status]);
@@ -63,21 +46,10 @@ export function StatusPill({ status, compact }: { status: CredentialStatus; comp
   );
 }
 
-/** Kept as the table-facing name for the same pill, so call sites read naturally. */
 export function StatusBadge({ status }: { status: CredentialStatus }) {
   return <StatusPill status={status} />;
 }
 
-/**
- * A titled content block.
- *
- * Thin wrapper over the Window component so every screen on the dashboard gets
- * the same mock-OS chrome from one definition. The `panel` class is carried
- * alongside `window` because a couple of hand-rolled sections still select it.
- *
- * `hue` is usually left unset: the stylesheet alternates hues down a page so a
- * stack of panels is colour-blocked without each call site choosing a colour.
- */
 export function Panel({
   title,
   actions,
@@ -114,12 +86,6 @@ export function Stat({ label, value, hint }: { label: string; value: ReactNode; 
   );
 }
 
-/**
- * Simple confirmation dialog.
- *
- * Presents a message and two buttons: a left "Cancel" (ghost) and a right
- * primary action (danger by default) labelled `actionLabel`.
- */
 export function ConfirmModal({
   title,
   message,
@@ -151,12 +117,6 @@ export function ConfirmModal({
   );
 }
 
-/**
- * Prompt-style modal with a text input.
- *
- * Pre-fills `defaultValue`, submits on Enter, and renders the value as a
- * password field when `type` is `"password"`.
- */
 export function PromptModal({
   title,
   message,
@@ -208,7 +168,6 @@ export function PromptModal({
   );
 }
 
-/** Overlay modal. Escape closes; clicking the backdrop closes. */
 export function Modal({
   title,
   subtitle,
@@ -233,12 +192,7 @@ export function Modal({
   return createPortal(
     <div
       className="overlay"
-      // React bubbles a portal's events through the *React* tree, not the DOM
-      // tree it's actually mounted into - a modal rendered from inside some
-      // clickable card (the provider dossier, say) sits under that card in
-      // the fiber tree regardless of `createPortal`, so without stopping it
-      // here this click would keep bubbling to the card's own handler and
-      // immediately reopen what it just closed.
+
       onClick={(event) => {
         event.stopPropagation();
         onClose();
@@ -262,7 +216,6 @@ export function Modal({
   );
 }
 
-/** Human-readable duration, matching the CLI's formatting. */
 export function formatDuration(ms: number): string {
   if (!Number.isFinite(ms) || ms < 0) return "-";
   if (ms < 1000) return `${Math.round(ms)}ms`;
@@ -275,12 +228,6 @@ export function formatNumber(value: number): string {
   return value.toLocaleString();
 }
 
-/**
- * Twelve 5-second buckets covering the trailing minute.
- *
- * Deliberately tiny and unlabeled: the exact numbers live in the tooltip, the
- * shape is what tells a user at a glance whether one key is doing all the work.
- */
 export function Sparkline({ buckets, title }: { buckets: number[]; title?: string }) {
   const max = Math.max(1, ...buckets);
   return (
@@ -292,13 +239,6 @@ export function Sparkline({ buckets, title }: { buckets: number[]; title?: strin
   );
 }
 
-/**
- * Observed throughput for one credential.
- *
- * "VPM" here means verified requests per minute, measured locally by COKEY -
- * not a provider-declared quota. It is the only way to tell two keys of the
- * same provider apart.
- */
 export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: boolean }) {
   const { t } = useLang();
   if (!rate || rate.lastRequestAt === undefined) {
@@ -322,7 +262,6 @@ export function RateLabel({ rate, compact }: { rate?: CredentialRate; compact?: 
   );
 }
 
-/** A credential's quota, or an explicit "unknown" - never a fabricated value. */
 export function QuotaLabel({
   quota,
   quotaErrors,
@@ -338,9 +277,7 @@ export function QuotaLabel({
   status?: string;
 }) {
   const { t } = useLang();
-  // quotaErrors is a lifetime counter, so it stays > 0 long after a key has
-  // recovered - only read it while the credential is still actually cooling
-  // down, or a key that failed once would show "exhausted" forever.
+
   if (status === "cooldown" && quotaErrors && quotaErrors > 0) {
     return (
       <span className="badge bad" title={`${quotaErrors} ${t("quota exhaustion(s) observed")}`}>
@@ -360,20 +297,6 @@ export function QuotaLabel({
   return <span className="muted">{parts.join(" · ")}</span>;
 }
 
-/**
- * A dropdown COKEY actually draws, instead of a native `<select>`.
- *
- * The closed control can be styled all day; the open list a browser draws for
- * a native select cannot be touched at all, which is what made every dropdown
- * in the app look like it belonged to a different program. This renders its
- * own floating panel in a portal (so a modal's `overflow: hidden` never clips
- * it), positioned against the trigger's real screen coordinates and flipped
- * upward when there is more room above than below.
- *
- * The API deliberately mirrors a native select — pass `<option>` children,
- * read `value`, get a new value back — so swapping one in is a tag rename,
- * not a rewrite of the surrounding form.
- */
 export function Select({
   id,
   value,
@@ -442,9 +365,7 @@ export function Select({
       if (triggerRef.current?.contains(target) || panelRef.current?.contains(target)) return;
       setOpen(false);
     };
-    // A dropdown that stays open under the content it should be layering
-    // above defeats the point of a portal; scrolling anywhere else closes it
-    // rather than tracking a stale position.
+
     const onScroll = (event: Event) => {
       if (panelRef.current?.contains(event.target as Node)) return;
       setOpen(false);
@@ -481,7 +402,6 @@ export function Select({
     };
   }, [open, options, highlight, onChange]);
 
-  // Keep the highlighted row in view as arrow keys move past the fold.
   useLayoutEffect(() => {
     if (!open) return;
     const row = panelRef.current?.querySelector(`[data-index="${highlight}"]`);
@@ -552,19 +472,6 @@ export function Select({
   );
 }
 
-/**
- * A tooltip that reads as a spoken word, not an OS hint box.
- *
- * A native `title` attribute answers "what is this" with the browser's own
- * plain grey rectangle, on its own timer, in its own font — the one part of
- * an icon-only button the app's own theme never reached. This draws a small
- * pill in the brand's own pink-to-violet instead, with a tail pointing at
- * whatever it is labelling and a soft pop-in so it reads as part of the
- * interface rather than a system aside.
- *
- * Positioned in a portal against the trigger's real screen coordinates so it
- * is never clipped by a scrolling list or a card's own `overflow`.
- */
 export function Tooltip({
   label,
   children,

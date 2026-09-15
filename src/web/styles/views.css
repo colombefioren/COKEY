@@ -1,29 +1,8 @@
-/*
- * View-specific surfaces.
- *
- * Everything here is tied to one screen or one diagram: the resilience layers,
- * the ranking boards, and the about/contact cards. Tokens only, so both themes
- * come along for free.
- */
-
-/* ---- resilience ----------------------------------------------------------- */
-
-/*
- * `Resilience` renders a hand-rolled `section.panel`, not a `Window`, so it
- * owns its own vertical rhythm: without this, the header, the three layer
- * cards and the footer note all ran together in one unbroken block, since
- * `section.panel` is plain flow, not a grid.
- */
 .layers-panel {
   display: grid;
   gap: 16px;
 }
 
-/*
- * Each layer is its own sticker: a pastel tint, a big icon-and-number badge,
- * and a headline set in the display face. Three layers in a row read as three
- * different, deliberate defences rather than three rows of a settings table.
- */
 .layer {
   position: relative;
   display: grid;
@@ -183,8 +162,7 @@
   color: var(--muted);
   white-space: nowrap;
 }
-/* The same three silhouettes the status pills use, so a state learned in the
-   keys table is recognised here without a second legend. */
+
 .layer-key i {
   width: 9px;
   height: 9px;
@@ -196,9 +174,7 @@
   color: var(--faint);
   font-size: 10.5px;
 }
-/* State lives on the glyph and the word after it, not on the whole chip's
-   fill — three chips side by side used to read as three different colours
-   of card; now the card is always the same plain white. */
+
 .layer-key.is-ok i {
   color: var(--sage);
   clip-path: polygon(50% 0%, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0% 50%, 38% 38%);
@@ -236,8 +212,6 @@
   color: var(--muted);
 }
 
-/* ---- ranking boards ------------------------------------------------------- */
-
 .swe-score {
   display: flex;
   align-items: center;
@@ -264,8 +238,6 @@
 .source-list a {
   color: var(--violet);
 }
-
-/* ---- about, chips and contact -------------------------------------------- */
 
 .btn {
   display: inline-flex;
@@ -378,21 +350,6 @@
   color: var(--faint);
 }
 
-/* ---- live route ----------------------------------------------------------- */
-/*
- * The route diagram, redrawn.
- *
- * This sheet is imported after core.css, so everything here supersedes the
- * first-generation flow styles: the old node cards, the dashed connector and
- * the square key marks are all replaced rather than added to. Tokens only, so
- * the palette still carries it.
- *
- * The shape of the thing: one inked rail across the whole journey, every stop
- * a pebble with four unequal corner radii, the hub the single orb, and a comet
- * with a fading tail travelling between them. A routing decision is a sequence;
- * the picture of it should look like a path, not a row of boxes.
- */
-
 .flow {
   display: flex;
   flex-direction: column;
@@ -416,10 +373,6 @@
   align-items: center;
 }
 
-/*
- * A chain tab. Exactly one shape on this row is filled, so which route you are
- * looking at is never a comparison between two tints of the same pink.
- */
 .flow-pill {
   display: inline-flex;
   align-items: center;
@@ -464,8 +417,7 @@
   background: var(--sage);
   animation: flow-blink 1.6s ease-in-out infinite;
 }
-/* A selected chain that is also serving right now keeps its live mark: the
-   route being live is the more urgent fact than the route being selected. */
+
 .flow-pill.active.live .flow-pill-dot {
   background: var(--sage-line);
   animation: none;
@@ -476,7 +428,6 @@
   font-size: 10px;
 }
 
-/* The state of the route, as one quiet capsule rather than three loud badges. */
 .flow-state {
   display: inline-flex;
   align-items: center;
@@ -526,12 +477,6 @@
   box-shadow: var(--shadow);
 }
 
-/*
- * The graph surface itself: an absolutely-positioned canvas the client node,
- * the hub and every fallback sit on, with the bezier paths drawn underneath
- * them. Fixed coordinates do not reflow, so on a narrow screen the surface
- * scrolls sideways instead of collapsing into an unreadable stack.
- */
 .flow-graph {
   position: relative;
   min-width: 840px;
@@ -545,12 +490,6 @@
   pointer-events: none;
 }
 
-/*
- * One inked line per hop, not a dashed rule and not a comet: the route is a
- * path a request actually walks, so it is drawn as a path. The line that was
- * just used brightens; every line a request did not take fades instead of
- * disappearing, so the shape of the whole chain stays legible.
- */
 .flow-path {
   fill: none;
   stroke: var(--border-strong);
@@ -570,14 +509,6 @@
   opacity: 0.45;
 }
 
-/*
- * A stop on the journey.
- *
- * Four unequal corner radii is the cheapest way to make a rectangle look cut
- * out rather than rendered: four equal radii is a spreadsheet cell, four
- * uneven ones read as a pebble. Every node now sits at an absolute point on
- * the graph — the coordinates come from the component, the size from here.
- */
 .flow-node {
   position: absolute;
   display: flex;
@@ -597,8 +528,7 @@
   gap: 8px;
   min-width: 0;
 }
-/* Long model ids stay on one line, ellipsised, rather than growing the card
-   past its slot in the graph — the full id is still in the title attribute. */
+
 .flow-entry .flow-node-title {
   flex: 1;
   min-width: 0;
@@ -628,9 +558,6 @@
   margin-top: 2px;
 }
 
-/* The entrance: the request arrives from outside, so it carries the one tape
-   accent in this whole diagram — everything downstream of it is a routing
-   decision COKEY made, this is the only node the user's own client owns. */
 .flow-client {
   left: 0;
   width: 220px;
@@ -648,12 +575,6 @@
   z-index: 2;
 }
 
-/*
- * The hub is the one stop drawn as a solid circle rather than a card —
- * everything else here is a point along the way; this is the thing they are
- * all routed through, so it reads as the centre of something. Solid pink, no
- * gradient: the brand colour standing for itself rather than fading into it.
- */
 .flow-hub {
   width: 170px;
   height: 170px;
@@ -678,8 +599,6 @@
   color: rgba(255, 255, 255, 0.75);
 }
 
-/* The stop number, a plain circle on the brand wash — no hand-cut corners,
-   the minimal editorial page does not want a sketchy note here. */
 .flow-stop {
   flex: none;
   display: grid;
@@ -707,11 +626,6 @@
   opacity: 0.55;
 }
 
-/*
- * A node whose key is being probed during a chain sweep: a hand-drawn circle
- * being continuously scribbled around it, the way you'd circle an answer
- * while double-checking it — not a mechanical spinner rotating in place.
- */
 .flow-entry.sweep-testing {
   border-color: var(--violet-line);
   box-shadow: 0 0 0 3px var(--violet-soft);
@@ -737,8 +651,6 @@
     0 0 0 5px var(--sage-soft);
 }
 
-/* The placeholder shown when a chain has no fallback nodes yet. Dashed,
-   because nothing has been decided here. */
 .flow-empty {
   width: 220px;
   border: 1.5px dashed var(--border-strong);
@@ -746,8 +658,6 @@
   box-shadow: none;
 }
 
-/* The verdict — sweep result, or just the node's role in the order — pinned
-   to the card's shoulder so the card itself never resizes to fit it. */
 .flow-node-flag {
   position: absolute;
   top: -11px;
@@ -772,9 +682,6 @@
   background: var(--text);
 }
 
-/* A bound key as a plain coloured dot. Colour alone is enough here because
-   the tooltip carries the exact status and the legend underneath carries
-   the colour key — a row of them should read as calm dots, not icons. */
 .flow-keys {
   display: flex;
   align-items: center;
@@ -857,15 +764,6 @@
   font-weight: 600;
 }
 
-/* ---- live route readout --------------------------------------------------- */
-/*
- * The topbar chip and its feed.
- *
- * The chip has to hold three facts in one pill: which model, which key, whether
- * traffic is moving. So the model is set in the display face at reading size,
- * the key recedes behind it, and the state is a single breathing dot on the
- * leading edge — not three badges fighting over the same line.
- */
 .live {
   position: relative;
 }
@@ -944,11 +842,6 @@
   font-weight: 650;
 }
 
-/*
- * The feed, as a tray. Same reasoning as the notices dropdown: the rows scroll
- * inside a rounded holder rather than against a hard clip, which is what keeps
- * a long routing feed from looking broken the moment it moves.
- */
 .live-panel {
   position: absolute;
   right: 0;
@@ -1005,15 +898,6 @@
 .live-msg {
   color: var(--muted);
 }
-
-/* ---- tutorial and terms --------------------------------------------------- */
-/*
- * The two reading screens.
- *
- * Both are mostly text, so the work is in the few things that are not: one
- * poster at the top of the tutorial and one at the bottom of the terms, with
- * everything between them kept quiet enough that the words carry it.
- */
 
 .hero {
   position: relative;
@@ -1072,7 +956,7 @@
   padding-left: 38px;
   min-height: 26px;
 }
-/* The same hand-cut tab the route diagram and the chain nodes use. */
+
 .steps-list > li::before {
   counter-increment: step;
   content: counter(step);
@@ -1136,8 +1020,7 @@
   font-size: 16px;
   font-weight: 400;
 }
-/* The open/closed mark as a chip, so it reads as a control rather than as a
-   stray character at the end of the row. */
+
 .recipe-toggle {
   display: grid;
   place-items: center;
@@ -1211,8 +1094,6 @@
   line-height: 1.78;
 }
 
-/* The sign-off, as the mirror of the tutorial's hero: the other end of the same
-   ramp, so the two documents feel like a pair. */
 .closing {
   position: relative;
   display: flex;
@@ -1242,15 +1123,6 @@
   color: var(--muted);
   font-style: italic;
 }
-
-/* ---- boards, cards and chips ---------------------------------------------- */
-/*
- * The surfaces that are really just lists.
- *
- * The work here is making one row legible at a glance: a bar that reads as a
- * measurement, a heading that reads as a name, a chip that reads as something
- * you could pick up.
- */
 
 .swe-score {
   gap: 9px;
@@ -1307,8 +1179,6 @@
   width: 100%;
 }
 
-/* Each provider's grid pages on its own, so one provider with 200 models can
-   no longer push every other provider off the page. */
 .model-pager {
   display: flex;
   align-items: center;
@@ -1352,8 +1222,6 @@ button.play.fail {
   margin-bottom: 24px;
 }
 
-/* Verdict headings are names, not micro-labels: display face, sentence case,
-   with the same hand-cut tab the rest of the app uses. */
 .provider-section-title {
   display: flex;
   align-items: center;
@@ -1380,7 +1248,6 @@ button.play.fail {
   background: var(--violet);
 }
 
-/* The whole card opens the dossier now, not just the Models button inside it. */
 .provider-card.clickable {
   cursor: pointer;
 }
@@ -1389,18 +1256,6 @@ button.play.fail {
   outline-offset: 2px;
 }
 
-/*
- * Four facts about a provider, as a small grid of tiles rather than a striped
- * settings table - the shape a definition list defaults to reads as a form,
- * and this is reference material, not something anyone is filling in.
- *
- * Scoped to `.modal .dossier`, not `.provider-card .dossier`: the modal that
- * holds this list is rendered through a portal straight onto `document.body`
- * (see `Modal` in Primitives.tsx), so in the real DOM it is never a
- * descendant of the card that opened it - a `.provider-card .dossier`
- * selector can never match at all, which is why this grid rendered as an
- * unstyled definition list despite the rule existing.
- */
 .modal .dossier {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1430,9 +1285,7 @@ button.play.fail {
   color: var(--text);
   line-height: 1.4;
 }
-/* Free tier earns the same accent as the card's own quota chip - it is the
-   fact most worth a second glance, so it should not read as identical to
-   "type" or "reviewed". */
+
 .modal .dossier > div.dossier-freetier {
   border-color: var(--sage-line);
   background: var(--sage-soft);
@@ -1472,7 +1325,6 @@ button.play.fail {
   border-style: dashed;
 }
 
-/* The full model list, revealed per provider. */
 .model-list {
   display: grid;
   gap: 6px;
@@ -1497,8 +1349,7 @@ button.play.fail {
 .model-list-item .spacer {
   flex: 1;
 }
-/* The provider stopped serving it: still named, so a reader knows what it
-   was, but visibly inert — no "add to chain" link exists for this row. */
+
 .model-list-item.retired {
   opacity: 0.55;
   background: var(--surface-3);
@@ -1522,7 +1373,6 @@ button.play.fail {
   display: flex;
 }
 
-/* The resilience panel's own heading, in the same voice as a window title. */
 .layers-panel .layer-head {
   align-items: baseline;
 }

@@ -1,14 +1,6 @@
 import type { TokenUsage } from "./adapter.js";
 import { openAiUsage } from "./openai-compatible.js";
 
-/**
- * Builders for OpenAI-shaped payloads.
- *
- * The adapters whose upstream wire format differs use these so that every
- * client of COKEY - regardless of which provider actually served the request -
- * sees exactly one response shape.
- */
-
 export interface OpenAiToolCall {
   index?: number;
   id?: string;
@@ -44,7 +36,6 @@ export interface CompletionOptions {
   usage?: TokenUsage;
 }
 
-/** A complete (non-streamed) `chat.completion` object. */
 export function openAiCompletion(options: CompletionOptions): Record<string, unknown> {
   const message: Record<string, unknown> = { role: "assistant", content: options.content || null };
   if (options.toolCalls && options.toolCalls.length > 0) {
@@ -78,7 +69,6 @@ export interface ChunkOptions {
   usage?: TokenUsage;
 }
 
-/** A single streamed `chat.completion.chunk` object. */
 export function openAiChunk(options: ChunkOptions): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     id: options.id,
@@ -92,10 +82,6 @@ export function openAiChunk(options: ChunkOptions): Record<string, unknown> {
   return payload;
 }
 
-/**
- * Normalise the many spellings of "why did generation stop" into the three
- * values OpenAI clients understand.
- */
 export function mapFinishReason(reason: string | undefined | null): string {
   if (!reason) return "stop";
   const normalized = reason.toLowerCase();
@@ -127,16 +113,6 @@ export function mapFinishReason(reason: string | undefined | null): string {
   return "stop";
 }
 
-/**
- * Watches the bytes of an SSE response as they are piped to the client and
- * captures the token usage carried by the last `data:` frame that has one.
- *
- * Every adapter with a custom `transformStream` attaches `usage` to its final
- * chunk (see `openAiChunk` above), and an already-OpenAI-compatible upstream
- * does the same once asked with `stream_options.include_usage`. Either way
- * the wire shape landing here is identical, so this is the one place that
- * needs to understand it - not each call site.
- */
 export function createStreamUsageSniffer(): {
   onChunk: (chunk: Uint8Array) => void;
   usage: () => TokenUsage | undefined;
@@ -171,7 +147,6 @@ export function createStreamUsageSniffer(): {
   };
 }
 
-/** Content may arrive as a string or as an array of typed parts. */
 export function flattenContent(content: unknown): string {
   if (typeof content === "string") return content;
   if (!Array.isArray(content)) return "";

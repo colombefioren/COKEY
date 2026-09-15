@@ -1,13 +1,6 @@
 import { CREATOR, REPO_URL } from "../links.js";
 import { useLang } from "../lang.js";
 
-/**
- * Where to reach the person who built this.
- *
- * The README deliberately carries no contact block: the app is where someone
- * using COKEY actually is, so the links live in Terms (and About) instead of in
- * a file only a contributor would open.
- */
 function ContactCard({
   label,
   value,

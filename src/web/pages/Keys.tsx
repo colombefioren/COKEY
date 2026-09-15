@@ -26,13 +26,6 @@ interface ProviderGroup {
   credentials: PublicCredential[];
 }
 
-/**
- * The credential inventory.
- *
- * Secrets are shown masked and only masked. A proxy set by the automatic pool is
- * labelled as such, so it is always obvious which keys will move when the pool
- * changes and which ones are pinned by hand.
- */
 export function Keys({
   refreshKey,
   onChanged,
@@ -274,7 +267,9 @@ export function Keys({
                           <button
                             className="ghost mono small"
                             style={{ padding: "2px 6px" }}
-                            title={t("Exit IP for this key: automatic pool, a pinned exit, or direct")}
+                            title={t(
+                              "Exit IP for this key: automatic pool, a pinned exit, or direct",
+                            )}
                             onClick={() => void openAssign(credential)}
                           >
                             {credential.proxy.configured
@@ -365,7 +360,7 @@ export function Keys({
       {replacingKey ? (
         <PromptModal
           title={t("Replace API key")}
-          message={`${t('Enter a new secret for')} "${replacingKey.description}". ${t("The key is verified before it is stored.")}`}
+          message={`${t("Enter a new secret for")} "${replacingKey.description}". ${t("The key is verified before it is stored.")}`}
           defaultValue=""
           placeholder="sk-..."
           onSubmit={(value) => void replace(replacingKey, value)}

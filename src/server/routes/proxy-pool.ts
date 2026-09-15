@@ -9,14 +9,6 @@ import {
 } from "../../core/validation/schemas.js";
 import { withErrors } from "./http-errors.js";
 
-/**
- * Automatic egress pool.
- *
- * The pool exists so that two keys of one provider never leave through the same
- * IP: provider limits are tracked per key *and* per IP, so rotating keys from a
- * single address still trips the same limit. Keys of different providers may
- * share an entry, because nothing correlates them upstream.
- */
 export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): void {
   app.get(
     "/api/proxy-pool",
@@ -77,7 +69,6 @@ export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): voi
     }),
   );
 
-  /** Re-run assignment on demand, after repairing state by hand. */
   app.post(
     "/api/proxy-pool/sync",
     withErrors(() => ({
@@ -87,14 +78,6 @@ export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): voi
     })),
   );
 
-  /**
-   * Pull Proxifly's free proxy list into the pool.
-   *
-   * Free proxies are public and shared: the pool grows fast, expectations stay
-   * low. Users who need reliability should paste in their own (often paid)
-   * entries via `/api/proxy-pool/bulk` instead. By default candidates are
-   * probed first so only working exits actually land in the pool.
-   */
   app.post(
     "/api/proxy-pool/fetch-proxifly",
     withErrors(async (request, reply) => {
@@ -118,12 +101,6 @@ export function registerProxyPoolRoutes(app: FastifyInstance, cokey: Cokey): voi
     }),
   );
 
-  /**
-   * Probe every enabled exit and drop the ones that no longer answer.
-   *
-   * The ugly truth of free proxies is that they die on a schedule, so a pool
-   * filled once rots into timeouts. This is the janitor call.
-   */
   app.post(
     "/api/proxy-pool/check",
     withErrors(async (request) => {

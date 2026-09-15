@@ -60,7 +60,15 @@ describe("fetchRemoteRankings", () => {
       vi.fn(async () =>
         jsonResponse(
           bundle({
-            tiers: [{ name: "S", label: "Top tier", labelFr: "Palier du haut", blurb: "The best.", blurbFr: "Le meilleur." }],
+            tiers: [
+              {
+                name: "S",
+                label: "Top tier",
+                labelFr: "Palier du haut",
+                blurb: "The best.",
+                blurbFr: "Le meilleur.",
+              },
+            ],
             skill: [
               {
                 model: "some-model",
