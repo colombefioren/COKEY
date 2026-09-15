@@ -1,4 +1,5 @@
 import { classifyError } from "../errors/classify.js";
+import { COKEY_USER_AGENT } from "../../version.js";
 import type {
   ChatCompletionRequest,
   ChatMessage,
@@ -30,7 +31,7 @@ export class GoogleAdapter extends OpenAICompatibleAdapter {
     return {
       url: `${base}/${model}:${method}?${query}`,
       method: "POST",
-      headers: { "content-type": "application/json", "user-agent": "cokey/0.1.0" },
+      headers: { "content-type": "application/json", "user-agent": COKEY_USER_AGENT },
       body: JSON.stringify(toGeminiRequest(request)),
       stream,
       proxyUrl: credential.proxyUrl,
@@ -78,7 +79,7 @@ export class GoogleAdapter extends OpenAICompatibleAdapter {
       {
         url: `${base}/models?key=${encodeURIComponent(credential.secret)}`,
         method: "GET",
-        headers: { "user-agent": "cokey/0.1.0" },
+        headers: { "user-agent": COKEY_USER_AGENT },
         stream: false,
         proxyUrl: credential.proxyUrl,
       },

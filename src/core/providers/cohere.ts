@@ -1,4 +1,5 @@
 import { classifyError } from "../errors/classify.js";
+import { COKEY_USER_AGENT } from "../../version.js";
 import type {
   ChainEntry,
   ChatCompletionRequest,
@@ -41,7 +42,7 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
       headers: {
         "content-type": "application/json",
         accept: request.stream === true ? "text/event-stream" : "application/json",
-        "user-agent": "cokey/0.1.0",
+        "user-agent": COKEY_USER_AGENT,
         authorization: `Bearer ${credential.secret}`,
       },
       body: JSON.stringify(body),
@@ -104,7 +105,7 @@ export class CohereAdapter extends OpenAICompatibleAdapter {
         method: "GET",
         headers: {
           authorization: `Bearer ${credential.secret}`,
-          "user-agent": "cokey/0.1.0",
+          "user-agent": COKEY_USER_AGENT,
         },
         stream: false,
         proxyUrl: credential.proxyUrl,
