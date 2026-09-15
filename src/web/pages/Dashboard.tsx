@@ -73,7 +73,6 @@ export function Dashboard({
 
   return (
     <>
-      {}
       {nudgeBlock}
 
       <div className="tabs tabs-inline" data-tour="dashboard-tabs">

@@ -504,7 +504,6 @@ function Catalog({
         <strong>▶</strong> {t("sends one real hello and turns green only on a 200.")}
       </p>
 
-      {}
       {data && data.stale > 0 ? (
         <div className="hint-box" style={{ marginBottom: 14 }}>
           {data.stale} {t("model(s) were gone on the last check, so they are hidden. Use")}{" "}
@@ -535,7 +534,6 @@ function Catalog({
                 <span className="small faint">{t(provider.freeTier.summary)}</span>
                 <span className="spacer" />
 
-                {}
                 <span
                   className="badge neutral"
                   title={

@@ -296,7 +296,6 @@ function Shell() {
           onRequestNavOpen={setNavOpen}
         />
 
-        {}
         <main>
           <div className="page" key={route.path}>
             {page}

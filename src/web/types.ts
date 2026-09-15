@@ -601,6 +601,7 @@ export interface RateLimitEntry {
   quota: string;
   provenance: QuotaProvenance;
   reliability: "solid" | "watch" | "avoid";
+  fieldTested?: boolean;
   note?: string;
   noteFr?: string;
 }
@@ -619,15 +620,31 @@ export interface RedundancyEntry {
   alsoOn: string[];
   keep: string;
   fallback: string;
+  note?: string;
+  noteFr?: string;
+}
+
+export interface RankingsMeta {
+  lastResearched: string;
+  methodology: string;
+  methodologyFr?: string;
+}
+
+export interface WorthTryingEntry {
+  provider: string;
+  note: string;
+  noteFr?: string;
 }
 
 export interface RankingsResponse {
+  meta?: RankingsMeta;
   tiers: SkillTier[];
   skill: SkillEntry[];
   rateLimit: RateLimitEntry[];
   combined: CombinedEntry[];
   redundancy: RedundancyEntry[];
   dropList: Array<{ provider: string; reason: string; reasonFr?: string }>;
+  worthTryingWithCaveats?: WorthTryingEntry[];
   bottomLine: string;
   bottomLineFr?: string;
   disclaimer: string;

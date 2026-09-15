@@ -244,7 +244,6 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
             }}
             title={t("Drag to reorder, or Alt+↑ / Alt+↓")}
           >
-            {}
             <div className="entry-reorder">
               <button
                 className="ghost"
@@ -262,7 +261,6 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               </button>
             </div>
 
-            {}
             <div className="entry-model">
               <span className="priority">{index + 1}.</span>
               <button
@@ -295,7 +293,6 @@ export function ChainCard({ chain, onChanged }: { chain: ChainView; onChanged: (
               {!entry.enabled && <span className="badge warn">{t("disabled")}</span>}
             </div>
 
-            {}
             <div className="entry-actions">
               <Tooltip label={t("View details")}>
                 <button

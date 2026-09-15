@@ -82,7 +82,12 @@ export function Rankings({ refreshKey }: { refreshKey: number }) {
         <p className="small muted" style={{ margin: 0 }}>
           {loc(data.disclaimer, data.disclaimerFr, lang)}
         </p>
-        {}
+        {data.meta ? (
+          <p className="small faint" style={{ marginTop: 8, marginBottom: 0 }}>
+            {t("Last hand-verified")} {data.meta.lastResearched} —{" "}
+            {loc(data.meta.methodology, data.meta.methodologyFr, lang)}
+          </p>
+        ) : null}
         <div className="row between center" style={{ marginTop: 8, flexWrap: "wrap", gap: 8 }}>
           <p className="small faint" style={{ margin: 0 }}>
             {data.source === "remote"
@@ -245,7 +250,14 @@ function RateBoard({ data }: { data: RankingsResponse }) {
                     ) : null}
                   </td>
                   <td className="small">{entry.quota}</td>
-                  <td className="small muted">{t(provenanceLabel(entry))}</td>
+                  <td className="small muted">
+                    {t(provenanceLabel(entry))}
+                    {entry.fieldTested ? (
+                      <span className="badge ok" style={{ marginLeft: 6 }}>
+                        {t("field-tested")}
+                      </span>
+                    ) : null}
+                  </td>
                   <td>
                     <span className={`badge ${reliabilityTone(entry)}`}>
                       {t(entry.reliability)}
@@ -278,6 +290,29 @@ function RateBoard({ data }: { data: RankingsResponse }) {
           </table>
         </div>
       </Panel>
+
+      {data.worthTryingWithCaveats && data.worthTryingWithCaveats.length > 0 ? (
+        <Panel title={t("Worth trying, with caveats")}>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th style={{ width: 240 }}>{t("Provider")}</th>
+                  <th>{t("Caveat")}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.worthTryingWithCaveats.map((entry) => (
+                  <tr key={entry.provider}>
+                    <td>{entry.provider}</td>
+                    <td className="small muted">{loc(entry.note, entry.noteFr, lang)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Panel>
+      ) : null}
     </>
   );
 }
@@ -321,7 +356,7 @@ function CombinedBoard({ data }: { data: RankingsResponse }) {
 }
 
 function RedundancyBoard({ data }: { data: RankingsResponse }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <Panel title={t("Duplicated model families")}>
       <p className="small muted" style={{ marginTop: 0 }}>
@@ -342,7 +377,12 @@ function RedundancyBoard({ data }: { data: RankingsResponse }) {
           <tbody>
             {data.redundancy.map((entry) => (
               <tr key={entry.family}>
-                <td className="mono small">{entry.family}</td>
+                <td className="mono small">
+                  {entry.family}
+                  {entry.note ? (
+                    <div className="small faint">{loc(entry.note, entry.noteFr, lang)}</div>
+                  ) : null}
+                </td>
                 <td className="small muted">{entry.alsoOn.join(", ")}</td>
                 <td className="small">
                   <span className="badge">{entry.keep}</span>
