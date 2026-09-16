@@ -339,6 +339,7 @@ export function Select({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+  const openedAtRef = useRef(0);
 
   const options = useMemo(() => {
     return Children.toArray(children)
@@ -381,6 +382,7 @@ export function Select({
       width: rect.width,
       openUp,
     });
+    openedAtRef.current = Date.now();
     setQuery("");
     setHighlight(selectedIndex >= 0 ? selectedIndex : 0);
     setOpen(true);
@@ -392,7 +394,7 @@ export function Select({
 
   useEffect(() => {
     if (!open || !showSearch) return undefined;
-    const timer = window.setTimeout(() => searchRef.current?.focus(), 0);
+    const timer = window.setTimeout(() => searchRef.current?.focus({ preventScroll: true }), 0);
     return () => window.clearTimeout(timer);
   }, [open, showSearch]);
 
@@ -406,9 +408,11 @@ export function Select({
     };
 
     const onScroll = (event: Event) => {
+      if (Date.now() - openedAtRef.current < 250) return;
       if (panelRef.current?.contains(event.target as Node)) return;
       setOpen(false);
     };
+    const onResize = () => setOpen(false);
     const pick = () => {
       const option = filtered[highlight];
       if (!option || option.disabled) return;
@@ -438,10 +442,12 @@ export function Select({
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("scroll", onScroll, true);
     document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("scroll", onScroll, true);
       document.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("resize", onResize);
     };
   }, [open, filtered, highlight, onChange, showSearch]);
 

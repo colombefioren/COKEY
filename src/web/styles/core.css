@@ -1215,7 +1215,7 @@ textarea:focus {
 }
 
 .select-panel {
-  z-index: 60;
+  z-index: 120;
   max-height: 264px;
   overflow-y: auto;
   background: var(--surface);
