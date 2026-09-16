@@ -1,4 +1,4 @@
-name: Publish to Docker Hub and GHCR
+name: Publish to Docker Hub
 
 on:
   push:
@@ -13,11 +13,9 @@ concurrency:
 
 permissions:
   contents: read
-  packages: write
 
 env:
   IMAGE: ${{ vars.DOCKERHUB_NAMESPACE || github.repository_owner }}/cokey
-  GHCR_IMAGE: ghcr.io/${{ vars.DOCKERHUB_NAMESPACE || github.repository_owner }}/cokey
 
 jobs:
   metadata:
@@ -44,11 +42,11 @@ jobs:
             echo "platforms=linux/amd64,linux/arm64"
             echo "tags<<EOF"
             if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-              printf '%s\n' "${IMAGE}:${VERSION}" "${IMAGE}:latest" "${GHCR_IMAGE}:${VERSION}" "${GHCR_IMAGE}:latest"
+              printf '%s\n' "${IMAGE}:${VERSION}" "${IMAGE}:latest"
             elif [[ "${GITHUB_REF}" == "refs/heads/prod" ]]; then
-              printf '%s\n' "${IMAGE}:nightly" "${GHCR_IMAGE}:nightly"
+              printf '%s\n' "${IMAGE}:nightly"
             else
-              printf '%s\n' "${IMAGE}:${VERSION}" "${GHCR_IMAGE}:${VERSION}"
+              printf '%s\n' "${IMAGE}:${VERSION}"
             fi
             echo "EOF"
           } >> "${GITHUB_OUTPUT}"
@@ -57,8 +55,6 @@ jobs:
         run: |
           echo "Version: ${{ steps.meta.outputs.version }}"
           echo "Platforms: ${{ steps.meta.outputs.platforms }}"
-          echo "Tags:"
-          echo "${{ steps.meta.outputs.tags }}"
 
   publish:
     name: Publish multi-arch manifests
@@ -100,14 +96,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Log in to GHCR
-        if: steps.creds.outputs.available == 'true'
-        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push
         if: steps.creds.outputs.available == 'true'
