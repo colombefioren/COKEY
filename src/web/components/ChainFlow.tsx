@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../api.js";
 import type { ChainEntryView, ChainView, LiveRouteSnapshot, PublicCredential } from "../types.js";
 import { Empty, Tooltip } from "./Primitives.js";
@@ -27,6 +27,9 @@ export function ChainFlow({
   const { t } = useLang();
   const [route, setRoute] = useState<LiveRouteSnapshot | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [panning, setPanning] = useState(false);
+  const graphRef = useRef<HTMLDivElement>(null);
+  const dragRef = useRef<{ x: number; left: number; moved: boolean } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +55,37 @@ export function ChainFlow({
   }, [chains, selectedId]);
 
   const sweep = useChainRefresh(selected, () => onChanged?.());
+
+  const onGraphPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== "mouse" || event.button !== 0) return;
+    const graph = graphRef.current;
+    if (!graph) return;
+    dragRef.current = { x: event.clientX, left: graph.scrollLeft, moved: false };
+  };
+
+  const onGraphPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const graph = graphRef.current;
+    const drag = dragRef.current;
+    if (!graph || !drag) return;
+    const dx = event.clientX - drag.x;
+    if (!drag.moved && Math.abs(dx) < 4) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      setPanning(true);
+      graph.setPointerCapture(event.pointerId);
+    }
+    graph.scrollLeft = drag.left - dx;
+    event.preventDefault();
+  };
+
+  const onGraphPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const graph = graphRef.current;
+    if (graph && dragRef.current?.moved && graph.hasPointerCapture(event.pointerId)) {
+      graph.releasePointerCapture(event.pointerId);
+    }
+    dragRef.current = null;
+    setPanning(false);
+  };
 
   const activeAlias = route?.chainAlias;
   const activeEntryKey =
@@ -124,7 +158,15 @@ export function ChainFlow({
         </button>
       </div>
 
-      <div className="flow-graph" style={{ height: graphHeight }}>
+      <div
+        ref={graphRef}
+        className={`flow-graph${panning ? " panning" : ""}`}
+        style={{ height: graphHeight }}
+        onPointerDown={onGraphPointerDown}
+        onPointerMove={onGraphPointerMove}
+        onPointerUp={onGraphPointerUp}
+        onPointerCancel={onGraphPointerUp}
+      >
         <svg className="flow-lines" width="100%" height={graphHeight} aria-hidden="true">
           <path
             className={`flow-path${route?.active ? " live" : ""}`}
@@ -266,8 +308,6 @@ function EntryNode({
                 ? t("ok")
                 : t("fail")}
         </span>
-      ) : live ? (
-        <span className="flow-node-flag live">{t("currently serving")}</span>
       ) : dead ? (
         <span className="flow-node-flag skip">{t("not reached")}</span>
       ) : index === 0 ? (

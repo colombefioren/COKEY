@@ -482,6 +482,16 @@
   min-width: 840px;
   overflow-x: auto;
   overflow-y: visible;
+  cursor: grab;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.flow-graph::-webkit-scrollbar {
+  display: none;
+}
+.flow-graph.panning {
+  cursor: grabbing;
+  user-select: none;
 }
 .flow-lines {
   position: absolute;
@@ -670,9 +680,6 @@
   font-weight: 600;
   line-height: 1;
   box-shadow: var(--shadow);
-}
-.flow-node-flag.live {
-  background: var(--sage);
 }
 .flow-node-flag.skip {
   background: var(--surface-3);
