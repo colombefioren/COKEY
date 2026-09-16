@@ -696,26 +696,36 @@
   color: var(--rose);
 }
 .flow-key {
+  position: relative;
   width: 20px;
   height: 20px;
   border-radius: 50%;
   border: none;
   background: var(--surface-3);
+  color: var(--faint);
+  transition:
+    background 0.18s ease,
+    transform 0.18s ease;
 }
 .flow-key.healthy {
   background: var(--sage);
+  color: var(--sage);
 }
 .flow-key.cooldown {
   background: var(--peach);
+  color: var(--peach);
 }
 .flow-key.invalid {
   background: var(--rose);
+  color: var(--rose);
 }
 .flow-key.disabled {
   background: var(--faint);
+  color: var(--faint);
 }
 .flow-key.unverified {
   background: var(--sky);
+  color: var(--sky);
 }
 .flow-key.active {
   transform: scale(1.15);
@@ -724,7 +734,7 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
-  border: 2px solid var(--sage);
+  border: 2px solid currentColor;
   animation: flow-blink 1.3s ease-in-out infinite;
 }
 

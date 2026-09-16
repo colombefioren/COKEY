@@ -115,6 +115,8 @@ export function useLive(): LiveSnapshot {
 export function useLiveInvalidation(onChange: () => void, delayMs = 600): void {
   const { revision } = useLive();
   const handler = useRef(onChange);
+  const timer = useRef<number | null>(null);
+  const dirty = useRef(false);
 
   useEffect(() => {
     handler.current = onChange;
@@ -122,9 +124,23 @@ export function useLiveInvalidation(onChange: () => void, delayMs = 600): void {
 
   useEffect(() => {
     if (revision === 0) return;
-    const timer = window.setTimeout(() => handler.current(), delayMs);
-    return () => window.clearTimeout(timer);
+    dirty.current = true;
+    if (timer.current !== null) return;
+    timer.current = window.setTimeout(() => {
+      timer.current = null;
+      if (!dirty.current) return;
+      dirty.current = false;
+      handler.current();
+    }, delayMs);
   }, [revision, delayMs]);
+
+  useEffect(
+    () => () => {
+      if (timer.current !== null) window.clearTimeout(timer.current);
+      timer.current = null;
+    },
+    [],
+  );
 }
 
 export function describeLastEvent(last: CokeyEvent | null): string | null {
