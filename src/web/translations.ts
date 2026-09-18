@@ -433,6 +433,7 @@ export const FR: Record<string, string> = {
   "No curated models.": "Aucun modèle sélectionné.",
   "Retired · gone since": "Retiré · disparu depuis",
   source: "source",
+  docs: "docs",
   "get a free key": "obtenir une clé gratuite",
 
   "Give the key a name, e.g. OpenCode": "Donnez un nom à la clé, par ex. OpenCode",
@@ -727,7 +728,10 @@ export const FR: Record<string, string> = {
   "Pool the free API keys you already have into ordered chains, behind one OpenAI-compatible endpoint. When a key runs out, the next one takes over and the client never notices. It runs on your machine, encrypted at rest, and sends nothing anywhere.":
     "Réunissez les clés API gratuites que vous avez déjà en chaînes ordonnées, derrière un seul point de terminaison compatible OpenAI. Quand une clé s'épuise, la suivante prend le relais sans que le client s'en aperçoive. Ça tourne sur votre machine, chiffré au repos, et n'envoie rien nulle part.",
   "If it's not free, it's not in COKEY": "Si ce n'est pas gratuit, ce n'est pas dans COKEY",
+  "Full documentation and additional information live at":
+    "La documentation complète et des informations supplémentaires se trouvent sur",
   "Source on GitHub": "Code source sur GitHub",
+  Documentation: "Documentation",
   Follow: "Suivre",
   Credits: "Crédits",
   "The provider and free-tier catalog is built in part from":
@@ -777,6 +781,7 @@ export const FR: Record<string, string> = {
   "Open source, MIT licensed": "Open source, licence MIT",
 
   "Getting started": "Prise en main",
+  "Full docs": "Documentation complète",
   "Connect two or three providers.": "Connectez deux ou trois fournisseurs.",
   "Open the Providers tab and paste a key for each. COKEY verifies every key before storing it, so a typo is caught immediately.":
     "Ouvrez l'onglet Fournisseurs et collez une clé pour chacun. COKEY vérifie chaque clé avant de la stocker, donc une faute de frappe est repérée immédiatement.",
