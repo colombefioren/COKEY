@@ -1,4 +1,4 @@
-import { CREATOR, REPO_URL } from "../links.js";
+import { CREATOR, DOCS_URL, REPO_URL } from "../links.js";
 import { useLang } from "../lang.js";
 
 export function StatusBar({
@@ -61,6 +61,9 @@ export function StatusBar({
       </a>
       <a href={REPO_URL} target="_blank" rel="noreferrer">
         {t("source")}
+      </a>
+      <a href={DOCS_URL} target="_blank" rel="noreferrer">
+        {t("docs")}
       </a>
     </footer>
   );

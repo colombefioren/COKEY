@@ -1,6 +1,6 @@
 import { CokeyLogo } from "../components/Logo.js";
 import { Panel } from "../components/Primitives.js";
-import { CREATOR, DATA_CREDIT, PROXY_CREDIT, REPO_URL } from "../links.js";
+import { CREATOR, DATA_CREDIT, DOCS_INTRO_URL, PROXY_CREDIT, REPO_URL } from "../links.js";
 import { useLang } from "../lang.js";
 
 export function About() {
@@ -22,9 +22,19 @@ export function About() {
             <span className="badge ok" style={{ marginBottom: 12 }}>
               {t("If it's not free, it's not in COKEY")}
             </span>
+            <p className="small muted">
+              {t("Full documentation and additional information live at")}{" "}
+              <a href={DOCS_INTRO_URL} target="_blank" rel="noreferrer">
+                cokey.vercel.app
+              </a>
+              .
+            </p>
             <div className="about-actions">
               <a className="btn" href={REPO_URL} target="_blank" rel="noreferrer">
                 {t("Source on GitHub")}
+              </a>
+              <a className="btn secondary" href={DOCS_INTRO_URL} target="_blank" rel="noreferrer">
+                {t("Documentation")}
               </a>
               <a className="btn secondary" href={CREATOR.github} target="_blank" rel="noreferrer">
                 {t("Follow")} @{CREATOR.name}

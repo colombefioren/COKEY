@@ -1,4 +1,6 @@
 export const REPO_URL = "https://github.com/colombefioren/COKEY";
+export const DOCS_URL = "https://cokey.vercel.app";
+export const DOCS_INTRO_URL = "https://cokey.vercel.app/#/docs/introduction";
 
 export const CREATOR = {
   name: "colombefioren",

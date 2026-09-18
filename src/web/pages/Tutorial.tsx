@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CokeyLogo } from "../components/Logo.js";
 import { Panel } from "../components/Primitives.js";
+import { DOCS_INTRO_URL } from "../links.js";
 import { useLang } from "../lang.js";
 
 interface Recipe {
@@ -287,7 +288,14 @@ export function Tutorial() {
 
   return (
     <>
-      <Panel title={t("Getting started")}>
+      <Panel
+        title={t("Getting started")}
+        actions={
+          <a href={DOCS_INTRO_URL} target="_blank" rel="noreferrer" className="btn secondary">
+            {t("Full docs")}
+          </a>
+        }
+      >
         <ol className="steps-list">
           <li>
             <strong>{t("Connect two or three providers.")}</strong>{" "}
