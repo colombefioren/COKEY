@@ -6,9 +6,12 @@ on:
     branches: [prod]
   release:
     types: [published]
+  workflow_run:
+    workflows: ["Publish to npm"]
+    types: [completed]
 
 concurrency:
-  group: docker-publish-${{ github.ref }}
+  group: docker-publish-${{ github.event.workflow_run.head_sha || github.ref }}
   cancel-in-progress: false
 
 permissions:
@@ -20,6 +23,7 @@ env:
 jobs:
   metadata:
     name: Resolve Docker release metadata
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.meta.outputs.version }}
@@ -27,6 +31,8 @@ jobs:
       platforms: ${{ steps.meta.outputs.platforms }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Derive release metadata
         id: meta
@@ -37,11 +43,20 @@ jobs:
             VERSION="${GITHUB_REF_NAME#v}"
           fi
 
+          # A tagged push, a published release, and a successful "Publish to npm" run
+          # (the normal path — that workflow's own tag push/release use the default
+          # token, which GitHub never lets trigger another workflow) all mean the
+          # same thing here: a new version just shipped, so tag it as a release.
+          IS_RELEASE=false
+          if [[ "${GITHUB_REF}" == refs/tags/* || "${GITHUB_EVENT_NAME}" == "release" || "${GITHUB_EVENT_NAME}" == "workflow_run" ]]; then
+            IS_RELEASE=true
+          fi
+
           {
             echo "version=${VERSION}"
             echo "platforms=linux/amd64,linux/arm64"
             echo "tags<<EOF"
-            if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            if [[ "${IS_RELEASE}" == "true" ]]; then
               printf '%s\n' "${IMAGE}:${VERSION}" "${IMAGE}:latest"
             elif [[ "${GITHUB_REF}" == "refs/heads/prod" ]]; then
               printf '%s\n' "${IMAGE}:nightly"
@@ -59,11 +74,13 @@ jobs:
   publish:
     name: Publish multi-arch manifests
     needs: metadata
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && (github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || github.sha }}
 
       - name: Detect Docker Hub credentials
         id: creds
